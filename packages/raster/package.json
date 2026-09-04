@@ -19,11 +19,9 @@
     "@orrery/core": "workspace:*",
     "@resvg/resvg-js": "^2.6",
     "fast-xml-parser": "^5",
-    "pixelmatch": "^7",
     "pngjs": "^7"
   },
   "devDependencies": {
-    "@types/pixelmatch": "^5",
     "@types/pngjs": "^6"
   }
 }

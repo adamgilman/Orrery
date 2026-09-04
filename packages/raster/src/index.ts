@@ -83,6 +83,42 @@ export function regionEquals(a: Bitmap, b: Bitmap, r: { x: number; y: number; wi
   return true;
 }
 
+export interface Rect { x: number; y: number; width: number; height: number }
+export interface FrameDiff {
+  /** Pixels whose RGBA differs at all (exact comparison; renders are deterministic). */
+  changed: number;
+  /** Changed pixels not covered by any `allowed` rect. Anything static that moves shows up here. */
+  outside: number;
+  bbox: Rect | null;
+  /** Visual: frame `a` faded to light grey with every changed pixel painted red. */
+  image: Bitmap;
+}
+
+/** Subtract two frames. The mask is exact; the image is for looking at. */
+export function diffFrames(a: Bitmap, b: Bitmap, { allowed = [] as Rect[] } = {}): FrameDiff {
+  if (a.width !== b.width || a.height !== b.height) throw new Error("diffFrames: frame sizes differ");
+  const { width, height } = a;
+  const image = Buffer.alloc(width * height * 4);
+  let changed = 0, outside = 0, x0 = width, y0 = height, x1 = -1, y1 = -1;
+  const inAllowed = (x: number, y: number) => allowed.some((r) => x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height);
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const i = (y * width + x) * 4;
+    const same = a.data[i] === b.data[i] && a.data[i + 1] === b.data[i + 1] && a.data[i + 2] === b.data[i + 2] && a.data[i + 3] === b.data[i + 3];
+    if (same) {
+      const grey = 255 - Math.round((255 - (a.data[i]! * 0.299 + a.data[i + 1]! * 0.587 + a.data[i + 2]! * 0.114)) * 0.15);
+      image[i] = grey; image[i + 1] = grey; image[i + 2] = grey; image[i + 3] = 255;
+    } else {
+      changed++;
+      if (!inAllowed(x, y)) outside++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      image[i] = 255; image[i + 1] = 0; image[i + 2] = 0; image[i + 3] = 255;
+    }
+  }
+  return { changed, outside, bbox: changed ? { x: x0, y: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 } : null, image: { width, height, data: image } };
+}
+
+export const encodePng = (bm: Bitmap): Buffer => { const p = new PNG({ width: bm.width, height: bm.height }); bm.data.copy(p.data); return PNG.sync.write(p); };
+
 export interface FrameOptions extends RasterOptions { times?: number[]; fps?: number; durationMs?: number }
 export interface Frame { tMs: number; png: Buffer }
 
@@ -110,19 +146,23 @@ export function contactSheet(frames: Buffer[], { columns = 4, gutter = 4 }: { co
 }
 
 export interface EdgeReport { key: string; load: number; durationMs: number; periodic: boolean; moving: boolean }
+export interface StepReport { fromMs: number; toMs: number; changed: number; outside: number }
 export interface InspectReport {
   ok: boolean;
   xml: { ok: boolean; error?: string };
   size: { width: number; height: number };
   edges: EdgeReport[];
+  /** Consecutive-frame subtraction over the whole diagram at `fps` for `durationMs`. */
+  steps: StepReport[];
   problems: string[];
 }
+export interface InspectOptions { scale?: number; fps?: number; durationMs?: number }
 
 /**
  * Validate a rendered SVG without a browser: well-formed XML, and for every edge, that the frozen frame
  * at t = duration equals t = 0 (timing matches the declared constant) and t = duration/2 differs (it moves).
  */
-export function inspect(svg: string, { scale = 1 }: { scale?: number } = {}): InspectReport {
+export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }: InspectOptions = {}): InspectReport {
   const v = XMLValidator.validate(svg);
   const xml = v === true ? { ok: true } : { ok: false, error: v.err.msg };
   const vb = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
@@ -130,8 +170,19 @@ export function inspect(svg: string, { scale = 1 }: { scale?: number } = {}): In
   const problems: string[] = [];
   if (!xml.ok) problems.push(`malformed XML: ${xml.error}`);
   const edges: EdgeReport[] = [];
+  const steps: StepReport[] = [];
   if (xml.ok) {
-    for (const [key, r] of Object.entries(flowRegions(svg, scale))) {
+    const regions = flowRegions(svg, scale);
+    // Whole-diagram subtraction: every changed pixel must sit inside some flow region.
+    const seq = renderFrames(svg, { fps, durationMs, scale });
+    const bitmaps = seq.map((f) => decodePng(f.png));
+    for (let i = 1; i < bitmaps.length; i++) {
+      const d = diffFrames(bitmaps[i - 1]!, bitmaps[i]!, { allowed: Object.values(regions) });
+      steps.push({ fromMs: seq[i - 1]!.tMs, toMs: seq[i]!.tMs, changed: d.changed, outside: d.outside });
+      if (d.outside > 0) problems.push(`${d.outside} pixels changed outside any flow between t=${seq[i - 1]!.tMs}ms and t=${seq[i]!.tMs}ms: something static is moving`);
+    }
+    if (Object.values(regions).some((r) => r.load > 0) && steps.length && steps.every((s) => s.changed === 0)) problems.push("no pixel changes between any frames although edges carry load");
+    for (const [key, r] of Object.entries(regions)) {
       const alone = isolateFlow(svg, key);
       const frame = (t: number) => decodePng(rasterize(freezeFrame(alone, t), { scale }));
       const d = r.load > 0 ? r.durationMs || flowDuration(r.load) * 1000 : 1000;
@@ -144,5 +195,5 @@ export function inspect(svg: string, { scale = 1 }: { scale?: number } = {}): In
       edges.push({ key, load: r.load, durationMs: d, periodic, moving });
     }
   }
-  return { ok: problems.length === 0, xml, size, edges, problems };
+  return { ok: problems.length === 0, xml, size, edges, steps, problems };
 }

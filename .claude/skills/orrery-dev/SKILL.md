@@ -36,6 +36,10 @@ frame(duration) == frame(0) (timing matches the declared constant) and frame(dur
 A zero-load edge must never change. If you change dash pattern, period or duration formula, update
 `FLOW_DASH`/`FLOW_PERIOD`/`flowDuration` in core and the check follows automatically.
 
+`inspect` also subtracts consecutive frames of the whole diagram (`diffFrames`): every changed pixel must lie inside
+a flow region, so a node, label or base edge that moves between frames is a failure. `diffs.png` paints changed pixels
+red over a faded frame; it is the fastest way to see what an animation change actually did.
+
 ## Layout of the repo
 
 | Path | What |

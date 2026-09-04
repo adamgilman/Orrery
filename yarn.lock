@@ -240,10 +240,8 @@ __metadata:
   dependencies:
     "@orrery/core": "workspace:*"
     "@resvg/resvg-js": "npm:^2.6"
-    "@types/pixelmatch": "npm:^5"
     "@types/pngjs": "npm:^6"
     fast-xml-parser: "npm:^5"
-    pixelmatch: "npm:^7"
     pngjs: "npm:^7"
   languageName: unknown
   linkType: soft
@@ -591,15 +589,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10c0/f2ba54d3d1fb92e1c57c78d32c3a17655b1e87363b707136f55c422b4838d4054901ce5d27f75bb0e5ecb7ebfee3804e0987822d22b473473008091857a09353
-  languageName: node
-  linkType: hard
-
-"@types/pixelmatch@npm:^5":
-  version: 5.2.6
-  resolution: "@types/pixelmatch@npm:5.2.6"
-  dependencies:
-    "@types/node": "npm:*"
-  checksum: 10c0/1045bde53809b7d555e70fb6a490472879fa8d322bc39cb3f15985b877e9fc5ccf0c0b7d97da936b52d76305aa8d2d6657c03b220af3196d17520cfaa2ecbaa1
   languageName: node
   linkType: hard
 
@@ -1157,18 +1146,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pixelmatch@npm:^7":
-  version: 7.2.0
-  resolution: "pixelmatch@npm:7.2.0"
-  dependencies:
-    pngjs: "npm:^7.0.0"
-  bin:
-    pixelmatch: bin/pixelmatch
-  checksum: 10c0/d8a2454ecf3a977738d6050ed087effa0a9f1b53a0da92d37381a74bb04db5c21e14cfcd41965fbdac4a5967aa5ff2525e2afe9826a77eae043b8339dafc53b6
-  languageName: node
-  linkType: hard
-
-"pngjs@npm:^7, pngjs@npm:^7.0.0":
+"pngjs@npm:^7":
   version: 7.0.0
   resolution: "pngjs@npm:7.0.0"
   checksum: 10c0/0d4c7a0fd476a9c33df7d0a2a73e1d56537628a668841f6995c2bca070cf30819f9254a64363266bc14ef2fee47659dd3b4f2b18eec7ab65143015139f497b38

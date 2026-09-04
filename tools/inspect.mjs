@@ -4,12 +4,13 @@
 //
 //   yarn inspect <file.orrery.json | file.svg> [--out <dir>] [--fps 10] [--frames 8] [--scale 2]
 //
-// Outputs in <out>/<name>/: static.png (t=0), frame-NN.png, sheet.png, report.json, rendered.svg
+// Outputs in <out>/<name>/: static.png (t=0), frame-NN.png, sheet.png (frames tiled), diff-NN.png (frame N-1 minus
+// frame N: changed pixels red, everything else faded), diffs.png (diffs tiled), report.json, rendered.svg
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { render, validate } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
-import { contactSheet, inspect, rasterize, renderFrames } from "@orrery/raster";
+import { contactSheet, decodePng, diffFrames, encodePng, inspect, rasterize, renderFrames } from "@orrery/raster";
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith("--"));
@@ -30,15 +31,20 @@ else {
 }
 writeFileSync(join(out, "rendered.svg"), svg);
 
-const report = inspect(svg, { scale: 1 });
+const report = inspect(svg, { scale: 1, fps, durationMs: (frames * 1000) / fps });
 writeFileSync(join(out, "static.png"), rasterize(svg, { scale }));
 const seq = renderFrames(svg, { fps, durationMs: (frames * 1000) / fps, scale });
 seq.forEach((f, i) => writeFileSync(join(out, `frame-${String(i).padStart(2, "0")}.png`), f.png));
 writeFileSync(join(out, "sheet.png"), contactSheet(seq.map((f) => f.png), { columns: Math.min(4, seq.length) }));
+const bitmaps = seq.map((f) => decodePng(f.png));
+const diffs = bitmaps.slice(1).map((b, i) => encodePng(diffFrames(bitmaps[i], b).image));
+diffs.forEach((png, i) => writeFileSync(join(out, `diff-${String(i + 1).padStart(2, "0")}.png`), png));
+if (diffs.length) writeFileSync(join(out, "diffs.png"), contactSheet(diffs, { columns: Math.min(4, diffs.length) }));
 writeFileSync(join(out, "report.json"), JSON.stringify(report, null, 2) + "\n");
 
 console.log(`${name}: ${report.size.width}x${report.size.height}, xml ${report.xml.ok ? "ok" : "BAD"}, ${report.edges.length} edges`);
 for (const e of report.edges) console.log(`  ${e.periodic && (e.load === 0 || e.moving) ? "ok " : "BAD"} ${e.key.padEnd(24)} load ${String(e.load).padEnd(4)} ${e.durationMs}ms/cycle${e.load > 0 ? (e.moving ? " moving" : " STATIC") : ""}`);
+console.log(`  frame subtraction @${fps}fps: changed px per step [${report.steps.map((s) => s.changed).join(", ")}], outside flows [${report.steps.map((s) => s.outside).join(", ")}]`);
 for (const p of report.problems) console.log(`  problem: ${p}`);
-console.log(`look at: ${join(out, "sheet.png")} (frames at ${fps} fps) and ${join(out, "static.png")}`);
+console.log(`look at: ${join(out, "sheet.png")} (frames), ${join(out, "diffs.png")} (what moved, in red), ${join(out, "static.png")}`);
 process.exit(report.ok ? 0 : 1);
