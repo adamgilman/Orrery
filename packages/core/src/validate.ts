@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import Ajv, { type ErrorObject } from "ajv";
+import { Ajv, type ErrorObject } from "ajv";
 import type { Diagram } from "./types.js";
 
 export class ValidationError {
