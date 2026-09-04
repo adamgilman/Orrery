@@ -7,8 +7,10 @@ export const USAGE = `Usage:
                                          "<file>:<json-pointer>: <message>" line per error on stderr.
   orrery render <file> [-o <out.svg>]    Validate, lay out and render a standalone SVG whose edge flow is
                  [--view <id>]           animated with CSS (plays inside <img>, e.g. a GitHub README).
-                                         Writes to stdout when -o is omitted. Output is deterministic.
-                                         --view picks one of the file's views (default: the first).
+                 [--scenario <id>]       Writes to stdout when -o is omitted. Output is deterministic.
+                 [--step <n>]            --view picks one of the file's views (default: the first).
+                                         --scenario applies a scenario's steps (cumulative) before rendering;
+                                         --step <n> stops after step n (default: the last step).
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -45,7 +47,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
         const file = rest[0];
         if (!file) throw new CliError(USAGE, 2);
         const d = loadDiagram(file);
-        io.stdout(`OK: ${d.nodes.length} nodes, ${d.edges.length} edges, ${d.groups.length} groups, ${d.views.length} views\n`);
+        io.stdout(`OK: ${d.nodes.length} nodes, ${d.edges.length} edges, ${d.groups.length} groups, ${d.views.length} views${d.scenarios.length ? `, ${d.scenarios.length} scenarios` : ""}\n`);
         return 0;
       }
       case "render": {
@@ -54,10 +56,21 @@ export async function main(argv: string[], io: Io): Promise<number> {
         const flag = (name: string) => { const i = rest.indexOf(name); if (i < 0) return undefined; const v = rest[i + 1]; if (!v) throw new CliError(`${name} requires a value`, 2); return v; };
         const out = flag("-o");
         const view = flag("--view");
+        const scenario = flag("--scenario");
+        const stepRaw = flag("--step");
+        if (stepRaw !== undefined && scenario === undefined) throw new CliError("--step requires --scenario", 2);
+        const step = stepRaw !== undefined ? Number(stepRaw) : undefined;
+        if (step !== undefined && !Number.isInteger(step)) throw new CliError(`--step must be an integer, got "${stepRaw}"`, 2);
         const diagram = loadDiagram(file);
         let svg: string;
-        try { svg = await render(diagram, new ElkLayoutEngine(), view !== undefined ? { view } : {}); }
-        catch (e) { if (e instanceof Error && e.message.startsWith("unknown view")) throw new CliError(`${file}: ${e.message}`); throw e; }
+        try {
+          svg = await render(diagram, new ElkLayoutEngine(), {
+            ...(view !== undefined ? { view } : {}), ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}),
+          });
+        } catch (e) {
+          if (e instanceof Error && /^(unknown view|unknown scenario|scenario ")/.test(e.message)) throw new CliError(`${file}: ${e.message}`);
+          throw e;
+        }
         if (out) writeFileSync(out, svg); else io.stdout(svg);
         return 0;
       }

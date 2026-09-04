@@ -1,7 +1,7 @@
 import { Resvg } from "@resvg/resvg-js";
 import { XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
-import { FLOW_PERIOD, flowDuration } from "@orrery/core";
+import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery/core";
 
 const fontDir = new URL("../fonts/", import.meta.url);
 const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => new URL(f, fontDir).pathname);
@@ -15,6 +15,11 @@ const fmt = (n: number) => { const r = Math.round(n * 1000) / 1000; return Strin
  * Everything else is left byte for byte, so frames test the artifact that ships.
  */
 export function freezeFrame(svg: string, tMs: number): string {
+  // Failure pulse: linear triangle wave on stroke-opacity, shared by every failed node, so one static value suffices.
+  const phase = (tMs / (PULSE_PERIOD * 1000)) % 1;
+  const tri = 1 - Math.abs(2 * phase - 1);
+  const opacity = 1 - (1 - PULSE_MIN_OPACITY) * tri;
+  svg = svg.replace(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, `stroke-opacity:${fmt(opacity)}`);
   return svg.replace(FLOW_RE, (whole, key: string, load: string, d: string, style: string) => {
     const m = style.match(/animation-duration:([\d.]+)s/);
     if (!m) return whole;
@@ -26,6 +31,9 @@ export function freezeFrame(svg: string, tMs: number): string {
     return `<path class="flow" data-flow="${key}" data-load="${load}" d="${d}" style="${frozen}"/>`;
   });
 }
+
+/** Hold the failure pulse at full opacity so a check of something else is not disturbed by it. */
+const stillPulse = (svg: string) => svg.replace(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, "stroke-opacity:1");
 
 /** Drop every flow overlay except `key`, so one edge's animation can be judged without neighbours interfering. */
 export function isolateFlow(svg: string, key: string): string {
@@ -72,6 +80,21 @@ export function flowRegions(svg: string, scale = 1): Record<string, Region> {
   return out;
 }
 
+export interface Rect { x: number; y: number; width: number; height: number }
+
+const PULSE_RE = /<g class="node [^"]*node-state-failed[^"]*" data-node="([^"]+)"[^>]*transform="translate\(([\d.-]+) ([\d.-]+)\)">(?:\s*<title>[^<]*<\/title>)?\s*<rect class="node-box" width="([\d.]+)" height="([\d.]+)"/g;
+
+/** Padded, scaled box of every failed (pulsing) node, keyed by node id. */
+export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
+  const out: Record<string, Rect> = {};
+  const pad = 3;
+  for (const m of svg.matchAll(PULSE_RE)) {
+    const [, id, x, y, w, h] = m;
+    out[id!] = { x: Math.floor((Number(x) - pad) * scale), y: Math.floor((Number(y) - pad) * scale), width: Math.ceil((Number(w) + 2 * pad) * scale), height: Math.ceil((Number(h) + 2 * pad) * scale) };
+  }
+  return out;
+}
+
 /** True when every pixel inside the region is identical in both bitmaps. */
 export function regionEquals(a: Bitmap, b: Bitmap, r: { x: number; y: number; width: number; height: number }): boolean {
   if (a.width !== b.width || a.height !== b.height) return false;
@@ -83,7 +106,6 @@ export function regionEquals(a: Bitmap, b: Bitmap, r: { x: number; y: number; wi
   return true;
 }
 
-export interface Rect { x: number; y: number; width: number; height: number }
 export interface FrameDiff {
   /** Pixels whose RGBA differs at all (exact comparison; renders are deterministic). */
   changed: number;
@@ -173,17 +195,18 @@ export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }:
   const steps: StepReport[] = [];
   if (xml.ok) {
     const regions = flowRegions(svg, scale);
-    // Whole-diagram subtraction: every changed pixel must sit inside some flow region.
+    // Whole-diagram subtraction: every changed pixel must sit inside a flow region or a pulsing failed node.
+    const allowed = [...Object.values(regions), ...Object.values(pulseRegions(svg, scale))];
     const seq = renderFrames(svg, { fps, durationMs, scale });
     const bitmaps = seq.map((f) => decodePng(f.png));
     for (let i = 1; i < bitmaps.length; i++) {
-      const d = diffFrames(bitmaps[i - 1]!, bitmaps[i]!, { allowed: Object.values(regions) });
+      const d = diffFrames(bitmaps[i - 1]!, bitmaps[i]!, { allowed });
       steps.push({ fromMs: seq[i - 1]!.tMs, toMs: seq[i]!.tMs, changed: d.changed, outside: d.outside });
-      if (d.outside > 0) problems.push(`${d.outside} pixels changed outside any flow between t=${seq[i - 1]!.tMs}ms and t=${seq[i]!.tMs}ms: something static is moving`);
+      if (d.outside > 0) problems.push(`${d.outside} pixels changed outside any flow or failed node between t=${seq[i - 1]!.tMs}ms and t=${seq[i]!.tMs}ms: something static is moving`);
     }
     if (Object.values(regions).some((r) => r.load > 0) && steps.length && steps.every((s) => s.changed === 0)) problems.push("no pixel changes between any frames although edges carry load");
     for (const [key, r] of Object.entries(regions)) {
-      const alone = isolateFlow(svg, key);
+      const alone = stillPulse(isolateFlow(svg, key));
       const frame = (t: number) => decodePng(rasterize(freezeFrame(alone, t), { scale }));
       const d = r.load > 0 ? r.durationMs || flowDuration(r.load) * 1000 : 1000;
       const f0 = frame(0);

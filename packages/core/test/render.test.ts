@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, render, renderSvg, toLayoutGraph, validate, type Diagram, type LayoutResult } from "../src/index.js";
+import { FakeLayoutEngine, PULSE_PERIOD, propagate, render, renderSvg, toLayoutGraph, validate, type Diagram, type LayoutResult } from "../src/index.js";
 
 const fixture = (name: string): Diagram => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
@@ -155,5 +155,52 @@ describe("renderSvg: groups, kinds, edge kinds", () => {
   it("matches the snapshot for grouped with the fake engine", async () => {
     const d = grouped();
     expect(renderSvg(d, await laidOut(d))).toMatchSnapshot();
+  });
+});
+
+describe("renderSvg: states", () => {
+  const failed = async () => {
+    const d = propagate(fixture("failover"), );
+    return d;
+  };
+  it("tags nodes with their effective state and explains propagated ones", async () => {
+    const base = fixture("failover");
+    const d = propagate({ ...base, nodes: base.nodes.map((n) => (n.id === "db" ? { ...n, state: "failed" as const } : n)) });
+    const svg = renderSvg(d, await laidOut(d));
+    expect(svg).toContain('data-node="db" data-kind="database" data-state="failed"');
+    expect(svg).toContain('class="node node-database node-state-failed"');
+    expect(svg).toContain('class="node node-service node-state-degraded"');
+    expect(svg).toContain('class="node node-external node-state-off"');
+    const api = svg.slice(svg.indexOf('data-node="api"'), svg.indexOf("</g>", svg.indexOf('data-node="api"')));
+    expect(api).toMatch(/<title>DB is down, using Replica<\/title>/);
+  });
+  it("styles failed, degraded and off nodes, and pulses failed ones with a fixed period", async () => {
+    const d = await failed();
+    const svg = renderSvg(d, await laidOut(d));
+    expect(svg).toMatch(/\.node-state-failed \.node-box\{[^}]*stroke:#dc2626/);
+    expect(svg).toMatch(/\.node-state-degraded \.node-box\{[^}]*stroke:#d97706/);
+    expect(svg).toMatch(/\.node-state-off\{[^}]*opacity/);
+    expect(svg).toMatch(new RegExp(`\\.node-state-failed \\.node-box\\{[^}]*animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`));
+    expect(svg).toContain("@keyframes orrery-pulse");
+  });
+  it("edges touching a down node carry no flow", async () => {
+    const base = fixture("failover");
+    const d = propagate({ ...base, nodes: base.nodes.map((n) => (n.id === "db" ? { ...n, state: "failed" as const } : n)) });
+    const svg = renderSvg(d, await laidOut(d));
+    expect(svg).toMatch(/data-flow="api->db" data-load="0"/);
+    expect(svg).toMatch(/data-flow="api->replica" data-load="0.6"/);
+  });
+});
+
+describe("render with a scenario", () => {
+  it("applies the scenario step, propagates, and titles the SVG with the step note", async () => {
+    const svg = await render(fixture("failover"), new FakeLayoutEngine(), { scenario: "db-failover", step: 1 });
+    expect(svg).toContain('data-node="db" data-kind="database" data-state="failed"');
+    expect(svg).toContain("<title>Failover — Primary DB fails (1/3): Primary goes down</title>");
+  });
+  it("propagates base-model states even without a scenario", async () => {
+    const svg = await render(fixture("failover"), new FakeLayoutEngine());
+    expect(svg).toContain('data-state="off"');
+    expect(svg).toMatch(/data-flow="api->legacy" data-load="0"/);
   });
 });

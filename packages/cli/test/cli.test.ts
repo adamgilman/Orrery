@@ -122,3 +122,30 @@ describe("orrery <command> --help", () => {
     }
   });
 });
+
+describe("orrery render --scenario", () => {
+  it("renders a scenario step", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const out = join(dir, "s.svg");
+    const r = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "1", "-o", out);
+    expect(r.err).toBe("");
+    expect(r.code).toBe(0);
+    const svg = readFileSync(out, "utf8");
+    expect(svg).toContain('data-state="failed"');
+    expect(svg).toContain("Primary goes down");
+  });
+  it("defaults to the last step and rejects bad ids and steps", () => {
+    expect(run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover").out).toContain("(3/3)");
+    const bad = run("render", join(fixtures, "valid/failover.json"), "--scenario", "nope");
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain('unknown scenario "nope"');
+    const range = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "9");
+    expect(range.code).toBe(1);
+    expect(range.err).toContain("between 1 and 3");
+    const noScenario = run("render", join(fixtures, "valid/failover.json"), "--step", "1");
+    expect(noScenario.code).toBe(2);
+  });
+  it("validate counts scenarios", () => {
+    expect(run("validate", join(fixtures, "valid/failover.json")).out).toContain(", 1 scenarios");
+  });
+});

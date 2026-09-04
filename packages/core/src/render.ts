@@ -2,6 +2,7 @@ import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { GLYPH_KINDS, GLYPH_WIDTH, toLayoutGraph } from "./measure.js";
 import type { Diagram, DiagramEdge, DiagramGroup, DiagramNode, NodeKind } from "./types.js";
 import { scopeDiagram, selectView } from "./view.js";
+import { applyScenario, propagate } from "./simulate.js";
 
 /** Text-content escaping. */
 const esc = (s: string) =>
@@ -39,6 +40,10 @@ export function flowDuration(load: number): number {
   return Math.round((0.5 + (1 - load) * 2.5) * 10) / 10;
 }
 
+/** Seconds per pulse of a failed node's outline. Linear triangle wave 1 → 0.4 → 1, so frames can freeze it exactly. */
+export const PULSE_PERIOD = 1.2;
+export const PULSE_MIN_OPACITY = 0.4;
+
 export function flowWidth(load: number): number {
   return 1.5 + load * 3;
 }
@@ -59,6 +64,12 @@ const STYLE = `
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.node-state-failed .node-box{fill:#fef2f2;stroke:#dc2626;stroke-width:2;animation:orrery-pulse ${PULSE_PERIOD}s linear infinite}
+.node-state-failed .node-label{fill:#991b1b}
+.node-state-degraded .node-box{fill:#fffbeb;stroke:#d97706;stroke-width:2}
+.node-state-degraded .node-label{fill:#92400e}
+.node-state-off{opacity:.45}
+.node-state-off .node-box{stroke-dasharray:4 4}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
@@ -69,6 +80,7 @@ const STYLE = `
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:${PULSE_MIN_OPACITY}}100%{stroke-opacity:1}}
 `.trim();
 
 function midpoint(pts: Point[]): Point {
@@ -112,8 +124,10 @@ function nodeMarkup(n: DiagramNode, layout: LayoutResult): string {
   if (!b) throw new Error(`layout returned no box for node ${n.id}`);
   const glyph = GLYPH_KINDS.has(n.kind) ? GLYPHS[n.kind] : undefined;
   const inset = glyph ? 12 + GLYPH_WIDTH : 0;
+  const stateClass = n.state === "on" ? "" : ` node-state-${n.state}`;
   return [
-    `<g class="node node-${n.kind}" data-node="${escAttr(n.id)}" data-kind="${n.kind}" transform="translate(${num(b.x)} ${num(b.y)})">`,
+    `<g class="node node-${n.kind}${stateClass}" data-node="${escAttr(n.id)}" data-kind="${n.kind}" data-state="${n.state}" transform="translate(${num(b.x)} ${num(b.y)})">`,
+    ...(n.reason !== undefined ? [`<title>${esc(n.reason)}</title>`] : []),
     `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
     ...(glyph ? [`<g class="glyph" transform="translate(12 ${num(b.height / 2 - 8)})">${glyph}</g>`] : []),
     `<text class="node-label" x="${num((inset + b.width) / 2)}" y="${num(b.height / 2)}">${esc(n.label)}</text>`,
@@ -155,11 +169,23 @@ export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
   ].join("\n") + "\n";
 }
 
-export interface RenderOptions { view?: string }
+export interface RenderOptions {
+  view?: string;
+  /** Scenario id to apply before rendering; `step` selects how far (default: all steps). */
+  scenario?: string;
+  step?: number;
+}
 
-/** Select a view, scope the model to it, measure, lay out and render in one call. */
+/** Select a view, apply a scenario (or just propagate base states), scope, measure, lay out and render. */
 export async function render(diagram: Diagram, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
-  const scoped = scopeDiagram(diagram, selectView(diagram, options.view));
+  let model = diagram;
+  if (options.scenario !== undefined) {
+    const s = applyScenario(diagram, options.scenario, options.step);
+    const label = diagram.scenarios.find((x) => x.id === s.scenarioId)!.label;
+    const title = `${diagram.title ?? "Diagram"} — ${label} (${s.step}/${s.steps})${s.note !== undefined ? `: ${s.note}` : ""}`;
+    model = { ...s.diagram, title };
+  } else model = propagate(diagram);
+  const scoped = scopeDiagram(model, selectView(model, options.view));
   const layout = await engine.layout(toLayoutGraph(scoped));
   return renderSvg(scoped, layout);
 }
