@@ -1,0 +1,29 @@
+{
+  "name": "@orrery/raster",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "fonts"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@orrery/core": "workspace:*",
+    "@resvg/resvg-js": "^2.6",
+    "fast-xml-parser": "^5",
+    "pixelmatch": "^7",
+    "pngjs": "^7"
+  },
+  "devDependencies": {
+    "@types/pixelmatch": "^5",
+    "@types/pngjs": "^6"
+  }
+}

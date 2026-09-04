@@ -12,10 +12,10 @@ exports[`renderSvg > matches the snapshot for three-tier with the fake engine 1`
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>
 <g class="edges">
 <path class="edge" data-edge="web->api" d="M100 44 L180 44" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="web->api" d="M100 44 L168 44" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="flow" data-flow="web->api" data-load="0.8" d="M100 44 L168 44" style="stroke-width:3.9;animation-duration:1s"/>
 <text class="edge-label" x="140" y="44">HTTPS</text>
 <path class="edge" data-edge="api->db" d="M260 44 L340 44" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" d="M260 44 L328 44" style="stroke-width:2.7;animation-duration:2s"/>
+<path class="flow" data-flow="api->db" data-load="0.4" d="M260 44 L328 44" style="stroke-width:2.7;animation-duration:2s"/>
 </g>
 <g class="nodes">
 <g class="node" data-node="web" transform="translate(20 20)">

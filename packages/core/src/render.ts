@@ -28,21 +28,34 @@ export function trimEnd(pts: Point[], by: number): Point[] {
   return out.length >= 2 ? out : pts.slice(0, 1);
 }
 
+/** Dash pattern of the flow overlay, in user units: [dash, gap]. */
+export const FLOW_DASH: readonly [number, number] = [6, 10];
+/** One animation cycle shifts the dashes by exactly one pattern length, so looping is seamless. */
+export const FLOW_PERIOD = FLOW_DASH[0] + FLOW_DASH[1];
+
+/** Seconds per cycle for a given load. Pure, so frame tooling can freeze the animation at any t. */
+export function flowDuration(load: number): number {
+  return Math.round((0.5 + (1 - load) * 2.5) * 10) / 10;
+}
+
+export function flowWidth(load: number): number {
+  return 1.5 + load * 3;
+}
+
 /** Flow animation is a pure function of load: faster and thicker as load rises, off at zero. */
 export function flowStyle(load: number): string {
-  const width = 1.5 + load * 3;
+  const width = flowWidth(load);
   if (load <= 0) return `stroke-width:${num(width)};animation:none;opacity:0`;
-  const duration = 0.5 + (1 - load) * 2.5;
-  return `stroke-width:${num(width)};animation-duration:${num(duration)}s`;
+  return `stroke-width:${num(width)};animation-duration:${num(flowDuration(load))}s`;
 }
 
 const STYLE = `
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
-.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
-@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
 `.trim();
 
 function midpoint(pts: Point[]): Point {
@@ -65,7 +78,7 @@ function edgeMarkup(e: DiagramEdge, i: number, layout: LayoutResult): string {
   const key = escAttr(`${e.from}->${e.to}`);
   const parts = [
     `<path class="edge" data-edge="${key}" d="${pathD(route.points)}" marker-end="url(#arrow)"/>`,
-    `<path class="flow" data-flow="${key}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
+    `<path class="flow" data-flow="${key}" data-load="${num(e.load)}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
   ];
   if (e.label !== undefined) {
     // Engines that know label sizes hand back a centre; otherwise sit just above the route's midpoint.

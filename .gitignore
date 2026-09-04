@@ -11,3 +11,4 @@ coverage/
 *.tsbuildinfo
 site/dist/
 site/server.log
+.orrery-inspect/

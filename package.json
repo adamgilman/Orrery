@@ -12,10 +12,12 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "orrery": "node packages/cli/dist/main.js",
-    "examples": "yarn build && node packages/cli/dist/main.js render examples/three-tier.orrery.json -o examples/three-tier.svg && node packages/cli/dist/main.js render fixtures/valid/fan-out.json -o examples/fan-out.svg"
+    "examples": "yarn build && node packages/cli/dist/main.js render examples/three-tier.orrery.json -o examples/three-tier.svg && node packages/cli/dist/main.js render fixtures/valid/fan-out.json -o examples/fan-out.svg",
+    "inspect": "node tools/inspect.mjs"
   },
   "devDependencies": {
-    "@resvg/resvg-js": "^2.6.2",
+    "@orrery/layout-elk": "workspace:*",
+    "@orrery/raster": "workspace:*",
     "@types/node": "^22",
     "typescript": "^5.6",
     "vitest": "^3"
