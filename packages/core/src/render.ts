@@ -1,6 +1,8 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
+import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
+export * from "./flow.js";
 import { GLYPH_KINDS, GLYPH_WIDTH, toLayoutGraph } from "./measure.js";
-import type { Diagram, DiagramEdge, DiagramGroup, DiagramNode, NodeKind } from "./types.js";
+import type { Diagram, DiagramEdge, DiagramGroup, DiagramNode, DiagramView, NodeKind } from "./types.js";
 import { scopeDiagram, selectView } from "./view.js";
 import { applyScenario, propagate } from "./simulate.js";
 
@@ -28,31 +30,6 @@ export function trimEnd(pts: Point[], by: number): Point[] {
     remaining = 0;
   }
   return out.length >= 2 ? out : pts.slice(0, 1);
-}
-
-/** Dash pattern of the flow overlay, in user units: [dash, gap]. */
-export const FLOW_DASH: readonly [number, number] = [6, 10];
-/** One animation cycle shifts the dashes by exactly one pattern length, so looping is seamless. */
-export const FLOW_PERIOD = FLOW_DASH[0] + FLOW_DASH[1];
-
-/** Seconds per cycle for a given load. Pure, so frame tooling can freeze the animation at any t. */
-export function flowDuration(load: number): number {
-  return Math.round((0.5 + (1 - load) * 2.5) * 10) / 10;
-}
-
-/** Seconds per pulse of a failed node's outline. Linear triangle wave 1 → 0.4 → 1, so frames can freeze it exactly. */
-export const PULSE_PERIOD = 1.2;
-export const PULSE_MIN_OPACITY = 0.4;
-
-export function flowWidth(load: number): number {
-  return 1.5 + load * 3;
-}
-
-/** Flow animation is a pure function of load: faster and thicker as load rises, off at zero. */
-export function flowStyle(load: number): string {
-  const width = flowWidth(load);
-  if (load <= 0) return `stroke-width:${num(width)};animation:none;opacity:0`;
-  return `stroke-width:${num(width)};animation-duration:${num(flowDuration(load))}s`;
 }
 
 const STYLE = `
@@ -112,7 +89,7 @@ function groupMarkup(g: DiagramGroup, layout: LayoutResult): string {
   const b = layout.groups[g.id];
   if (!b) throw new Error(`layout returned no box for group ${g.id}`);
   return [
-    `<g class="group group-${g.kind}" data-group="${escAttr(g.id)}">`,
+    `<g class="group group-${g.kind}" data-group="${escAttr(g.id)}" data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}">`,
     `<rect class="group-box" x="${num(b.x)}" y="${num(b.y)}" width="${num(b.width)}" height="${num(b.height)}" rx="10"/>`,
     `<text class="group-label" x="${num(b.x + 12)}" y="${num(b.y + 16)}">${esc(g.label)}</text>`,
     `</g>`,
@@ -126,7 +103,7 @@ function nodeMarkup(n: DiagramNode, layout: LayoutResult): string {
   const inset = glyph ? 12 + GLYPH_WIDTH : 0;
   const stateClass = n.state === "on" ? "" : ` node-state-${n.state}`;
   return [
-    `<g class="node node-${n.kind}${stateClass}" data-node="${escAttr(n.id)}" data-kind="${n.kind}" data-state="${n.state}" transform="translate(${num(b.x)} ${num(b.y)})">`,
+    `<g class="node node-${n.kind}${stateClass}" data-node="${escAttr(n.id)}" data-kind="${n.kind}" data-state="${n.state}" data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}" transform="translate(${num(b.x)} ${num(b.y)})">`,
     ...(n.reason !== undefined ? [`<title>${esc(n.reason)}</title>`] : []),
     `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
     ...(glyph ? [`<g class="glyph" transform="translate(12 ${num(b.height / 2 - 8)})">${glyph}</g>`] : []),
@@ -151,22 +128,67 @@ function edgeMarkup(e: DiagramEdge, layout: LayoutResult): string {
   return parts.join("\n");
 }
 
-/** Render a laid-out diagram to a standalone SVG string. Pure and deterministic. */
-export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
+/** One view's drawing: groups, then edges, then nodes, in absolute coordinates. */
+export function renderView(diagram: Diagram, layout: LayoutResult): string {
   const groups = diagram.groups.map((g) => groupMarkup(g, layout));
   const nodes = diagram.nodes.map((n) => nodeMarkup(n, layout));
   const edges = diagram.edges.map((e) => edgeMarkup(e, layout));
-  const title = diagram.title !== undefined ? `<title>${esc(diagram.title)}</title>\n` : "";
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(layout.width)} ${num(layout.height)}" width="${num(layout.width)}" height="${num(layout.height)}" data-orrery="1">`,
-    title + `<style>${STYLE}</style>`,
-    // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths, and only marker-end is used.
-    `<defs><marker id="arrow" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z" fill="#94a3b8"/></marker></defs>`,
     `<g class="groups">\n${groups.join("\n")}\n</g>`,
     `<g class="edges">\n${edges.join("\n")}\n</g>`,
     `<g class="nodes">\n${nodes.join("\n")}\n</g>`,
+  ].join("\n");
+}
+
+interface ViewLayer { view: DiagramView; title: string; width: number; height: number; markup: string }
+
+const viewLayer = (l: ViewLayer, visible: boolean) =>
+  `<g class="view" data-view="${escAttr(l.view.id)}" data-title="${escAttr(l.title)}" data-size="${num(l.width)} ${num(l.height)}"${visible ? "" : ' style="display:none"'}>\n${l.markup}\n</g>`;
+
+/** Only the CDATA terminator can break out of a CDATA section; split it across two sections. Browsers merge them. */
+const cdata = (s: string) => `<![CDATA[${s.replace(/]]>/g, "]]]]><![CDATA[>")}]]>`;
+
+function wrapDocument(title: string | undefined, layers: ViewLayer[], extra: string[]): string {
+  const first = layers[0]!;
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(first.width)} ${num(first.height)}" width="${num(first.width)}" height="${num(first.height)}" data-orrery="1">`,
+    (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${STYLE}</style>`,
+    // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths, and only marker-end is used.
+    `<defs><marker id="arrow" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z" fill="#94a3b8"/></marker></defs>`,
+    `<g class="scene">\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
+    ...extra,
     `</svg>`,
   ].join("\n") + "\n";
+}
+
+/** Render a laid-out diagram (one view) to a standalone SVG string. Pure and deterministic. */
+export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
+  const view = diagram.views[0] ?? { id: "default", type: "topology", direction: diagram.direction };
+  return wrapDocument(diagram.title, [{ view, title: diagram.title ?? view.id, width: layout.width, height: layout.height, markup: renderView(diagram, layout) }], []);
+}
+
+export interface DocumentOptions {
+  /** JavaScript source to embed as the runtime. Empty string embeds nothing (static document). */
+  runtime: string;
+}
+
+/**
+ * The shippable file: every view pre-laid-out and embedded (first visible), the validated model as JSON, and the
+ * runtime script. Inside <img> it is the animated first view; opened directly, the runtime makes it interactive.
+ */
+export async function renderDocument(diagram: Diagram, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
+  const model = propagate(diagram);
+  const layers: ViewLayer[] = [];
+  for (const view of model.views) {
+    const scoped = scopeDiagram(model, view);
+    const layout = await engine.layout(toLayoutGraph(scoped));
+    layers.push({ view, title: view.title ?? diagram.title ?? view.id, width: layout.width, height: layout.height, markup: renderView(scoped, layout) });
+  }
+  // The declared (un-propagated) model, so runtime toggles compose with authored states rather than derived ones.
+  const json = JSON.stringify(diagram).replace(/]]>/g, "]]\\u003e");
+  const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
+  if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
+  return wrapDocument(diagram.title, layers, extra);
 }
 
 export interface RenderOptions {

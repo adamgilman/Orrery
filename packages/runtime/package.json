@@ -1,8 +1,7 @@
 {
-  "name": "orrery",
+  "name": "@orrery/runtime",
   "version": "0.0.0",
   "type": "module",
-  "bin": "./dist/main.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,11 +12,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "bundle": "node bundle.mjs"
   },
   "dependencies": {
-    "@orrery/core": "workspace:*",
-    "@orrery/layout-elk": "workspace:*",
-    "@orrery/runtime": "workspace:*"
+    "@orrery/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21",
+    "esbuild": "^0.28",
+    "jsdom": "^26"
   }
 }

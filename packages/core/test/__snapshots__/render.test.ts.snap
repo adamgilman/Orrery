@@ -29,6 +29,8 @@ exports[`renderSvg > matches the snapshot for three-tier with the fake engine 1`
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="default" data-title="Three tier" data-size="440 88">
 <g class="groups">
 
 </g>
@@ -40,17 +42,19 @@ exports[`renderSvg > matches the snapshot for three-tier with the fake engine 1`
 <path class="flow" data-flow="api->db" data-load="0.4" d="M260 44 L328 44" style="stroke-width:2.7;animation-duration:2s"/>
 </g>
 <g class="nodes">
-<g class="node node-service" data-node="web" data-kind="service" data-state="on" transform="translate(20 20)">
+<g class="node node-service" data-node="web" data-kind="service" data-state="on" data-bbox="20 20 80 48" transform="translate(20 20)">
 <rect class="node-box" width="80" height="48" rx="8"/>
 <text class="node-label" x="40" y="24">Web</text>
 </g>
-<g class="node node-service" data-node="api" data-kind="service" data-state="on" transform="translate(180 20)">
+<g class="node node-service" data-node="api" data-kind="service" data-state="on" data-bbox="180 20 80 48" transform="translate(180 20)">
 <rect class="node-box" width="80" height="48" rx="8"/>
 <text class="node-label" x="40" y="24">API</text>
 </g>
-<g class="node node-service" data-node="db" data-kind="service" data-state="on" transform="translate(340 20)">
+<g class="node node-service" data-node="db" data-kind="service" data-state="on" data-bbox="340 20 80 48" transform="translate(340 20)">
 <rect class="node-box" width="80" height="48" rx="8"/>
 <text class="node-label" x="40" y="24">DB</text>
+</g>
+</g>
 </g>
 </g>
 </svg>
@@ -86,16 +90,18 @@ exports[`renderSvg: groups, kinds, edge kinds > matches the snapshot for grouped
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="overview" data-title="Grouped three tier" data-size="1095 176">
 <g class="groups">
-<g class="group group-region" data-group="region">
+<g class="group group-region" data-group="region" data-bbox="337 12 738 144">
 <rect class="group-box" x="337" y="12" width="738" height="144" rx="10"/>
 <text class="group-label" x="349" y="28">us-east-1</text>
 </g>
-<g class="group group-tier" data-group="app">
+<g class="group group-tier" data-group="app" data-bbox="349 48 148 96">
 <rect class="group-box" x="349" y="48" width="148" height="96" rx="10"/>
 <text class="group-label" x="361" y="64">Application</text>
 </g>
-<g class="group group-tier" data-group="data">
+<g class="group group-tier" data-group="data" data-bbox="633 48 430 96">
 <rect class="group-box" x="633" y="48" width="430" height="96" rx="10"/>
 <text class="group-label" x="645" y="64">Data</text>
 </g>
@@ -114,24 +120,26 @@ exports[`renderSvg: groups, kinds, edge kinds > matches the snapshot for grouped
 <path class="flow" data-flow="db->replica" data-load="0.2" d="M770 108 L838 108" style="stroke-width:2.1;animation-duration:2.5s"/>
 </g>
 <g class="nodes">
-<g class="node node-gateway" data-node="web" data-kind="gateway" data-state="on" transform="translate(84 84)">
+<g class="node node-gateway" data-node="web" data-kind="gateway" data-state="on" data-bbox="84 84 117 48" transform="translate(84 84)">
 <rect class="node-box" width="117" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
 <text class="node-label" x="76.5" y="24">Web tier</text>
 </g>
-<g class="node node-service" data-node="api" data-kind="service" data-state="on" transform="translate(361 84)">
+<g class="node node-service" data-node="api" data-kind="service" data-state="on" data-bbox="361 84 124 48" transform="translate(361 84)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text>
 </g>
-<g class="node node-database" data-node="db" data-kind="database" data-state="on" transform="translate(645 84)">
+<g class="node node-database" data-node="db" data-kind="database" data-state="on" data-bbox="645 84 125 48" transform="translate(645 84)">
 <rect class="node-box" width="125" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="80.5" y="24">Orders DB</text>
 </g>
-<g class="node node-database" data-node="replica" data-kind="database" data-state="on" transform="translate(850 84)">
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="850 84 201 48" transform="translate(850 84)">
 <rect class="node-box" width="201" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
+</g>
+</g>
 </g>
 </g>
 </svg>
