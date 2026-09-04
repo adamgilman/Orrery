@@ -1,0 +1,26 @@
+{
+  "$schema": "https://orrery.dev/schema/v1.json",
+  "title": "Node kinds",
+  "direction": "down",
+  "nodes": [
+    { "id": "app", "label": "Mobile app", "kind": "client" },
+    { "id": "gw", "label": "API gateway", "kind": "gateway" },
+    { "id": "orders", "label": "Orders", "kind": "service" },
+    { "id": "db", "label": "DB", "kind": "database" },
+    { "id": "cache", "label": "Cache", "kind": "cache" },
+    { "id": "events", "label": "Events", "kind": "queue" },
+    { "id": "notify", "label": "Notify", "kind": "function" },
+    { "id": "archive", "label": "Archive", "kind": "storage" },
+    { "id": "sms", "label": "SMS provider", "kind": "external" }
+  ],
+  "edges": [
+    { "from": "app", "to": "gw", "load": 0.8 },
+    { "from": "gw", "to": "orders", "load": 0.7 },
+    { "from": "orders", "to": "db", "load": 0.5 },
+    { "from": "orders", "to": "cache", "load": 0.6 },
+    { "from": "orders", "to": "events", "load": 0.3, "kind": "async" },
+    { "from": "events", "to": "notify", "load": 0.3, "kind": "async" },
+    { "from": "events", "to": "archive", "load": 0.2, "kind": "dataflow" },
+    { "from": "notify", "to": "sms", "load": 0.2 }
+  ]
+}

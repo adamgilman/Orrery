@@ -14,23 +14,51 @@ Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Mo
 
 A more terrestrial example, a checkout service with tiers, a region, and a worker queue, is below.
 
-## Status
+## What it does
 
-Milestone 2: the diagram is a model. Nodes have kinds and health, groups nest, edges carry kind, load, and dependency
-semantics, views drill into groups, and scenarios play failures through the model. The interactive runtime and GIF
-export are next. See [PRD.md](PRD.md).
+Every diagram below is a plain SVG in an image tag, small enough to read on a phone. Sources are in
+[examples/readme](examples/readme).
 
-![Checkout service with tiers and a region](examples/checkout.svg)
+**Node kinds.** A small fixed vocabulary, each with its own glyph: client, gateway, service, database, cache, queue,
+function, storage, external.
 
-The same file with its primary database failed, two steps into the `db-failover` scenario. Nothing here was drawn by
-hand: the database is declared failed, and the tool works out that the worker fails with it, the API degrades onto
-its replica, the CDN degrades behind the API, and which edges stop carrying traffic.
+![Node kinds](examples/readme/kinds.svg)
 
-![Checkout service during database failover](examples/checkout-db-failover.svg)
+**Nested groups.** Tiers, regions, zones, clusters and trust boundaries, each with a distinct frame. The hierarchy is
+also the outline for navigation.
+
+![Nested groups](examples/readme/groups.svg)
+
+**Edge kinds and load.** Sync, async, replication and dataflow edges are drawn differently. Load drives the speed and
+weight of the flow.
+
+![Edge kinds](examples/readme/edge-kinds.svg)
+
+**Failure scenarios.** Edges declare dependencies and fallbacks. A scenario marks one node failed and the tool works out
+the rest: the worker fails with the primary, the API degrades onto its replica, the web tier degrades behind the API,
+and traffic moves off the dead paths. Healthy first, then one step into the scenario.
+
+![Failover, healthy](examples/readme/failover.svg)
+
+![Failover, primary failed](examples/readme/failover-db-fails.svg)
 
 ```sh
-orrery render examples/checkout.orrery.json --scenario db-failover --step 2 -o failover.svg
+orrery render examples/readme/failover.orrery.json --scenario db-fails -o failed.svg
 ```
+
+**Views.** One model, many drawings. A view can drill into a group and choose its own direction.
+
+![Overview](examples/readme/views.svg)
+
+![Billing only](examples/readme/views-billing.svg)
+
+A larger example, a checkout service with three tiers, a region, an external provider and a database failover, is at
+[examples/checkout.svg](examples/checkout.svg) and [examples/checkout-db-failover.svg](examples/checkout-db-failover.svg).
+
+## Status
+
+Milestone 2 of the [PRD](PRD.md): the diagram is a model. Next are the interactive runtime inside the SVG (outline,
+zoom, click to fail, step-through, view morphing) and GIF export.
 
 ## Quick start
 
