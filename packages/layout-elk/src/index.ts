@@ -39,9 +39,16 @@ export class ElkLayoutEngine implements LayoutEngine {
         "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES",
         "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
         "elk.padding": `[top=${PADDING},left=${PADDING},bottom=${PADDING},right=${PADDING}]`,
+        // Inline labels: ELK reserves room on the edge itself, so labels never collide with nodes or each other.
+        "elk.edgeLabels.inline": "true",
       },
       children: graph.nodes.map((n) => ({ id: n.id, width: n.width, height: n.height })),
-      edges: graph.edges.map((e): ElkExtendedEdge => ({ id: e.id, sources: [e.from], targets: [e.to] })),
+      edges: graph.edges.map((e): ElkExtendedEdge => ({
+        id: e.id,
+        sources: [e.from],
+        targets: [e.to],
+        ...(e.label ? { labels: [{ text: e.id, width: e.label.width, height: e.label.height }] } : {}),
+      })),
     };
     const out = await this.elk.layout(input);
     const nodes: LayoutResult["nodes"] = {};
@@ -50,7 +57,11 @@ export class ElkLayoutEngine implements LayoutEngine {
     for (const e of out.edges ?? []) {
       const s = e.sections?.[0];
       if (!s) throw new Error(`ELK returned no route for edge ${e.id}`);
-      edges[e.id] = { points: [s.startPoint, ...(s.bendPoints ?? []), s.endPoint].map((p) => ({ x: p.x, y: p.y })) };
+      const points = [s.startPoint, ...(s.bendPoints ?? []), s.endPoint].map((p) => ({ x: p.x, y: p.y }));
+      const l = e.labels?.[0];
+      edges[e.id] = l && l.x !== undefined && l.y !== undefined
+        ? { points, labelAt: { x: l.x + (l.width ?? 0) / 2, y: l.y + (l.height ?? 0) / 2 } }
+        : { points };
     }
     return { width: out.width ?? 0, height: out.height ?? 0, nodes, edges };
   }

@@ -1,75 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 239" width="1200" height="239" data-orrery="1">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1669 254" width="1669" height="254" data-orrery="1">
 <title>Typical web application</title>
 <style>.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
-.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>
 <g class="edges">
-<path class="edge" data-edge="client->lb" d="M174 158 L244 158" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="client->lb" d="M174 158 L232 158" style="stroke-width:4.2;animation-duration:0.8s"/>
-<text class="edge-label" x="209" y="150">HTTPS</text>
-<path class="edge" data-edge="lb->app1" d="M375 150 L400 150 L400 62 L445 62" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="lb->app1" d="M375 150 L400 150 L400 62 L433 62" style="stroke-width:2.9;animation-duration:1.9s"/>
-<path class="edge" data-edge="lb->app2" d="M375 166 L445 166" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="lb->app2" d="M375 166 L433 166" style="stroke-width:2.9;animation-duration:1.9s"/>
-<path class="edge" data-edge="app1->cache" d="M569 62 L639 62" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app1->cache" d="M569 62 L627 62" style="stroke-width:3.6;animation-duration:1.3s"/>
-<text class="edge-label" x="604" y="54">GET/SET</text>
-<path class="edge" data-edge="app2->cache" d="M569 154 L594 154 L594 78 L639 78" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app2->cache" d="M569 154 L594 154 L594 78 L627 78" style="stroke-width:3.6;animation-duration:1.3s"/>
-<text class="edge-label" x="594" y="98">GET/SET</text>
-<path class="edge" data-edge="app1->db" d="M569 50 L594 50 L594 20 L1037 20 L1037 183 L1072 183" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app1->db" d="M569 50 L594 50 L594 20 L1037 20 L1037 183 L1060 183" style="stroke-width:2.4;animation-duration:2.3s"/>
-<text class="edge-label" x="887" y="12">SQL</text>
-<path class="edge" data-edge="app2->db" d="M569 178 L594 178 L594 207 L1072 207" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app2->db" d="M569 178 L594 178 L594 207 L1060 207" style="stroke-width:2.4;animation-duration:2.3s"/>
-<text class="edge-label" x="806" y="199">SQL</text>
-<path class="edge" data-edge="app1->queue" d="M569 74 L604 74 L604 150 L639 150" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app1->queue" d="M569 74 L604 74 L604 150 L627 150" style="stroke-width:2;animation-duration:2.6s"/>
-<text class="edge-label" x="604" y="104">publish</text>
-<path class="edge" data-edge="app2->queue" d="M569 166 L639 166" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="app2->queue" d="M569 166 L627 166" style="stroke-width:2;animation-duration:2.6s"/>
-<text class="edge-label" x="604" y="158">publish</text>
-<path class="edge" data-edge="queue->worker" d="M770 158 L840 158" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="queue->worker" d="M770 158 L828 158" style="stroke-width:2.3;animation-duration:2.4s"/>
-<text class="edge-label" x="805" y="150">consume</text>
-<path class="edge" data-edge="worker->db" d="M1002 158 L1027 158 L1027 195 L1072 195" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="worker->db" d="M1002 158 L1027 158 L1027 195 L1060 195" style="stroke-width:1.8;animation-duration:2.8s"/>
-<text class="edge-label" x="1027" y="178.5">SQL</text>
+<path class="edge" data-edge="client->lb" d="M174 194 L355 194" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="client->lb" d="M174 194 L343 194" style="stroke-width:4.2;animation-duration:0.8s"/>
+<text class="edge-label" x="264.5" y="205">HTTPS</text>
+<path class="edge" data-edge="lb->app1" d="M486 186 L511 186 L511 114 L556 114" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="lb->app1" d="M486 186 L511 186 L511 114 L544 114" style="stroke-width:2.9;animation-duration:1.9s"/>
+<path class="edge" data-edge="lb->app2" d="M486 202 L556 202" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="lb->app2" d="M486 202 L544 202" style="stroke-width:2.9;animation-duration:1.9s"/>
+<path class="edge" data-edge="app1->cache" d="M680 114 L715 114 L715 46 L840 46 L840 65 L885 65" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app1->cache" d="M680 114 L715 114 L715 46 L840 46 L840 65 L873 65" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="787.5" y="57">GET/SET</text>
+<path class="edge" data-edge="app2->cache" d="M680 190 L725 190 L725 81 L885 81" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app2->cache" d="M680 190 L725 190 L725 81 L873 81" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="787.5" y="92">GET/SET</text>
+<path class="edge" data-edge="app1->db" d="M680 102 L705 102 L705 20 L1496 20 L1496 149 L1541 149" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app1->db" d="M680 102 L705 102 L705 20 L1496 20 L1496 149 L1529 149" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1113.5" y="31">SQL</text>
+<path class="edge" data-edge="app2->db" d="M680 214 L1496 214 L1496 173 L1541 173" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app2->db" d="M680 214 L1496 214 L1496 173 L1529 173" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1113.5" y="225">SQL</text>
+<path class="edge" data-edge="app1->queue" d="M680 126 L840 126 L840 153 L885 153" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app1->queue" d="M680 126 L840 126 L840 153 L873 153" style="stroke-width:2;animation-duration:2.6s"/>
+<text class="edge-label" x="787.5" y="137">publish</text>
+<path class="edge" data-edge="app2->queue" d="M680 202 L735 202 L735 169 L885 169" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="app2->queue" d="M680 202 L735 202 L735 169 L873 169" style="stroke-width:2;animation-duration:2.6s"/>
+<text class="edge-label" x="787.5" y="180">publish</text>
+<path class="edge" data-edge="queue->worker" d="M1016 161 L1211 161" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="queue->worker" d="M1016 161 L1199 161" style="stroke-width:2.3;animation-duration:2.4s"/>
+<text class="edge-label" x="1113.5" y="172">consume</text>
+<path class="edge" data-edge="worker->db" d="M1373 161 L1541 161" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->db" d="M1373 161 L1529 161" style="stroke-width:1.8;animation-duration:2.8s"/>
+<text class="edge-label" x="1457" y="172">SQL</text>
 </g>
 <g class="nodes">
-<g class="node" data-node="client" transform="translate(20 134)">
+<g class="node" data-node="client" transform="translate(20 170)">
 <rect class="node-box" width="154" height="48" rx="8"/>
 <text class="node-label" x="77" y="24">Browser / Mobile</text>
 </g>
-<g class="node" data-node="lb" transform="translate(244 134)">
+<g class="node" data-node="lb" transform="translate(355 170)">
 <rect class="node-box" width="131" height="48" rx="8"/>
 <text class="node-label" x="65.5" y="24">Load balancer</text>
 </g>
-<g class="node" data-node="app1" transform="translate(445 38)">
+<g class="node" data-node="app1" transform="translate(556 90)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">App server 1</text>
 </g>
-<g class="node" data-node="app2" transform="translate(445 142)">
+<g class="node" data-node="app2" transform="translate(556 178)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">App server 2</text>
 </g>
-<g class="node" data-node="cache" transform="translate(639 46)">
+<g class="node" data-node="cache" transform="translate(885 49)">
 <rect class="node-box" width="116" height="48" rx="8"/>
 <text class="node-label" x="58" y="24">Redis cache</text>
 </g>
-<g class="node" data-node="db" transform="translate(1072 171)">
+<g class="node" data-node="db" transform="translate(1541 137)">
 <rect class="node-box" width="108" height="48" rx="8"/>
 <text class="node-label" x="54" y="24">PostgreSQL</text>
 </g>
-<g class="node" data-node="queue" transform="translate(639 134)">
+<g class="node" data-node="queue" transform="translate(885 137)">
 <rect class="node-box" width="131" height="48" rx="8"/>
 <text class="node-label" x="65.5" y="24">Message queue</text>
 </g>
-<g class="node" data-node="worker" transform="translate(840 134)">
+<g class="node" data-node="worker" transform="translate(1211 137)">
 <rect class="node-box" width="162" height="48" rx="8"/>
 <text class="node-label" x="81" y="24">Background worker</text>
 </g>

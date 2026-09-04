@@ -4,7 +4,7 @@ import type { Direction } from "./types.js";
 export interface LayoutGraph {
   direction: Direction;
   nodes: { id: string; width: number; height: number }[];
-  edges: { id: string; from: string; to: string }[];
+  edges: { id: string; from: string; to: string; label?: { width: number; height: number } }[];
 }
 
 export interface Point { x: number; y: number }
@@ -14,7 +14,7 @@ export interface LayoutResult {
   width: number;
   height: number;
   nodes: Record<string, Box>;
-  /** Polyline route per edge id, from source boundary to target boundary. */
+  /** Polyline route per edge id, from source boundary to target boundary. `labelAt` is the label's centre when the graph supplied a label size. */
   edges: Record<string, { points: Point[]; labelAt?: Point }>;
 }
 
@@ -24,7 +24,7 @@ export interface LayoutEngine {
 }
 
 const MARGIN = 20;
-const GAP = 60;
+const GAP = 80;
 
 /**
  * Places nodes in a single row (direction "right") or column ("down"), in input order,
@@ -50,7 +50,13 @@ export class FakeLayoutEngine implements LayoutEngine {
       const points = horizontal
         ? [{ x: a.x + a.width, y: a.y + a.height / 2 }, { x: b.x, y: b.y + b.height / 2 }]
         : [{ x: a.x + a.width / 2, y: a.y + a.height }, { x: b.x + b.width / 2, y: b.y }];
-      edges[e.id] = { points };
+      // Label sits in the gap right after the source, so it never lands on a node even when the edge skips past siblings.
+      const labelAt = e.label
+        ? horizontal
+          ? { x: a.x + a.width + GAP / 2, y: a.y + a.height / 2 }
+          : { x: a.x + a.width / 2, y: a.y + a.height + GAP / 2 }
+        : undefined;
+      edges[e.id] = labelAt ? { points, labelAt } : { points };
     }
     return {
       width: horizontal ? main : cross + 2 * MARGIN,

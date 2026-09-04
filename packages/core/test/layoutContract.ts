@@ -83,6 +83,27 @@ export function layoutContract(name: string, make: () => LayoutEngine) {
       });
     }
 
+    it("places edge labels inside the canvas and clear of every node when sizes are given", async () => {
+      const labelled: LayoutGraph = {
+        ...fan,
+        edges: fan.edges.map((e) => ({ ...e, label: { width: 70, height: 16 } })),
+      };
+      const r = await make().layout(labelled);
+      for (const e of labelled.edges) {
+        const at = r.edges[e.id]!.labelAt;
+        expect(at, `${e.id} labelAt`).toBeDefined();
+        const box = { x: at!.x - 35, y: at!.y - 8, width: 70, height: 16 };
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.y).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(r.width);
+        expect(box.y + box.height).toBeLessThanOrEqual(r.height);
+        for (const [id, n] of Object.entries(r.nodes)) {
+          const overlap = box.x < n.x + n.width && n.x < box.x + box.width && box.y < n.y + n.height && n.y < box.y + box.height;
+          expect(overlap, `${e.id} label overlaps node ${id}`).toBe(false);
+        }
+      }
+    });
+
     it("respects direction: chain flows left to right", async () => {
       const r = await make().layout(chain);
       expect(r.nodes.web!.x).toBeLessThan(r.nodes.api!.x);

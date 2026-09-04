@@ -41,7 +41,7 @@ const STYLE = `
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
-.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 `.trim();
 
@@ -68,8 +68,9 @@ function edgeMarkup(e: DiagramEdge, i: number, layout: LayoutResult): string {
     `<path class="flow" data-flow="${key}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
   ];
   if (e.label !== undefined) {
-    const m = route.labelAt ?? midpoint(route.points);
-    parts.push(`<text class="edge-label" x="${num(m.x)}" y="${num(m.y - 8)}">${esc(e.label)}</text>`);
+    // Engines that know label sizes hand back a centre; otherwise sit just above the route's midpoint.
+    const m = route.labelAt ?? (({ x, y }) => ({ x, y: y - 8 }))(midpoint(route.points));
+    parts.push(`<text class="edge-label" x="${num(m.x)}" y="${num(m.y)}">${esc(e.label)}</text>`);
   }
   return parts.join("\n");
 }
