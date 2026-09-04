@@ -173,6 +173,17 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 **Packages in M0** (pnpm workspace, vitest): `@orrery/core` (schema, validator, model, `LayoutEngine` interface, SVG renderer), `@orrery/layout-elk` (the only importer of elkjs), `orrery` (CLI). Splitting `core` further waits until a second consumer exists.
 
+### Status (2026-09-05)
+
+M3 shipped: the runtime lives inside the raw SVG. `orrery render` now emits the interactive document by default: every
+view pre-laid-out and embedded (first visible, so `<img>` shows the animated first view), the validated model as JSON,
+and a 6 KB gzipped runtime. Opened directly: panel with outline, view and scenario pickers, step-through with notes,
+click to fail / shift-click to switch off with live propagation, hover to highlight neighbours, camera zoom on select,
+view switching with a node morph, keyboard shortcuts, reset. No layout engine in the browser. Phase continuity when
+load changes. `--static` gives the old single-view file; `--scenario` implies static. Frame tooling inspects only the
+visible view. Runtime behaviour is tested in jsdom (panel, toggles, scenarios, view switch, keyboard); the minified
+bundle was also booted as a real SVG document in jsdom. Not yet verified in a real browser by a human.
+
 ### Status (2026-09-04, night)
 
 M2 shipped: node `state`, `dependsOn`/`fallback` edges, scenarios with cumulative steps, propagation as a pure fixed-point
@@ -205,7 +216,7 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 |---|---|---|
 | M1 | Model/view schema shape (edge ids and kinds, node and group kinds, `views` with `scope`); nested groups; neutral glyph set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment; `render --view` works |
 | M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | Done: `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
-| M3 | Runtime inside the SVG: outline, camera zoom (viewBox tween), toggles with failure propagation, scenario picker, step-through, keyboard nav; **all views pre-laid-out and embedded in one file, with a morph transition between views** (stable ids make boxes slide to their new positions); < 25 KB gz. No layout engine in the browser. | Click-through test passes on the same file that animates in the README; switching to a scoped view morphs rather than cuts |
+| M3 | Runtime inside the SVG: outline, camera zoom, toggles with failure propagation, scenario picker, step-through, keyboard nav; all views embedded in one file with a morph between views; < 25 KB gz (actual: ~6 KB). No layout engine in the browser. | Done in jsdom; awaiting a human click-through in a browser |
 | M3b | `sequence` view type: lifelines from nodes, messages from an interaction; and `walkthrough`: a token moving along the topology for the same interaction | A click on a component swaps to its sequence view with the morph |
 | M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |
 | M5 | Demo repo, docs site, MCP server, agent eval harness with retry counts | Public launch |

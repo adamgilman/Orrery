@@ -31,7 +31,8 @@ const cards = sources.map((file) => {
     <button data-tab="json">source JSON</button>
   </div>
   <div class="pane on" data-pane="img"><div class="scroll"><img src="svg/${name}.svg" alt="${esc(d.title ?? name)}"></div>
-    <p class="hint">Plain image tag. Script and pointer events are stripped in this mode, animation is not. <a href="svg/${name}.svg" target="_blank">Open the SVG file</a>.</p></div>
+    <p class="hint">Plain image tag: this is what a README shows. Script and pointer events are stripped, animation is not.
+    <a href="svg/${name}.svg" target="_blank"><strong>Open interactive</strong></a> — the same file as a document: outline, click to fail, scenarios, views.</p></div>
   <div class="pane" data-pane="inline"><div class="scroll">${svg}</div></div>
   <div class="pane" data-pane="json"><pre><code>${esc(json)}</code></pre></div>
 </section>`;
