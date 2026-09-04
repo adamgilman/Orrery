@@ -1,0 +1,44 @@
+{
+  "$schema": "https://orrery.dev/schema/v1.json",
+  "title": "Checkout service",
+  "direction": "right",
+  "groups": [
+    { "id": "edge", "label": "Edge", "kind": "tier" },
+    { "id": "region", "label": "us-east-1", "kind": "region" },
+    { "id": "app", "label": "Application", "kind": "tier", "parent": "region" },
+    { "id": "data", "label": "Data", "kind": "tier", "parent": "region" },
+    { "id": "async", "label": "Async", "kind": "tier", "parent": "region" }
+  ],
+  "nodes": [
+    { "id": "browser", "label": "Browser", "kind": "client" },
+    { "id": "cdn", "label": "CDN", "kind": "gateway", "group": "edge" },
+    { "id": "api", "label": "Checkout API", "kind": "service", "group": "app" },
+    { "id": "pricing", "label": "Pricing", "kind": "function", "group": "app" },
+    { "id": "cache", "label": "Session cache", "kind": "cache", "group": "data" },
+    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" },
+    { "id": "replica", "label": "Orders DB (replica)", "kind": "database", "group": "data" },
+    { "id": "queue", "label": "Order events", "kind": "queue", "group": "async" },
+    { "id": "worker", "label": "Fulfilment worker", "kind": "service", "group": "async" },
+    { "id": "s3", "label": "Receipts", "kind": "storage", "group": "async" },
+    { "id": "psp", "label": "Payment provider", "kind": "external" }
+  ],
+  "edges": [
+    { "from": "browser", "to": "cdn", "load": 0.9, "label": "HTTPS" },
+    { "from": "cdn", "to": "api", "load": 0.8 },
+    { "from": "api", "to": "pricing", "load": 0.6 },
+    { "from": "api", "to": "cache", "load": 0.6 },
+    { "from": "api", "to": "db", "load": 0.5, "label": "writes" },
+    { "id": "api-reads", "from": "api", "to": "replica", "load": 0.4, "label": "reads" },
+    { "from": "db", "to": "replica", "kind": "replication", "load": 0.2 },
+    { "from": "api", "to": "psp", "load": 0.3, "label": "charge" },
+    { "from": "api", "to": "queue", "kind": "async", "load": 0.4, "label": "order.placed" },
+    { "from": "queue", "to": "worker", "kind": "async", "load": 0.4 },
+    { "from": "worker", "to": "s3", "kind": "dataflow", "load": 0.2 },
+    { "from": "worker", "to": "db", "load": 0.1 }
+  ],
+  "views": [
+    { "id": "overview" },
+    { "id": "data", "title": "Data tier", "scope": "data", "direction": "down" },
+    { "id": "region", "title": "us-east-1 only", "scope": "region" }
+  ]
+}

@@ -17,3 +17,17 @@ describe("ElkLayoutEngine: model order", () => {
     expect(r.nodes.s2!.x).toBeLessThan(r.nodes.s3!.x);
   });
 });
+
+describe("ElkLayoutEngine: compound graphs", () => {
+  it("lays out nested groups with edges crossing hierarchy levels (regression: considerModelOrder crashed ELK)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const { validate, toLayoutGraph } = await import("@orrery/core");
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/checkout.json"), "utf8")));
+    if (!r.ok) throw new Error();
+    const out = await new ElkLayoutEngine().layout(toLayoutGraph(r.diagram));
+    expect(Object.keys(out.nodes)).toHaveLength(11);
+    expect(Object.keys(out.groups)).toHaveLength(5);
+    expect(Object.keys(out.edges)).toHaveLength(12);
+  });
+});
