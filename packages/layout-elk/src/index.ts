@@ -13,6 +13,8 @@ export interface ElkOptions {
   layerSpacing?: number;
   /** Distance between nodes in the same layer. */
   nodeSpacing?: number;
+  /** Raw ELK options merged last. For tuning experiments; production defaults live in this file. */
+  extra?: Record<string, string>;
 }
 
 /** LayoutEngine backed by the Eclipse Layout Kernel (layered algorithm, orthogonal routing). */
@@ -21,7 +23,7 @@ export class ElkLayoutEngine implements LayoutEngine {
   constructor(private readonly options: ElkOptions = {}) {}
 
   async layout(graph: LayoutGraph): Promise<LayoutResult> {
-    const { layerSpacing = 40, nodeSpacing = 40 } = this.options;
+    const { layerSpacing = 40, nodeSpacing = 40, extra = {} } = this.options;
     const groups = graph.groups ?? [];
     const common = {
       "elk.algorithm": "layered",
@@ -41,6 +43,7 @@ export class ElkLayoutEngine implements LayoutEngine {
       ...(groups.length === 0 ? { "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES" } : {}),
       // Inline labels: ELK reserves room on the edge itself, so labels never collide with nodes or each other.
       "elk.edgeLabels.inline": "true",
+      ...extra,
     };
     // Build the compound-node tree: groups become ELK nodes with padding that reserves the label band.
     const elkNodes = new Map<string, ElkNode>();

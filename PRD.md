@@ -84,9 +84,9 @@ Not a general diagram meta-model. Flowcharts, ER, class, state machines and Gant
   // ---- timelines (M2+) ----
   "scenarios": [
     { "id": "db-failover", "label": "Primary DB fails",
-      "steps": [
-        { "set": { "db": { "state": "failed" } }, "note": "Primary goes down" },
-        { "set": { "edges": { "api->db-r": { "load": 0.5 } } }, "note": "API fails over to replica" }
+      "steps": [                                                        // cumulative: step k applies steps 1..k
+        { "note": "Primary goes down",            "nodes": { "db": { "state": "failed" } } },
+        { "note": "API fails over to replica",    "edges": { "api->db-r": { "load": 0.5 } } }
       ] }
   ],
   "interactions": [                                                       // designed, not built until the runtime can play it
@@ -177,8 +177,11 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 M1 first pass shipped: model/view schema (edge ids and kinds, node and group kinds, nested groups, views with scope),
 containment contract, ELK compound layout, group frames, kind glyphs, edge-kind styles, `render --view`. Found and
-worked around an ELK 0.9 crash (considerModelOrder inside compound graphs). Remaining M1 polish: edge routes hugging
-group frames, spacing, and a second fresh-agent test against the new schema.
+worked around an ELK 0.9 crash (considerModelOrder inside compound graphs). Second fresh-agent test passed first try (13 nodes, 6
+nested groups, 16 edges, drill-down view). Polish pass done: a measured sweep of 15 ELK options (`tools/layout-tune.mjs`,
+scored by bends, edge length, edges through nodes, foreign-frame crossings) found no improvement over the baseline, which
+already scores zero on the last two. Long over-the-top routes are inherent to layered layout; the runtime's focus mode
+(M3) is the planned answer, not more tuning. M1 closed.
 
 ### Status (2026-09-04, M0)
 
@@ -194,7 +197,8 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 |---|---|---|
 | M1 | Model/view schema shape (edge ids and kinds, node and group kinds, `views` with `scope`); nested groups; neutral glyph set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment; `render --view` works |
 | M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
-| M3 | Runtime inside the SVG: outline, focus, toggles, scenario picker, step-through, keyboard nav; < 25 KB gz | Click-through test passes on the same file that animates in the README |
+| M3 | Runtime inside the SVG: outline, camera zoom (viewBox tween), toggles with failure propagation, scenario picker, step-through, keyboard nav; **all views pre-laid-out and embedded in one file, with a morph transition between views** (stable ids make boxes slide to their new positions); < 25 KB gz. No layout engine in the browser. | Click-through test passes on the same file that animates in the README; switching to a scoped view morphs rather than cuts |
+| M3b | `sequence` view type: lifelines from nodes, messages from an interaction; and `walkthrough`: a token moving along the topology for the same interaction | A click on a component swaps to its sequence view with the morph |
 | M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |
 | M5 | Demo repo, docs site, MCP server, agent eval harness with retry counts | Public launch |
 
@@ -226,7 +230,7 @@ kept here so the model grows from evidence rather than guesswork:
 - Subcommand `--help` (fixed), scope semantics spelled out in the schema (fixed).
 
 ## 11. Open questions
-1. SMIL vs CSS keyframes as the primary animation mechanism. Both work in `<img>`. CSS is easier to freeze at time *t* for GIF export; SMIL is friendlier to `begin`/`end` control. Leaning CSS.
+1. **Resolved: CSS keyframes, not SMIL** (2026-09-04). Both play inside `<img>`; nothing outside browsers plays either. CSS wins on control: the Web Animations API gives the runtime one timeline (pause, scrub, playback rate) over every animation. Rule that follows: animation stays a pure function of (model, t); when load changes at runtime, continue from the current phase, never restart.
 2. Layout hint vocabulary: how much can we expose before agents start micromanaging? Start with `direction`, `rank`, `sameRank`, and nothing else.
 3. Icon licensing per provider. Verify AWS/GCP/Azure architecture icon terms before bundling.
 4. Schema hosting domain (`orrery.dev`?) and package scope (`@orrery/*` availability on npm).
