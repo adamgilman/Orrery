@@ -170,6 +170,8 @@ export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
 export interface DocumentOptions {
   /** JavaScript source to embed as the runtime. Empty string embeds nothing (static document). */
   runtime: string;
+  /** View shown first (visible inside <img>); default: the first declared view. */
+  view?: string;
 }
 
 /**
@@ -178,8 +180,9 @@ export interface DocumentOptions {
  */
 export async function renderDocument(diagram: Diagram, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
   const model = propagate(diagram);
+  const first = selectView(model, options.view);
   const layers: ViewLayer[] = [];
-  for (const view of model.views) {
+  for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
     const scoped = scopeDiagram(model, view);
     const layout = await engine.layout(toLayoutGraph(scoped));
     layers.push({ view, title: view.title ?? diagram.title ?? view.id, width: layout.width, height: layout.height, markup: renderView(scoped, layout) });

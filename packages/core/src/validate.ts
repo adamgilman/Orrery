@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import type { Diagram, Direction, EdgeKind, GroupKind, NodeKind, NodeState, ViewType } from "./types.js";
 
@@ -15,7 +16,7 @@ export class ValidationError {
 
 export type ValidationResult = { ok: true; diagram: Diagram } | { ok: false; errors: ValidationError[] };
 
-export const schema: object = JSON.parse(readFileSync(new URL("../schema/v1.json", import.meta.url), "utf8"));
+export const schema: object = JSON.parse(readFileSync(join(import.meta.dirname, "../schema/v1.json"), "utf8"));
 
 const ajv = new Ajv({ allErrors: true, useDefaults: true, strict: true });
 const checkSchema = ajv.compile(schema);

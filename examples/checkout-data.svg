@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 422 224" width="422" height="224" data-orrery="1">
-<title>Data tier</title>
+<title>Checkout service</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-region .group-box{stroke-dasharray:8 6}
 .group-zone .group-box{stroke-dasharray:3 5}
@@ -26,8 +26,10 @@
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="data" data-title="Data tier" data-size="422 224">
 <g class="groups">
-<g class="group group-tier" data-group="data">
+<g class="group group-tier" data-group="data" data-bbox="20 20 382 184">
 <rect class="group-box" x="20" y="20" width="382" height="184" rx="10"/>
 <text class="group-label" x="32" y="36">Data</text>
 </g>
@@ -37,20 +39,240 @@
 <path class="flow" data-flow="db->replica" data-load="0.2" d="M289.5 104 L289.5 132" style="stroke-width:2.1;animation-duration:2.5s"/>
 </g>
 <g class="nodes">
-<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" transform="translate(32 56)">
+<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" data-bbox="32 56 155 48" transform="translate(32 56)">
 <rect class="node-box" width="155" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
 <text class="node-label" x="95.5" y="24">Session cache</text>
 </g>
-<g class="node node-database" data-node="db" data-kind="database" data-state="on" transform="translate(227 56)">
+<g class="node node-database" data-node="db" data-kind="database" data-state="on" data-bbox="227 56 125 48" transform="translate(227 56)">
 <rect class="node-box" width="125" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="80.5" y="24">Orders DB</text>
 </g>
-<g class="node node-database" data-node="replica" data-kind="database" data-state="on" transform="translate(189 144)">
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="189 144 201 48" transform="translate(189 144)">
 <rect class="node-box" width="201" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
 </g>
 </g>
+</g>
+<g class="view" data-view="overview" data-title="Checkout service" data-size="2351.5 359" style="display:none">
+<g class="groups">
+<g class="group group-tier" data-group="edge" data-bbox="258.5 156.4 104 96">
+<rect class="group-box" x="258.5" y="156.4" width="104" height="96" rx="10"/>
+<text class="group-label" x="270.5" y="172.4">Edge</text>
+</g>
+<g class="group group-region" data-group="region" data-bbox="417.5 20 1624.5 308">
+<rect class="group-box" x="417.5" y="20" width="1624.5" height="308" rx="10"/>
+<text class="group-label" x="429.5" y="36">us-east-1</text>
+</g>
+<g class="group group-tier" data-group="app" data-bbox="437 78 328 196">
+<rect class="group-box" x="437" y="78" width="328" height="196" rx="10"/>
+<text class="group-label" x="449" y="94">Application</text>
+</g>
+<g class="group group-tier" data-group="data" data-bbox="1600 73 430 210">
+<rect class="group-box" x="1600" y="73" width="430" height="210" rx="10"/>
+<text class="group-label" x="1612" y="89">Data</text>
+</g>
+<g class="group group-tier" data-group="async" data-bbox="994 82 541 122">
+<rect class="group-box" x="994" y="82" width="541" height="122" rx="10"/>
+<text class="group-label" x="1006" y="98">Async</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync" data-edge="browser->cdn" data-kind="sync" d="M130 216.4 L270.5 216.4" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="browser->cdn" data-load="0.9" d="M130 216.4 L258.5 216.4" style="stroke-width:4.2;animation-duration:0.8s"/>
+<text class="edge-label" x="190.5" y="227.4">HTTPS</text>
+<path class="edge edge-sync" data-edge="cdn->api" data-kind="sync" d="M350.5 216.4 L449 216.4" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="cdn->api" data-load="0.8" d="M350.5 216.4 L437 216.4" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-sync" data-edge="api->pricing" data-kind="sync" d="M573 206.1 L608 206.1 L608 164 L643 164" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->pricing" data-load="0.6" d="M573 206.1 L608 206.1 L608 164 L631 164" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->cache" data-kind="sync" d="M573 199.3 L598 199.3 L598 114 L797.5 114 L797.5 56 L1567.5 56 L1567.5 133 L1612 133" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->cache" data-load="0.6" d="M573 199.3 L598 199.3 L598 114 L797.5 114 L797.5 56 L1567.5 56 L1567.5 133 L1600 133" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M573 219.9 L618 219.9 L618 229 L1622 229" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.5" d="M573 219.9 L618 219.9 L618 229 L1610 229" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="889.5" y="218">writes</text>
+<path class="edge edge-sync" data-edge="api-reads" data-kind="sync" d="M573 226.7 L608 226.7 L608 245 L807.5 245 L807.5 270 L1792 270 L1792 237 L1817 237" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api-reads" data-load="0" d="M573 226.7 L608 226.7 L608 245 L807.5 245 L807.5 270 L1792 270 L1792 237 L1805 237" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="889.5" y="281">reads (failover)</text>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M1747 221 L1817 221" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M1747 221 L1805 221" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="api->psp" data-kind="sync" d="M573 233.6 L598 233.6 L598 261 L797.5 261 L797.5 315 L2177.5 315" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->psp" data-load="0.3" d="M573 233.6 L598 233.6 L598 261 L797.5 261 L797.5 315 L2165.5 315" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="2113.5" y="326">charge</text>
+<path class="edge edge-async" data-edge="api->queue" data-kind="async" d="M573 213 L797.5 213 L797.5 150 L1006 150" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->queue" data-load="0.4" d="M573 213 L797.5 213 L797.5 150 L994 150" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="889.5" y="161">order.placed</text>
+<path class="edge edge-async" data-edge="queue->worker" data-kind="async" d="M1154 150 L1194 150" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="queue->worker" data-load="0.4" d="M1154 150 L1182 150" style="stroke-width:2.7;animation-duration:2s"/>
+<path class="edge edge-dataflow" data-edge="worker->s3" data-kind="dataflow" d="M1356 142 L1406 142" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->s3" data-load="0.2" d="M1356 142 L1394 142" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="worker->db" data-kind="sync" d="M1356 158 L1381 158 L1381 191 L1567.5 191 L1567.5 213 L1622 213" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->db" data-load="0.1" d="M1356 158 L1381 158 L1381 191 L1567.5 191 L1567.5 213 L1610 213" style="stroke-width:1.8;animation-duration:2.8s"/>
+</g>
+<g class="nodes">
+<g class="node node-client" data-node="browser" data-kind="client" data-state="on" data-bbox="20 192.4 110 48" transform="translate(20 192.4)">
+<rect class="node-box" width="110" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="73" y="24">Browser</text>
+</g>
+<g class="node node-gateway" data-node="cdn" data-kind="gateway" data-state="on" data-bbox="270.5 192.4 80 48" transform="translate(270.5 192.4)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="58" y="24">CDN</text>
+</g>
+<g class="node node-service" data-node="api" data-kind="service" data-state="on" data-bbox="449 192.4 124 48" transform="translate(449 192.4)">
+<rect class="node-box" width="124" height="48" rx="8"/>
+<text class="node-label" x="62" y="24">Checkout API</text>
+</g>
+<g class="node node-function" data-node="pricing" data-kind="function" data-state="on" data-bbox="643 140 110 48" transform="translate(643 140)">
+<rect class="node-box" width="110" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="73" y="24">Pricing</text>
+</g>
+<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" data-bbox="1612 109 155 48" transform="translate(1612 109)">
+<rect class="node-box" width="155" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="95.5" y="24">Session cache</text>
+</g>
+<g class="node node-database" data-node="db" data-kind="database" data-state="on" data-bbox="1622 197 125 48" transform="translate(1622 197)">
+<rect class="node-box" width="125" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="80.5" y="24">Orders DB</text>
+</g>
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="1817 205 201 48" transform="translate(1817 205)">
+<rect class="node-box" width="201" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
+</g>
+<g class="node node-queue" data-node="queue" data-kind="queue" data-state="on" data-bbox="1006 126 148 48" transform="translate(1006 126)">
+<rect class="node-box" width="148" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><rect x="1.5" y="5" width="3.5" height="6" rx=".5"/><rect x="6.25" y="5" width="3.5" height="6" rx=".5"/><rect x="11" y="5" width="3.5" height="6" rx=".5"/></g>
+<text class="node-label" x="92" y="24">Order events</text>
+</g>
+<g class="node node-service" data-node="worker" data-kind="service" data-state="on" data-bbox="1194 126 162 48" transform="translate(1194 126)">
+<rect class="node-box" width="162" height="48" rx="8"/>
+<text class="node-label" x="81" y="24">Fulfilment worker</text>
+</g>
+<g class="node node-storage" data-node="s3" data-kind="storage" data-state="on" data-bbox="1406 118 117 48" transform="translate(1406 118)">
+<rect class="node-box" width="117" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
+<text class="node-label" x="76.5" y="24">Receipts</text>
+</g>
+<g class="node node-external" data-node="psp" data-kind="external" data-state="on" data-bbox="2177.5 291 154 48" transform="translate(2177.5 291)">
+<rect class="node-box" width="154" height="48" rx="8"/>
+<text class="node-label" x="77" y="24">Payment provider</text>
+</g>
+</g>
+</g>
+<g class="view" data-view="region" data-title="us-east-1 only" data-size="1677 392" style="display:none">
+<g class="groups">
+<g class="group group-region" data-group="region" data-bbox="20 20 1637 352">
+<rect class="group-box" x="20" y="20" width="1637" height="352" rx="10"/>
+<text class="group-label" x="32" y="36">us-east-1</text>
+</g>
+<g class="group group-tier" data-group="app" data-bbox="32 56 338 170">
+<rect class="group-box" x="32" y="56" width="338" height="170" rx="10"/>
+<text class="group-label" x="44" y="72">Application</text>
+</g>
+<g class="group group-tier" data-group="data" data-bbox="1215 150 430 210">
+<rect class="group-box" x="1215" y="150" width="430" height="210" rx="10"/>
+<text class="group-label" x="1227" y="166">Data</text>
+</g>
+<g class="group group-tier" data-group="async" data-bbox="589 223 541 122">
+<rect class="group-box" x="589" y="223" width="541" height="122" rx="10"/>
+<text class="group-label" x="601" y="239">Async</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync" data-edge="api->pricing" data-kind="sync" d="M168 116 L248 116" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->pricing" data-load="0.6" d="M168 116 L236 116" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->cache" data-kind="sync" d="M168 132 L213 132 L213 181 L402.5 181 L402.5 171 L1172.5 171 L1172.5 236 L1227 236" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->cache" data-load="0.6" d="M168 132 L213 132 L213 181 L402.5 181 L402.5 171 L1172.5 171 L1172.5 236 L1215 236" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M168 140 L203 140 L203 197 L1162.5 197 L1162.5 316 L1237 316" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.5" d="M168 140 L203 140 L203 197 L1162.5 197 L1162.5 316 L1225 316" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="484.5" y="208">writes</text>
+<path class="edge edge-sync" data-edge="api-reads" data-kind="sync" d="M168 124 L223 124 L223 165 L402.5 165 L402.5 126 L1182.5 126 L1182.5 186 L1407 186 L1407 308 L1432 308" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api-reads" data-load="0" d="M168 124 L223 124 L223 165 L402.5 165 L402.5 126 L1182.5 126 L1182.5 186 L1407 186 L1407 308 L1420 308" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="484.5" y="137">reads (failover)</text>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M1362 324 L1432 324" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M1362 324 L1420 324" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-async" data-edge="api->queue" data-kind="async" d="M168 148 L193 148 L193 213 L402.5 213 L402.5 291 L601 291" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->queue" data-load="0.4" d="M168 148 L193 148 L193 213 L402.5 213 L402.5 291 L589 291" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="484.5" y="302">order.placed</text>
+<path class="edge edge-async" data-edge="queue->worker" data-kind="async" d="M749 291 L789 291" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="queue->worker" data-load="0.4" d="M749 291 L777 291" style="stroke-width:2.7;animation-duration:2s"/>
+<path class="edge edge-dataflow" data-edge="worker->s3" data-kind="dataflow" d="M951 283 L1001 283" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->s3" data-load="0.2" d="M951 283 L989 283" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="worker->db" data-kind="sync" d="M951 299 L976 299 L976 332 L1237 332" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->db" data-load="0.1" d="M951 299 L976 299 L976 332 L1225 332" style="stroke-width:1.8;animation-duration:2.8s"/>
+</g>
+<g class="nodes">
+<g class="node node-service" data-node="api" data-kind="service" data-state="on" data-bbox="44 108 124 48" transform="translate(44 108)">
+<rect class="node-box" width="124" height="48" rx="8"/>
+<text class="node-label" x="62" y="24">Checkout API</text>
+</g>
+<g class="node node-function" data-node="pricing" data-kind="function" data-state="on" data-bbox="248 92 110 48" transform="translate(248 92)">
+<rect class="node-box" width="110" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="73" y="24">Pricing</text>
+</g>
+<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" data-bbox="1227 212 155 48" transform="translate(1227 212)">
+<rect class="node-box" width="155" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="95.5" y="24">Session cache</text>
+</g>
+<g class="node node-database" data-node="db" data-kind="database" data-state="on" data-bbox="1237 300 125 48" transform="translate(1237 300)">
+<rect class="node-box" width="125" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="80.5" y="24">Orders DB</text>
+</g>
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="1432 292 201 48" transform="translate(1432 292)">
+<rect class="node-box" width="201" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
+</g>
+<g class="node node-queue" data-node="queue" data-kind="queue" data-state="on" data-bbox="601 267 148 48" transform="translate(601 267)">
+<rect class="node-box" width="148" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><rect x="1.5" y="5" width="3.5" height="6" rx=".5"/><rect x="6.25" y="5" width="3.5" height="6" rx=".5"/><rect x="11" y="5" width="3.5" height="6" rx=".5"/></g>
+<text class="node-label" x="92" y="24">Order events</text>
+</g>
+<g class="node node-service" data-node="worker" data-kind="service" data-state="on" data-bbox="789 267 162 48" transform="translate(789 267)">
+<rect class="node-box" width="162" height="48" rx="8"/>
+<text class="node-label" x="81" y="24">Fulfilment worker</text>
+</g>
+<g class="node node-storage" data-node="s3" data-kind="storage" data-state="on" data-bbox="1001 259 117 48" transform="translate(1001 259)">
+<rect class="node-box" width="117" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
+<text class="node-label" x="76.5" y="24">Receipts</text>
+</g>
+</g>
+</g>
+</g>
+<script type="application/json" id="orrery-model"><![CDATA[{"title":"Checkout service","direction":"right","groups":[{"id":"edge","label":"Edge","kind":"tier"},{"id":"region","label":"us-east-1","kind":"region"},{"id":"app","label":"Application","kind":"tier","parent":"region"},{"id":"data","label":"Data","kind":"tier","parent":"region"},{"id":"async","label":"Async","kind":"tier","parent":"region"}],"nodes":[{"id":"browser","label":"Browser","kind":"client","state":"on"},{"id":"cdn","label":"CDN","kind":"gateway","state":"on","group":"edge"},{"id":"api","label":"Checkout API","kind":"service","state":"on","group":"app"},{"id":"pricing","label":"Pricing","kind":"function","state":"on","group":"app"},{"id":"cache","label":"Session cache","kind":"cache","state":"on","group":"data"},{"id":"db","label":"Orders DB","kind":"database","state":"on","group":"data"},{"id":"replica","label":"Orders DB (replica)","kind":"database","state":"on","group":"data"},{"id":"queue","label":"Order events","kind":"queue","state":"on","group":"async"},{"id":"worker","label":"Fulfilment worker","kind":"service","state":"on","group":"async"},{"id":"s3","label":"Receipts","kind":"storage","state":"on","group":"async"},{"id":"psp","label":"Payment provider","kind":"external","state":"on"}],"edges":[{"id":"browser->cdn","from":"browser","to":"cdn","kind":"sync","load":0.9,"dependsOn":false,"fallback":false,"label":"HTTPS"},{"id":"cdn->api","from":"cdn","to":"api","kind":"sync","load":0.8,"dependsOn":true,"fallback":false},{"id":"api->pricing","from":"api","to":"pricing","kind":"sync","load":0.6,"dependsOn":false,"fallback":false},{"id":"api->cache","from":"api","to":"cache","kind":"sync","load":0.6,"dependsOn":true,"fallback":false},{"id":"api->db","from":"api","to":"db","kind":"sync","load":0.5,"dependsOn":true,"fallback":false,"label":"writes"},{"id":"api-reads","from":"api","to":"replica","kind":"sync","load":0,"dependsOn":false,"fallback":true,"label":"reads (failover)","fallbackFor":"api->db"},{"id":"db->replica","from":"db","to":"replica","kind":"replication","load":0.2,"dependsOn":false,"fallback":false},{"id":"api->psp","from":"api","to":"psp","kind":"sync","load":0.3,"dependsOn":true,"fallback":false,"label":"charge"},{"id":"api->queue","from":"api","to":"queue","kind":"async","load":0.4,"dependsOn":false,"fallback":false,"label":"order.placed"},{"id":"queue->worker","from":"queue","to":"worker","kind":"async","load":0.4,"dependsOn":false,"fallback":false},{"id":"worker->s3","from":"worker","to":"s3","kind":"dataflow","load":0.2,"dependsOn":false,"fallback":false},{"id":"worker->db","from":"worker","to":"db","kind":"sync","load":0.1,"dependsOn":true,"fallback":false}],"views":[{"id":"overview","type":"topology","direction":"right"},{"id":"data","type":"topology","direction":"down","title":"Data tier","scope":"data"},{"id":"region","type":"topology","direction":"right","title":"us-east-1 only","scope":"region"}],"scenarios":[{"id":"db-failover","label":"Primary DB fails","steps":[{"note":"Orders DB goes down","nodes":{"db":{"state":"failed"}},"edges":{}},{"note":"Reads fail over to the replica","nodes":{},"edges":{"api-reads":{"load":0.5}}},{"note":"Primary back, catching up","nodes":{"db":{"state":"degraded"}},"edges":{}},{"note":"Recovered","nodes":{"db":{"state":"on"}},"edges":{"api-reads":{"load":0}}}]},{"id":"psp-outage","label":"Payment provider outage","steps":[{"note":"Provider returns 5xx","nodes":{"psp":{"state":"failed"}},"edges":{}}]}]}]]></script>
+<script><![CDATA["use strict";(()=>{var ge=new Set(["off","failed"]),se={on:0,degraded:1,failed:2,off:2};function ie(n){let l=new Map(n.nodes.map(d=>[d.id,{...d}])),r=d=>l.get(d)?.label??d,p=d=>ge.has(l.get(d).state),m=new Map;for(let d of n.edges)m.set(d.from,[...m.get(d.from)??[],d]);for(let d=!0,k=0;d&&k<l.size+1;k++){d=!1;for(let x of l.values()){if(p(x.id))continue;let c=m.get(x.id)??[],S=E=>c.find(v=>v.fallback&&v.fallbackFor===E.id&&l.get(v.to).state==="on"),y,L=[];for(let E of c.filter(v=>v.dependsOn)){let v=l.get(E.to);if(p(E.to)){let w=S(E);w?(y=y??"degraded",L.push(`${r(E.to)} is down, using ${r(w.to)}`)):E.dependsOn==="soft"?(y=y??"degraded",L.push(`${r(E.to)} is down (soft dependency)`)):(y="failed",L.push(`depends on ${r(E.to)}`))}else v.state==="degraded"&&(y=y??"degraded",L.push(`${r(E.to)} degraded`))}y!==void 0&&se[y]>se[x.state]&&(l.set(x.id,{...x,state:y,reason:L.join("; ")}),d=!0)}}let A=n.edges.map(d=>{if(p(d.from)||p(d.to))return{...d,load:0};if(d.fallback&&d.fallbackFor!==void 0){let k=n.edges.find(c=>c.id===d.fallbackFor),x=k&&p(k.to)?k.load:0;return{...d,load:Math.max(d.load,x)}}return{...d}});return{...n,nodes:n.nodes.map(d=>l.get(d.id)),edges:A}}var I=n=>String(Math.round(n*10)/10),ae=[6,10],ve=ae[0]+ae[1];function H(n){return Math.round((.5+(1-n)*2.5)*10)/10}function me(n){return 1.5+n*3}function de(n){let l=me(n);return n<=0?`stroke-width:${I(l)};animation:none;opacity:0`:`stroke-width:${I(l)};animation-duration:${I(H(n))}s`}function le(n,l,r){let p=l.width-r.left-2*r.margin,m=l.height-2*r.margin,A=Math.min(p/n.width,m/n.height,r.maxZoom??1.5);return{k:A,tx:r.left+r.margin+(p-n.width*A)/2,ty:r.margin+(m-n.height*A)/2}}function ce(n,l,r){let p=r.pad??40,m=l.width-r.left-2*r.margin,A=l.height-2*r.margin,d=Math.min(m/(n.width+2*p),A/(n.height+2*p),r.maxZoom??2),k=n.x+n.width/2,x=n.y+n.height/2;return{k:d,tx:r.left+r.margin+m/2-k*d,ty:r.margin+A/2-x*d}}var B=n=>`translate(${n.tx} ${n.ty}) scale(${n.k})`;function pe(n,l,r){return n===null||!(l>0)||!(r>0)?0:-((n%l+l)%l/l)*r}var W=280,he=24,be="http://www.w3.org/1999/xhtml",ye=`
+.scene .node{cursor:pointer}
+.scene .node.is-selected .node-box{stroke:#2563eb;stroke-width:2.5;filter:drop-shadow(0 0 6px rgba(37,99,235,.45))}
+.scene .group.is-selected .group-box{stroke:#2563eb;stroke-width:2}
+.view.has-hover .node:not(.is-hot),.view.has-hover .edge:not(.is-hot),.view.has-hover .flow:not(.is-hot),.view.has-hover .edge-label:not(.is-hot){opacity:.18;transition:opacity .15s}
+.node,.edge,.flow,.edge-label{transition:opacity .15s}`,we=`
+.orrery-panel{box-sizing:border-box;width:${W}px;height:100%;overflow:auto;padding:14px 14px 20px;background:rgba(248,250,252,.96);border-right:1px solid #e2e8f0;font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a}
+.orrery-panel h1{font-size:15px;margin:0 0 10px}
+.orrery-panel label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:12px 0 4px}
+.orrery-panel select,.orrery-panel button{font:inherit;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:inherit}
+.orrery-panel select{width:100%}
+.orrery-panel button{cursor:pointer}.orrery-panel button:hover{background:#f1f5f9}
+.orrery-steps{display:flex;gap:6px;align-items:center;margin-top:6px}
+.orrery-step{color:#64748b;min-width:44px;text-align:center}
+.orrery-note{margin:6px 0 0;color:#334155;min-height:1.4em}
+.orrery-outline{list-style:none;margin:0;padding:0}
+.orrery-outline li{padding:3px 6px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orrery-outline li:hover{background:#e2e8f0}.orrery-outline li.is-active{background:#dbeafe}
+.orrery-outline li[data-type=group]{color:#475569;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.orrery-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex:none}
+.orrery-dot[data-state=failed]{background:#dc2626}.orrery-dot[data-state=degraded]{background:#d97706}.orrery-dot[data-state=off]{background:#cbd5e1}.orrery-dot[data-state=on]{background:#16a34a}
+.orrery-help{margin-top:14px;color:#64748b;font-size:11px;line-height:1.6}
+.orrery-help kbd{border:1px solid #cbd5e1;border-radius:4px;padding:0 4px;background:#fff;font:inherit}
+.orrery-reset{margin-top:12px}`,P=n=>{let[l,r,p,m]=(n.getAttribute("data-bbox")??"0 0 0 0").split(" ").map(Number);return{x:l,y:r,width:p,height:m}},g=(n,l,r)=>{let p=document.createElementNS(be,n);return l&&(p.className=l),r!==void 0&&(p.textContent=r),p};function xe(n,l={}){let r=JSON.parse(n.querySelector("#orrery-model").textContent??"{}"),p=n.querySelector(".scene"),m=new Map([...n.querySelectorAll("g.view")].map(e=>[e.getAttribute("data-view"),e])),A=()=>l.size??{width:window.innerWidth,height:window.innerHeight},d=()=>({left:W,margin:he}),k=[...m.keys()][0],x=new Map,c=null,S=null,y={k:1,tx:0,ty:0},L;n.removeAttribute("viewBox"),n.setAttribute("width","100%"),n.setAttribute("height","100%"),n.style.background="#fff";let E=document.createElementNS("http://www.w3.org/2000/svg","style");E.textContent=ye,n.insertBefore(E,p);let v=document.createElementNS("http://www.w3.org/2000/svg","foreignObject");v.setAttribute("x","0"),v.setAttribute("y","0"),v.setAttribute("width",String(W)),v.setAttribute("height","100%");let w=g("div","orrery-panel"),_=g("style");_.textContent=we,w.appendChild(_),w.appendChild(g("h1","orrery-title",r.title??"Diagram")),w.appendChild(g("label",void 0,"View"));let O=g("select","orrery-views");for(let[e,t]of m){let o=g("option",void 0,t.getAttribute("data-title")??e);o.value=e,O.appendChild(o)}w.appendChild(O),w.appendChild(g("label",void 0,"Scenario"));let C=g("select","orrery-scenarios"),j=g("option",void 0,"None");j.value="",C.appendChild(j);for(let e of r.scenarios){let t=g("option",void 0,e.label);t.value=e.id,C.appendChild(t)}w.appendChild(C);let U=g("div","orrery-steps"),K=g("button","orrery-prev","◀"),Z=g("button","orrery-next","▶"),J=g("span","orrery-step","");U.append(K,J,Z),w.appendChild(U);let X=g("p","orrery-note","");w.appendChild(X),w.appendChild(g("label",void 0,"Outline"));let M=g("ul","orrery-outline");w.appendChild(M);let Y=g("div","orrery-help");Y.innerHTML="Click a component to fail it, <kbd>shift</kbd>+click to switch it off. <kbd>↑</kbd><kbd>↓</kbd> select, <kbd>⏎</kbd> zoom, <kbd>f</kbd> fail, <kbd>o</kbd> off, <kbd>[</kbd> <kbd>]</kbd> scenario steps, <kbd>1</kbd>–<kbd>9</kbd> views, <kbd>esc</kbd> reset view.",w.appendChild(Y);let Q=g("button","orrery-reset","Reset");w.appendChild(Q),v.appendChild(w),n.appendChild(v);let ue=()=>{let e=new Map,t=new Map;if(c){let o=r.scenarios.find(s=>s.id===c.id);for(let s of o.steps.slice(0,c.step)){for(let[a,i]of Object.entries(s.nodes??{}))e.set(a,i.state);for(let[a,i]of Object.entries(s.edges??{}))t.set(a,i.load)}}for(let[o,s]of x)e.set(o,s);return ie({...r,nodes:r.nodes.map(o=>e.has(o.id)?{...o,state:e.get(o.id)}:o),edges:r.edges.map(o=>t.has(o.id)?{...o,load:t.get(o.id)}:o)})},q=()=>{let e=ue(),t=new Map(e.nodes.map(s=>[s.id,s])),o=new Map(e.edges.map(s=>[s.id,s]));for(let s of m.values()){for(let a of s.querySelectorAll("[data-node]")){let i=t.get(a.getAttribute("data-node"));if(!i)continue;a.classList.remove("node-state-failed","node-state-degraded","node-state-off"),i.state!=="on"&&a.classList.add(`node-state-${i.state}`),a.setAttribute("data-state",i.state);let f=a.querySelector("title");i.reason?(f||(f=document.createElementNS("http://www.w3.org/2000/svg","title"),a.insertBefore(f,a.firstChild)),f.textContent=i.reason):f?.remove()}for(let a of s.querySelectorAll("[data-flow]")){let i=o.get(a.getAttribute("data-flow"));if(!i)continue;let f=Number(a.getAttribute("data-load"));if(f===i.load)continue;let u=a.getAnimations?.()[0],h=pe(u?.currentTime??null,H(f)*1e3,H(i.load)*1e3);a.setAttribute("data-load",String(i.load)),a.setAttribute("style",de(i.load)+(i.load>0&&h?`;animation-delay:${Math.round(h)}ms`:""))}}for(let s of M.querySelectorAll("li[data-type=node] .orrery-dot"))s.setAttribute("data-state",t.get(s.parentElement.getAttribute("data-id"))?.state??"on");J.textContent=c?`${c.step} / ${r.scenarios.find(s=>s.id===c.id).steps.length}`:"",X.textContent=c?r.scenarios.find(s=>s.id===c.id).steps[c.step-1].note??"":""},ee=(e,t)=>{if(L&&clearTimeout(L),!t){y=e,p.setAttribute("transform",B(e));return}let o=y,s=Date.now(),a=300,i=()=>{let f=Math.min(1,(Date.now()-s)/a),u=1-Math.pow(1-f,3);y={k:o.k+(e.k-o.k)*u,tx:o.tx+(e.tx-o.tx)*u,ty:o.ty+(e.ty-o.ty)*u},p.setAttribute("transform",B(y)),f<1?L=setTimeout(i,16):(y=e,p.setAttribute("transform",B(e)))};i()},fe=e=>{let[t,o]=(m.get(e).getAttribute("data-size")??"1 1").split(" ").map(Number);return{width:t,height:o}},z=e=>ee(le(fe(k),A(),d()),e),T=()=>m.get(k),V=[],te=()=>{M.innerHTML="",V.length=0;let e=T(),t=i=>e.querySelector(i)!==null,o=new Set(r.groups.filter(i=>t(`[data-group="${i.id}"]`)).map(i=>i.id)),s=(i,f,u,h,$)=>{let b=g("li");if(b.setAttribute("data-id",i),b.setAttribute("data-type",f),b.style.paddingLeft=`${6+h*14}px`,f==="node"){let D=g("span","orrery-dot");D.setAttribute("data-state",$??"on"),b.appendChild(D)}b.appendChild(g("span",void 0,u)),b.addEventListener("click",()=>{G(i,f),ne(i,f)}),M.appendChild(b),V.push({id:i,type:f})},a=(i,f)=>{for(let u of r.nodes)t(`[data-node="${u.id}"]`)&&(u.group===i||i===void 0&&(u.group===void 0||!o.has(u.group)))&&s(u.id,"node",u.label,f,e.querySelector(`[data-node="${u.id}"]`).getAttribute("data-state")??"on");for(let u of r.groups)o.has(u.id)&&(u.parent===i||i===void 0&&(u.parent===void 0||!o.has(u.parent)))&&(s(u.id,"group",u.label,f),a(u.id,f+1))};a(void 0,0)},oe=(e,t)=>T().querySelector(t==="node"?`[data-node="${e}"]`:`[data-group="${e}"]`),G=(e,t="node")=>{n.querySelectorAll(".is-selected").forEach(o=>o.classList.remove("is-selected")),M.querySelectorAll(".is-active").forEach(o=>o.classList.remove("is-active")),S=e?{id:e,type:t}:null,e&&(oe(e,t)?.classList.add("is-selected"),M.querySelector(`li[data-id="${e}"]`)?.classList.add("is-active"))},ne=(e,t)=>{let o=oe(e,t);o&&ee(ce(P(o),A(),{...d(),maxZoom:t==="node"?2:1.5}),!0)},R=(e,t)=>{x.get(e)===t?x.delete(e):x.set(e,t),q()};p.addEventListener("click",e=>{let t=e.target.closest?.("[data-node]");if(!t)return;let o=t.getAttribute("data-node");G(o,"node"),R(o,e.shiftKey?"off":"failed")}),p.addEventListener("mouseover",e=>{let t=e.target.closest?.("[data-node]"),o=T();if(o.querySelectorAll(".is-hot").forEach(a=>a.classList.remove("is-hot")),o.classList.toggle("has-hover",!!t),!t)return;let s=t.getAttribute("data-node");t.classList.add("is-hot");for(let a of r.edges)(a.from===s||a.to===s)&&(o.querySelector(`[data-edge="${a.id}"]`)?.classList.add("is-hot"),o.querySelector(`[data-flow="${a.id}"]`)?.classList.add("is-hot"),o.querySelector(`[data-node="${a.from===s?a.to:a.from}"]`)?.classList.add("is-hot"))}),p.addEventListener("mouseleave",()=>{let e=T();e.classList.remove("has-hover"),e.querySelectorAll(".is-hot").forEach(t=>t.classList.remove("is-hot"))});let N=(e,t)=>{if(!e)c=null;else{let o=r.scenarios.find(s=>s.id===e);if(!o)return;c={id:e,step:Math.min(Math.max(t??1,1),o.steps.length)}}C.value=e??"",q()};C.addEventListener("change",()=>N(C.value||null,1)),K.addEventListener("click",()=>c&&N(c.id,c.step-1)),Z.addEventListener("click",()=>c&&N(c.id,c.step+1)),Q.addEventListener("click",()=>re());let re=()=>{x.clear(),c=null,C.value="",q(),G(null),z(!0)},F=e=>{if(!m.has(e)||e===k)return;let t=T(),o=m.get(e),s=[];for(let h of t.querySelectorAll("[data-node]")){let $=o.querySelector(`[data-node="${h.getAttribute("data-node")}"]`),b=P(h);if($){let D=P($);s.push({el:h,dx:D.x-b.x,dy:D.y-b.y,b})}else h.style.opacity="0"}t.querySelectorAll(".edges, .groups").forEach(h=>h.style.opacity="0");let a=Date.now(),i=350,f=()=>{for(let h of s)h.el.setAttribute("transform",`translate(${h.b.x} ${h.b.y})`);t.querySelectorAll("[style]").forEach(h=>h.style.opacity=""),t.style.display="none",o.style.display="",k=e,O.value=e,te(),q(),S&&G(S.id,S.type),z(!0)},u=()=>{let h=Math.min(1,(Date.now()-a)/i),$=1-Math.pow(1-h,3);for(let b of s)b.el.setAttribute("transform",`translate(${b.b.x+b.dx*$} ${b.b.y+b.dy*$})`);h<1?setTimeout(u,16):f()};s.length?u():f()};return O.addEventListener("change",()=>F(O.value)),document.addEventListener("keydown",e=>{let t=e.key;if(e.target?.tagName!=="SELECT"){if(t==="ArrowDown"||t==="ArrowUp"){e.preventDefault();let o=S?V.findIndex(a=>a.id===S.id):-1,s=V[Math.min(V.length-1,Math.max(0,o+(t==="ArrowDown"?1:-1)))];s&&G(s.id,s.type)}else if(t==="Enter"&&S)ne(S.id,S.type);else if(t==="f"&&S?.type==="node")R(S.id,"failed");else if(t==="o"&&S?.type==="node")R(S.id,"off");else if(t==="Escape")G(null),z(!0);else if(t==="["&&c)N(c.id,c.step-1);else if(t==="]"&&c)N(c.id,c.step+1);else if(/^[1-9]$/.test(t)){let o=[...m.keys()][Number(t)-1];o&&F(o)}}}),typeof window<"u"&&window.addEventListener("resize",()=>z(!1)),te(),q(),z(!1),{showView:F,setScenario:N,reset:re}}if(typeof document<"u"){let n=document.documentElement;n&&n.getAttribute("data-orrery")==="1"&&n.tagName.toLowerCase()==="svg"&&!n.querySelector(".orrery-panel")&&xe(n)}})();
+]]></script>
 </svg>

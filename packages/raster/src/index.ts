@@ -1,10 +1,33 @@
+import { join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import { XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
 import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery/core";
 
-const fontDir = new URL("../fonts/", import.meta.url);
-const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => new URL(f, fontDir).pathname);
+const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => join(import.meta.dirname, "../fonts", f));
+
+/** Remove a balanced <g ...>...</g> element starting at `start`. Returns the string without it. */
+function dropElement(svg: string, start: number): string {
+  let depth = 0, i = start;
+  const re = /<g[\s>]|<\/g>/g;
+  re.lastIndex = start;
+  for (let m = re.exec(svg); m; m = re.exec(svg)) {
+    depth += m[0] === "</g>" ? -1 : 1;
+    if (depth === 0) { i = m.index + 4; break; }
+  }
+  return svg.slice(0, start) + svg.slice(i);
+}
+
+/**
+ * Reduce an interactive document to what a viewer sees inside <img>: the visible view only, no scripts.
+ * Idempotent; every pixel-level check runs on this.
+ */
+export function activeView(svg: string): string {
+  let out = svg.replace(/<script(?: [^>]*)?>(?:<!\[CDATA\[[\s\S]*?\]\]>|[\s\S]*?)<\/script>\s*/g, "");
+  const hidden = /<g class="view" [^>]*style="display:none"[^>]*>/g;
+  for (let m = hidden.exec(out); m; m = hidden.exec(out)) { out = dropElement(out, m.index); hidden.lastIndex = m.index; }
+  return out;
+}
 
 const FLOW_RE = /<path class="flow" data-flow="([^"]+)" data-load="([^"]+)" d="([^"]+)" style="([^"]*)"\/>/g;
 const fmt = (n: number) => { const r = Math.round(n * 1000) / 1000; return String(r === 0 ? 0 : r); };
@@ -59,6 +82,7 @@ export interface Region { x: number; y: number; width: number; height: number; l
 
 /** Padded, scaled bounding box of every flow path, keyed by "from->to". */
 export function flowRegions(svg: string, scale = 1): Record<string, Region> {
+  svg = activeView(svg);
   const out: Record<string, Region> = {};
   for (const m of svg.matchAll(FLOW_RE)) {
     const [, key, load, d, style] = m;
@@ -86,6 +110,7 @@ const PULSE_RE = /<g class="node [^"]*node-state-failed[^"]*" data-node="([^"]+)
 
 /** Padded, scaled box of every failed (pulsing) node, keyed by node id. */
 export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
+  svg = activeView(svg);
   const out: Record<string, Rect> = {};
   const pad = 3;
   for (const m of svg.matchAll(PULSE_RE)) {
@@ -186,6 +211,7 @@ export interface InspectOptions { scale?: number; fps?: number; durationMs?: num
  */
 export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }: InspectOptions = {}): InspectReport {
   const v = XMLValidator.validate(svg);
+  svg = activeView(svg);
   const xml = v === true ? { ok: true } : { ok: false, error: v.err.msg };
   const vb = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
   const size = { width: vb ? Number(vb[1]) : 0, height: vb ? Number(vb[2]) : 0 };

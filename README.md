@@ -52,20 +52,27 @@ orrery render examples/readme/failover.orrery.json --scenario db-fails -o failed
 
 ![Billing only](examples/readme/views-billing.svg)
 
+**Interactive.** The same SVG file, opened directly instead of through an image tag, runs a small embedded runtime:
+an outline to navigate, click a component to fail it and watch the cascade, step through scenarios, switch views with
+a morph, keyboard shortcuts. No page, no build, no server. Try the checkout example:
+[open it interactive](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
+(served with the right content type by jsDelivr; GitHub's raw links serve SVG as text).
+
 A larger example, a checkout service with three tiers, a region, an external provider and a database failover, is at
 [examples/checkout.svg](examples/checkout.svg) and [examples/checkout-db-failover.svg](examples/checkout-db-failover.svg).
 
 ## Status
 
-Milestone 2 of the [PRD](PRD.md): the diagram is a model. Next are the interactive runtime inside the SVG (outline,
-zoom, click to fail, step-through, view morphing) and GIF export.
+Milestone 3 of the [PRD](PRD.md): the diagram is a model, and the file is interactive. Next: sequence and walkthrough
+views, GIF export, and an MCP server.
 
 ## Quick start
 
 ```sh
 yarn install && yarn build
 node packages/cli/dist/main.js validate examples/three-tier.orrery.json
-node packages/cli/dist/main.js render examples/three-tier.orrery.json -o out.svg
+node packages/cli/dist/main.js render examples/three-tier.orrery.json -o out.svg   # interactive when opened directly
+node packages/cli/dist/main.js render examples/three-tier.orrery.json --static -o out.svg
 ```
 
 ## Writing a diagram

@@ -26,24 +26,26 @@
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="overview" data-title="Checkout service — Primary DB fails (2/4): Reads fail over to the replica" data-size="2351.5 359">
 <g class="groups">
-<g class="group group-tier" data-group="edge">
+<g class="group group-tier" data-group="edge" data-bbox="258.5 156.4 104 96">
 <rect class="group-box" x="258.5" y="156.4" width="104" height="96" rx="10"/>
 <text class="group-label" x="270.5" y="172.4">Edge</text>
 </g>
-<g class="group group-region" data-group="region">
+<g class="group group-region" data-group="region" data-bbox="417.5 20 1624.5 308">
 <rect class="group-box" x="417.5" y="20" width="1624.5" height="308" rx="10"/>
 <text class="group-label" x="429.5" y="36">us-east-1</text>
 </g>
-<g class="group group-tier" data-group="app">
+<g class="group group-tier" data-group="app" data-bbox="437 78 328 196">
 <rect class="group-box" x="437" y="78" width="328" height="196" rx="10"/>
 <text class="group-label" x="449" y="94">Application</text>
 </g>
-<g class="group group-tier" data-group="data">
+<g class="group group-tier" data-group="data" data-bbox="1600 73 430 210">
 <rect class="group-box" x="1600" y="73" width="430" height="210" rx="10"/>
 <text class="group-label" x="1612" y="89">Data</text>
 </g>
-<g class="group group-tier" data-group="async">
+<g class="group group-tier" data-group="async" data-bbox="994 82 541 122">
 <rect class="group-box" x="994" y="82" width="541" height="122" rx="10"/>
 <text class="group-label" x="1006" y="98">Async</text>
 </g>
@@ -80,60 +82,62 @@
 <path class="flow" data-flow="worker->db" data-load="0" d="M1356 158 L1381 158 L1381 191 L1567.5 191 L1567.5 213 L1610 213" style="stroke-width:1.5;animation:none;opacity:0"/>
 </g>
 <g class="nodes">
-<g class="node node-client" data-node="browser" data-kind="client" data-state="on" transform="translate(20 192.4)">
+<g class="node node-client" data-node="browser" data-kind="client" data-state="on" data-bbox="20 192.4 110 48" transform="translate(20 192.4)">
 <rect class="node-box" width="110" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
 <text class="node-label" x="73" y="24">Browser</text>
 </g>
-<g class="node node-gateway node-state-degraded" data-node="cdn" data-kind="gateway" data-state="degraded" transform="translate(270.5 192.4)">
+<g class="node node-gateway node-state-degraded" data-node="cdn" data-kind="gateway" data-state="degraded" data-bbox="270.5 192.4 80 48" transform="translate(270.5 192.4)">
 <title>Checkout API degraded</title>
 <rect class="node-box" width="80" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
 <text class="node-label" x="58" y="24">CDN</text>
 </g>
-<g class="node node-service node-state-degraded" data-node="api" data-kind="service" data-state="degraded" transform="translate(449 192.4)">
+<g class="node node-service node-state-degraded" data-node="api" data-kind="service" data-state="degraded" data-bbox="449 192.4 124 48" transform="translate(449 192.4)">
 <title>Orders DB is down, using Orders DB (replica)</title>
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text>
 </g>
-<g class="node node-function" data-node="pricing" data-kind="function" data-state="on" transform="translate(643 140)">
+<g class="node node-function" data-node="pricing" data-kind="function" data-state="on" data-bbox="643 140 110 48" transform="translate(643 140)">
 <rect class="node-box" width="110" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
 <text class="node-label" x="73" y="24">Pricing</text>
 </g>
-<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" transform="translate(1612 109)">
+<g class="node node-cache" data-node="cache" data-kind="cache" data-state="on" data-bbox="1612 109 155 48" transform="translate(1612 109)">
 <rect class="node-box" width="155" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
 <text class="node-label" x="95.5" y="24">Session cache</text>
 </g>
-<g class="node node-database node-state-failed" data-node="db" data-kind="database" data-state="failed" transform="translate(1622 197)">
+<g class="node node-database node-state-failed" data-node="db" data-kind="database" data-state="failed" data-bbox="1622 197 125 48" transform="translate(1622 197)">
 <rect class="node-box" width="125" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="80.5" y="24">Orders DB</text>
 </g>
-<g class="node node-database" data-node="replica" data-kind="database" data-state="on" transform="translate(1817 205)">
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="1817 205 201 48" transform="translate(1817 205)">
 <rect class="node-box" width="201" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
 </g>
-<g class="node node-queue" data-node="queue" data-kind="queue" data-state="on" transform="translate(1006 126)">
+<g class="node node-queue" data-node="queue" data-kind="queue" data-state="on" data-bbox="1006 126 148 48" transform="translate(1006 126)">
 <rect class="node-box" width="148" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><rect x="1.5" y="5" width="3.5" height="6" rx=".5"/><rect x="6.25" y="5" width="3.5" height="6" rx=".5"/><rect x="11" y="5" width="3.5" height="6" rx=".5"/></g>
 <text class="node-label" x="92" y="24">Order events</text>
 </g>
-<g class="node node-service node-state-failed" data-node="worker" data-kind="service" data-state="failed" transform="translate(1194 126)">
+<g class="node node-service node-state-failed" data-node="worker" data-kind="service" data-state="failed" data-bbox="1194 126 162 48" transform="translate(1194 126)">
 <title>depends on Orders DB</title>
 <rect class="node-box" width="162" height="48" rx="8"/>
 <text class="node-label" x="81" y="24">Fulfilment worker</text>
 </g>
-<g class="node node-storage" data-node="s3" data-kind="storage" data-state="on" transform="translate(1406 118)">
+<g class="node node-storage" data-node="s3" data-kind="storage" data-state="on" data-bbox="1406 118 117 48" transform="translate(1406 118)">
 <rect class="node-box" width="117" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
 <text class="node-label" x="76.5" y="24">Receipts</text>
 </g>
-<g class="node node-external" data-node="psp" data-kind="external" data-state="on" transform="translate(2177.5 291)">
+<g class="node node-external" data-node="psp" data-kind="external" data-state="on" data-bbox="2177.5 291 154 48" transform="translate(2177.5 291)">
 <rect class="node-box" width="154" height="48" rx="8"/>
 <text class="node-label" x="77" y="24">Payment provider</text>
+</g>
+</g>
 </g>
 </g>
 </svg>

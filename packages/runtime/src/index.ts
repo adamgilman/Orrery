@@ -1,3 +1,4 @@
 import { readFileSync } from "node:fs";
-/** The bundled browser runtime, embedded verbatim into rendered documents. */
-export const RUNTIME_SOURCE: string = readFileSync(new URL("./runtime.min.js", import.meta.url), "utf8");
+import { join } from "node:path";
+/** The bundled browser runtime, embedded verbatim into rendered documents. Built by bundle.mjs into dist/. */
+export const RUNTIME_SOURCE: string = readFileSync(join(import.meta.dirname, "../dist/runtime.min.js"), "utf8");

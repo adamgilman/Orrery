@@ -6,6 +6,18 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./simulate": {
+      "types": "./dist/simulate.d.ts",
+      "default": "./dist/simulate.js"
+    },
+    "./flow": {
+      "types": "./dist/flow.d.ts",
+      "default": "./dist/flow.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
     }
   },
   "files": [

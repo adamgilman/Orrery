@@ -93,7 +93,7 @@ describe("orrery render --view", () => {
   it("renders the named view", () => {
     const dir = mkdtempSync(join(tmpdir(), "orrery-"));
     const out = join(dir, "v.svg");
-    const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "data-tier", "-o", out);
+    const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "data-tier", "--static", "-o", out);
     expect(r.err).toBe("");
     expect(r.code).toBe(0);
     const svg = readFileSync(out, "utf8");
@@ -147,5 +147,34 @@ describe("orrery render --scenario", () => {
   });
   it("validate counts scenarios", () => {
     expect(run("validate", join(fixtures, "valid/failover.json")).out).toContain(", 1 scenarios");
+  });
+});
+
+describe("orrery render: interactive document by default", () => {
+  it("embeds every view, the model and the runtime; --static strips them to one view", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const full = join(dir, "full.svg"), stat = join(dir, "static.svg");
+    expect(run("render", join(fixtures, "valid/grouped.json"), "-o", full).code).toBe(0);
+    const svg = readFileSync(full, "utf8");
+    expect((svg.match(/<g class="view"/g) ?? []).length).toBe(2);
+    expect(svg).toContain('id="orrery-model"');
+    expect(svg).toMatch(/<script><!\[CDATA\[/);
+    expect(run("render", join(fixtures, "valid/grouped.json"), "--static", "-o", stat).code).toBe(0);
+    const s = readFileSync(stat, "utf8");
+    expect((s.match(/<g class="view"/g) ?? []).length).toBe(1);
+    expect(s).not.toContain("orrery-model");
+    expect(s).not.toMatch(/<script/);
+  });
+  it("--view with an interactive document makes that view the visible first layer", () => {
+    const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "data-tier");
+    expect(r.code).toBe(0);
+    const layers = [...r.out.matchAll(/<g class="view" data-view="([^"]+)"[^>]*?( style="display:none")?>/g)].map((m) => [m[1], !!m[2]]);
+    expect(layers).toEqual([["data-tier", false], ["overview", true]]);
+  });
+  it("--scenario renders a static snapshot of that step", () => {
+    const r = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "1");
+    expect(r.code).toBe(0);
+    expect(r.out).not.toMatch(/<script/);
+    expect(r.out).toContain('data-state="failed"');
   });
 });

@@ -26,6 +26,8 @@
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="default" data-title="Failover — Primary fails (1/1): Primary goes down" data-size="298.3 372">
 <g class="groups">
 
 </g>
@@ -43,32 +45,34 @@
 <path class="flow" data-flow="worker->db" data-load="0" d="M227.3 156 L227.3 194" style="stroke-width:1.5;animation:none;opacity:0"/>
 </g>
 <g class="nodes">
-<g class="node node-gateway node-state-degraded" data-node="web" data-kind="gateway" data-state="degraded" transform="translate(56.3 20)">
+<g class="node node-gateway node-state-degraded" data-node="web" data-kind="gateway" data-state="degraded" data-bbox="56.3 20 80 48" transform="translate(56.3 20)">
 <title>API degraded</title>
 <rect class="node-box" width="80" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
 <text class="node-label" x="58" y="24">Web</text>
 </g>
-<g class="node node-service node-state-degraded" data-node="api" data-kind="service" data-state="degraded" transform="translate(56.3 108)">
+<g class="node node-service node-state-degraded" data-node="api" data-kind="service" data-state="degraded" data-bbox="56.3 108 80 48" transform="translate(56.3 108)">
 <title>Primary is down, using Replica</title>
 <rect class="node-box" width="80" height="48" rx="8"/>
 <text class="node-label" x="40" y="24">API</text>
 </g>
-<g class="node node-database node-state-failed" data-node="db" data-kind="database" data-state="failed" transform="translate(154 206)">
+<g class="node node-database node-state-failed" data-node="db" data-kind="database" data-state="failed" data-bbox="154 206 110 48" transform="translate(154 206)">
 <rect class="node-box" width="110" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="73" y="24">Primary</text>
 </g>
-<g class="node node-database" data-node="replica" data-kind="database" data-state="on" transform="translate(46.3 304)">
+<g class="node node-database" data-node="replica" data-kind="database" data-state="on" data-bbox="46.3 304 110 48" transform="translate(46.3 304)">
 <rect class="node-box" width="110" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="73" y="24">Replica</text>
 </g>
-<g class="node node-function node-state-failed" data-node="worker" data-kind="function" data-state="failed" transform="translate(176.3 108)">
+<g class="node node-function node-state-failed" data-node="worker" data-kind="function" data-state="failed" data-bbox="176.3 108 102 48" transform="translate(176.3 108)">
 <title>depends on Primary</title>
 <rect class="node-box" width="102" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
 <text class="node-label" x="69" y="24">Worker</text>
+</g>
+</g>
 </g>
 </g>
 </svg>
