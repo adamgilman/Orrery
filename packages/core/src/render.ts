@@ -61,7 +61,7 @@ const STYLE = `
 .group-zone .group-box{stroke-dasharray:3 5}
 .group-cluster .group-box{stroke:#94a3b8}
 .group-boundary .group-box{stroke:#dc2626;stroke-dasharray:6 6;fill:none}
-.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
 .node-state-failed .node-box{fill:#fef2f2;stroke:#dc2626;stroke-width:2;animation:orrery-pulse ${PULSE_PERIOD}s linear infinite}
