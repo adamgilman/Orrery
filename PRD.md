@@ -181,8 +181,9 @@ and a 6 KB gzipped runtime. Opened directly: panel with outline, view and scenar
 click to fail / shift-click to switch off with live propagation, hover to highlight neighbours, camera zoom on select,
 view switching with a node morph, keyboard shortcuts, reset. No layout engine in the browser. Phase continuity when
 load changes. `--static` gives the old single-view file; `--scenario` implies static. Frame tooling inspects only the
-visible view. Runtime behaviour is tested in jsdom (panel, toggles, scenarios, view switch, keyboard); the minified
-bundle was also booted as a real SVG document in jsdom. Not yet verified in a real browser by a human.
+visible view. Runtime behaviour is tested in jsdom (panel, toggles, scenarios, view switch, keyboard), and the minified bundle is
+executed inside a rendered SVG document's window as a test (jsdom does not run SVG <script> elements by itself, so the
+test injects it). Not yet verified in a real browser by a human.
 
 ### Status (2026-09-04, night)
 
