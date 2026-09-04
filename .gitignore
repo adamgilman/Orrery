@@ -9,3 +9,5 @@ coverage/
 !.yarn/versions
 .pnp.*
 *.tsbuildinfo
+site/dist/
+site/server.log
