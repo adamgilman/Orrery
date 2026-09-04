@@ -1,0 +1,8 @@
+{
+  "direction": "down",
+  "nodes": [ { "id": "lb", "label": "Load balancer" }, { "id": "s1", "label": "Service 1" }, { "id": "s2", "label": "Service 2" }, { "id": "s3", "label": "Service 3" }, { "id": "cache", "label": "Cache" } ],
+  "edges": [
+    { "from": "lb", "to": "s1", "load": 0.3 }, { "from": "lb", "to": "s2", "load": 0.3 }, { "from": "lb", "to": "s3", "load": 0.3 },
+    { "from": "s1", "to": "cache", "load": 1 }, { "from": "s2", "to": "cache", "load": 0 }, { "from": "s3", "to": "cache", "load": 0.5 }
+  ]
+}
