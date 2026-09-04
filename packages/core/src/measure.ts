@@ -2,6 +2,8 @@ import type { LayoutGraph } from "./layout.js";
 import type { Diagram, DiagramNode } from "./types.js";
 
 export const NODE_HEIGHT = 48;
+/** Band reserved at the top of a group frame for its title. */
+export const GROUP_LABEL_HEIGHT = 24;
 export const NODE_MIN_WIDTH = 80;
 const CHAR_WIDTH = 7.6; // average glyph width at 14px in a system sans font
 const PADDING = 32;
@@ -23,7 +25,8 @@ export function measureEdgeLabel(text: string): { width: number; height: number 
 export function toLayoutGraph(diagram: Diagram): LayoutGraph {
   return {
     direction: diagram.direction,
-    nodes: diagram.nodes.map((n) => ({ id: n.id, ...measureNode(n) })),
+    groups: diagram.groups.map((g) => ({ id: g.id, ...(g.parent !== undefined ? { parent: g.parent } : {}), labelHeight: GROUP_LABEL_HEIGHT })),
+    nodes: diagram.nodes.map((n) => ({ id: n.id, ...measureNode(n), ...(n.group !== undefined ? { group: n.group } : {}) })),
     edges: diagram.edges.map((e) => ({
       id: e.id,
       from: e.from,

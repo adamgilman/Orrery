@@ -24,6 +24,85 @@ export function layoutContract(name: string, make: () => LayoutEngine) {
     ],
   };
 
+  /** region > { app > {api}, data > {db, replica} }, web outside everything. */
+  const grouped: LayoutGraph = {
+    direction: "right",
+    groups: [
+      { id: "region", labelHeight: 20 },
+      { id: "app", parent: "region", labelHeight: 20 },
+      { id: "data", parent: "region", labelHeight: 20 },
+    ],
+    nodes: [
+      { id: "web", width: 120, height: 48 },
+      { id: "api", width: 140, height: 48, group: "app" },
+      { id: "db", width: 100, height: 48, group: "data" },
+      { id: "replica", width: 120, height: 48, group: "data" },
+    ],
+    edges: [
+      { id: "e0", from: "web", to: "api" },
+      { id: "e1", from: "api", to: "db" },
+      { id: "e2", from: "api", to: "replica" },
+      { id: "e3", from: "db", to: "replica" },
+    ],
+  };
+  const inside = (inner: { x: number; y: number; width: number; height: number }, outer: { x: number; y: number; width: number; height: number }, margin = 0) =>
+    inner.x >= outer.x + margin && inner.y >= outer.y + margin && inner.x + inner.width <= outer.x + outer.width - margin && inner.y + inner.height <= outer.y + outer.height - margin;
+
+  describe(`LayoutEngine contract: ${name} (groups)`, () => {
+    it("returns a box for every group", async () => {
+      const r = await make().layout(grouped);
+      for (const g of grouped.groups!) expect(r.groups[g.id], g.id).toBeDefined();
+    });
+    it("keeps every node strictly inside its group with padding, below the label band", async () => {
+      const r = await make().layout(grouped);
+      for (const n of grouped.nodes) {
+        if (!n.group) continue;
+        const g = r.groups[n.group]!, b = r.nodes[n.id]!;
+        expect(inside(b, g, 8), `${n.id} in ${n.group}`).toBe(true);
+        expect(b.y, `${n.id} below label of ${n.group}`).toBeGreaterThanOrEqual(g.y + 20);
+      }
+    });
+    it("nests child groups strictly inside their parent", async () => {
+      const r = await make().layout(grouped);
+      for (const g of grouped.groups!) {
+        if (!g.parent) continue;
+        expect(inside(r.groups[g.id]!, r.groups[g.parent]!, 8), `${g.id} in ${g.parent}`).toBe(true);
+        expect(r.groups[g.id]!.y).toBeGreaterThanOrEqual(r.groups[g.parent]!.y + 20);
+      }
+    });
+    it("keeps sibling groups apart and ungrouped nodes outside every group", async () => {
+      const r = await make().layout(grouped);
+      const a = r.groups.app!, d = r.groups.data!;
+      const overlap = a.x < d.x + d.width && d.x < a.x + a.width && a.y < d.y + d.height && d.y < a.y + a.height;
+      expect(overlap).toBe(false);
+      const web = r.nodes.web!;
+      for (const [id, g] of Object.entries(r.groups)) {
+        const o = web.x < g.x + g.width && g.x < web.x + web.width && web.y < g.y + g.height && g.y < web.y + web.height;
+        expect(o, `web overlaps ${id}`).toBe(false);
+      }
+    });
+    it("routes cross-group edges from boundary to boundary in absolute coordinates", async () => {
+      const r = await make().layout(grouped);
+      const e = r.edges.e0!;
+      const web = r.nodes.web!, api = r.nodes.api!;
+      const p0 = e.points[0]!, pn = e.points.at(-1)!;
+      expect(Math.abs(p0.x - (web.x + web.width)) <= 1 || Math.abs(p0.y - web.y) <= 1 || Math.abs(p0.y - (web.y + web.height)) <= 1 || Math.abs(p0.x - web.x) <= 1).toBe(true);
+      expect(pn.x >= api.x - 1 && pn.x <= api.x + api.width + 1 && pn.y >= api.y - 1 && pn.y <= api.y + api.height + 1).toBe(true);
+    });
+    it("canvas contains every group", async () => {
+      const r = await make().layout(grouped);
+      for (const g of Object.values(r.groups)) {
+        expect(g.x).toBeGreaterThanOrEqual(0);
+        expect(g.y).toBeGreaterThanOrEqual(0);
+        expect(g.x + g.width).toBeLessThanOrEqual(r.width);
+        expect(g.y + g.height).toBeLessThanOrEqual(r.height);
+      }
+    });
+    it("is deterministic with groups", async () => {
+      expect(await make().layout(grouped)).toEqual(await make().layout(grouped));
+    });
+  });
+
   describe(`LayoutEngine contract: ${name}`, () => {
     for (const [label, graph] of [["chain", chain], ["fan", fan]] as const) {
       it(`${label}: positions every node with its requested size`, async () => {
