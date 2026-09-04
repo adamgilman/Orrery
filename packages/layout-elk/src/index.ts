@@ -21,7 +21,7 @@ export class ElkLayoutEngine implements LayoutEngine {
   constructor(private readonly options: ElkOptions = {}) {}
 
   async layout(graph: LayoutGraph): Promise<LayoutResult> {
-    const { layerSpacing = 70, nodeSpacing = 40 } = this.options;
+    const { layerSpacing = 40, nodeSpacing = 40 } = this.options;
     const input: ElkNode = {
       id: "root",
       layoutOptions: {

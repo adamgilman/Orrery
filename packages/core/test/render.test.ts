@@ -40,6 +40,15 @@ describe("renderSvg", () => {
     expect(svg).toContain("<marker id=\"arrow\"");
   });
 
+  it("defines the arrowhead in user space with orient=auto so every renderer draws it the same", async () => {
+    // resvg (and some older renderers) ignore orient="auto-start-reverse" on vertical segments, drawing half a triangle.
+    const d = fixture("three-tier");
+    const marker = renderSvg(d, await laidOut(d)).match(/<marker[^>]*>/)![0];
+    expect(marker).toContain('orient="auto"');
+    expect(marker).toContain('markerUnits="userSpaceOnUse"');
+    expect(marker).toContain('markerWidth="12"');
+  });
+
   it("renders edge labels when present", async () => {
     const d = fixture("three-tier");
     const svg = renderSvg(d, await laidOut(d));

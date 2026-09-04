@@ -9,7 +9,7 @@ exports[`renderSvg > matches the snapshot for three-tier with the fake engine 1`
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
-<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
 <g class="edges">
 <path class="edge" data-edge="web->api" d="M100 44 L180 44" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M100 44 L168 44" style="stroke-width:3.9;animation-duration:1s"/>

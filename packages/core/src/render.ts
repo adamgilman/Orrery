@@ -10,7 +10,7 @@ const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 const num = (n: number) => String(Math.round(n * 10) / 10);
 const pathD = (pts: Point[]) => pts.map((p, i) => `${i === 0 ? "M" : "L"}${num(p.x)} ${num(p.y)}`).join(" ");
 
-/** Length of the arrowhead marker along the edge (marker 8 units × stroke 1.5), so flow dashes stop before it. */
+/** Arrowhead length in user units. Fixed via markerUnits="userSpaceOnUse" so it does not scale with stroke width. */
 const ARROW_LENGTH = 12;
 
 /** Shorten a polyline's final segment by `by`, dropping segments that vanish entirely. */
@@ -105,7 +105,8 @@ export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(layout.width)} ${num(layout.height)}" width="${num(layout.width)}" height="${num(layout.height)}" data-orrery="1">`,
     title + `<style>${STYLE}</style>`,
-    `<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>`,
+    // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths, and only marker-end is used.
+    `<defs><marker id="arrow" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z" fill="#94a3b8"/></marker></defs>`,
     `<g class="edges">\n${edges.join("\n")}\n</g>`,
     `<g class="nodes">\n${nodes.join("\n")}\n</g>`,
     `</svg>`,

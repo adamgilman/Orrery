@@ -12,7 +12,7 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "orrery": "node packages/cli/dist/main.js",
-    "examples": "yarn build && node packages/cli/dist/main.js render examples/three-tier.orrery.json -o examples/three-tier.svg && node packages/cli/dist/main.js render fixtures/valid/fan-out.json -o examples/fan-out.svg",
+    "examples": "yarn build && node tools/examples.mjs",
     "inspect": "node tools/inspect.mjs"
   },
   "devDependencies": {

@@ -5,9 +5,15 @@
 **Orrery makes architecture diagrams that are models, not pictures.** Written as JSON by AI agents,
 laid out automatically, rendered to a single SVG that animates in a GitHub README with no plugin.
 
-![Three-tier checkout architecture](examples/three-tier.svg)
+Orrery's first diagram is, naturally, an orrery.
 
-*Dash speed and thickness are driven by each edge's `load`. This is a plain SVG file embedded with an image tag.*
+![The solar system, as a service](examples/solar-system.svg)
+
+*A plain SVG file in an image tag. Dash speed and thickness follow each edge's `load`: the Sun pours heat into Venus,
+Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Moon mostly gets tides.*
+
+A more terrestrial example, a checkout service with a read replica and a worker queue, is in
+[examples/three-tier.svg](examples/three-tier.svg).
 
 ## Status
 

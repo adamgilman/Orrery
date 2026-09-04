@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 396" width="360" height="396" data-orrery="1">
+<title>The solar system, as a service</title>
+<style>.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="edges">
+<path class="edge" data-edge="sun->venus" d="M60 68 L60 184" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="sun->venus" data-load="0.9" d="M60 68 L60 172" style="stroke-width:4.2;animation-duration:0.8s"/>
+<text class="edge-label" x="40.5" y="136">heat</text>
+<path class="edge" data-edge="sun->earth" d="M80 68 L80 103 L180 103 L180 184" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="sun->earth" data-load="0.7" d="M80 68 L80 103 L180 103 L180 172" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="147.5" y="136">sunlight</text>
+<path class="edge" data-edge="sun->mars" d="M100 68 L100 93 L300 93 L300 184" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="sun->mars" data-load="0.3" d="M100 68 L100 93 L300 93 L300 172" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="261" y="136">solar wind</text>
+<path class="edge" data-edge="earth->moon" d="M180 232 L180 328" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="earth->moon" data-load="0.2" d="M180 232 L180 316" style="stroke-width:2.1;animation-duration:2.5s"/>
+<text class="edge-label" x="157.5" y="280">tides</text>
+</g>
+<g class="nodes">
+<g class="node" data-node="sun" transform="translate(40 20)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Sun</text>
+</g>
+<g class="node" data-node="venus" transform="translate(20 184)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Venus</text>
+</g>
+<g class="node" data-node="earth" transform="translate(140 184)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Earth</text>
+</g>
+<g class="node" data-node="mars" transform="translate(260 184)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Mars</text>
+</g>
+<g class="node" data-node="moon" transform="translate(140 328)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Moon</text>
+</g>
+</g>
+</svg>

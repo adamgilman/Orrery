@@ -149,7 +149,8 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 M0 shipped: schema with descriptions, validator, ELK adapter behind `LayoutEngine`, label-aware layout, animated SVG,
 CLI, examples page, fresh-agent test passed first try. Pulled forward from later milestones: load animation (was M2),
 PNG rasterisation with a bundled font, and the frame/diff tooling that GIF export will reuse (was M5).
-Still open from M0: eyeball confirmation that the README SVG animates on github.com.
+README test confirmed in Safari on github.com (M0 complete). The GitHub mobile app cannot zoom markdown images, so the
+README's first diagram must be narrow: direction "down", few nodes, short labels.
 
 ### Later milestones (reordered: model semantics before the runtime, so toggles have something to toggle)
 
