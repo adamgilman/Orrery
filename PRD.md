@@ -173,6 +173,14 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 **Packages in M0** (pnpm workspace, vitest): `@orrery/core` (schema, validator, model, `LayoutEngine` interface, SVG renderer), `@orrery/layout-elk` (the only importer of elkjs), `orrery` (CLI). Splitting `core` further waits until a second consumer exists.
 
+### Status (2026-09-04, night)
+
+M2 shipped: node `state`, `dependsOn`/`fallback` edges, scenarios with cumulative steps, propagation as a pure fixed-point
+function with reasons (rendered as tooltips), state styling (failed pulses red, degraded amber, off dimmed), edges to down
+nodes stop flowing, fallback edges take over load, `render --scenario --step`. Frame tooling freezes the pulse too.
+Propagation rules as built: declared state is a floor; a dependsOn target that is off/failed fails the source unless a
+healthy fallback exists (then degraded); a degraded target degrades the source; non-dependsOn edges never propagate.
+
 ### Status (2026-09-04, evening)
 
 M1 first pass shipped: model/view schema (edge ids and kinds, node and group kinds, nested groups, views with scope),
@@ -196,7 +204,7 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 | # | Deliverable | Done when |
 |---|---|---|
 | M1 | Model/view schema shape (edge ids and kinds, node and group kinds, `views` with `scope`); nested groups; neutral glyph set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment; `render --view` works |
-| M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
+| M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | Done: `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
 | M3 | Runtime inside the SVG: outline, camera zoom (viewBox tween), toggles with failure propagation, scenario picker, step-through, keyboard nav; **all views pre-laid-out and embedded in one file, with a morph transition between views** (stable ids make boxes slide to their new positions); < 25 KB gz. No layout engine in the browser. | Click-through test passes on the same file that animates in the README; switching to a scoped view morphs rather than cuts |
 | M3b | `sequence` view type: lifelines from nodes, messages from an interaction; and `walkthrough`: a token moving along the topology for the same interaction | A click on a component swaps to its sequence view with the morph |
 | M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |

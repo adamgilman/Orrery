@@ -40,6 +40,15 @@ A zero-load edge must never change. If you change dash pattern, period or durati
 a flow region, so a node, label or base edge that moves between frames is a failure. `diffs.png` paints changed pixels
 red over a faded frame; it is the fastest way to see what an animation change actually did.
 
+## Model semantics (M2)
+
+`propagate()` in `packages/core/src/simulate.ts` is the single source of truth for failure behaviour; it is pure and
+fixed-point. `applyScenario()` layers cumulative step overrides on the base model, then propagates. Rendering never
+computes state itself: it reads `node.state`, `node.reason` and effective `edge.load` from the propagated model.
+Failed nodes pulse (`PULSE_PERIOD`, linear triangle wave) and `freezeFrame` freezes that too; `inspect` treats failed
+node boxes as allowed motion. Adding a state or animation means: constant in core, freeze rule in raster, region
+extractor in raster, then the tests that use them.
+
 ## Layout of the repo
 
 | Path | What |

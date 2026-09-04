@@ -16,10 +16,21 @@ A more terrestrial example, a checkout service with tiers, a region, and a worke
 
 ## Status
 
-Milestone 1: one model, many views. Nodes with kinds, nested groups, edge kinds, and views that drill into a group.
-Failure simulation, scenarios, the interactive runtime, and GIF export are on the roadmap. See [PRD.md](PRD.md).
+Milestone 2: the diagram is a model. Nodes have kinds and health, groups nest, edges carry kind, load, and dependency
+semantics, views drill into groups, and scenarios play failures through the model. The interactive runtime and GIF
+export are next. See [PRD.md](PRD.md).
 
 ![Checkout service with tiers and a region](examples/checkout.svg)
+
+The same file with its primary database failed, two steps into the `db-failover` scenario. Nothing here was drawn by
+hand: the database is declared failed, and the tool works out that the worker fails with it, the API degrades onto
+its replica, the CDN degrades behind the API, and which edges stop carrying traffic.
+
+![Checkout service during database failover](examples/checkout-db-failover.svg)
+
+```sh
+orrery render examples/checkout.orrery.json --scenario db-failover --step 2 -o failover.svg
+```
 
 ## Quick start
 
@@ -60,6 +71,9 @@ Rules an agent needs to know:
   Groups: tier, region, zone, cluster, boundary. Edges: sync, async, replication, dataflow.
 - Edge ids default to `from->to`. Two edges between the same nodes need explicit ids.
 - `load` is 0 to 1. Zero hides the flow, one is the fastest and thickest.
+- `dependsOn: true` on an edge means the source cannot work without the target. `fallback: true` marks a standby edge
+  from the same source that takes over when the primary target is down. Node `state` is on, off, degraded, or failed.
+- Scenarios are ordered, cumulative steps that override states and loads. Propagation does the rest.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
 The full schema lives at [packages/core/schema/v1.json](packages/core/schema/v1.json).
