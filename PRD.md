@@ -144,17 +144,22 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 **Packages in M0** (pnpm workspace, vitest): `@orrery/core` (schema, validator, model, `LayoutEngine` interface, SVG renderer), `@orrery/layout-elk` (the only importer of elkjs), `orrery` (CLI). Splitting `core` further waits until a second consumer exists.
 
-### Later milestones
+### Status (2026-09-04)
 
+M0 shipped: schema with descriptions, validator, ELK adapter behind `LayoutEngine`, label-aware layout, animated SVG,
+CLI, examples page, fresh-agent test passed first try. Pulled forward from later milestones: load animation (was M2),
+PNG rasterisation with a bundled font, and the frame/diff tooling that GIF export will reuse (was M5).
+Still open from M0: eyeball confirmation that the README SVG animates on github.com.
+
+### Later milestones (reordered: model semantics before the runtime, so toggles have something to toggle)
 
 | # | Deliverable | Done when |
 |---|---|---|
-| M1 | Static SVG via ELK, groups, orthogonal routing, icons | Three-tier demo looks professional in a README (no animation yet) |
-| M2 | Load animation | README test passes |
-| M3 | Runtime: outline, focus, toggles | Click-through test passes |
-| M4 | Failure propagation + scenarios + step-through | Demo: primary DB failover animates and cascades |
-| M5 | PNG/GIF export | Confluence fallback documented with a real GIF |
-| M6 | Demo repo, docs site, MCP server | Public launch |
+| M1 | Groups (nested) and node kinds with a neutral icon set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment |
+| M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
+| M3 | Runtime inside the SVG: outline, focus, toggles, scenario picker, step-through, keyboard nav; < 25 KB gz | Click-through test passes on the same file that animates in the README |
+| M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |
+| M5 | Demo repo, docs site, MCP server, agent eval harness with retry counts | Public launch |
 
 ## 8. Engineering rules
 
