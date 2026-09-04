@@ -1,75 +1,90 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1459 254" width="1459" height="254" data-orrery="1">
 <title>Typical web application</title>
-<style>.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-region .group-box{stroke-dasharray:8 6}
+.group-zone .group-box{stroke-dasharray:3 5}
+.group-cluster .group-box{stroke:#94a3b8}
+.group-boundary .group-box{stroke:#dc2626;stroke-dasharray:6 6;fill:none}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="groups">
+
+</g>
 <g class="edges">
-<path class="edge" data-edge="client->lb" d="M174 194 L295 194" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="client->lb" data-kind="sync" d="M174 194 L295 194" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="client->lb" data-load="0.9" d="M174 194 L283 194" style="stroke-width:4.2;animation-duration:0.8s"/>
 <text class="edge-label" x="234.5" y="205">HTTPS</text>
-<path class="edge" data-edge="lb->app1" d="M426 186 L451 186 L451 114 L476 114" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="lb->app1" data-kind="sync" d="M426 186 L451 186 L451 114 L476 114" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="lb->app1" data-load="0.5" d="M426 186 L451 186 L451 114 L464 114" style="stroke-width:2.9;animation-duration:1.9s"/>
-<path class="edge" data-edge="lb->app2" d="M426 202 L476 202" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="lb->app2" data-kind="sync" d="M426 202 L476 202" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="lb->app2" data-load="0.5" d="M426 202 L464 202" style="stroke-width:2.9;animation-duration:1.9s"/>
-<path class="edge" data-edge="app1->cache" d="M600 114 L635 114 L635 46 L760 46 L760 65 L785 65" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app1->cache" data-kind="sync" d="M600 114 L635 114 L635 46 L760 46 L760 65 L785 65" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app1->cache" data-load="0.7" d="M600 114 L635 114 L635 46 L760 46 L760 65 L773 65" style="stroke-width:3.6;animation-duration:1.3s"/>
 <text class="edge-label" x="707.5" y="57">GET/SET</text>
-<path class="edge" data-edge="app2->cache" d="M600 190 L645 190 L645 81 L785 81" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app2->cache" data-kind="sync" d="M600 190 L645 190 L645 81 L785 81" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app2->cache" data-load="0.7" d="M600 190 L645 190 L645 81 L773 81" style="stroke-width:3.6;animation-duration:1.3s"/>
 <text class="edge-label" x="707.5" y="92">GET/SET</text>
-<path class="edge" data-edge="app1->db" d="M600 102 L625 102 L625 20 L1306 20 L1306 149 L1331 149" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app1->db" data-kind="sync" d="M600 102 L625 102 L625 20 L1306 20 L1306 149 L1331 149" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app1->db" data-load="0.3" d="M600 102 L625 102 L625 20 L1306 20 L1306 149 L1319 149" style="stroke-width:2.4;animation-duration:2.3s"/>
 <text class="edge-label" x="983.5" y="31">SQL</text>
-<path class="edge" data-edge="app2->db" d="M600 214 L1306 214 L1306 173 L1331 173" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app2->db" data-kind="sync" d="M600 214 L1306 214 L1306 173 L1331 173" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app2->db" data-load="0.3" d="M600 214 L1306 214 L1306 173 L1319 173" style="stroke-width:2.4;animation-duration:2.3s"/>
 <text class="edge-label" x="983.5" y="225">SQL</text>
-<path class="edge" data-edge="app1->queue" d="M600 126 L760 126 L760 153 L785 153" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app1->queue" data-kind="sync" d="M600 126 L760 126 L760 153 L785 153" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app1->queue" data-load="0.2" d="M600 126 L760 126 L760 153 L773 153" style="stroke-width:2;animation-duration:2.6s"/>
 <text class="edge-label" x="707.5" y="137">publish</text>
-<path class="edge" data-edge="app2->queue" d="M600 202 L655 202 L655 169 L785 169" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="app2->queue" data-kind="sync" d="M600 202 L655 202 L655 169 L785 169" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="app2->queue" data-load="0.2" d="M600 202 L655 202 L655 169 L773 169" style="stroke-width:2;animation-duration:2.6s"/>
 <text class="edge-label" x="707.5" y="180">publish</text>
-<path class="edge" data-edge="queue->worker" d="M916 161 L1051 161" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="queue->worker" data-kind="sync" d="M916 161 L1051 161" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="queue->worker" data-load="0.3" d="M916 161 L1039 161" style="stroke-width:2.3;animation-duration:2.4s"/>
 <text class="edge-label" x="983.5" y="172">consume</text>
-<path class="edge" data-edge="worker->db" d="M1213 161 L1331 161" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="worker->db" data-kind="sync" d="M1213 161 L1331 161" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="worker->db" data-load="0.1" d="M1213 161 L1319 161" style="stroke-width:1.8;animation-duration:2.8s"/>
 <text class="edge-label" x="1267" y="172">SQL</text>
 </g>
 <g class="nodes">
-<g class="node" data-node="client" transform="translate(20 170)">
+<g class="node node-service" data-node="client" data-kind="service" transform="translate(20 170)">
 <rect class="node-box" width="154" height="48" rx="8"/>
 <text class="node-label" x="77" y="24">Browser / Mobile</text>
 </g>
-<g class="node" data-node="lb" transform="translate(295 170)">
+<g class="node node-service" data-node="lb" data-kind="service" transform="translate(295 170)">
 <rect class="node-box" width="131" height="48" rx="8"/>
 <text class="node-label" x="65.5" y="24">Load balancer</text>
 </g>
-<g class="node" data-node="app1" transform="translate(476 90)">
+<g class="node node-service" data-node="app1" data-kind="service" transform="translate(476 90)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">App server 1</text>
 </g>
-<g class="node" data-node="app2" transform="translate(476 178)">
+<g class="node node-service" data-node="app2" data-kind="service" transform="translate(476 178)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">App server 2</text>
 </g>
-<g class="node" data-node="cache" transform="translate(785 49)">
+<g class="node node-service" data-node="cache" data-kind="service" transform="translate(785 49)">
 <rect class="node-box" width="116" height="48" rx="8"/>
 <text class="node-label" x="58" y="24">Redis cache</text>
 </g>
-<g class="node" data-node="db" transform="translate(1331 137)">
+<g class="node node-service" data-node="db" data-kind="service" transform="translate(1331 137)">
 <rect class="node-box" width="108" height="48" rx="8"/>
 <text class="node-label" x="54" y="24">PostgreSQL</text>
 </g>
-<g class="node" data-node="queue" transform="translate(785 137)">
+<g class="node node-service" data-node="queue" data-kind="service" transform="translate(785 137)">
 <rect class="node-box" width="131" height="48" rx="8"/>
 <text class="node-label" x="65.5" y="24">Message queue</text>
 </g>
-<g class="node" data-node="worker" transform="translate(1051 137)">
+<g class="node node-service" data-node="worker" data-kind="service" transform="translate(1051 137)">
 <rect class="node-box" width="162" height="48" rx="8"/>
 <text class="node-label" x="81" y="24">Background worker</text>
 </g>

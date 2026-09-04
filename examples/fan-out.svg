@@ -1,43 +1,58 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 423 294" width="423" height="294" data-orrery="1">
-<style>.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-region .group-box{stroke-dasharray:8 6}
+.group-zone .group-box{stroke-dasharray:3 5}
+.group-cluster .group-box{stroke:#94a3b8}
+.group-boundary .group-box{stroke:#dc2626;stroke-dasharray:6 6;fill:none}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="groups">
+
+</g>
 <g class="edges">
-<path class="edge" data-edge="lb->s1" d="M70.5 68 L70.5 128" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="lb->s1" data-kind="sync" d="M70.5 68 L70.5 128" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="lb->s1" data-load="0.3" d="M70.5 68 L70.5 116" style="stroke-width:2.4;animation-duration:2.3s"/>
-<path class="edge" data-edge="lb->s2" d="M103.3 68 L103.3 103 L211.5 103 L211.5 128" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="lb->s2" data-kind="sync" d="M103.3 68 L103.3 103 L211.5 103 L211.5 128" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="lb->s2" data-load="0.3" d="M103.3 68 L103.3 103 L211.5 103 L211.5 116" style="stroke-width:2.4;animation-duration:2.3s"/>
-<path class="edge" data-edge="lb->s3" d="M136 68 L136 93 L352.5 93 L352.5 128" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="lb->s3" data-kind="sync" d="M136 68 L136 93 L352.5 93 L352.5 128" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="lb->s3" data-load="0.3" d="M136 68 L136 93 L352.5 93 L352.5 116" style="stroke-width:2.4;animation-duration:2.3s"/>
-<path class="edge" data-edge="s1->cache" d="M70.5 176 L70.5 201 L191.5 201 L191.5 226" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="s1->cache" data-kind="sync" d="M70.5 176 L70.5 201 L191.5 201 L191.5 226" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="s1->cache" data-load="1" d="M70.5 176 L70.5 201 L191.5 201 L191.5 214" style="stroke-width:4.5;animation-duration:0.5s"/>
-<path class="edge" data-edge="s2->cache" d="M211.5 176 L211.5 226" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="s2->cache" data-kind="sync" d="M211.5 176 L211.5 226" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="s2->cache" data-load="0" d="M211.5 176 L211.5 214" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge" data-edge="s3->cache" d="M352.5 176 L352.5 201 L231.5 201 L231.5 226" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="s3->cache" data-kind="sync" d="M352.5 176 L352.5 201 L231.5 201 L231.5 226" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="s3->cache" data-load="0.5" d="M352.5 176 L352.5 201 L231.5 201 L231.5 214" style="stroke-width:3;animation-duration:1.8s"/>
 </g>
 <g class="nodes">
-<g class="node" data-node="lb" transform="translate(37.8 20)">
+<g class="node node-service" data-node="lb" data-kind="service" transform="translate(37.8 20)">
 <rect class="node-box" width="131" height="48" rx="8"/>
 <text class="node-label" x="65.5" y="24">Load balancer</text>
 </g>
-<g class="node" data-node="s1" transform="translate(20 128)">
+<g class="node node-service" data-node="s1" data-kind="service" transform="translate(20 128)">
 <rect class="node-box" width="101" height="48" rx="8"/>
 <text class="node-label" x="50.5" y="24">Service 1</text>
 </g>
-<g class="node" data-node="s2" transform="translate(161 128)">
+<g class="node node-service" data-node="s2" data-kind="service" transform="translate(161 128)">
 <rect class="node-box" width="101" height="48" rx="8"/>
 <text class="node-label" x="50.5" y="24">Service 2</text>
 </g>
-<g class="node" data-node="s3" transform="translate(302 128)">
+<g class="node node-service" data-node="s3" data-kind="service" transform="translate(302 128)">
 <rect class="node-box" width="101" height="48" rx="8"/>
 <text class="node-label" x="50.5" y="24">Service 3</text>
 </g>
-<g class="node" data-node="cache" transform="translate(171.5 226)">
+<g class="node node-service" data-node="cache" data-kind="service" transform="translate(171.5 226)">
 <rect class="node-box" width="80" height="48" rx="8"/>
 <text class="node-label" x="40" y="24">Cache</text>
 </g>
