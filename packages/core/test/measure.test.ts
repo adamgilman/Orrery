@@ -19,7 +19,7 @@ describe("toLayoutGraph", () => {
     expect(g.direction).toBe("down");
     expect(g.nodes.map((n) => n.id)).toEqual(["a", "b"]);
     expect(g.nodes[0]!.width).toBeGreaterThan(0);
-    expect(g.edges).toEqual([{ id: "e0", from: "a", to: "b" }]);
+    expect(g.edges).toEqual([{ id: "a->b", from: "a", to: "b" }]);
   });
 
   it("measures edge labels so the layout engine can place them", () => {

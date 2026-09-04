@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { Ajv, type ErrorObject } from "ajv";
-import type { Diagram } from "./types.js";
+import type { Diagram, Direction, EdgeKind, GroupKind, NodeKind, ViewType } from "./types.js";
 
 export class ValidationError {
   constructor(
@@ -38,21 +38,70 @@ function describe(e: ErrorObject): ValidationError {
   }
 }
 
-/** Semantic checks that JSON Schema cannot express. Runs only on schema-valid input. */
-function checkSemantics(d: Diagram): ValidationError[] {
+/** Semantic checks that JSON Schema cannot express. Runs only on schema-valid, normalised input. */
+function checkSemantics(d: Diagram, explicitEdgeIds: boolean[]): ValidationError[] {
   const errors: ValidationError[] = [];
-  const ids = new Set<string>();
-  d.nodes.forEach((n, i) => {
-    if (ids.has(n.id)) errors.push(new ValidationError(`/nodes/${i}/id`, `duplicate node id "${n.id}"`));
-    ids.add(n.id);
+  const err = (pointer: string, message: string) => errors.push(new ValidationError(pointer, message));
+
+  const groupIds = new Set<string>();
+  d.groups.forEach((g, i) => {
+    if (groupIds.has(g.id)) err(`/groups/${i}/id`, `duplicate group id "${g.id}"`);
+    groupIds.add(g.id);
   });
+  const nodeIds = new Set<string>();
+  d.nodes.forEach((n, i) => {
+    if (nodeIds.has(n.id)) err(`/nodes/${i}/id`, `duplicate node id "${n.id}"`);
+    else if (groupIds.has(n.id)) err(`/nodes/${i}/id`, `id "${n.id}" is already used by a group`);
+    nodeIds.add(n.id);
+    if (n.group !== undefined && !groupIds.has(n.group)) err(`/nodes/${i}/group`, `unknown group "${n.group}"`);
+  });
+
+  // Parent references and cycles. Every group on a cycle is reported so the author sees the whole loop.
+  const parentOf = new Map(d.groups.map((g) => [g.id, g.parent] as const));
+  d.groups.forEach((g, i) => {
+    if (g.parent === undefined) return;
+    if (!groupIds.has(g.parent)) return err(`/groups/${i}/parent`, `unknown group "${g.parent}"`);
+    const seen = new Set<string>([g.id]);
+    for (let cur: string | undefined = g.parent; cur !== undefined; cur = parentOf.get(cur)) {
+      if (cur === g.id) return err(`/groups/${i}/parent`, `group cycle through "${g.id}"`);
+      if (seen.has(cur)) return; // joins a cycle it is not on; that cycle is reported by its own members
+      seen.add(cur);
+    }
+  });
+
+  const edgeIds = new Set<string>();
   d.edges.forEach((e, i) => {
-    if (!ids.has(e.from)) errors.push(new ValidationError(`/edges/${i}/from`, `unknown node "${e.from}"`));
-    if (!ids.has(e.to)) errors.push(new ValidationError(`/edges/${i}/to`, `unknown node "${e.to}"`));
-    if (e.from === e.to && ids.has(e.from)) errors.push(new ValidationError(`/edges/${i}`, `self-referencing edge "${e.from}"`));
+    if (!nodeIds.has(e.from)) err(`/edges/${i}/from`, `unknown node "${e.from}"`);
+    if (!nodeIds.has(e.to)) err(`/edges/${i}/to`, `unknown node "${e.to}"`);
+    if (e.from === e.to && nodeIds.has(e.from)) err(`/edges/${i}`, `self-referencing edge "${e.from}"`);
+    if (edgeIds.has(e.id)) {
+      const hint = explicitEdgeIds[i] ? "" : "; give one of them an explicit id";
+      err(explicitEdgeIds[i] ? `/edges/${i}/id` : `/edges/${i}`, `duplicate edge id "${e.id}"${hint}`);
+    }
+    edgeIds.add(e.id);
+  });
+
+  const viewIds = new Set<string>();
+  d.views.forEach((v, i) => {
+    if (viewIds.has(v.id)) err(`/views/${i}/id`, `duplicate view id "${v.id}"`);
+    viewIds.add(v.id);
+    if (v.scope !== undefined && !groupIds.has(v.scope)) err(`/views/${i}/scope`, `unknown group "${v.scope}"`);
   });
   return errors;
 }
+
+interface RawDiagram {
+  $schema?: string;
+  title?: string;
+  direction: Direction;
+  groups: { id: string; label?: string; kind: GroupKind; parent?: string }[];
+  nodes: { id: string; label?: string; kind: NodeKind; group?: string }[];
+  edges: { id?: string; from: string; to: string; kind: EdgeKind; label?: string; load: number }[];
+  views?: { id: string; title?: string; type: ViewType; direction?: Direction; scope?: string }[];
+}
+
+const opt = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } =>
+  (value !== undefined ? ({ [key]: value } as { [P in K]: V }) : {});
 
 /** Validate an untrusted JSON value and return a normalised Diagram or a list of pointer-addressed errors. */
 export function validate(input: unknown): ValidationResult {
@@ -61,14 +110,22 @@ export function validate(input: unknown): ValidationResult {
     const errors = (checkSchema.errors ?? []).map(describe);
     return { ok: false, errors: dedupe(errors) };
   }
-  const raw = data as Diagram & { $schema?: string };
+  const raw = data as RawDiagram;
   const diagram: Diagram = {
-    ...(raw.title !== undefined ? { title: raw.title } : {}),
+    ...opt("title", raw.title),
     direction: raw.direction,
-    nodes: raw.nodes.map((n) => ({ id: n.id, label: n.label ?? n.id })),
-    edges: raw.edges.map((e) => ({ from: e.from, to: e.to, load: e.load, ...(e.label !== undefined ? { label: e.label } : {}) })),
+    groups: raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, ...opt("parent", g.parent) })),
+    nodes: raw.nodes.map((n) => ({ id: n.id, label: n.label ?? n.id, kind: n.kind, ...opt("group", n.group) })),
+    edges: raw.edges.map((e) => ({ id: e.id ?? `${e.from}->${e.to}`, from: e.from, to: e.to, kind: e.kind, load: e.load, ...opt("label", e.label) })),
+    views: (raw.views ?? [{ id: "default", type: "topology" }]).map((v) => ({
+      id: v.id,
+      type: v.type ?? "topology",
+      direction: v.direction ?? raw.direction,
+      ...opt("title", v.title),
+      ...opt("scope", v.scope),
+    })),
   };
-  const errors = checkSemantics(diagram);
+  const errors = checkSemantics(diagram, raw.edges.map((e) => e.id !== undefined));
   return errors.length ? { ok: false, errors } : { ok: true, diagram };
 }
 

@@ -94,7 +94,7 @@ describe("renderSvg: edge label placement", () => {
   it("draws the label at the engine's labelAt, centred, when provided", async () => {
     const d = fixture("three-tier");
     const l = await laidOut(d);
-    l.edges.e0!.labelAt = { x: 123.4, y: 56.7 };
+    l.edges["web->api"]!.labelAt = { x: 123.4, y: 56.7 };
     const svg = renderSvg(d, l);
     expect(svg).toMatch(/<text class="edge-label" x="123\.4" y="56\.7">HTTPS<\/text>/);
   });

@@ -1,5 +1,5 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
-import { edgeId, toLayoutGraph } from "./measure.js";
+import { toLayoutGraph } from "./measure.js";
 import type { Diagram, DiagramEdge } from "./types.js";
 
 /** Text-content escaping. */
@@ -72,10 +72,10 @@ function midpoint(pts: Point[]): Point {
   return pts[0]!;
 }
 
-function edgeMarkup(e: DiagramEdge, i: number, layout: LayoutResult): string {
-  const route = layout.edges[edgeId(e, i)];
-  if (!route) throw new Error(`layout returned no route for edge ${e.from}->${e.to}`);
-  const key = escAttr(`${e.from}->${e.to}`);
+function edgeMarkup(e: DiagramEdge, layout: LayoutResult): string {
+  const route = layout.edges[e.id];
+  if (!route) throw new Error(`layout returned no route for edge ${e.id}`);
+  const key = escAttr(e.id);
   const parts = [
     `<path class="edge" data-edge="${key}" d="${pathD(route.points)}" marker-end="url(#arrow)"/>`,
     `<path class="flow" data-flow="${key}" data-load="${num(e.load)}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
@@ -100,7 +100,7 @@ export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
       `</g>`,
     ].join("\n");
   });
-  const edges = diagram.edges.map((e, i) => edgeMarkup(e, i, layout));
+  const edges = diagram.edges.map((e) => edgeMarkup(e, layout));
   const title = diagram.title !== undefined ? `<title>${esc(diagram.title)}</title>\n` : "";
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(layout.width)} ${num(layout.height)}" width="${num(layout.width)}" height="${num(layout.height)}" data-orrery="1">`,

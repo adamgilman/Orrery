@@ -1,0 +1,7 @@
+{
+  "nodes": [ { "id": "a" }, { "id": "b" } ],
+  "edges": [
+    { "id": "a-b-reads", "from": "a", "to": "b", "label": "reads", "load": 0.6 },
+    { "id": "a-b-writes", "from": "a", "to": "b", "label": "writes", "kind": "async", "load": 0.2 }
+  ]
+}

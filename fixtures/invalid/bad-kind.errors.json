@@ -1,0 +1,1 @@
+[ { "pointer": "/nodes/0/kind", "message": "must be one of: service, database, queue, cache, gateway, client, storage, function, external" } ]

@@ -1,0 +1,1 @@
+[ { "pointer": "/groups/0/parent", "message": "group cycle" }, { "pointer": "/groups/1/parent", "message": "group cycle" }, { "pointer": "/groups/2/parent", "message": "group cycle" } ]

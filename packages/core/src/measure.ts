@@ -20,14 +20,12 @@ export function measureEdgeLabel(text: string): { width: number; height: number 
   return { width: Math.ceil(text.length * LABEL_CHAR_WIDTH + 8), height: EDGE_LABEL_HEIGHT };
 }
 
-export const edgeId = (edge: { from: string; to: string }, index: number) => `e${index}`;
-
 export function toLayoutGraph(diagram: Diagram): LayoutGraph {
   return {
     direction: diagram.direction,
     nodes: diagram.nodes.map((n) => ({ id: n.id, ...measureNode(n) })),
-    edges: diagram.edges.map((e, i) => ({
-      id: edgeId(e, i),
+    edges: diagram.edges.map((e) => ({
+      id: e.id,
       from: e.from,
       to: e.to,
       ...(e.label !== undefined ? { label: measureEdgeLabel(e.label) } : {}),

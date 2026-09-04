@@ -56,3 +56,40 @@ describe("validate: normalisation", () => {
     expect(result.errors[0]?.toString()).toBe('/edges/0/to: unknown node "nope"');
   });
 });
+
+describe("validate: model and views normalisation", () => {
+  const grouped = () => {
+    const r = validate(load(join(fixtures, "valid", "grouped.json")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    return r.diagram;
+  };
+  it("defaults edge id to from->to and keeps explicit ids", () => {
+    const d = grouped();
+    expect(d.edges.map((e) => e.id)).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
+  });
+  it("defaults kinds", () => {
+    const d = grouped();
+    expect(d.nodes.find((n) => n.id === "web")?.kind).toBe("gateway");
+    expect(d.edges[0]?.kind).toBe("sync");
+    expect(d.groups[0]?.kind).toBe("region");
+    const r = validate({ nodes: [{ id: "a" }], edges: [], groups: [{ id: "g" }] });
+    if (!r.ok) throw new Error();
+    expect(r.diagram.nodes[0]?.kind).toBe("service");
+    expect(r.diagram.groups[0]).toEqual({ id: "g", label: "g", kind: "tier" });
+  });
+  it("synthesises one topology view of everything when views are absent", () => {
+    const r = validate({ direction: "down", nodes: [{ id: "a" }], edges: [] });
+    if (!r.ok) throw new Error();
+    expect(r.diagram.views).toEqual([{ id: "default", type: "topology", direction: "down" }]);
+  });
+  it("fills view defaults from the top level and keeps scope", () => {
+    const d = grouped();
+    expect(d.views[0]).toEqual({ id: "overview", type: "topology", direction: "right" });
+    expect(d.views[1]).toEqual({ id: "data-tier", type: "topology", direction: "down", title: "Data tier", scope: "data" });
+  });
+  it("keeps node group and group parent references", () => {
+    const d = grouped();
+    expect(d.nodes.find((n) => n.id === "api")?.group).toBe("app");
+    expect(d.groups.find((g) => g.id === "app")?.parent).toBe("region");
+  });
+});

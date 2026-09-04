@@ -1,0 +1,1 @@
+{ "groups": [ { "id": "g1", "parent": "g2" }, { "id": "g2", "parent": "g1" }, { "id": "g3", "parent": "g3" } ], "nodes": [ { "id": "a" } ], "edges": [] }

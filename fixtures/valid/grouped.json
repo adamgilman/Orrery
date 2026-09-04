@@ -1,0 +1,25 @@
+{
+  "title": "Grouped three tier",
+  "direction": "right",
+  "groups": [
+    { "id": "region", "label": "us-east-1", "kind": "region" },
+    { "id": "app", "label": "Application", "kind": "tier", "parent": "region" },
+    { "id": "data", "label": "Data", "kind": "tier", "parent": "region" }
+  ],
+  "nodes": [
+    { "id": "web", "label": "Web tier", "kind": "gateway" },
+    { "id": "api", "label": "Checkout API", "kind": "service", "group": "app" },
+    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" },
+    { "id": "replica", "label": "Orders DB (replica)", "kind": "database", "group": "data" }
+  ],
+  "edges": [
+    { "from": "web", "to": "api", "load": 0.7, "label": "HTTPS" },
+    { "from": "api", "to": "db", "load": 0.5, "label": "writes" },
+    { "id": "api-reads", "from": "api", "to": "replica", "kind": "sync", "load": 0.3, "label": "reads" },
+    { "from": "db", "to": "replica", "kind": "replication", "load": 0.2 }
+  ],
+  "views": [
+    { "id": "overview" },
+    { "id": "data-tier", "title": "Data tier", "scope": "data", "direction": "down" }
+  ]
+}
