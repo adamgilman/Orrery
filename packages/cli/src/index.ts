@@ -3,11 +3,16 @@ import { render, validate, type ValidationError } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 
 export const USAGE = `Usage:
-  orrery validate <file>                 Check a diagram file; prints one "<pointer>: <message>" per error
-  orrery render <file> [-o <out.svg>]    Render an animated SVG (stdout when -o is omitted)
+  orrery validate <file>                 Check a diagram file. Prints "OK: N nodes, M edges", or one
+                                         "<file>:<json-pointer>: <message>" line per error on stderr.
+  orrery render <file> [-o <out.svg>]    Validate, lay out and render a standalone SVG whose edge flow is
+                                         animated with CSS (plays inside <img>, e.g. a GitHub README).
+                                         Writes to stdout when -o is omitted. Output is deterministic.
   orrery --help
 
-Schema: https://orrery.dev/schema/v1.json`;
+Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
+Layout is automatic; the file never contains coordinates. Every property is documented in the schema:
+  https://orrery.dev/schema/v1.json  (local copy: packages/core/schema/v1.json)`;
 
 export class CliError extends Error {
   constructor(message: string, public readonly exitCode: number = 1) { super(message); }

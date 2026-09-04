@@ -4,37 +4,84 @@
   "title": "Orrery diagram (M0 subset)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["nodes", "edges"],
+  "required": [
+    "nodes",
+    "edges"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "title": { "type": "string" },
-    "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
+    "$schema": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "description": "Diagram title. Rendered as the SVG <title> for accessibility."
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "right",
+        "down"
+      ],
+      "default": "right",
+      "description": "Layout flow direction: edges run from source to target left-to-right (\"right\") or top-to-bottom (\"down\"). The only layout hint; positions are computed automatically and are deterministic."
+    },
     "nodes": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
-          "label": { "type": "string", "minLength": 1 }
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique identifier referenced by edges. Letters, digits, '_', '.', '-'; must start with a letter or digit."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Text shown in the node box. Defaults to the id."
+          }
         }
-      }
+      },
+      "description": "Components of the system. Order matters: nodes in the same rank are placed in this order, so list the important ones first."
     },
     "edges": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["from", "to"],
+        "required": [
+          "from",
+          "to"
+        ],
         "properties": {
-          "from": { "type": "string" },
-          "to": { "type": "string" },
-          "label": { "type": "string" },
-          "load": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 }
+          "from": {
+            "type": "string",
+            "description": "Source node id."
+          },
+          "to": {
+            "type": "string",
+            "description": "Target node id. The arrowhead is drawn here."
+          },
+          "label": {
+            "type": "string",
+            "description": "Short text drawn at the edge midpoint, e.g. a protocol or purpose.",
+            "minLength": 1
+          },
+          "load": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.5,
+            "description": "Relative traffic on this edge, 0 to 1. Drives the flow animation: 0 hides the flow, 1 is the fastest and thickest dashes. Use it for relative intensity, not real units."
+          }
         }
-      }
+      },
+      "description": "Directed connections. Each 'from'/'to' must be an existing node id (checked by the validator); self-references and duplicate node ids are rejected."
     }
   }
 }
