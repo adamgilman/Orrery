@@ -1,6 +1,7 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
-import { toLayoutGraph } from "./measure.js";
-import type { Diagram, DiagramEdge } from "./types.js";
+import { GLYPH_KINDS, GLYPH_WIDTH, toLayoutGraph } from "./measure.js";
+import type { Diagram, DiagramEdge, DiagramGroup, DiagramNode, NodeKind } from "./types.js";
+import { scopeDiagram, selectView } from "./view.js";
 
 /** Text-content escaping. */
 const esc = (s: string) =>
@@ -50,9 +51,21 @@ export function flowStyle(load: number): string {
 }
 
 const STYLE = `
+.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-region .group-box{stroke-dasharray:8 6}
+.group-zone .group-box{stroke-dasharray:3 5}
+.group-cluster .group-box{stroke:#94a3b8}
+.group-boundary .group-box{stroke:#dc2626;stroke-dasharray:6 6;fill:none}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
@@ -72,12 +85,48 @@ function midpoint(pts: Point[]): Point {
   return pts[0]!;
 }
 
+/** 16×16 glyphs, stroke-based so they inherit the theme. */
+const GLYPHS: Partial<Record<NodeKind, string>> = {
+  database: `<ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/>`,
+  queue: `<rect x="1.5" y="5" width="3.5" height="6" rx=".5"/><rect x="6.25" y="5" width="3.5" height="6" rx=".5"/><rect x="11" y="5" width="3.5" height="6" rx=".5"/>`,
+  cache: `<path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/>`,
+  gateway: `<path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/>`,
+  client: `<rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/>`,
+  storage: `<path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/>`,
+  function: `<text class="glyph-text" x="8" y="8.5">λ</text>`,
+};
+
+function groupMarkup(g: DiagramGroup, layout: LayoutResult): string {
+  const b = layout.groups[g.id];
+  if (!b) throw new Error(`layout returned no box for group ${g.id}`);
+  return [
+    `<g class="group group-${g.kind}" data-group="${escAttr(g.id)}">`,
+    `<rect class="group-box" x="${num(b.x)}" y="${num(b.y)}" width="${num(b.width)}" height="${num(b.height)}" rx="10"/>`,
+    `<text class="group-label" x="${num(b.x + 12)}" y="${num(b.y + 16)}">${esc(g.label)}</text>`,
+    `</g>`,
+  ].join("\n");
+}
+
+function nodeMarkup(n: DiagramNode, layout: LayoutResult): string {
+  const b = layout.nodes[n.id];
+  if (!b) throw new Error(`layout returned no box for node ${n.id}`);
+  const glyph = GLYPH_KINDS.has(n.kind) ? GLYPHS[n.kind] : undefined;
+  const inset = glyph ? 12 + GLYPH_WIDTH : 0;
+  return [
+    `<g class="node node-${n.kind}" data-node="${escAttr(n.id)}" data-kind="${n.kind}" transform="translate(${num(b.x)} ${num(b.y)})">`,
+    `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
+    ...(glyph ? [`<g class="glyph" transform="translate(12 ${num(b.height / 2 - 8)})">${glyph}</g>`] : []),
+    `<text class="node-label" x="${num((inset + b.width) / 2)}" y="${num(b.height / 2)}">${esc(n.label)}</text>`,
+    `</g>`,
+  ].join("\n");
+}
+
 function edgeMarkup(e: DiagramEdge, layout: LayoutResult): string {
   const route = layout.edges[e.id];
   if (!route) throw new Error(`layout returned no route for edge ${e.id}`);
   const key = escAttr(e.id);
   const parts = [
-    `<path class="edge" data-edge="${key}" d="${pathD(route.points)}" marker-end="url(#arrow)"/>`,
+    `<path class="edge edge-${e.kind}" data-edge="${key}" data-kind="${e.kind}" d="${pathD(route.points)}" marker-end="url(#arrow)"/>`,
     `<path class="flow" data-flow="${key}" data-load="${num(e.load)}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
   ];
   if (e.label !== undefined) {
@@ -90,16 +139,8 @@ function edgeMarkup(e: DiagramEdge, layout: LayoutResult): string {
 
 /** Render a laid-out diagram to a standalone SVG string. Pure and deterministic. */
 export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
-  const nodes = diagram.nodes.map((n) => {
-    const b = layout.nodes[n.id];
-    if (!b) throw new Error(`layout returned no box for node ${n.id}`);
-    return [
-      `<g class="node" data-node="${escAttr(n.id)}" transform="translate(${num(b.x)} ${num(b.y)})">`,
-      `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
-      `<text class="node-label" x="${num(b.width / 2)}" y="${num(b.height / 2)}">${esc(n.label)}</text>`,
-      `</g>`,
-    ].join("\n");
-  });
+  const groups = diagram.groups.map((g) => groupMarkup(g, layout));
+  const nodes = diagram.nodes.map((n) => nodeMarkup(n, layout));
   const edges = diagram.edges.map((e) => edgeMarkup(e, layout));
   const title = diagram.title !== undefined ? `<title>${esc(diagram.title)}</title>\n` : "";
   return [
@@ -107,14 +148,18 @@ export function renderSvg(diagram: Diagram, layout: LayoutResult): string {
     title + `<style>${STYLE}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths, and only marker-end is used.
     `<defs><marker id="arrow" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z" fill="#94a3b8"/></marker></defs>`,
+    `<g class="groups">\n${groups.join("\n")}\n</g>`,
     `<g class="edges">\n${edges.join("\n")}\n</g>`,
     `<g class="nodes">\n${nodes.join("\n")}\n</g>`,
     `</svg>`,
   ].join("\n") + "\n";
 }
 
-/** Measure, lay out and render in one call. */
-export async function render(diagram: Diagram, engine: LayoutEngine): Promise<string> {
-  const layout = await engine.layout(toLayoutGraph(diagram));
-  return renderSvg(diagram, layout);
+export interface RenderOptions { view?: string }
+
+/** Select a view, scope the model to it, measure, lay out and render in one call. */
+export async function render(diagram: Diagram, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
+  const scoped = scopeDiagram(diagram, selectView(diagram, options.view));
+  const layout = await engine.layout(toLayoutGraph(scoped));
+  return renderSvg(scoped, layout);
 }

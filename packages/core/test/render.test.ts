@@ -111,7 +111,7 @@ describe("renderSvg: flow overlay stops short of the arrowhead", () => {
   it("trims the flow path so dashes never cover the marker", async () => {
     const d = fixture("three-tier");
     const svg = renderSvg(d, await laidOut(d));
-    const edgeD = svg.match(/<path class="edge" data-edge="[^"]*" d="([^"]*)"/)![1]!;
+    const edgeD = svg.match(/<path class="edge[^"]*" data-edge="[^"]*" data-kind="[^"]*" d="([^"]*)"/)![1]!;
     const flowD = svg.match(/<path class="flow" data-flow="[^"]*" data-load="[^"]*" d="([^"]*)"/)![1]!;
     const last = (p: string) => p.split(" L").at(-1)!.split(" ").map(Number);
     const [ex, ey] = last(edgeD), [fx, fy] = last(flowD);
@@ -119,5 +119,41 @@ describe("renderSvg: flow overlay stops short of the arrowhead", () => {
     expect(gap).toBeGreaterThanOrEqual(8);
     expect(gap).toBeLessThanOrEqual(14);
     expect(flowD.startsWith(edgeD.split(" L")[0]!)).toBe(true);
+  });
+});
+
+describe("renderSvg: groups, kinds, edge kinds", () => {
+  const grouped = () => fixture("grouped");
+  it("draws group frames with labels, beneath edges and nodes, in hierarchy order", async () => {
+    const d = grouped();
+    const svg = renderSvg(d, await laidOut(d));
+    expect(attr(svg, "g", "data-group")).toEqual(["region", "app", "data"]);
+    expect(svg).toContain('<g class="group group-region" data-group="region"');
+    expect(svg).toContain('<rect class="group-box"');
+    expect(svg).toContain(">us-east-1</text>");
+    expect(svg.indexOf('class="groups"')).toBeLessThan(svg.indexOf('class="edges"'));
+    expect(svg.indexOf('class="edges"')).toBeLessThan(svg.indexOf('class="nodes"'));
+  });
+  it("tags nodes with their kind and draws a glyph for non-service kinds", async () => {
+    const d = grouped();
+    const svg = renderSvg(d, await laidOut(d));
+    expect(svg).toContain('class="node node-database" data-node="db" data-kind="database"');
+    expect(svg).toContain('class="node node-service" data-node="api" data-kind="service"');
+    const dbGroup = svg.slice(svg.indexOf('data-node="db"'), svg.indexOf("</g>", svg.indexOf('data-node="db"')));
+    expect(dbGroup).toContain('class="glyph"');
+    const apiGroup = svg.slice(svg.indexOf('data-node="api"'), svg.indexOf("</g>", svg.indexOf('data-node="api"')));
+    expect(apiGroup).not.toContain('class="glyph"');
+  });
+  it("styles base edges by kind", async () => {
+    const d = grouped();
+    const svg = renderSvg(d, await laidOut(d));
+    expect(svg).toContain('<path class="edge edge-replication" data-edge="db->replica" data-kind="replication"');
+    expect(svg).toContain('<path class="edge edge-sync" data-edge="web->api" data-kind="sync"');
+    expect(svg).toMatch(/\.edge-async\{[^}]*stroke-dasharray/);
+    expect(svg).toMatch(/\.edge-replication\{[^}]*stroke-dasharray/);
+  });
+  it("matches the snapshot for grouped with the fake engine", async () => {
+    const d = grouped();
+    expect(renderSvg(d, await laidOut(d))).toMatchSnapshot();
   });
 });

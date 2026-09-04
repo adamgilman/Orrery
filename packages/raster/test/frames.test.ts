@@ -69,7 +69,7 @@ describe("isolateFlow", () => {
     const one = isolateFlow(svg, "lb->s2");
     expect(one.match(/<path class="flow"/g)).toHaveLength(1);
     expect(one).toContain('data-flow="lb->s2"');
-    expect(one.match(/<path class="edge"/g)).toHaveLength(6);
+    expect(one.match(/<path class="edge[ "]/g)).toHaveLength(6);
     expect(one.match(/<g class="node"/g)).toHaveLength(5);
   });
 });

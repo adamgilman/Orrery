@@ -7,10 +7,15 @@ export const GROUP_LABEL_HEIGHT = 24;
 export const NODE_MIN_WIDTH = 80;
 const CHAR_WIDTH = 7.6; // average glyph width at 14px in a system sans font
 const PADDING = 32;
+/** Extra width for the kind glyph drawn left of the label. */
+export const GLYPH_WIDTH = 24;
+/** Kinds drawn with a glyph; "service" and "external" rely on box style alone. */
+export const GLYPH_KINDS: ReadonlySet<string> = new Set(["database", "queue", "cache", "gateway", "client", "storage", "function"]);
 
 /** Estimate a node's box from its label. Layout engines receive sizes; they never measure text. */
 export function measureNode(node: DiagramNode): { width: number; height: number } {
-  const width = Math.max(NODE_MIN_WIDTH, Math.ceil(node.label.length * CHAR_WIDTH + PADDING));
+  const glyph = GLYPH_KINDS.has(node.kind) ? GLYPH_WIDTH : 0;
+  const width = Math.max(NODE_MIN_WIDTH, Math.ceil(node.label.length * CHAR_WIDTH + PADDING + glyph));
   return { width, height: NODE_HEIGHT };
 }
 

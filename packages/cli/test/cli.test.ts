@@ -88,3 +88,26 @@ describe("orrery usage", () => {
     expect(r.out).toContain("orrery render <file> [-o <out.svg>]");
   });
 });
+
+describe("orrery render --view", () => {
+  it("renders the named view", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const out = join(dir, "v.svg");
+    const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "data-tier", "-o", out);
+    expect(r.err).toBe("");
+    expect(r.code).toBe(0);
+    const svg = readFileSync(out, "utf8");
+    expect(svg).toContain('data-node="db"');
+    expect(svg).not.toContain('data-node="web"');
+  });
+  it("lists available views on an unknown id", () => {
+    const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "nope");
+    expect(r.code).toBe(1);
+    expect(r.err).toContain('unknown view "nope"');
+    expect(r.err).toContain("overview, data-tier");
+  });
+  it("validate reports the view count", () => {
+    const r = run("validate", join(fixtures, "valid/grouped.json"));
+    expect(r.out).toBe("OK: 4 nodes, 4 edges, 3 groups, 2 views\n");
+  });
+});

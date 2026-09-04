@@ -6,8 +6,9 @@ export const USAGE = `Usage:
   orrery validate <file>                 Check a diagram file. Prints "OK: N nodes, M edges", or one
                                          "<file>:<json-pointer>: <message>" line per error on stderr.
   orrery render <file> [-o <out.svg>]    Validate, lay out and render a standalone SVG whose edge flow is
-                                         animated with CSS (plays inside <img>, e.g. a GitHub README).
+                 [--view <id>]           animated with CSS (plays inside <img>, e.g. a GitHub README).
                                          Writes to stdout when -o is omitted. Output is deterministic.
+                                         --view picks one of the file's views (default: the first).
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -43,16 +44,19 @@ export async function main(argv: string[], io: Io): Promise<number> {
         const file = rest[0];
         if (!file) throw new CliError(USAGE, 2);
         const d = loadDiagram(file);
-        io.stdout(`OK: ${d.nodes.length} nodes, ${d.edges.length} edges\n`);
+        io.stdout(`OK: ${d.nodes.length} nodes, ${d.edges.length} edges, ${d.groups.length} groups, ${d.views.length} views\n`);
         return 0;
       }
       case "render": {
         const file = rest[0];
         if (!file) throw new CliError(USAGE, 2);
-        const oIdx = rest.indexOf("-o");
-        const out = oIdx >= 0 ? rest[oIdx + 1] : undefined;
-        if (oIdx >= 0 && !out) throw new CliError("-o requires a path", 2);
-        const svg = await render(loadDiagram(file), new ElkLayoutEngine());
+        const flag = (name: string) => { const i = rest.indexOf(name); if (i < 0) return undefined; const v = rest[i + 1]; if (!v) throw new CliError(`${name} requires a value`, 2); return v; };
+        const out = flag("-o");
+        const view = flag("--view");
+        const diagram = loadDiagram(file);
+        let svg: string;
+        try { svg = await render(diagram, new ElkLayoutEngine(), view !== undefined ? { view } : {}); }
+        catch (e) { if (e instanceof Error && e.message.startsWith("unknown view")) throw new CliError(`${file}: ${e.message}`); throw e; }
         if (out) writeFileSync(out, svg); else io.stdout(svg);
         return 0;
       }
