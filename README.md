@@ -12,13 +12,14 @@ Orrery's first diagram is, naturally, an orrery.
 *A plain SVG file in an image tag. Dash speed and thickness follow each edge's `load`: the Sun pours heat into Venus,
 Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Moon mostly gets tides.*
 
-A more terrestrial example, a checkout service with a read replica and a worker queue, is in
-[examples/three-tier.svg](examples/three-tier.svg).
+A more terrestrial example, a checkout service with tiers, a region, and a worker queue, is below.
 
 ## Status
 
-Milestone 0, the thin slice: `validate` and `render` for nodes, edges, and load. Groups, icons,
-failure simulation, scenarios, the interactive runtime, and GIF export are on the roadmap. See [PRD.md](PRD.md).
+Milestone 1: one model, many views. Nodes with kinds, nested groups, edge kinds, and views that drill into a group.
+Failure simulation, scenarios, the interactive runtime, and GIF export are on the roadmap. See [PRD.md](PRD.md).
+
+![Checkout service with tiers and a region](examples/checkout.svg)
 
 ## Quick start
 
@@ -34,15 +35,30 @@ node packages/cli/dist/main.js render examples/three-tier.orrery.json -o out.svg
 {
   "$schema": "https://orrery.dev/schema/v1.json",
   "direction": "right",
-  "nodes": [ { "id": "web", "label": "Web" }, { "id": "api", "label": "API" }, { "id": "db", "label": "DB" } ],
-  "edges": [ { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" }, { "from": "api", "to": "db", "load": 0.4 } ]
+  "groups": [ { "id": "data", "label": "Data", "kind": "tier" } ],
+  "nodes": [
+    { "id": "web", "label": "Web", "kind": "gateway" },
+    { "id": "api", "label": "API" },
+    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" }
+  ],
+  "edges": [
+    { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" },
+    { "from": "api", "to": "db", "load": 0.4 }
+  ],
+  "views": [ { "id": "overview" }, { "id": "data", "scope": "data", "direction": "down" } ]
 }
 ```
+
+The top level is the model: `groups`, `nodes`, `edges`. `views` are drawings of it; leave them out for one view of
+everything, or add several and pick one with `render --view <id>`.
 
 Rules an agent needs to know:
 
 - Never write coordinates. Layout is automatic and deterministic; `direction` is the only hint.
 - Node order in JSON is the order on the canvas within a rank, so put important things first.
+- Kinds are a small fixed vocabulary. Nodes: service, database, queue, cache, gateway, client, storage, function, external.
+  Groups: tier, region, zone, cluster, boundary. Edges: sync, async, replication, dataflow.
+- Edge ids default to `from->to`. Two edges between the same nodes need explicit ids.
 - `load` is 0 to 1. Zero hides the flow, one is the fastest and thickest.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 

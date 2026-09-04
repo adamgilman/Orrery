@@ -109,7 +109,7 @@ Semantics that hold in every view:
 - Edge `id` defaults to `"<from>-><to>"` and must be unique; several edges between one pair need explicit ids. Views, scenarios and interactions reference edges by id, never by position.
 - `load` is 0..1 and is the *only* animation input. `state` is `on | off | degraded | failed`.
 - `dependsOn: true` on an edge means the source cannot be healthy if the target is not, unless a `fallback` edge from the same source is healthy. `replication` and `dataflow` edges never imply dependency.
-- A view's `scope` is a group id; the view shows that group's descendants and the edges among them, plus edges to outside nodes drawn as stubs.
+- A view's `scope` is a group id; the view shows that group as the root frame, its descendants, and the edges among them. Edges to nodes outside the scope are dropped today; drawing them as stubs is a later refinement.
 - Outline = group hierarchy, then nodes. No separate outline model.
 - Timelines are ordered steps. The runtime has one step-through control that plays scenarios (state changes) and interactions (messages) alike; a sequence view is another renderer for an interaction.
 
@@ -173,7 +173,14 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 **Packages in M0** (pnpm workspace, vitest): `@orrery/core` (schema, validator, model, `LayoutEngine` interface, SVG renderer), `@orrery/layout-elk` (the only importer of elkjs), `orrery` (CLI). Splitting `core` further waits until a second consumer exists.
 
-### Status (2026-09-04)
+### Status (2026-09-04, evening)
+
+M1 first pass shipped: model/view schema (edge ids and kinds, node and group kinds, nested groups, views with scope),
+containment contract, ELK compound layout, group frames, kind glyphs, edge-kind styles, `render --view`. Found and
+worked around an ELK 0.9 crash (considerModelOrder inside compound graphs). Remaining M1 polish: edge routes hugging
+group frames, spacing, and a second fresh-agent test against the new schema.
+
+### Status (2026-09-04, M0)
 
 M0 shipped: schema with descriptions, validator, ELK adapter behind `LayoutEngine`, label-aware layout, animated SVG,
 CLI, examples page, fresh-agent test passed first try. Pulled forward from later milestones: load animation (was M2),
