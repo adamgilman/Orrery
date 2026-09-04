@@ -1,0 +1,22 @@
+{
+  "name": "orrery",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": "./dist/main.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@orrery/core": "workspace:*",
+    "@orrery/layout-elk": "workspace:*"
+  }
+}
