@@ -108,7 +108,7 @@ Vocabulary (small on purpose; every value has a glyph and a meaning across all v
 Semantics that hold in every view:
 - Edge `id` defaults to `"<from>-><to>"` and must be unique; several edges between one pair need explicit ids. Views, scenarios and interactions reference edges by id, never by position.
 - `load` is 0..1 and is the *only* animation input. `state` is `on | off | degraded | failed`.
-- `dependsOn: true` on an edge means the source cannot be healthy if the target is not, unless a `fallback` edge from the same source is healthy. `replication` and `dataflow` edges never imply dependency.
+- `dependsOn: true` on an edge means the source cannot be healthy if the target is not, unless a `fallback` edge covering that edge (`fallbackFor`) is healthy, in which case the source is degraded. `dependsOn: "soft"` only degrades. Degradation propagates. Edge kinds never imply dependency by themselves.
 - A view's `scope` is a group id; the view shows that group as the root frame, its descendants, and the edges among them. Edges to nodes outside the scope are dropped today; drawing them as stubs is a later refinement.
 - Outline = group hierarchy, then nodes. No separate outline model.
 - Timelines are ordered steps. The runtime has one step-through control that plays scenarios (state changes) and interactions (messages) alike; a sequence view is another renderer for an interaction.
@@ -236,6 +236,10 @@ kept here so the model grows from evidence rather than guesswork:
 - Inactive/failover edges expressed as state rather than `load: 0` (lands with M2).
 - View-level emphasis: highlight a subset of edges on the full topology (lands with interactions).
 - Subcommand `--help` (fixed), scope semantics spelled out in the schema (fixed).
+- From the M2 agent test: fallbacks must name what they cover (`fallbackFor`, fixed; the agent's standby card processor
+  had silently taken over a database failure); soft dependencies (`dependsOn: "soft"`, fixed); document that degradation
+  propagates and fallback activation is automatic (fixed). Still open: scenario steps that change topology or labels
+  ("replica promoted to primary"), and a way for a queue to absorb degradation so async consumers do not inherit it.
 
 ## 11. Open questions
 1. **Resolved: CSS keyframes, not SMIL** (2026-09-04). Both play inside `<img>`; nothing outside browsers plays either. CSS wins on control: the Web Animations API gives the runtime one timeline (pause, scrub, playback rate) over every animation. Rule that follows: animation stays a pure function of (model, t); when load changes at runtime, continue from the current phase, never restart.

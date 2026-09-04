@@ -71,8 +71,9 @@ Rules an agent needs to know:
   Groups: tier, region, zone, cluster, boundary. Edges: sync, async, replication, dataflow.
 - Edge ids default to `from->to`. Two edges between the same nodes need explicit ids.
 - `load` is 0 to 1. Zero hides the flow, one is the fastest and thickest.
-- `dependsOn: true` on an edge means the source cannot work without the target. `fallback: true` marks a standby edge
-  from the same source that takes over when the primary target is down. Node `state` is on, off, degraded, or failed.
+- `dependsOn: true` on an edge means the source cannot work without the target; `"soft"` means it only degrades.
+  `fallback: true` marks a standby edge that takes over when the dependency it covers is down. Name that dependency
+  with `fallbackFor` when the source has more than one. Node `state` is on, off, degraded, or failed.
 - Scenarios are ordered, cumulative steps that override states and loads. Propagation does the rest.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 

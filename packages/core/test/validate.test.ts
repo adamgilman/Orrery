@@ -124,3 +124,17 @@ describe("validate: states, dependencies, scenarios", () => {
     expect(r2.diagram.scenarios).toEqual([]);
   });
 });
+
+describe("validate: fallbackFor", () => {
+  it("keeps explicit fallbackFor and defaults it when the source has exactly one dependsOn edge", () => {
+    const r = validate(load(join(fixtures, "valid", "two-deps.json")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    expect(r.diagram.edges[1]?.fallbackFor).toBe("svc->db");
+    expect(r.diagram.edges[3]?.fallbackFor).toBe("svc->stripe");
+    expect(r.diagram.edges[4]?.dependsOn).toBe("soft");
+    const single = validate(load(join(fixtures, "valid", "failover.json")));
+    if (!single.ok) throw new Error();
+    expect(single.diagram.edges[1]?.fallbackFor).toBe("api->db");
+    expect(single.diagram.edges[0]?.fallbackFor).toBeUndefined();
+  });
+});

@@ -1,0 +1,10 @@
+{
+  "nodes": [ { "id": "svc" }, { "id": "db", "kind": "database" }, { "id": "replica", "kind": "database" }, { "id": "stripe", "kind": "external" }, { "id": "adyen", "kind": "external" }, { "id": "fraud" } ],
+  "edges": [
+    { "from": "svc", "to": "db", "dependsOn": true, "load": 0.8 },
+    { "from": "svc", "to": "replica", "fallback": true, "fallbackFor": "svc->db" },
+    { "from": "svc", "to": "stripe", "dependsOn": true, "load": 0.5 },
+    { "from": "svc", "to": "adyen", "fallback": true, "fallbackFor": "svc->stripe" },
+    { "from": "svc", "to": "fraud", "dependsOn": "soft", "load": 0.3 }
+  ]
+}

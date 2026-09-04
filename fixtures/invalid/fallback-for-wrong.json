@@ -1,0 +1,51 @@
+{
+  "nodes": [
+    {
+      "id": "s"
+    },
+    {
+      "id": "t"
+    },
+    {
+      "id": "a"
+    },
+    {
+      "id": "c"
+    }
+  ],
+  "edges": [
+    {
+      "from": "s",
+      "to": "a",
+      "dependsOn": true
+    },
+    {
+      "from": "t",
+      "to": "a",
+      "dependsOn": true
+    },
+    {
+      "from": "s",
+      "to": "c",
+      "fallback": true,
+      "fallbackFor": "t->a"
+    },
+    {
+      "from": "s",
+      "to": "t",
+      "fallback": true,
+      "fallbackFor": "nope"
+    },
+    {
+      "from": "a",
+      "to": "c",
+      "load": 0.1
+    },
+    {
+      "from": "a",
+      "to": "t",
+      "fallback": true,
+      "fallbackFor": "a->c"
+    }
+  ]
+}

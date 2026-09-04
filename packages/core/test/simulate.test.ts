@@ -99,3 +99,37 @@ describe("applyScenario", () => {
     expect(() => applyScenario(failover(), "db-failover", 4)).toThrow(/step must be between 1 and 3/);
   });
 });
+
+describe("propagate: fallbackFor and soft dependencies", () => {
+  const twoDeps = (): Diagram => {
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/two-deps.json"), "utf8")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    return r.diagram;
+  };
+  it("activates only the fallback that covers the failed dependency", () => {
+    const d = propagate(withStates(twoDeps(), { db: "failed" }));
+    expect(node(d, "svc").state).toBe("degraded");
+    expect(edge(d, "svc->replica").load).toBe(0.8);
+    expect(edge(d, "svc->adyen").load).toBe(0);   // stripe is fine, adyen stays idle
+    expect(edge(d, "svc->stripe").load).toBe(0.5);
+  });
+  it("fails the source when a failed dependency has no covering fallback, even if another fallback is healthy", () => {
+    const base = twoDeps();
+    const noCover: Diagram = { ...base, edges: base.edges.filter((e) => e.id !== "svc->replica") };
+    const d = propagate(withStates(noCover, { db: "failed" }));
+    expect(node(d, "svc").state).toBe("failed");
+    expect(edge(d, "svc->adyen").load).toBe(0);
+  });
+  it("a soft dependency degrades the source instead of failing it", () => {
+    const d = propagate(withStates(twoDeps(), { fraud: "failed" }));
+    expect(node(d, "svc").state).toBe("degraded");
+    expect(node(d, "svc").reason).toMatch(/fraud/);
+    expect(edge(d, "svc->fraud").load).toBe(0);
+  });
+  it("two failed dependencies, both covered, still only degrade", () => {
+    const d = propagate(withStates(twoDeps(), { db: "failed", stripe: "failed" }));
+    expect(node(d, "svc").state).toBe("degraded");
+    expect(edge(d, "svc->replica").load).toBe(0.8);
+    expect(edge(d, "svc->adyen").load).toBe(0.5);
+  });
+});

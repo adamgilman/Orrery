@@ -1,0 +1,1 @@
+[ { "pointer": "/edges/2", "message": "fallback edge needs fallbackFor: \"s\" has 2 dependsOn edges (s->a, s->b)" } ]

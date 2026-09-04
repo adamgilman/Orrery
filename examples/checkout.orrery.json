@@ -135,7 +135,8 @@
       "to": "replica",
       "load": 0.0,
       "label": "reads (failover)",
-      "fallback": true
+      "fallback": true,
+      "fallbackFor": "api->db"
     },
     {
       "from": "db",

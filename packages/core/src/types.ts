@@ -34,8 +34,11 @@ export interface DiagramEdge {
   label?: string;
   /** 0..1, drives flow animation. In a propagated diagram this is the effective load. */
   load: number;
-  dependsOn: boolean;
+  /** true: hard dependency; "soft": target outage only degrades the source. */
+  dependsOn: boolean | "soft";
   fallback: boolean;
+  /** For fallback edges: id of the dependsOn edge (same source) this one covers. Always set after validation. */
+  fallbackFor?: string;
 }
 
 export interface ScenarioStep {

@@ -114,7 +114,7 @@
               "failed"
             ],
             "default": "on",
-            "description": "Health in the base model. 'off' is deliberately switched off (dimmed); 'failed' is broken (red); 'degraded' is partially working (amber). Dependents of an off or failed node fail too unless a fallback edge is healthy. Scenarios override this per step."
+            "description": "Health in the base model. 'off' is deliberately switched off (dimmed); 'failed' is broken (red, pulsing); 'degraded' is partially working (amber). Propagation only ever worsens a node: dependents of an off or failed node fail (or degrade if covered by a healthy fallback), dependents of a degraded node degrade. Scenarios override this per step."
           }
         }
       },
@@ -147,8 +147,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "default": 0.5,
-            "description": "Relative traffic on this edge, 0 to 1. Drives the flow animation: 0 hides the flow, 1 is the fastest and thickest dashes. Use it for relative intensity, not real units."
+            "description": "Relative traffic on this edge, 0 to 1. Drives the flow animation: 0 hides the flow, 1 is the fastest and thickest dashes. Use it for relative intensity, not real units. Defaults to 0.5, or 0 for fallback edges."
           },
           "id": {
             "type": "string",
@@ -167,14 +166,22 @@
             "description": "Nature of the connection: a synchronous call, an asynchronous message, data replication, or a bulk data flow. Chooses the line style and, later, whether it implies a dependency."
           },
           "dependsOn": {
-            "type": "boolean",
+            "enum": [
+              true,
+              false,
+              "soft"
+            ],
             "default": false,
-            "description": "The source cannot work without the target: if the target is off or failed, the source fails (or degrades if it has a healthy fallback edge). Set it on the calls a component cannot survive without."
+            "description": "true: the source cannot work without the target. If the target is off or failed, the source fails, unless a fallback edge covering this edge is healthy, in which case the source is degraded. If the target is degraded, the source is degraded. \"soft\": the source only degrades when the target is down (a nice-to-have call). Degradation propagates up chains of dependsOn edges. Non-dependsOn edges never affect health."
           },
           "fallback": {
             "type": "boolean",
             "default": false,
-            "description": "Standby path used when a dependsOn target of the same source is down. Usually load 0 in the base model; it takes over the failed edge's load when activated. Cannot be combined with dependsOn."
+            "description": "Standby path for one dependsOn edge of the same source (named by fallbackFor). Usually load 0 in the base model; when the covered target is down it automatically carries that edge's load, no scenario step needed. A non-zero base load means active-active. Cannot be combined with dependsOn."
+          },
+          "fallbackFor": {
+            "type": "string",
+            "description": "Id of the dependsOn edge this fallback covers; must start at the same source. Optional when the source has exactly one dependsOn edge, required otherwise."
           }
         }
       },
@@ -282,7 +289,7 @@
                 },
                 "edges": {
                   "type": "object",
-                  "description": "Edge id to load override (0..1).",
+                  "description": "Edge id (default \"<from>-><to>\", or the explicit id) to load override (0..1). Fallback loads switch automatically; use this for other changes such as traffic shifting.",
                   "additionalProperties": {
                     "type": "object",
                     "additionalProperties": false,

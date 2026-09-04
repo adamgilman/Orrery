@@ -26,20 +26,22 @@ export function propagate(input: Diagram): Diagram {
     for (const n of nodes.values()) {
       if (isDown(n.id)) continue;
       const mine = outEdges.get(n.id) ?? [];
-      const deps = mine.filter((e) => e.dependsOn);
-      const downDeps = deps.filter((e) => isDown(e.to));
-      const degradedDeps = deps.filter((e) => nodes.get(e.to)!.state === "degraded");
-      const healthyFallback = mine.find((e) => e.fallback && nodes.get(e.to)!.state === "on");
+      const covered = (dep: DiagramEdge) => mine.find((f) => f.fallback && f.fallbackFor === dep.id && nodes.get(f.to)!.state === "on");
       let next: NodeState | undefined;
-      let reason: string | undefined;
-      if (downDeps.length > 0) {
-        if (healthyFallback) { next = "degraded"; reason = `${label(downDeps[0]!.to)} is down, using ${label(healthyFallback.to)}`; }
-        else { next = "failed"; reason = `depends on ${downDeps.map((e) => label(e.to)).join(", ")}`; }
-      } else if (degradedDeps.length > 0) {
-        next = "degraded"; reason = `${degradedDeps.map((e) => label(e.to)).join(", ")} degraded`;
+      const reasons: string[] = [];
+      for (const dep of mine.filter((e) => e.dependsOn)) {
+        const t = nodes.get(dep.to)!;
+        if (isDown(dep.to)) {
+          const f = covered(dep);
+          if (f) { next = next ?? "degraded"; reasons.push(`${label(dep.to)} is down, using ${label(f.to)}`); }
+          else if (dep.dependsOn === "soft") { next = next ?? "degraded"; reasons.push(`${label(dep.to)} is down (soft dependency)`); }
+          else { next = "failed"; reasons.push(`depends on ${label(dep.to)}`); }
+        } else if (t.state === "degraded") {
+          next = next ?? "degraded"; reasons.push(`${label(dep.to)} degraded`);
+        }
       }
       if (next !== undefined && RANK[next] > RANK[n.state]) {
-        nodes.set(n.id, { ...n, state: next, ...(reason !== undefined ? { reason } : {}) });
+        nodes.set(n.id, { ...n, state: next, reason: reasons.join("; ") });
         changed = true;
       }
     }
@@ -47,8 +49,9 @@ export function propagate(input: Diagram): Diagram {
 
   const edges = input.edges.map((e) => {
     if (isDown(e.from) || isDown(e.to)) return { ...e, load: 0 };
-    if (e.fallback) {
-      const takenOver = (outEdges.get(e.from) ?? []).filter((d) => d.dependsOn && isDown(d.to)).reduce((m, d) => Math.max(m, d.load), 0);
+    if (e.fallback && e.fallbackFor !== undefined) {
+      const primary = input.edges.find((d) => d.id === e.fallbackFor);
+      const takenOver = primary && isDown(primary.to) ? primary.load : 0;
       return { ...e, load: Math.max(e.load, takenOver) };
     }
     return { ...e };

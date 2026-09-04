@@ -94,6 +94,23 @@ function checkSemantics(d: Diagram, explicitEdgeIds: boolean[]): ValidationError
     });
   });
 
+  // Fallback coverage: explicit fallbackFor must be a dependsOn edge from the same source; otherwise default to the
+  // source's only dependsOn edge, or complain so the author disambiguates.
+  const byId = new Map(d.edges.map((e) => [e.id, e] as const));
+  d.edges.forEach((e, i) => {
+    if (!e.fallback) return;
+    if (e.fallbackFor !== undefined) {
+      const target = byId.get(e.fallbackFor);
+      if (!target) return err(`/edges/${i}/fallbackFor`, `unknown edge "${e.fallbackFor}"`);
+      if (target.from !== e.from) return err(`/edges/${i}/fallbackFor`, `"${e.fallbackFor}" does not start at "${e.from}"`);
+      if (!target.dependsOn) return err(`/edges/${i}/fallbackFor`, `"${e.fallbackFor}" is not a dependsOn edge`);
+      return;
+    }
+    const deps = d.edges.filter((x) => x.from === e.from && x.dependsOn);
+    if (deps.length === 1) e.fallbackFor = deps[0]!.id;
+    else err(`/edges/${i}`, `fallback edge needs fallbackFor: "${e.from}" has ${deps.length} dependsOn edges${deps.length ? ` (${deps.map((x) => x.id).join(", ")})` : ""}`);
+  });
+
   const viewIds = new Set<string>();
   d.views.forEach((v, i) => {
     if (viewIds.has(v.id)) err(`/views/${i}/id`, `duplicate view id "${v.id}"`);
@@ -109,7 +126,7 @@ interface RawDiagram {
   direction: Direction;
   groups: { id: string; label?: string; kind: GroupKind; parent?: string }[];
   nodes: { id: string; label?: string; kind: NodeKind; group?: string; state: NodeState }[];
-  edges: { id?: string; from: string; to: string; kind: EdgeKind; label?: string; load: number; dependsOn: boolean; fallback: boolean }[];
+  edges: { id?: string; from: string; to: string; kind: EdgeKind; label?: string; load?: number; dependsOn: boolean | "soft"; fallback: boolean; fallbackFor?: string }[];
   views?: { id: string; title?: string; type: ViewType; direction?: Direction; scope?: string }[];
   scenarios: { id: string; label?: string; steps: { note?: string; nodes?: Record<string, { state: NodeState }>; edges?: Record<string, { load: number }> }[] }[];
 }
@@ -131,8 +148,8 @@ export function validate(input: unknown): ValidationResult {
     groups: raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, ...opt("parent", g.parent) })),
     nodes: raw.nodes.map((n) => ({ id: n.id, label: n.label ?? n.id, kind: n.kind, state: n.state, ...opt("group", n.group) })),
     edges: raw.edges.map((e) => ({
-      id: e.id ?? `${e.from}->${e.to}`, from: e.from, to: e.to, kind: e.kind, load: e.load,
-      dependsOn: e.dependsOn, fallback: e.fallback, ...opt("label", e.label),
+      id: e.id ?? `${e.from}->${e.to}`, from: e.from, to: e.to, kind: e.kind, load: e.load ?? (e.fallback ? 0 : 0.5),
+      dependsOn: e.dependsOn, fallback: e.fallback, ...opt("label", e.label), ...opt("fallbackFor", e.fallbackFor),
     })),
     views: (raw.views ?? [{ id: "default", type: "topology" }]).map((v) => ({
       id: v.id,
