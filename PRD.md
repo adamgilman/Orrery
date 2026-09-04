@@ -42,47 +42,76 @@ Three tests every release must pass:
 - Sequence diagrams, ER diagrams, flowcharts. Architecture/topology only.
 - Confluence native rendering. Documented fallback: GIF, or iframe macro to hosted HTML.
 
-## 4. Core model (sketch, to be formalised as JSON Schema in M0)
+## 4. Model and views
+
+One model, many views. The file's top level *is* the model: `nodes`, `groups`, `edges` describe what exists.
+`views` describe how to draw it. `scenarios` and `interactions` are timelines the runtime can play over any view.
+Design principle: three view families (topology, deployment, dynamic) over one model, one timeline mechanism.
+Not a general diagram meta-model. Flowcharts, ER, class, state machines and Gantt are non-goals forever.
 
 ```jsonc
 {
   "$schema": "https://orrery.dev/schema/v1.json",
-  "title": "Checkout service",
-  "direction": "right",                       // layout hint: right | down
-  "nodes": [
-    { "id": "web",  "label": "Web tier",   "icon": "aws.alb",  "group": "edge" },
-    { "id": "api",  "label": "Checkout API", "icon": "service", "group": "app",  "replicas": 3 },
-    { "id": "db",   "label": "Orders DB",  "icon": "aws.rds",  "group": "data", "role": "primary" },
-    { "id": "db-r", "label": "Orders DB (replica)", "icon": "aws.rds", "group": "data", "role": "replica" }
-  ],
+  "title": "Checkout",
+  "direction": "right",                       // default for views that do not set their own
+
+  // ---- model ----
   "groups": [
-    { "id": "edge", "label": "Edge" },
-    { "id": "app",  "label": "Application", "parent": "region-a" },
-    { "id": "data", "label": "Data",        "parent": "region-a" },
-    { "id": "region-a", "label": "us-east-1" }
+    { "id": "region-a", "label": "us-east-1", "kind": "region" },
+    { "id": "app",  "label": "Application", "kind": "tier", "parent": "region-a" },
+    { "id": "data", "label": "Data",        "kind": "tier", "parent": "region-a" }
+  ],
+  "nodes": [
+    { "id": "web",  "label": "Web tier",     "kind": "gateway" },
+    { "id": "api",  "label": "Checkout API", "kind": "service",  "group": "app" },
+    { "id": "db",   "label": "Orders DB",    "kind": "database", "group": "data" },
+    { "id": "db-r", "label": "Orders DB (replica)", "kind": "database", "group": "data" }
   ],
   "edges": [
-    { "from": "web", "to": "api",  "kind": "sync",        "load": 0.7, "label": "HTTPS" },
-    { "from": "api", "to": "db",   "kind": "sync",        "load": 0.5, "dependsOn": true },
+    { "id": "web->api", "from": "web", "to": "api", "kind": "sync", "load": 0.7, "label": "HTTPS" },
+    { "from": "api", "to": "db",   "kind": "sync",        "load": 0.5, "dependsOn": true },   // id defaults to "api->db"
     { "from": "api", "to": "db-r", "kind": "sync",        "load": 0.0, "fallback": true },
     { "from": "db",  "to": "db-r", "kind": "replication", "load": 0.3 }
   ],
+
+  // ---- views (optional; default is one topology view of everything) ----
+  "views": [
+    { "id": "overview", "type": "topology", "direction": "right" },
+    { "id": "data-tier", "type": "topology", "scope": "data" }          // C4-style drill-down: children of a group
+    // later: { "id": "checkout-flow", "type": "sequence", "interaction": "place-order" }
+  ],
+
+  // ---- timelines (M2+) ----
   "scenarios": [
     { "id": "db-failover", "label": "Primary DB fails",
       "steps": [
         { "set": { "db": { "state": "failed" } }, "note": "Primary goes down" },
         { "set": { "edges": { "api->db-r": { "load": 0.5 } } }, "note": "API fails over to replica" }
       ] }
+  ],
+  "interactions": [                                                       // designed, not built until the runtime can play it
+    { "id": "place-order", "label": "Place order",
+      "steps": [ { "edge": "web->api", "message": "POST /orders" }, { "edge": "api->db", "message": "INSERT order", "response": "id" } ] }
   ]
 }
 ```
 
-Key semantics:
-- `load` is 0..1 and drives dash speed/density and stroke width. It is the *only* animation input.
-- `state` is `on | off | degraded | failed`. `off` is a user/author choice; `failed`/`degraded` are computed or scripted.
-- `dependsOn: true` on an edge means the source cannot be healthy if the target is not, unless a `fallback` edge from the same source is healthy.
-- Scenarios are ordered steps of partial overrides. Step-through mode plays them; the "current" scenario is also a static export target.
+Vocabulary (small on purpose; every value has a glyph and a meaning across all views):
+
+| Field | Values |
+|---|---|
+| node `kind` | `service` (default), `database`, `queue`, `cache`, `gateway`, `client`, `storage`, `function`, `external` |
+| group `kind` | `tier` (default), `region`, `zone`, `cluster`, `boundary` |
+| edge `kind` | `sync` (default), `async`, `replication`, `dataflow` |
+| view `type` | `topology` now; `sequence`, `walkthrough` later |
+
+Semantics that hold in every view:
+- Edge `id` defaults to `"<from>-><to>"` and must be unique; several edges between one pair need explicit ids. Views, scenarios and interactions reference edges by id, never by position.
+- `load` is 0..1 and is the *only* animation input. `state` is `on | off | degraded | failed`.
+- `dependsOn: true` on an edge means the source cannot be healthy if the target is not, unless a `fallback` edge from the same source is healthy. `replication` and `dataflow` edges never imply dependency.
+- A view's `scope` is a group id; the view shows that group's descendants and the edges among them, plus edges to outside nodes drawn as stubs.
 - Outline = group hierarchy, then nodes. No separate outline model.
+- Timelines are ordered steps. The runtime has one step-through control that plays scenarios (state changes) and interactions (messages) alike; a sequence view is another renderer for an interaction.
 
 ## 5. Outputs and portability matrix
 
@@ -156,7 +185,7 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 
 | # | Deliverable | Done when |
 |---|---|---|
-| M1 | Groups (nested) and node kinds with a neutral icon set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment |
+| M1 | Model/view schema shape (edge ids and kinds, node and group kinds, `views` with `scope`); nested groups; neutral glyph set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment; `render --view` works |
 | M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
 | M3 | Runtime inside the SVG: outline, focus, toggles, scenario picker, step-through, keyboard nav; < 25 KB gz | Click-through test passes on the same file that animates in the README |
 | M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |
