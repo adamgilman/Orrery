@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1404 213" width="1404" height="213" data-orrery="1">
+<title>Checkout: three-tier with read replica</title>
+<style>.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>
+<g class="edges">
+<path class="edge" data-edge="cdn->web" d="M100 58.4 L170 58.4" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="cdn->web" d="M100 58.4 L158 58.4" style="stroke-width:4.2;animation-duration:0.8s"/>
+<text class="edge-label" x="135" y="50.4">HTTPS</text>
+<path class="edge" data-edge="web->api" d="M263 58.4 L333 58.4" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="web->api" d="M263 58.4 L321 58.4" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="298" y="50.4">REST</text>
+<path class="edge" data-edge="api->cache" d="M457 44 L527 44" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->cache" d="M457 44 L515 44" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge" data-edge="api->db" d="M457 53.6 L502 53.6 L502 93 L960 93" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" d="M457 53.6 L502 53.6 L502 93 L948 93" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="688.8" y="85">writes</text>
+<path class="edge" data-edge="api->replica" d="M457 72.8 L482 72.8 L482 192 L1162 192 L1162 117 L1207 117" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->replica" d="M457 72.8 L482 72.8 L482 192 L1162 192 L1162 117 L1195 117" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="809.9" y="184">reads</text>
+<path class="edge" data-edge="db->replica" d="M1137 101 L1207 101" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" d="M1137 101 L1195 101" style="stroke-width:2.1;animation-duration:2.5s"/>
+<text class="edge-label" x="1172" y="93">replication</text>
+<path class="edge" data-edge="api->queue" d="M457 63.2 L492 63.2 L492 143 L530.5 143" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->queue" d="M457 63.2 L492 63.2 L492 143 L518.5 143" style="stroke-width:2.7;animation-duration:2s"/>
+<path class="edge" data-edge="queue->worker" d="M654.5 143 L728 143" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="queue->worker" d="M654.5 143 L716 143" style="stroke-width:2.7;animation-duration:2s"/>
+<path class="edge" data-edge="worker->db" d="M890 143 L915 143 L915 109 L960 109" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="worker->db" d="M890 143 L915 143 L915 109 L948 109" style="stroke-width:1.8;animation-duration:2.8s"/>
+</g>
+<g class="nodes">
+<g class="node" data-node="cdn" transform="translate(20 34.4)">
+<rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">CDN</text>
+</g>
+<g class="node" data-node="web" transform="translate(170 34.4)">
+<rect class="node-box" width="93" height="48" rx="8"/>
+<text class="node-label" x="46.5" y="24">Web tier</text>
+</g>
+<g class="node" data-node="api" transform="translate(333 34.4)">
+<rect class="node-box" width="124" height="48" rx="8"/>
+<text class="node-label" x="62" y="24">Checkout API</text>
+</g>
+<g class="node" data-node="cache" transform="translate(527 20)">
+<rect class="node-box" width="131" height="48" rx="8"/>
+<text class="node-label" x="65.5" y="24">Session cache</text>
+</g>
+<g class="node" data-node="db" transform="translate(960 77)">
+<rect class="node-box" width="177" height="48" rx="8"/>
+<text class="node-label" x="88.5" y="24">Orders DB (primary)</text>
+</g>
+<g class="node" data-node="replica" transform="translate(1207 85)">
+<rect class="node-box" width="177" height="48" rx="8"/>
+<text class="node-label" x="88.5" y="24">Orders DB (replica)</text>
+</g>
+<g class="node" data-node="queue" transform="translate(530.5 119)">
+<rect class="node-box" width="124" height="48" rx="8"/>
+<text class="node-label" x="62" y="24">Events queue</text>
+</g>
+<g class="node" data-node="worker" transform="translate(728 119)">
+<rect class="node-box" width="162" height="48" rx="8"/>
+<text class="node-label" x="81" y="24">Fulfilment worker</text>
+</g>
+</g>
+</svg>

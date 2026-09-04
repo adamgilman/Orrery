@@ -87,3 +87,18 @@ describe("render", () => {
     expect(svg).toContain('data-node="a"');
   });
 });
+
+describe("renderSvg: flow overlay stops short of the arrowhead", () => {
+  it("trims the flow path so dashes never cover the marker", async () => {
+    const d = fixture("three-tier");
+    const svg = renderSvg(d, await laidOut(d));
+    const edgeD = svg.match(/<path class="edge" data-edge="[^"]*" d="([^"]*)"/)![1]!;
+    const flowD = svg.match(/<path class="flow" data-flow="[^"]*" d="([^"]*)"/)![1]!;
+    const last = (p: string) => p.split(" L").at(-1)!.split(" ").map(Number);
+    const [ex, ey] = last(edgeD), [fx, fy] = last(flowD);
+    const gap = Math.hypot(ex! - fx!, ey! - fy!);
+    expect(gap).toBeGreaterThanOrEqual(8);
+    expect(gap).toBeLessThanOrEqual(14);
+    expect(flowD.startsWith(edgeD.split(" L")[0]!)).toBe(true);
+  });
+});

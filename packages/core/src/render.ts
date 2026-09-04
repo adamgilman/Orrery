@@ -10,6 +10,24 @@ const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 const num = (n: number) => String(Math.round(n * 10) / 10);
 const pathD = (pts: Point[]) => pts.map((p, i) => `${i === 0 ? "M" : "L"}${num(p.x)} ${num(p.y)}`).join(" ");
 
+/** Length of the arrowhead marker along the edge (marker 8 units × stroke 1.5), so flow dashes stop before it. */
+const ARROW_LENGTH = 12;
+
+/** Shorten a polyline's final segment by `by`, dropping segments that vanish entirely. */
+export function trimEnd(pts: Point[], by: number): Point[] {
+  const out = pts.slice();
+  let remaining = by;
+  while (out.length >= 2 && remaining > 0) {
+    const a = out[out.length - 2]!, b = out[out.length - 1]!;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len <= remaining) { out.pop(); remaining -= len; continue; }
+    const t = (len - remaining) / len;
+    out[out.length - 1] = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    remaining = 0;
+  }
+  return out.length >= 2 ? out : pts.slice(0, 1);
+}
+
 /** Flow animation is a pure function of load: faster and thicker as load rises, off at zero. */
 export function flowStyle(load: number): string {
   const width = 1.5 + load * 3;
@@ -45,10 +63,9 @@ function edgeMarkup(e: DiagramEdge, i: number, layout: LayoutResult): string {
   const route = layout.edges[edgeId(e, i)];
   if (!route) throw new Error(`layout returned no route for edge ${e.from}->${e.to}`);
   const key = escAttr(`${e.from}->${e.to}`);
-  const d = pathD(route.points);
   const parts = [
-    `<path class="edge" data-edge="${key}" d="${d}" marker-end="url(#arrow)"/>`,
-    `<path class="flow" data-flow="${key}" d="${d}" style="${flowStyle(e.load)}"/>`,
+    `<path class="edge" data-edge="${key}" d="${pathD(route.points)}" marker-end="url(#arrow)"/>`,
+    `<path class="flow" data-flow="${key}" d="${pathD(trimEnd(route.points, ARROW_LENGTH))}" style="${flowStyle(e.load)}"/>`,
   ];
   if (e.label !== undefined) {
     const m = route.labelAt ?? midpoint(route.points);

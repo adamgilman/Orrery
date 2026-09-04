@@ -10,11 +10,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "orrery": "node packages/cli/dist/main.js",
+    "examples": "yarn build && node packages/cli/dist/main.js render examples/three-tier.orrery.json -o examples/three-tier.svg && node packages/cli/dist/main.js render fixtures/valid/fan-out.json -o examples/fan-out.svg"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^22",
     "typescript": "^5.6",
     "vitest": "^3"
-  }
+  },
+  "license": "MIT"
 }
