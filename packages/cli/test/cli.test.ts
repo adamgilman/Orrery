@@ -111,3 +111,14 @@ describe("orrery render --view", () => {
     expect(r.out).toBe("OK: 4 nodes, 4 edges, 3 groups, 2 views\n");
   });
 });
+
+describe("orrery <command> --help", () => {
+  it("prints usage for a subcommand instead of treating --help as a file", () => {
+    for (const cmd of ["validate", "render"]) {
+      const r = run(cmd, "--help");
+      expect(r.code, cmd).toBe(0);
+      expect(r.out, cmd).toContain("Usage");
+      expect(r.err, cmd).toBe("");
+    }
+  });
+});

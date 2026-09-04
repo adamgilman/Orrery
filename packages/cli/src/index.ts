@@ -3,7 +3,7 @@ import { render, validate, type ValidationError } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 
 export const USAGE = `Usage:
-  orrery validate <file>                 Check a diagram file. Prints "OK: N nodes, M edges", or one
+  orrery validate <file>                 Check a diagram file. Prints "OK: N nodes, M edges, G groups, V views", or one
                                          "<file>:<json-pointer>: <message>" line per error on stderr.
   orrery render <file> [-o <out.svg>]    Validate, lay out and render a standalone SVG whose edge flow is
                  [--view <id>]           animated with CSS (plays inside <img>, e.g. a GitHub README).
@@ -36,6 +36,7 @@ const formatErrors = (file: string, errors: ValidationError[]) => errors.map((e)
 /** Run the CLI. Returns the process exit code; never calls process.exit itself so it stays testable. */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...rest] = argv;
+  if (rest.includes("--help") || rest.includes("-h")) { io.stdout(USAGE + "\n"); return 0; }
   try {
     switch (command) {
       case "--help": case "-h": case "help":

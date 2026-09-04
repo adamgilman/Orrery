@@ -56,7 +56,7 @@
               "boundary"
             ],
             "default": "tier",
-            "description": "What the container represents. Chooses the frame style."
+            "description": "What the container represents; each has a distinct frame: tier (solid, tinted), region (dashed), zone (dotted), cluster (solid, darker), boundary (red dashed, no fill, for trust boundaries)."
           },
           "parent": {
             "type": "string",
@@ -107,7 +107,7 @@
           }
         }
       },
-      "description": "Components of the system. Order matters: nodes in the same rank are placed in this order, so list the important ones first."
+      "description": "Components of the system. Order matters: nodes that end up side by side are placed in this order, so list the important ones first."
     },
     "edges": {
       "type": "array",
@@ -142,7 +142,7 @@
           "id": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.>-]*$",
-            "description": "Unique edge id, referenced by scenarios and interactions. Defaults to \"<from>-><to>\"; give explicit ids when one pair of nodes has several edges."
+            "description": "Unique edge id. Defaults to \"<from>-><to>\"; give explicit ids when one pair of nodes has several edges. Reserved for future scenarios and interactions to reference."
           },
           "kind": {
             "type": "string",
@@ -198,7 +198,7 @@
           },
           "scope": {
             "type": "string",
-            "description": "Group id to drill into: the view shows that group's descendants and the edges among them. Omit to show everything."
+            "description": "Group id to drill into: the view shows that group as its outer frame, every group and node inside it, and only the edges whose both ends are inside. Edges that cross the scope boundary are not drawn. Omit to show everything."
           }
         }
       }

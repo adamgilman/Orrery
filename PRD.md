@@ -211,12 +211,26 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 - Demo README SVG animates on GitHub with no manual tweaks.
 - Runtime under budget; a 200-node diagram renders and stays interactive at 60 fps on a laptop.
 
-## 10. Open questions
+## 10. Backlog from agent tests
+
+Two fresh agents (M0 and M1 schemas) each validated on the first attempt. What they wanted and could not express,
+kept here so the model grows from evidence rather than guesswork:
+
+- Cross-boundary edges in a scoped view drawn as stubs (most requested; real information loss today).
+- Edges whose endpoint is a group ("routes to the region"), not a representative node.
+- Node attributes beyond label: technology, description/tooltip, role (primary/replica), replica count. Multi-line labels.
+- Bidirectional or request/response edges without drawing two.
+- Group-level layout direction (region left-to-right, a tier inside it top-to-bottom).
+- Inactive/failover edges expressed as state rather than `load: 0` (lands with M2).
+- View-level emphasis: highlight a subset of edges on the full topology (lands with interactions).
+- Subcommand `--help` (fixed), scope semantics spelled out in the schema (fixed).
+
+## 11. Open questions
 1. SMIL vs CSS keyframes as the primary animation mechanism. Both work in `<img>`. CSS is easier to freeze at time *t* for GIF export; SMIL is friendlier to `begin`/`end` control. Leaning CSS.
 2. Layout hint vocabulary: how much can we expose before agents start micromanaging? Start with `direction`, `rank`, `sameRank`, and nothing else.
 3. Icon licensing per provider. Verify AWS/GCP/Azure architecture icon terms before bundling.
 4. Schema hosting domain (`orrery.dev`?) and package scope (`@orrery/*` availability on npm).
 
-## 11. Language decision
+## 12. Language decision
 
 **TypeScript, strict mode, Node 22+, pnpm workspace, vitest.** Decided 2026-09-04. Escape hatch: a future custom layout engine may be Rust compiled to WASM behind the `LayoutEngine` interface; nothing else needs to change.

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 905.6 687.5" width="905.6" height="687.5" data-orrery="1">
+<title>us-east-1 primary region</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-region .group-box{stroke-dasharray:8 6}
+.group-zone .group-box{stroke-dasharray:3 5}
+.group-cluster .group-box{stroke:#94a3b8}
+.group-boundary .group-box{stroke:#dc2626;stroke-dasharray:6 6;fill:none}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker></defs>
+<g class="groups">
+<g class="group group-region" data-group="us-east">
+<rect class="group-box" x="20" y="20" width="865.6" height="647.5" rx="10"/>
+<text class="group-label" x="32" y="36">us-east-1 (primary)</text>
+</g>
+<g class="group group-tier" data-group="us-east-web">
+<rect class="group-box" x="89.3" y="56" width="401" height="300" rx="10"/>
+<text class="group-label" x="101.3" y="72">Web tier</text>
+</g>
+<g class="group group-tier" data-group="us-east-data">
+<rect class="group-box" x="78.8" y="527" width="608" height="96" rx="10"/>
+<text class="group-label" x="90.8" y="543">Data tier</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync" data-edge="api-us->catalog-us" data-kind="sync" d="M237.9 140 L237.9 165 L381.3 165 L381.3 246" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api-us->catalog-us" data-load="0.8" d="M237.9 140 L237.9 165 L381.3 165 L381.3 234" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="431.3" y="198">GET /products</text>
+<path class="edge edge-sync" data-edge="api-us->checkout-us" data-kind="sync" d="M191.3 140 L191.3 246" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api-us->checkout-us" data-load="0.5" d="M191.3 140 L191.3 234" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="145.3" y="198">POST /orders</text>
+<path class="edge edge-sync" data-edge="catalog-us->catalog-cache-us" data-kind="sync" d="M381.3 294 L381.3 408.5 L700.6 408.5 L700.6 484.5 L409.3 484.5 L409.3 563" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="catalog-us->catalog-cache-us" data-load="0.9" d="M381.3 294 L381.3 408.5 L700.6 408.5 L700.6 484.5 L409.3 484.5 L409.3 551" style="stroke-width:4.2;animation-duration:0.8s"/>
+<text class="edge-label" x="654.6" y="441.5">read-through</text>
+<path class="edge edge-sync" data-edge="checkout-writes-orders" data-kind="sync" d="M191.3 294 L191.3 563" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="checkout-writes-orders" data-load="0.5" d="M191.3 294 L191.3 551" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="238.3" y="441.5">insert order</text>
+<path class="edge edge-dataflow" data-edge="checkout-archives-orders" data-kind="dataflow" d="M152.8 294 L152.8 388.5 L141 388.5 L141 563" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="checkout-archives-orders" data-load="0.1" d="M152.8 294 L152.8 388.5 L141 388.5 L141 551" style="stroke-width:1.8;animation-duration:2.8s"/>
+<text class="edge-label" x="85.5" y="441.5">nightly archive</text>
+<path class="edge edge-async" data-edge="checkout-us->order-events" data-kind="async" d="M229.8 294 L229.8 319 L391.3 319 L391.3 398.5 L716.6 398.5 L716.6 494.5 L600.8 494.5 L600.8 563" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="checkout-us->order-events" data-load="0.5" d="M229.8 294 L229.8 319 L391.3 319 L391.3 398.5 L716.6 398.5 L716.6 494.5 L600.8 494.5 L600.8 551" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="760.1" y="441.5">OrderPlaced</text>
+<path class="edge edge-async" data-edge="order-events->fulfillment-fn" data-kind="async" d="M600.8 611 L600.8 655.5 L872.6 655.5 L872.6 388.5 L658.9 388.5 L658.9 356" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="order-events->fulfillment-fn" data-load="0.5" d="M600.8 611 L600.8 655.5 L872.6 655.5 L872.6 388.5 L658.9 388.5 L658.9 368" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="843.1" y="441.5">trigger</text>
+<path class="edge edge-sync" data-edge="fulfillment-fn->orders-db-us" data-kind="sync" d="M594.6 356 L594.6 474.5 L241.5 474.5 L241.5 563" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="fulfillment-fn->orders-db-us" data-load="0.3" d="M594.6 356 L594.6 474.5 L241.5 474.5 L241.5 551" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="545.6" y="441.5">update status</text>
+</g>
+<g class="nodes">
+<g class="node node-gateway" data-node="api-us" data-kind="gateway" transform="translate(144.6 92)">
+<rect class="node-box" width="140" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="88" y="24">API gateway</text>
+</g>
+<g class="node node-service" data-node="checkout-us" data-kind="service" transform="translate(114.3 246)">
+<rect class="node-box" width="154" height="48" rx="8"/>
+<text class="node-label" x="77" y="24">Checkout service</text>
+</g>
+<g class="node node-service" data-node="catalog-us" data-kind="service" transform="translate(308.3 246)">
+<rect class="node-box" width="146" height="48" rx="8"/>
+<text class="node-label" x="73" y="24">Catalog service</text>
+</g>
+<g class="node node-database" data-node="orders-db-us" data-kind="database" transform="translate(90.8 563)">
+<rect class="node-box" width="201" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="118.5" y="24">Orders DB (primary)</text>
+</g>
+<g class="node node-cache" data-node="catalog-cache-us" data-kind="cache" transform="translate(331.8 563)">
+<rect class="node-box" width="155" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="95.5" y="24">Catalog cache</text>
+</g>
+<g class="node node-queue" data-node="order-events" data-kind="queue" transform="translate(526.8 563)">
+<rect class="node-box" width="148" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><rect x="1.5" y="5" width="3.5" height="6" rx=".5"/><rect x="6.25" y="5" width="3.5" height="6" rx=".5"/><rect x="11" y="5" width="3.5" height="6" rx=".5"/></g>
+<text class="node-label" x="92" y="24">Order events</text>
+</g>
+<g class="node node-function" data-node="fulfillment-fn" data-kind="function" transform="translate(530.3 308)">
+<rect class="node-box" width="193" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="114.5" y="24">Fulfillment worker</text>
+</g>
+</g>
+</svg>
