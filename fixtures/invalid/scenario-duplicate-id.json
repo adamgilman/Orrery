@@ -1,0 +1,1 @@
+{ "nodes": [ { "id": "a" } ], "edges": [], "scenarios": [ { "id": "s", "steps": [ { "nodes": { "a": { "state": "off" } } } ] }, { "id": "s", "steps": [ { "nodes": { "a": { "state": "failed" } } } ] } ] }

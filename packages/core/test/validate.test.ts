@@ -93,3 +93,34 @@ describe("validate: model and views normalisation", () => {
     expect(d.groups.find((g) => g.id === "app")?.parent).toBe("region");
   });
 });
+
+describe("validate: states, dependencies, scenarios", () => {
+  const failover = () => {
+    const r = validate(load(join(fixtures, "valid", "failover.json")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    return r.diagram;
+  };
+  it("defaults node state to on and edge flags to false", () => {
+    const d = failover();
+    expect(d.nodes.find((n) => n.id === "api")?.state).toBe("on");
+    expect(d.nodes.find((n) => n.id === "legacy")?.state).toBe("off");
+    expect(d.edges[0]).toMatchObject({ dependsOn: true, fallback: false });
+    expect(d.edges[2]).toMatchObject({ dependsOn: false, fallback: false });
+  });
+  it("normalises scenarios with cumulative steps and empty maps", () => {
+    const d = failover();
+    expect(d.scenarios).toHaveLength(1);
+    const s = d.scenarios[0]!;
+    expect(s.label).toBe("Primary DB fails");
+    expect(s.steps[0]).toEqual({ note: "Primary goes down", nodes: { db: { state: "failed" } }, edges: {} });
+    expect(s.steps[1]).toEqual({ note: "Replica takes reads", nodes: {}, edges: { "api->replica": { load: 0.6 } } });
+  });
+  it("defaults scenarios to an empty list and label to id", () => {
+    const r = validate({ nodes: [{ id: "a" }], edges: [], scenarios: [{ id: "s", steps: [{ nodes: { a: { state: "off" } } }] }] });
+    if (!r.ok) throw new Error();
+    expect(r.diagram.scenarios[0]?.label).toBe("s");
+    const r2 = validate({ nodes: [{ id: "a" }], edges: [] });
+    if (!r2.ok) throw new Error();
+    expect(r2.diagram.scenarios).toEqual([]);
+  });
+});

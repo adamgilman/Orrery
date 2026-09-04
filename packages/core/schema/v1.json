@@ -104,6 +104,17 @@
           "group": {
             "type": "string",
             "description": "Id of the group this node sits inside. Omit for top-level nodes."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off",
+              "degraded",
+              "failed"
+            ],
+            "default": "on",
+            "description": "Health in the base model. 'off' is deliberately switched off (dimmed); 'failed' is broken (red); 'degraded' is partially working (amber). Dependents of an off or failed node fail too unless a fallback edge is healthy. Scenarios override this per step."
           }
         }
       },
@@ -154,6 +165,16 @@
             ],
             "default": "sync",
             "description": "Nature of the connection: a synchronous call, an asynchronous message, data replication, or a bulk data flow. Chooses the line style and, later, whether it implies a dependency."
+          },
+          "dependsOn": {
+            "type": "boolean",
+            "default": false,
+            "description": "The source cannot work without the target: if the target is off or failed, the source fails (or degrades if it has a healthy fallback edge). Set it on the calls a component cannot survive without."
+          },
+          "fallback": {
+            "type": "boolean",
+            "default": false,
+            "description": "Standby path used when a dependsOn target of the same source is down. Usually load 0 in the base model; it takes over the failed edge's load when activated. Cannot be combined with dependsOn."
           }
         }
       },
@@ -199,6 +220,86 @@
           "scope": {
             "type": "string",
             "description": "Group id to drill into: the view shows that group as its outer frame, every group and node inside it, and only the edges whose both ends are inside. Edges that cross the scope boundary are not drawn. Omit to show everything."
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "default": [],
+      "description": "Named what-if timelines. Each step overrides node states and edge loads; steps are cumulative (step k applies steps 1..k). Render one with `orrery render --scenario <id> --step <n>`.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "steps"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique scenario id."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human title. Defaults to the id."
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Ordered changes. A step must change at least one node or edge.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "note": {
+                  "type": "string",
+                  "description": "What happens in this step, shown during step-through."
+                },
+                "nodes": {
+                  "type": "object",
+                  "description": "Node id to state override.",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "state"
+                    ],
+                    "properties": {
+                      "state": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off",
+                          "degraded",
+                          "failed"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "edges": {
+                  "type": "object",
+                  "description": "Edge id to load override (0..1).",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "load"
+                    ],
+                    "properties": {
+                      "load": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { Ajv, type ErrorObject } from "ajv";
-import type { Diagram, Direction, EdgeKind, GroupKind, NodeKind, ViewType } from "./types.js";
+import type { Diagram, Direction, EdgeKind, GroupKind, NodeKind, NodeState, ViewType } from "./types.js";
 
 export class ValidationError {
   constructor(
@@ -74,11 +74,24 @@ function checkSemantics(d: Diagram, explicitEdgeIds: boolean[]): ValidationError
     if (!nodeIds.has(e.from)) err(`/edges/${i}/from`, `unknown node "${e.from}"`);
     if (!nodeIds.has(e.to)) err(`/edges/${i}/to`, `unknown node "${e.to}"`);
     if (e.from === e.to && nodeIds.has(e.from)) err(`/edges/${i}`, `self-referencing edge "${e.from}"`);
+    if (e.dependsOn && e.fallback) err(`/edges/${i}`, "an edge cannot be both dependsOn and fallback");
     if (edgeIds.has(e.id)) {
       const hint = explicitEdgeIds[i] ? "" : "; give one of them an explicit id";
       err(explicitEdgeIds[i] ? `/edges/${i}/id` : `/edges/${i}`, `duplicate edge id "${e.id}"${hint}`);
     }
     edgeIds.add(e.id);
+  });
+
+  const scenarioIds = new Set<string>();
+  d.scenarios.forEach((sc, i) => {
+    if (scenarioIds.has(sc.id)) err(`/scenarios/${i}/id`, `duplicate scenario id "${sc.id}"`);
+    scenarioIds.add(sc.id);
+    sc.steps.forEach((st, j) => {
+      const base = `/scenarios/${i}/steps/${j}`;
+      if (Object.keys(st.nodes).length + Object.keys(st.edges).length === 0) err(base, "step changes nothing");
+      for (const id of Object.keys(st.nodes)) if (!nodeIds.has(id)) err(`${base}/nodes/${id}`, `unknown node "${id}"`);
+      for (const id of Object.keys(st.edges)) if (!edgeIds.has(id)) err(`${base}/edges/${id}`, `unknown edge "${id}"`);
+    });
   });
 
   const viewIds = new Set<string>();
@@ -95,9 +108,10 @@ interface RawDiagram {
   title?: string;
   direction: Direction;
   groups: { id: string; label?: string; kind: GroupKind; parent?: string }[];
-  nodes: { id: string; label?: string; kind: NodeKind; group?: string }[];
-  edges: { id?: string; from: string; to: string; kind: EdgeKind; label?: string; load: number }[];
+  nodes: { id: string; label?: string; kind: NodeKind; group?: string; state: NodeState }[];
+  edges: { id?: string; from: string; to: string; kind: EdgeKind; label?: string; load: number; dependsOn: boolean; fallback: boolean }[];
   views?: { id: string; title?: string; type: ViewType; direction?: Direction; scope?: string }[];
+  scenarios: { id: string; label?: string; steps: { note?: string; nodes?: Record<string, { state: NodeState }>; edges?: Record<string, { load: number }> }[] }[];
 }
 
 const opt = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } =>
@@ -115,14 +129,22 @@ export function validate(input: unknown): ValidationResult {
     ...opt("title", raw.title),
     direction: raw.direction,
     groups: raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, ...opt("parent", g.parent) })),
-    nodes: raw.nodes.map((n) => ({ id: n.id, label: n.label ?? n.id, kind: n.kind, ...opt("group", n.group) })),
-    edges: raw.edges.map((e) => ({ id: e.id ?? `${e.from}->${e.to}`, from: e.from, to: e.to, kind: e.kind, load: e.load, ...opt("label", e.label) })),
+    nodes: raw.nodes.map((n) => ({ id: n.id, label: n.label ?? n.id, kind: n.kind, state: n.state, ...opt("group", n.group) })),
+    edges: raw.edges.map((e) => ({
+      id: e.id ?? `${e.from}->${e.to}`, from: e.from, to: e.to, kind: e.kind, load: e.load,
+      dependsOn: e.dependsOn, fallback: e.fallback, ...opt("label", e.label),
+    })),
     views: (raw.views ?? [{ id: "default", type: "topology" }]).map((v) => ({
       id: v.id,
       type: v.type ?? "topology",
       direction: v.direction ?? raw.direction,
       ...opt("title", v.title),
       ...opt("scope", v.scope),
+    })),
+    scenarios: raw.scenarios.map((sc) => ({
+      id: sc.id,
+      label: sc.label ?? sc.id,
+      steps: sc.steps.map((st) => ({ ...opt("note", st.note), nodes: st.nodes ?? {}, edges: st.edges ?? {} })),
     })),
   };
   const errors = checkSemantics(diagram, raw.edges.map((e) => e.id !== undefined));

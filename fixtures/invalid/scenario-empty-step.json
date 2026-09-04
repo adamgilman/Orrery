@@ -1,0 +1,1 @@
+{ "nodes": [ { "id": "a" } ], "edges": [], "scenarios": [ { "id": "s", "steps": [ { "note": "nothing happens" } ] } ] }

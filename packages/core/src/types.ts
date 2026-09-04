@@ -4,6 +4,7 @@ export type NodeKind = "service" | "database" | "queue" | "cache" | "gateway" | 
 export type GroupKind = "tier" | "region" | "zone" | "cluster" | "boundary";
 export type EdgeKind = "sync" | "async" | "replication" | "dataflow";
 export type ViewType = "topology";
+export type NodeState = "on" | "off" | "degraded" | "failed";
 
 export interface DiagramNode {
   id: string;
@@ -11,6 +12,10 @@ export interface DiagramNode {
   kind: NodeKind;
   /** Enclosing group id, if any. */
   group?: string;
+  /** Health. In a propagated diagram this is the effective state; see `reason`. */
+  state: NodeState;
+  /** Set by propagation when the state was derived from a dependency rather than declared. */
+  reason?: string;
 }
 
 export interface DiagramGroup {
@@ -27,8 +32,22 @@ export interface DiagramEdge {
   to: string;
   kind: EdgeKind;
   label?: string;
-  /** 0..1, drives flow animation. */
+  /** 0..1, drives flow animation. In a propagated diagram this is the effective load. */
   load: number;
+  dependsOn: boolean;
+  fallback: boolean;
+}
+
+export interface ScenarioStep {
+  note?: string;
+  nodes: Record<string, { state: NodeState }>;
+  edges: Record<string, { load: number }>;
+}
+
+export interface Scenario {
+  id: string;
+  label: string;
+  steps: ScenarioStep[];
 }
 
 export interface DiagramView {
@@ -48,4 +67,5 @@ export interface Diagram {
   edges: DiagramEdge[];
   /** Never empty: a default topology view is synthesised when the file has none. */
   views: DiagramView[];
+  scenarios: Scenario[];
 }

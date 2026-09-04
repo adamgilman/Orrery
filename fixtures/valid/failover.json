@@ -1,0 +1,22 @@
+{
+  "title": "Failover",
+  "nodes": [
+    { "id": "api", "label": "API" },
+    { "id": "db", "label": "DB", "kind": "database" },
+    { "id": "replica", "label": "Replica", "kind": "database" },
+    { "id": "legacy", "label": "Legacy", "kind": "external", "state": "off" }
+  ],
+  "edges": [
+    { "from": "api", "to": "db", "load": 0.6, "dependsOn": true },
+    { "from": "api", "to": "replica", "load": 0, "fallback": true },
+    { "from": "db", "to": "replica", "kind": "replication", "load": 0.2 },
+    { "from": "api", "to": "legacy", "load": 0.1 }
+  ],
+  "scenarios": [
+    { "id": "db-failover", "label": "Primary DB fails", "steps": [
+      { "note": "Primary goes down", "nodes": { "db": { "state": "failed" } } },
+      { "note": "Replica takes reads", "edges": { "api->replica": { "load": 0.6 } } },
+      { "note": "Primary back, degraded", "nodes": { "db": { "state": "degraded" } } }
+    ] }
+  ]
+}
