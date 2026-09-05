@@ -74,7 +74,7 @@ say means: MODEL.md invariant first, then the test named there, then the code.
 | `tools/inspect.mjs` | the loop script above |
 | `tools/frames.mjs` | frames of any animated file over a time window, every track frozen exactly (resvg, no browser) |
 | `tools/layout-score.mjs`, `tools/layout-tune.mjs` | score a layout (bends, length, frame crossings) and sweep ELK options over the compound examples, so layout tuning is measured |
-| `tools/browser-frames.mjs` | the same in headless Chromium (`PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright`): the check of record for camera and level-of-detail transitions, since it runs the real CSS engine |
+| `tools/browser-frames.mjs` | the same in headless Chromium (`PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright`): the check of record for camera and drill-down transitions, since it runs the real CSS engine |
 | `site/` | examples page (`node site/build.mjs`, `node site/serve.mjs 8080`) |
 | `PRD.md` | scope, milestones, open questions |
 

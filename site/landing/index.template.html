@@ -232,9 +232,9 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Drill down</p><h2>The whole system, and the parts inside, in one diagram.</h2></div>
-      <p class="o-lede o-muted">Start high. The session cache is one box. Open it and you are inside, looking at the two nodes it is made of. Open a node and you are inside that: a Redis process and its append-only file. Close them and you are back at the whole system. Nothing is redrawn. The detail is in the model, folded away until the reader wants it, as many levels deep as the model goes. The figure plays that as five scenes: the system, the cache, node A, Redis dies, back out.</p>
+      <p class="o-lede o-muted">Start high. The session cache is one small box. Open it and it grows into a frame, the picture reflows around it, and you are looking at the two nodes it is made of. Open a node and you are inside that: a Redis process and its append-only file. Close them and everything slides back. The detail is in the model, folded away until the reader wants it, as many levels deep as the model goes. The figure plays that as five scenes: the system, the cache, node A, Redis dies, back out.</p>
     </div>
-    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Five scenes, twenty seconds, one drawing.</b> The API talks to the session cache as a whole, so its line ends on the frame. Inside, two nodes; inside a node, a process and a file. When Redis dies the step marks the node failed and the cluster and API degraded, and every closed box above it carries that state.</figcaption></figure>
+    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Five scenes, twenty seconds, one drawing that moves.</b> Closed, the session cache is the size of any other box. Open, it is a frame with two nodes; inside a node, a process and a file. When Redis dies the step marks the node failed and the cluster and API degraded, and every closed box above it carries that state on the way out.</figcaption></figure>
     <div class="o-split">
       <pre><code><span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"sessions"</span>, <span class="s">"cache-a"</span>, <span class="s">"cache-b"</span>] } ],
 <span class="k">"tour"</span>: { <span class="k">"seconds"</span>: <span class="n">4</span>, <span class="k">"scenes"</span>: [
@@ -244,7 +244,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
   { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"cache-a"</span>, <span class="k">"scenario"</span>: <span class="s">"redis-fails"</span> },
   { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"scenario"</span>: <span class="s">"redis-fails"</span> }
 ] }</code></pre>
-      <p class="o-body o-muted">One view, one story. A <code>tour</code> lists scenes: a view, a group to focus on at any depth, a moment of a scenario, a caption. Nothing is duplicated and nothing can drift: the same components, connections and states draw every scene, so a change to the model is a change to all of them.</p>
+      <p class="o-body o-muted">One view, one story. A <code>tour</code> lists scenes: a view, a group to open at any depth, a moment of a scenario, a caption. Each set of open groups is laid out on its own and the picture moves between them. Nothing is duplicated and nothing can drift: the same components, connections and states draw every scene, so a change to the model is a change to all of them.</p>
     </div>
   </div>
 </section>

@@ -38,23 +38,28 @@ export function activeView(svg: string): string {
   // Hidden layers carry their style right after the class (the renderer guarantees the attribute order).
   const hidden = '<g class="view" style="display:none"';
   for (let i = out.indexOf(hidden); i >= 0; i = out.indexOf(hidden, i)) out = dropElement(out, i);
-  // A playing view stacks one layer per step, a tour one per state; the still picture is the first.
-  const steps = /<g class="(?:step|tour|state)" data-(?:step|frame|state)="(\d+)"/g;
+  // A playing view stacks one layer per step, a tour one per view; the still picture is the first.
+  const steps = /<g class="(?:step|tour)" data-(?:step|frame)="(\d+)"/g;
   for (let m = steps.exec(out); m; m = steps.exec(out)) if (m[1] !== "0") { out = dropElement(out, m.index); steps.lastIndex = m.index; }
-  // Level of detail at rest: hidden detail goes; summaries become the ordinary elements the checks understand.
-  // Attribute-aware matching: keys like "a->b" put a ">" inside quoted attribute values.
-  const ATTRS = String.raw`(?:[^>"]|"[^"]*")*`;
-  const detailGroup = new RegExp(`<g class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}>`, "g");
-  for (let m = detailGroup.exec(out); m; m = detailGroup.exec(out)) { out = dropElement(out, m.index); detailGroup.lastIndex = m.index; }
-  out = out.replace(new RegExp(`<(path|text) class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
-  const summaryWrap = '<g class="lod" data-lod="summary" data-for="';
-  for (let i = out.indexOf(summaryWrap); i >= 0; i = out.indexOf(summaryWrap, i)) out = unwrapElement(out, i);
-  out = out.replace(/ data-lod="summary" data-for="[^"]*"/g, "");
-  // Scene captions are shown one at a time by CSS; the still keeps the first.
-  out = out.replace(/<text class="step-note"[^>]*style="animation:orrery-caption-(?!0 )[^"]*"[^>]*>[^<]*<\/text>\n?/g, "");
-  // The still is the resting picture: no cycle, no camera, no level-of-detail track left on what survives.
-  out = out.replace(/ style="animation:orrery-(?:play|tour|state|caption|camera)[^"]*"/g, "");
-  out = out.replace(/\n[^\n{}]*\{animation:orrery-lod-[^}]*\}/g, "");
+  // A one-drawing tour marks everything it shows per scene with whether it is visible at t = 0; the still keeps
+  // what is, and unwraps the tour's own wrappers so the checks see ordinary elements.
+  const hiddenAt0 = /<(g|text) [^>]*data-t0="0"/g;
+  for (let m = hiddenAt0.exec(out); m; m = hiddenAt0.exec(out)) {
+    if (m[1] === "g") out = dropElement(out, m.index);
+    else out = out.slice(0, m.index) + out.slice(out.indexOf("</text>", m.index) + 7).replace(/^\n/, "");
+    hiddenAt0.lastIndex = m.index;
+  }
+  for (const cls of ["entity", "variant", "shown", "detail", "lod-summary", "legend-variant"]) {
+    const wrap = `<g class="${cls}`;
+    for (let i = out.indexOf(wrap); i >= 0; i = out.indexOf(wrap, i)) {
+      if (cls === "lod-summary") { i += wrap.length; continue; } // a real element in static renders too: keep it
+      out = unwrapElement(out, i);
+    }
+  }
+  out = out.replace(/<g class="edges" data-edges="\d+" data-t0="1" style="[^"]*">/g, '<g class="edges">');
+  out = out.replace(/ data-t0="[01]"/g, "");
+  // The still is the resting picture: every static attribute already holds the t = 0 value, so the tracks go.
+  out = out.replace(/ style="animation:orrery-(?!flow|pulse)[\w-]+ [\d.]+s (?:linear|step-end) infinite"/g, "");
   return out;
 }
 

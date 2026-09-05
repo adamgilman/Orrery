@@ -137,7 +137,10 @@
       "id": "data",
       "title": "Data tier",
       "scope": "data",
-      "direction": "down"
+      "direction": "down",
+      "collapse": [
+        "sessions"
+      ]
     }
   ],
   "scenarios": [

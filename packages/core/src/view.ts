@@ -1,13 +1,14 @@
 import { ModelError } from "./declare.js";
-import type { Component, Model, View } from "./types.js";
+import type { Component, Connection, Model, View } from "./types.js";
 
 /**
- * Reduce the model to what one view shows (docs/MODEL.md §5.5). Selection: everything, or the scope group and its
+ * Reduce the model to what one view shows (docs/MODEL.md §5.4). Selection: everything, or the scope group and its
  * descendants, intersected with `only` (a group there means its descendants too). Groups shown are the selected
  * ones plus those containing a selected entity, up to the scope. Connections with one end outside are kept and the
- * outside end becomes a ghost component at the top level (R4): nothing is dropped silently.
+ * outside end becomes a ghost component at the top level (R4): nothing is dropped silently. Closed groups (the view's
+ * `collapse` minus `open`) hide their contents and take over their connections (R11).
  */
-export function scopeModel(model: Model, view: View): Model {
+export function scopeModel(model: Model, view: View, open: readonly string[] = []): Model {
   const base: Model = { ...model, direction: view.direction, ...(view.title !== undefined ? { title: view.title } : {}), views: [view] };
   if (view.scope === undefined && view.only === undefined && view.collapse === undefined) return base;
 
@@ -29,27 +30,36 @@ export function scopeModel(model: Model, view: View): Model {
   for (const id of selected) for (const g of chain(id)) { if (view.scope !== undefined && !within(g, view.scope)) break; shownGroups.add(g); }
   const shown = new Set([...selected].filter((id) => !isGroup(id)).concat([...shownGroups]));
 
-  // Collapsed groups (R11): level of detail. Members stay in the model and the layout; the renderer hides them
-  // until the group is in focus. Only the count of hidden components is recorded here.
-  const collapsed = new Set((view.collapse ?? []).filter((id) => shownGroups.has(id) && id !== view.scope));
-  const closedBy = (id: string): string | undefined => chain(id).find((g) => collapsed.has(g));
+  // Closed groups (R11): a group in `collapse` that is not in `open` is drawn as one node-sized box. Everything inside
+  // it leaves the model, and connections to what was inside re-attach to the box. Closed groups nest: the visible
+  // representative of an entity is its outermost closed ancestor. `open` lists the groups a focus has opened.
+  const opened = new Set(open);
+  const collapsed = new Set((view.collapse ?? []).filter((id) => shownGroups.has(id) && id !== view.scope && !opened.has(id)));
+  const representative = (id: string): string => { let rep = id; for (const g of chain(id)) if (collapsed.has(g)) rep = g; return rep; };
+  const visible = (id: string) => representative(id) === id;
   const hiddenCount = new Map<string, number>();
-  for (const c of model.components) { const box = closedBy(c.id); if (box) hiddenCount.set(box, (hiddenCount.get(box) ?? 0) + 1); }
-  const groups = model.groups.filter((g) => shownGroups.has(g.id))
+  for (const c of model.components) { const box = representative(c.id); if (box !== c.id) hiddenCount.set(box, (hiddenCount.get(box) ?? 0) + 1); }
+  const groups = model.groups.filter((g) => shownGroups.has(g.id) && visible(g.id))
     .map((g) => { if (g.id !== view.scope) return g; const { parent, ...root } = g; return root; })
     .map((g) => (collapsed.has(g.id) ? { ...g, collapsed: hiddenCount.get(g.id) ?? 0 } : g));
-  const components: Component[] = model.components.filter((c) => shown.has(c.id));
+  const components: Component[] = model.components.filter((c) => shown.has(c.id) && visible(c.id));
   const ghosts = new Map<string, Component>();
-  const connections = model.connections.filter((c) => {
+  const connections: Connection[] = [];
+  for (const c of model.connections) {
     const a = shown.has(c.from), b = shown.has(c.to);
-    if (!a && !b) return false;
+    if (!a && !b) continue;
     for (const end of [c.from, c.to]) if (!shown.has(end) && !ghosts.has(end)) {
       // A ghost is drawn from its flag alone; its kind is carried through for the data attribute but never styled.
       const src = model.components.find((x) => x.id === end) ?? model.groups.find((x) => x.id === end)!;
       ghosts.set(end, { id: end, label: src.label, kind: src.kind, state: src.state, replicas: 1, ghost: true, ...(src.reason !== undefined ? { reason: src.reason } : {}), ...(src.description !== undefined ? { description: src.description } : {}) });
     }
-    return true;
-  });
+    const from = representative(c.from), to = representative(c.to);
+    if (from === to) continue; // internal to a closed group
+    // Several connections landing on one pair of boxes are drawn as one line, with their load summed.
+    const same = connections.find((x) => x.from === from && x.to === to);
+    if (same) { same.load = Math.min(1, Math.round((same.load + c.load) * 100) / 100); continue; }
+    connections.push({ ...c, from, to });
+  }
   return { ...base, groups, components: [...components, ...ghosts.values()], connections };
 }
 

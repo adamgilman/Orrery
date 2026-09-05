@@ -19,7 +19,9 @@ const doc = async (name: string) => {
   document.body.appendChild(root);
   return root;
 };
-const vis = (root: Element, sel: string) => root.querySelector(`.view:not([style*="display:none"]) ${sel}`)!;
+/** The layer on show. The runtime hides layers through `style.display`, which jsdom serialises with a space, so read the property, not the attribute. */
+const shownLayer = (root: Element) => [...root.querySelectorAll<SVGGElement>(".view")].find((g) => g.style.display !== "none")!;
+const vis = (root: Element, sel: string) => shownLayer(root).querySelector(sel)!;
 const state = (root: Element, id: string) => vis(root, `[data-node="${id}"],[data-group="${id}"]`).getAttribute("data-state");
 const flowLoad = (root: Element, key: string) => vis(root, `[data-flow="${key}"]`).getAttribute("data-load");
 const click = (el: Element, init: MouseEventInit = {}) => el.dispatchEvent(new MouseEvent("click", { bubbles: true, ...init }));
@@ -200,7 +202,7 @@ describe("runtime autoplay", () => {
     rt = boot(root, { size: { width: 1600, height: 900 } });
     rt.showView("failover-loop");
     vi.advanceTimersByTime(400); // finish the morph
-    expect(root.querySelectorAll('.view:not([style*="display:none"]) .step')).toHaveLength(1); // extra step layers removed, CSS cycle gone
+    expect(shownLayer(root).querySelectorAll(".step")).toHaveLength(1); // extra step layers removed, CSS cycle gone
     expect(root.querySelector(".orrery-step")!.textContent).toBe("");
     vi.advanceTimersByTime(2000);
     expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4");
@@ -221,61 +223,61 @@ describe("runtime drill-down", () => {
   let rt: Runtime;
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
-  const opacity = (root: Element, sel: string) => (vis(root, sel) as HTMLElement).style.opacity;
-  it("clicking a closed group focuses it: the camera closes on it and its members appear; Escape returns", async () => {
+  it("clicking a closed group opens it: a morph to the layer with that group open, then the camera closes on it; Escape returns", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
-    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
-    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
+    expect(shownLayer(root).getAttribute("data-open")).toBe("");
+    expect(vis(root, '[data-node="ledger"]')).toBeNull();
+    expect(vis(root, '[data-group="payments"]').hasAttribute("data-collapsed")).toBe(true);
     click(vis(root, '[data-group="payments"]'));
     vi.advanceTimersByTime(100);
-    // the camera moves over an unchanging picture: the summary and its connections hold until it has settled
-    expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
-    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
-    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
-    vi.advanceTimersByTime(700);
-    expect(opacity(root, '[data-node="ledger"]')).toBe("1");
-    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("0");
-    expect(opacity(root, '[data-node="login"]')).toBe("0"); // identity stays closed
-    expect(state(root, "payments")).toBe("on"); // focusing is navigation, not a state change
-    key("Escape");
-    vi.advanceTimersByTime(50);
-    expect(opacity(root, '[data-node="ledger"]')).toBe("1"); // detail holds while the camera pulls back
+    expect(shownLayer(root).getAttribute("data-open")).toBe(""); // still morphing on the old layer
     vi.advanceTimersByTime(800);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("payments");
+    expect(vis(root, '[data-node="ledger"]')).not.toBeNull();
+    expect(vis(root, '[data-group="payments"]').hasAttribute("data-collapsed")).toBe(false);
+    expect(vis(root, '[data-node="login"]')).toBeNull(); // identity stays closed
+    expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
+    expect(state(root, "payments")).toBe("on"); // focusing is navigation, not a state change
+    expect([...root.querySelectorAll(".orrery-outline li")].map((li) => li.getAttribute("data-id"))).toContain("ledger");
+    key("Escape");
+    vi.advanceTimersByTime(900);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("");
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
-    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
-    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
+    expect(vis(root, '[data-node="ledger"]')).toBeNull();
   });
-  it("opens a closed group inside an open one, keeping the outer one open; Escape steps back out one level", async () => {
+  it("opens a closed group inside an open one; Escape steps back out one level at a time", async () => {
     const root = await doc("nested-drill");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     click(vis(root, '[data-group="outer"]'));
-    vi.advanceTimersByTime(800);
-    expect(opacity(root, '[data-node="y"]')).toBe("1");
-    expect(opacity(root, '.lod-summary[data-for="inner"]')).toBe("1"); // inner is still closed
-    expect(opacity(root, '[data-node="x"]')).toBe("0");
-    click(vis(root, '.lod-summary[data-for="inner"]'));
-    vi.advanceTimersByTime(800);
-    expect(opacity(root, '[data-node="x"]')).toBe("1");
-    expect(opacity(root, '[data-node="y"]')).toBe("1"); // outer stays open around it
-    expect(opacity(root, '.lod-summary[data-for="outer"]')).toBe("0");
+    vi.advanceTimersByTime(900);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("outer");
+    expect(vis(root, '[data-node="y"]')).not.toBeNull();
+    expect(vis(root, '[data-group="inner"]').hasAttribute("data-collapsed")).toBe(true);
+    expect(vis(root, '[data-node="x"]')).toBeNull();
+    click(vis(root, '[data-group="inner"]'));
+    vi.advanceTimersByTime(900);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("outer inner");
+    expect(vis(root, '[data-node="x"]')).not.toBeNull();
+    expect(vis(root, '[data-node="y"]')).not.toBeNull();
     key("Escape");
-    vi.advanceTimersByTime(800);
-    expect(opacity(root, '[data-node="x"]')).toBe("0");
-    expect(opacity(root, '[data-node="y"]')).toBe("1");
+    vi.advanceTimersByTime(900);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("outer");
     key("Escape");
-    vi.advanceTimersByTime(800);
-    expect(opacity(root, '[data-node="y"]')).toBe("0");
-    expect(opacity(root, '.lod-summary[data-for="outer"]')).toBe("1");
+    vi.advanceTimersByTime(900);
+    expect(shownLayer(root).getAttribute("data-open")).toBe("");
   });
-  it("a click on a hidden member counts as a click on its closed group", async () => {
+  it("a state set while drilled in shows in every layer", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });
+    click(vis(root, '[data-group="payments"]'));
+    vi.advanceTimersByTime(900);
     click(vis(root, '[data-node="ledger"]'));
-    vi.advanceTimersByTime(800);
-    expect(opacity(root, '[data-node="ledger"]')).toBe("1");
-    expect(state(root, "ledger")).toBe("on");
+    expect(state(root, "ledger")).toBe("degraded");
+    key("Escape");
+    vi.advanceTimersByTime(900);
+    expect(root.querySelector('.view[data-open="payments"] [data-node="ledger"]')!.getAttribute("data-state")).toBe("degraded");
   });
 });
 
@@ -286,18 +288,17 @@ describe("runtime tour", () => {
   it("plays the model's scenes: camera focus, scenario moments, captions; stops on the first interaction", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });
-    const opacity = (sel: string) => (vis(root, sel) as HTMLElement).style.opacity;
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
     expect(root.querySelector(".orrery-note")!.textContent).toBe("The platform. Payments and Identity are closed.");
-    expect(opacity('[data-node="ledger"]')).toBe("0");
+    expect(vis(root, '[data-node="ledger"]')).toBeNull();
     vi.advanceTimersByTime(4000 + 800);
-    expect(opacity('[data-node="ledger"]')).toBe("1");
+    expect(vis(root, '[data-node="ledger"]')).not.toBeNull();
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
     vi.advanceTimersByTime(4000);
     expect(state(root, "ledger")).toBe("failed");
     expect(root.querySelector(".orrery-note")!.textContent).toMatch(/The ledger fails/);
-    vi.advanceTimersByTime(4000);
-    expect(opacity('[data-node="ledger"]')).toBe("0");
+    vi.advanceTimersByTime(4000 + 800);
+    expect(vis(root, '[data-node="ledger"]')).toBeNull();
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
     expect(state(root, "payments")).toBe("degraded");
     vi.advanceTimersByTime(4000);
@@ -305,6 +306,6 @@ describe("runtime tour", () => {
     key("ArrowDown");
     vi.advanceTimersByTime(30000);
     expect(state(root, "payments")).toBe("on");
-    expect(opacity('[data-node="ledger"]')).toBe("0");
+    expect(vis(root, '[data-node="ledger"]')).toBeNull();
   });
 });

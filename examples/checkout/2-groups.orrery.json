@@ -74,5 +74,14 @@
       "kind": "storage",
       "group": "cache-b"
     }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    }
   ]
 }

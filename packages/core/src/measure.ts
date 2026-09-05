@@ -8,6 +8,8 @@ const COMPONENT_MIN_WIDTH = 80;
 export const GROUP_LABEL_HEIGHT = 24;
 /** Extra width for the kind glyph drawn left of the label. */
 export const GLYPH_WIDTH = 24;
+/** Extra width for the expand mark on a closed group. */
+export const EXPAND_MARK_WIDTH = 24;
 /** Extra width for the "×n" replicas badge. */
 const REPLICA_BADGE_WIDTH = 28;
 const CHAR_WIDTH = 7.6; // average glyph width at 14px
@@ -40,7 +42,8 @@ export function toLayoutGraph(model: Model): LayoutGraph {
       id: g.id,
       ...(g.parent !== undefined ? { parent: g.parent } : {}),
       labelHeight: GROUP_LABEL_HEIGHT,
-      ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH + 40, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + 16)), height: COMPONENT_HEIGHT + 12 } } : {}),
+      // A closed group is the size of a component with that label, plus room for the expand mark.
+      ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH)), height: COMPONENT_HEIGHT } } : {}),
     })),
     nodes: model.components.map((c) => ({ id: c.id, ...measureComponent(c, model.kinds), ...(c.group !== undefined ? { group: c.group } : {}) })),
     edges: model.connections.map((c) => ({ id: c.key, from: c.from, to: c.to, ...(c.label !== undefined ? { label: measureConnectionLabel(c.label) } : {}) })),

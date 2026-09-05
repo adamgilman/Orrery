@@ -1,8 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491.2 911.5" width="491.2" height="911.5" data-orrery="1">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420.2 503.5" width="420.2" height="503.5" data-orrery="1">
 <title>Overview</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
-[data-lod="detail"]{opacity:0}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .summary-open{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
@@ -42,83 +41,49 @@
 .st-off{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
-<g class="view" data-view="overview" data-title="Overview" data-size="491.2 911.5">
+<g class="view" data-view="overview" data-open="" data-title="Overview" data-size="420.2 503.5">
 <g class="groups">
-<g class="group gk-tier st-on" data-group="data" data-bbox="20 289.5 451.2 602" data-state="on">
-<rect class="group-box" x="20" y="289.5" width="451.2" height="602" rx="10"/>
-<text class="group-label" x="32" y="305.5">Data</text>
+<g class="group gk-tier st-on" data-group="data" data-bbox="20 289.5 380.2 194" data-state="on" transform="translate(20 289.5)">
+<rect class="group-box" width="380.2" height="194" rx="10"/>
+<text class="group-label" x="12" y="16">Data</text>
 </g>
-<g class="group gk-cluster st-on" data-group="sessions" data-bbox="32 325.5 226 456" data-state="on">
-<rect class="group-box" x="32" y="325.5" width="226" height="456" rx="10"/>
-<text class="group-label" x="44" y="341.5">Session cache</text>
-</g>
-<g class="group gk-cluster st-on" data-group="cache-a" data-bbox="44 361.5 202 184" data-state="on">
-<rect class="group-box" x="44" y="361.5" width="202" height="184" rx="10"/>
-<text class="group-label" x="56" y="377.5">Node A</text>
-</g>
-<g class="group gk-cluster st-on" data-group="cache-b" data-bbox="44 585.5 202 184" data-state="on">
-<rect class="group-box" x="44" y="585.5" width="202" height="184" rx="10"/>
-<text class="group-label" x="56" y="601.5">Node B</text>
+<g class="group gk-cluster st-on" data-group="sessions" data-bbox="32 325.5 155 48" data-state="on" data-collapsed="4" transform="translate(32 325.5)">
+<rect class="group-box" width="155" height="48" rx="10"/>
+<g class="lod-summary"><text class="summary-label" x="65.5" y="24">Session cache</text><g class="summary-open" transform="translate(133 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g>
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M315.5 68 L315.5 108" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="web->api" data-load="0.8" d="M315.5 68 L315.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M315.5 156 L315.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M315.5 156 L315.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
-<text class="edge-label" x="334.5" y="224">writes</text>
-<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 831.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="failover" data-load="0" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 819.5" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M360.5 577.5 L360.5 831.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="db->replica" data-load="0.2" d="M360.5 577.5 L360.5 819.5" style="stroke-width:2.1;animation-duration:2.5s"/>
-<path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M284.5 156 L284.5 257 L145 257 L145 325.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->sessions" data-load="0.5" d="M284.5 156 L284.5 257 L145 257 L145 313.5" style="stroke-width:3;animation-duration:1.8s"/>
-<path class="edge edge-dataflow" data-edge="redis-a->aof-a" data-kind="dataflow" d="M145 445.5 L145 485.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="redis-a->aof-a" data-load="0.3" d="M145 445.5 L145 473.5" style="stroke-width:2.4;animation-duration:2.3s"/>
-<path class="edge edge-dataflow" data-edge="redis-b->aof-b" data-kind="dataflow" d="M145 669.5 L145 709.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="redis-b->aof-b" data-load="0.3" d="M145 669.5 L145 697.5" style="stroke-width:2.4;animation-duration:2.3s"/>
-<path class="edge edge-replication" data-edge="cache-a->cache-b" data-kind="replication" d="M145 545.5 L145 585.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M145 545.5 L145 573.5" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M244.5 68 L244.5 108" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="web->api" data-load="0.8" d="M244.5 68 L244.5 96" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M244.5 156 L244.5 191 L289.5 191 L289.5 325.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.6" d="M244.5 156 L244.5 191 L289.5 191 L289.5 313.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="263.5" y="224">writes</text>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M275.5 156 L275.5 181 L315.5 181 L315.5 257 L377 257 L377 398.5 L338.8 398.5 L338.8 423.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="failover" data-load="0" d="M275.5 156 L275.5 181 L315.5 181 L315.5 257 L377 257 L377 398.5 L338.8 398.5 L338.8 411.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M289.5 373.5 L289.5 423.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M289.5 373.5 L289.5 411.5" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M213.5 156 L213.5 257 L109.5 257 L109.5 325.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->sessions" data-load="0.5" d="M213.5 156 L213.5 257 L109.5 257 L109.5 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 </g>
 <g class="nodes">
-<g class="node kind-client st-on" data-node="web" data-kind="client" data-state="on" data-bbox="249.5 20 132 48" transform="translate(249.5 20)">
+<g class="node kind-client st-on" data-node="web" data-kind="client" data-state="on" data-bbox="178.5 20 132 48" transform="translate(178.5 20)">
 <rect class="node-box" width="132" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
 <text class="node-label" x="84" y="24">Storefront</text>
 </g>
-<g class="node kind-service st-on" data-node="api" data-kind="service" data-state="on" data-bbox="253.5 108 124 48" transform="translate(253.5 108)">
+<g class="node kind-service st-on" data-node="api" data-kind="service" data-state="on" data-bbox="182.5 108 124 48" transform="translate(182.5 108)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text>
 </g>
-<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="298 529.5 125 48" transform="translate(298 529.5)">
+<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="227 325.5 125 48" transform="translate(227 325.5)">
 <rect class="node-box" width="125" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="80.5" y="24">Orders DB</text>
 </g>
-<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="311.2 831.5 148 48" transform="translate(311.2 831.5)">
+<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="240.2 423.5 148 48" transform="translate(240.2 423.5)">
 <rect class="node-box" width="148" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="92" y="24">Read replica</text>
-</g>
-<g class="node kind-cache st-on" data-node="redis-a" data-kind="cache" data-state="on" data-bbox="98 397.5 94 48" transform="translate(98 397.5)">
-<rect class="node-box" width="94" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
-<text class="node-label" x="65" y="24">Redis</text>
-</g>
-<g class="node kind-storage st-on" data-node="aof-a" data-kind="storage" data-state="on" data-bbox="56 485.5 178 48" transform="translate(56 485.5)">
-<rect class="node-box" width="178" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
-<text class="node-label" x="107" y="24">Append-only file</text>
-</g>
-<g class="node kind-cache st-on" data-node="redis-b" data-kind="cache" data-state="on" data-bbox="98 621.5 94 48" transform="translate(98 621.5)">
-<rect class="node-box" width="94" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
-<text class="node-label" x="65" y="24">Redis</text>
-</g>
-<g class="node kind-storage st-on" data-node="aof-b" data-kind="storage" data-state="on" data-bbox="56 709.5 178 48" transform="translate(56 709.5)">
-<rect class="node-box" width="178" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
-<text class="node-label" x="107" y="24">Append-only file</text>
 </g>
 </g>
 </g>

@@ -146,5 +146,14 @@
         }
       ]
     }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    }
   ]
 }

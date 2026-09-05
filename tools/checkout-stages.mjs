@@ -4,18 +4,21 @@ import { readFileSync, writeFileSync } from "node:fs";
 const master = JSON.parse(readFileSync("examples/checkout.orrery.json", "utf8"));
 const { $schema, direction, groups, components, connections, views, scenarios, tour } = master;
 const bare = (c) => { const { group, ...rest } = c; return rest; };
+// Before the drill-down stage the session cache is one closed box. Stage 1 has no groups yet, so it is one part.
+const topLevel = (c) => !["cache-a", "cache-b"].includes(c.group);
+const parts = [...components.filter(topLevel).map(bare), { id: "sessions", label: "Session cache", kind: "cache" }];
+const closedViews = [{ id: "overview", title: "Overview", collapse: ["sessions"] }, { id: "data", title: "Data tier", scope: "data", direction: "down", collapse: ["sessions"] }];
 const stages = {
-  "1-parts": { title: "Checkout: the parts", direction: "right", components: components.map(bare) },
-  "2-groups": { title: "Checkout: grouped", direction: "right", groups, components },
-  "3-connections": { title: "Checkout: connected", direction, groups, components, connections },
-  "4-scenarios": { title: "Checkout: what happens", direction, groups, components, connections, scenarios: scenarios.filter((s) => s.id === "db-fails") },
-  "5-views": { title: "Checkout: views", direction, groups, components, connections, scenarios,
-    views: views.map(({ collapse, ...v }) => v) },
+  "1-parts": { title: "Checkout: the parts", direction: "right", components: parts },
+  "2-groups": { title: "Checkout: grouped", direction: "right", groups, components, views: [closedViews[0]] },
+  "3-connections": { title: "Checkout: connected", direction, groups, components, connections, views: [closedViews[0]] },
+  "4-scenarios": { title: "Checkout: what happens", direction, groups, components, connections, scenarios: scenarios.filter((s) => s.id === "db-fails"), views: [closedViews[0]] },
+  "5-views": { title: "Checkout: views", direction, groups, components, connections, scenarios, views: closedViews },
   "6-drill-down": { title: "Checkout: drill down", direction, groups, components, connections, scenarios, views, tour },
   // The same system in one company's words. The session cache is a nice-to-have for this team: drained for
   // maintenance, checkout runs on for guests, a brownout. Nothing in the tool knows these names.
   "7-vocabulary": {
-    title: "Checkout, in our words", direction, groups,
+    title: "Checkout, in our words", direction, groups, views: [closedViews[0]],
     states: {
       replace: true, default: "healthy",
       define: {

@@ -27,6 +27,15 @@
       "parent": "sessions"
     }
   ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    }
+  ],
   "states": {
     "replace": true,
     "default": "healthy",

@@ -63,19 +63,43 @@ describe("render with a view", () => {
 
 describe("scopeModel: collapsed groups (R11)", () => {
   const m = () => fixture("drill-down");
-  it("keeps every member and connection in place and only marks the group closed with its count", () => {
+  it("a closed group hides what is inside and takes over its connections; the count of hidden components is kept", () => {
     const s = scopeModel(m(), m().views[0]!);
-    expect(s.components.map((c) => c.id)).toEqual(m().components.map((c) => c.id));
-    expect(s.connections.map((c) => c.key)).toEqual(m().connections.map((c) => c.key));
+    expect(s.components.map((c) => c.id)).toEqual(["web", "checkout", "catalog", "stripe", "adyen"]);
+    expect(s.groups.map((g) => g.id)).toEqual(["storefront", "payments", "identity"]); // pay-core is inside payments
     expect(s.groups.find((g) => g.id === "payments")!.collapsed).toBe(4); // pay-api, ledger, ledger-replica, tokens
     expect(s.groups.find((g) => g.id === "identity")!.collapsed).toBe(2);
-    expect(s.groups.find((g) => g.id === "pay-core")!.collapsed).toBeUndefined();
+    // connections to hidden members re-attach to the closed box; internal ones vanish; several onto one pair merge
+    const keys = s.connections.map((c) => `${c.from}->${c.to}`);
+    expect(keys).toEqual(["web->checkout", "web->catalog", "checkout->payments", "checkout->identity", "payments->stripe", "payments->adyen"]);
+    const charge = s.connections.find((c) => c.to === "payments")!;
+    expect(charge.key).toBe("checkout->pay-api"); // keeps the key of the connection it stands for
+    expect(charge.label).toBe("charge");
   });
-  it("a closed group keeps the state the author gave it, and hides nothing about it", () => {
+  it("opening a group brings its members back; an inner closed group stays closed until opened too (any depth)", () => {
+    const n = fixture("nested-drill");
+    const closed = scopeModel(n, n.views[0]!);
+    expect(closed.components.map((c) => c.id)).toEqual(["app"]);
+    expect(closed.groups.map((g) => g.id)).toEqual(["outer"]);
+    expect(closed.connections.map((c) => `${c.from}->${c.to}`)).toEqual(["app->outer"]); // x->y is internal to outer
+    const outer = scopeModel(n, n.views[0]!, ["outer"]);
+    expect(outer.components.map((c) => c.id)).toEqual(["app", "y"]);
+    expect(outer.groups.map((g) => ({ id: g.id, collapsed: g.collapsed }))).toEqual([{ id: "outer", collapsed: undefined }, { id: "inner", collapsed: 1 }]);
+    expect(outer.connections.map((c) => `${c.from}->${c.to}`)).toEqual(["app->outer", "inner->y"]);
+    const both = scopeModel(n, n.views[0]!, ["outer", "inner"]);
+    expect(both.components.map((c) => c.id)).toEqual(["app", "x", "y"]);
+    expect(both.connections.map((c) => `${c.from}->${c.to}`)).toEqual(["app->outer", "x->y"]);
+  });
+  it("merged connections sum their load, capped at one, and a closed group keeps the state the author gave it", () => {
+    const r = validate({ groups: [{ id: "g" }], components: [{ id: "a" }, { id: "p", group: "g" }, { id: "q", group: "g" }], connections: [{ from: "a", to: "p", load: 0.7 }, { from: "a", to: "q", load: 0.6 }], views: [{ id: "v", collapse: ["g"] }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const s = scopeModel(r.model, r.model.views[0]!);
+    expect(s.connections).toHaveLength(1);
+    expect(s.connections[0]!.load).toBe(1);
     const set = applySet(m(), { failed: ["ledger"], degraded: ["payments"] });
-    const s = scopeModel(set, set.views[0]!);
-    expect(s.groups.find((g) => g.id === "payments")!.state).toBe("degraded");
-    expect(s.components.find((c) => c.id === "ledger")!.state).toBe("failed");
-    expect(s.components.find((c) => c.id === "checkout")!.state).toBe("on");
+    const t = scopeModel(set, set.views[0]!);
+    expect(t.groups.find((g) => g.id === "payments")!.state).toBe("degraded");
+    expect(t.components.find((c) => c.id === "checkout")!.state).toBe("on");
   });
 });
+

@@ -41,21 +41,25 @@ describe("playing views in the frame tooling", () => {
 });
 
 describe("tours in the frame tooling", () => {
-  it("activeView keeps the first state of a one-drawing tour and shows closed groups at rest: summaries, no hidden detail", async () => {
+  it("activeView keeps what a one-drawing tour shows at t = 0: the first scene's entities, edges, legend and caption, as plain elements", async () => {
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
     const svg = await render(r.model, new FakeLayoutEngine(), { tour: true });
     const one = activeView(svg);
-    expect((one.match(/<g class="state"/g) ?? []).length).toBe(1);
-    expect(one).not.toMatch(/<[^>]*data-lod="detail"/); // no hidden elements remain (the stylesheet still names the attribute)
-    expect(one).not.toContain('data-node="ledger"');
-    expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="/); // the summary stands in for the cut connection
-    expect(one).not.toContain('class="lod"'); // no level-of-detail wrapper or attribute survives
-    expect(one).not.toContain(' data-lod="summary"');
+    expect(one).not.toContain("data-t0=");
+    expect(one).not.toContain('class="entity"');
+    expect(one).not.toContain('class="variant');
+    expect(one).not.toContain('data-node="ledger"'); // inside the closed payments box in scene 1
+    expect(one).toMatch(/<g class="node kind-gateway" data-node="web"/);
+    expect(one).toMatch(/<g class="group gk-boundary" data-group="payments"[^>]*data-collapsed="4"/);
+    expect((one.match(/<g class="edges">/g) ?? []).length).toBe(1);
+    expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="/); // re-attached to the closed box
+    expect((one.match(/class="step-note"/g) ?? []).length).toBe(1); // one caption in the still
+    expect(one).not.toMatch(/style="animation:orrery-(?!flow|pulse)/);
+    expect(one).toMatch(/<g class="camera" data-stage="[\d.]+ [\d.]+" transform="translate\([\d.]+ [\d.]+\) scale\(1\) translate\([\d.-]+ [\d.-]+\)">/); // at rest, the whole picture
     const report = inspect(svg, { fps: 5, durationMs: 400 });
     expect(report.problems).toEqual([]);
     expect(report.connections.map((c) => c.key)).toEqual(["web->checkout", "web->catalog", "checkout->pay-api", "checkout->login", "pay-api->stripe", "pay-api->adyen"]);
-    expect((one.match(/class="step-note"/g) ?? []).length).toBe(1); // one caption in the still
   });
   it("activeView keeps only the first frame of a crossfading tour of different views", async () => {
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));

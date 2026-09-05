@@ -546,7 +546,7 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
-            "description": "Group ids drawn closed in this view: the group keeps its real footprint, its name sits centred on it with an expand mark, and its members are hidden until the group is in focus (a tour scene's 'focus', or a click in the interactive file). Connections into it stop at its frame until then."
+            "description": "Group ids drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark, nothing inside, connections re-attached to it. Opening it (a tour scene's 'focus', or a click in the interactive file) lays the view out again with the group open and moves the picture there. Closed groups nest to any depth."
           }
         }
       }
@@ -773,7 +773,7 @@
               },
               "focus": {
                 "type": "string",
-                "description": "Group id the camera closes on in this scene. The group's members are revealed while it is in focus; omit to show the whole view."
+                "description": "Group id to open and close the camera on in this scene. The groups above it open too. Must be a group; leave out for the whole view."
               }
             }
           }

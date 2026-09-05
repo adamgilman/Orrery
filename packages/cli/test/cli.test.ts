@@ -243,7 +243,8 @@ describe("orrery render --tour", () => {
     expect(r.out).not.toMatch(/<script/);
     const own = run("render", join(fixtures, "valid/drill-down.json"), "--tour");
     expect(own.code).toBe(0);
-    expect(own.out).toContain('<g class="camera"'); // one drawing, a camera, state layers
-    expect((own.out.match(/<g class="state" data-state="\d+" style=/g) ?? []).length).toBe(2); // two pictures; the legend strip is a separate layer
+    expect(own.out).toContain('<g class="camera"'); // one drawing that moves
+    expect(own.out).toMatch(/<g class="edges" data-edges="0" data-t0="1"/); // one edge set per layout
+    expect(own.out).toMatch(/@keyframes orrery-pos-payments\{/); // the focused frame slides and grows
   });
 });

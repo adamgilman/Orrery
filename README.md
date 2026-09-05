@@ -20,12 +20,13 @@ derived from one master file, [examples/checkout.orrery.json](examples/checkout.
 
 **1. The parts.** Name the components and give each a kind. Components alone render: client, service, cache, database
 here; gateway, queue, function, storage and external are the other defaults, and you can define your own with a glyph
-and a box style.
+and a box style. The session cache is one part for now; stage 6 opens it up.
 
 ![The parts](examples/checkout/1-parts.svg)
 
 **2. Groups.** Put the parts in tiers, regions, zones, clusters or trust boundaries, nested as deep as the system goes.
-The hierarchy is also the outline for navigation, and a group can be connected, needed and given a state.
+A group can be connected and given a state, and a view can draw it closed: one box the size of a component, with an
+expand mark. The session cache is a cluster drawn closed here, so the rest of the story stays small.
 
 ![Grouped](examples/checkout/2-groups.svg)
 
@@ -54,12 +55,12 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 
 ![Data tier](examples/checkout/5-views-data.svg)
 
-**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box. Open it and you
-are inside, looking at the two nodes it is made of. Open a node and you are inside that: a Redis process and its
-append-only file. Close them and you are back at the whole system. Nothing is redrawn; the detail is in the model,
-folded away until the reader wants it, as many levels deep as the model goes. This image plays that as a five-scene
-`tour`: the whole system, inside the cache, inside node A, Redis dies, back out. In the interactive file, click any
-closed group to open it and press Escape to step back out.
+**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one small box. Open it and
+it grows into a frame, the picture reflows around it, and you are looking at the two nodes it is made of. Open a node
+and you are inside that: a Redis process and its append-only file. Close them and everything slides back. The detail
+is in the model, folded away until the reader wants it, as many levels deep as the model goes. This image plays that as
+a five-scene `tour`: the whole system, inside the cache, inside node A, Redis dies, back out. In the interactive file,
+click any closed group to open it and press Escape to step back out.
 
 ![The whole system, inside the cache, inside a node, Redis dies, back out](examples/checkout/6-drill-down-tour.svg)
 

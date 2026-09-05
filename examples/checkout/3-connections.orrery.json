@@ -122,5 +122,14 @@
       "kind": "replication",
       "load": 0.2
     }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    }
   ]
 }
