@@ -47,7 +47,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 
 /* ---------- hero: the instrument plate ---------- */
 .o-hero{background:var(--night);color:var(--on-night);position:relative;overflow:hidden}
-.o-hero .o-wrap{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,80px);align-items:center;padding-top:clamp(48px,7vw,104px);padding-bottom:clamp(56px,7vw,112px)}
+.o-hero .o-wrap{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:clamp(32px,5vw,80px);align-items:center;padding-top:clamp(40px,6vw,88px);padding-bottom:clamp(40px,6vw,88px)}
 .o-hero h1{font-size:clamp(3.25rem,7.2vw,6.75rem);line-height:.98;letter-spacing:-.02em}
 .o-hero h1 em{font-style:italic;color:var(--brass)}
 .o-hero .o-lede{color:var(--on-night-muted);margin-top:28px}
@@ -57,17 +57,20 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 .o-btn:hover{background:var(--flow-ink);border-color:var(--flow-ink);text-decoration:none}
 .o-btn.o-ghost{background:transparent;color:var(--on-night);border-color:rgba(230,233,240,.28)}
 .o-btn.o-ghost:hover{border-color:var(--on-night)}
-.o-plate{position:relative;justify-self:end;width:100%;max-width:440px}
-.o-orbits{position:absolute;inset:-22% -22% -22% -22%;width:144%;height:144%;pointer-events:none;opacity:.9}
-.o-orbits circle{fill:none;stroke:var(--brass-dim);stroke-width:.6}
-.o-orbits .o-tick{stroke:var(--brass);stroke-width:1.2}
-.o-spin{transform-origin:50% 50%;animation:o-turn 140s linear infinite}
-.o-spin.o-slow{animation-duration:220s;animation-direction:reverse}
+.o-plate{position:relative;justify-self:end;width:100%;max-width:460px;padding:60px 0}
+.o-orrery{position:absolute;pointer-events:none}
+.o-orrery-hero{width:170%;height:auto;left:50%;top:50%;transform:translate(-50%,-50%)}
+.o-engrave line{stroke:var(--brass);stroke-opacity:.55}
+.o-ring{fill:none;stroke:var(--brass);stroke-opacity:.35;stroke-width:.6}
+.o-orbit{fill:none;stroke:var(--brass);stroke-opacity:.28;stroke-width:.7}
+.o-turn{animation:o-turn linear infinite;transform-box:view-box}
+.o-bodies .o-turn{transform-origin:50% 50%}
 @keyframes o-turn{to{transform:rotate(360deg)}}
-.o-dial{position:relative;background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px;box-shadow:0 30px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(201,161,90,.18)}
+.o-dial{position:relative;background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:16px;box-shadow:0 30px 80px -30px rgba(0,0,0,.75),0 0 0 1px rgba(201,161,90,.22);width:min(100%,340px);margin-left:auto}
 .o-dial svg{display:block;width:100%;height:auto;max-width:100%}
-.o-dial-caption{margin-top:14px;font-size:.85rem;color:var(--on-night-muted);max-width:44ch}
+.o-dial-caption{position:relative;margin:14px 0 0 auto;font-size:.85rem;color:var(--on-night-muted);max-width:340px}
 .o-dial-caption b{color:var(--on-night);font-weight:500}
+.o-plate-note{position:relative;margin:10px 0 0 auto;max-width:340px;font:400 .7rem/1.5 var(--mono);color:var(--brass);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 
 /* ---------- sections ---------- */
 .o-section{padding:clamp(56px,7vw,112px) 0}
@@ -99,8 +102,10 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 .o-facts p{color:var(--ink-muted);font-size:.9rem;margin-top:6px}
 
 /* ---------- close ---------- */
-.o-close{background:var(--night);color:var(--on-night)}
-.o-close .o-wrap{padding-top:clamp(64px,8vw,128px);padding-bottom:clamp(48px,6vw,96px)}
+.o-close{background:var(--night);color:var(--on-night);position:relative;overflow:hidden}
+.o-close .o-wrap{position:relative;padding-top:clamp(64px,8vw,128px);padding-bottom:clamp(48px,6vw,96px)}
+.o-orrery-close{width:min(120vw,1100px);height:auto;right:-18%;top:50%;transform:translateY(-50%);opacity:.55}
+.o-close .o-wrap>*{position:relative}
 .o-close h2{font-size:clamp(2.5rem,5.5vw,4.5rem);max-width:16ch}
 .o-close h2 em{font-style:italic;color:var(--brass)}
 .o-close .o-lede{color:var(--on-night-muted);margin-top:22px}
@@ -110,13 +115,16 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 @media (max-width:900px){
   .o-hero .o-wrap,.o-section-head,.o-pair,.o-split,.o-three,.o-facts{grid-template-columns:minmax(0,1fr)}
   .o-hero .o-wrap>*,.o-section-head>*,.o-pair>*,.o-split>*,.o-three>*,.o-facts>*{min-width:0;max-width:100%}
-  .o-plate{justify-self:start;max-width:420px;width:100%}
+  .o-plate{justify-self:start;max-width:420px;width:100%;padding:36px 0}
+  .o-orrery-hero{width:150%}
+  .o-dial,.o-dial-caption,.o-plate-note{margin-left:0}
+  .o-orrery-close{right:-60%;width:160vw;opacity:.35}
   .o-figure{padding:12px}
   .o-scroll svg{min-width:820px}
   .o-list li{grid-template-columns:1fr;gap:6px}
   .o-nav{display:none}
 }
-@media (prefers-reduced-motion: reduce){ .o-spin{animation:none} .flow{animation:none !important} }
+@media (prefers-reduced-motion: reduce){ .o-turn{animation:none} .flow{animation:none !important} }
 </style>
 
 <header class="o-head">
@@ -144,19 +152,10 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
       </div>
     </div>
     <div class="o-plate">
-      <svg class="o-orbits" viewBox="0 0 400 400" aria-hidden="true">
-        <g class="o-spin">
-          <circle cx="200" cy="200" r="120"/><circle cx="200" cy="200" r="150"/><circle cx="200" cy="200" r="184"/>
-          <line class="o-tick" x1="200" y1="16" x2="200" y2="26"/><line class="o-tick" x1="320" y1="200" x2="330" y2="200"/>
-        </g>
-        <g class="o-spin o-slow">
-          <circle cx="200" cy="200" r="90" stroke-dasharray="2 6"/>
-          <circle cx="200" cy="200" r="198" stroke-dasharray="1 9"/>
-          <circle cx="200" cy="110" r="2.2" fill="#C9A15A" stroke="none"/>
-        </g>
-      </svg>
+      <!--orrery:hero-->
       <div class="o-dial"><!--svg:solar--></div>
       <p class="o-dial-caption"><b>A plain SVG file.</b> In a README it animates with no plugin, and a view can play a whole scenario on a timer. Opened in a browser, the same file is an instrument: an outline, a scenario player, click to fail a component.</p>
+      <p class="o-plate-note">Orbital periods to scale: Mercury 0.241 · Venus 0.615 · Earth 1 · Mars 1.881 · Jupiter 11.86 years, one year a minute. Distances are not.</p>
     </div>
   </div>
 </section>
@@ -264,6 +263,7 @@ platform.orrery.json:/scenarios/1/steps/0/set/failed: unknown state "failed"; kn
 </section>
 
 <section class="o-close">
+  <!--orrery:close-->
   <div class="o-wrap">
     <h2>Set your system <em>in motion.</em></h2>
     <p class="o-lede">Open source, MIT licensed, TypeScript. One command from a JSON file to a diagram that moves.</p>
