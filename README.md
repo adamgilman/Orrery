@@ -54,13 +54,16 @@ orrery render examples/readme/failover.orrery.json --play db-fails --every 3 -o 
 ![Billing only](examples/readme/views-billing.svg)
 
 **Drill down.** A view can draw a group closed: its real footprint with its name and a count, members hidden until the
-group is in focus. Everything is one drawing, so opening a group is a camera move, not a new picture. This image plays a
-four-scene story with no script: the camera closes on Payments and its members appear, the ledger fails in there, and
-the camera pulls back to the overview with the closed box and the checkout that needs it turned amber. A `tour` in the
-model is a list of scenes, each a view at a moment, optionally focused on a group; the interactive file plays the same
-scenes with its camera until you click, and a click on any closed group focuses it.
+group is in focus. Everything is one drawing, so opening a group is a camera move, not a new picture: the closed box
+keeps its name and its connections while the camera closes on it, and its members resolve once the camera has settled,
+the way a map resolves as you approach. This image plays a four-scene story with no script: the camera closes on
+Orders and its members appear, the database fails in there, and the camera pulls back to the overview with the closed
+box and the app that needs it turned red. A `tour` in the model is a list of scenes, each a view at a moment, optionally
+focused on a group; the interactive file plays the same scenes with its camera until you click, and a click on any
+closed group focuses it. A larger platform with nested groups plays the same way in
+[drill-down-tour.svg](examples/readme/drill-down-tour.svg).
 
-![Platform overview, then inside each subsystem](examples/readme/drill-down-tour.svg)
+![Orders closed, then inside Orders, then its database fails, then back out](examples/readme/drill-mini-tour.svg)
 
 **Your vocabulary.** States and kinds are yours to name: bind them to looks and mechanics, and the legend teaches the
 reader your words. A trading platform whose organisation says healthy, impaired, brownout, outage and drained, two

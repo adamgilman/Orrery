@@ -43,21 +43,23 @@
 .st-off .node-box{stroke-dasharray:4 4}
 .st-off .group-box{stroke-dasharray:4 4}
 .st-off{opacity:0.45}
-@keyframes orrery-camera{0%{transform:none}26.88%{animation-timing-function:ease-in-out;transform:none}32.5%{transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}76.88%{animation-timing-function:ease-in-out;transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}82.5%{transform:none}100%{transform:none}}
+@keyframes orrery-camera{0%{transform:none}26.88%{animation-timing-function:ease-in-out;transform:none}32.5%{transform:translate(781px, 164.5px) scale(1.2368) translate(-1022.5px, -129px)}76.88%{animation-timing-function:ease-in-out;transform:translate(781px, 164.5px) scale(1.2368) translate(-1022.5px, -129px)}82.5%{transform:none}100%{transform:none}}
 @keyframes orrery-state-0{0%{opacity:1}50%{opacity:1}59.38%{opacity:0}100%{opacity:0}}
 @keyframes orrery-state-1{0%{opacity:0}50%{opacity:0}59.38%{opacity:1}100%{opacity:1}}
 [data-lod="detail"][data-for~="payments"]{animation:orrery-lod-payments-detail 16s linear infinite}
 [data-lod="summary"][data-for~="payments"]{animation:orrery-lod-payments-summary 16s linear infinite}
-@keyframes orrery-lod-payments-detail{0%{opacity:0}32.5%{opacity:0}34.38%{opacity:1}75%{opacity:1}76.88%{opacity:0}100%{opacity:0}}
-@keyframes orrery-lod-payments-summary{0%{opacity:1}25%{opacity:1}26.88%{opacity:0}82.5%{opacity:0}84.38%{opacity:1}100%{opacity:1}}
-@keyframes orrery-caption-0{0%{opacity:1}25%{opacity:1}34.38%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-1{0%{opacity:0}25%{opacity:0}34.38%{opacity:1}50%{opacity:1}59.38%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-2{0%{opacity:0}50%{opacity:0}59.38%{opacity:1}75%{opacity:1}84.38%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-3{0%{opacity:0}75%{opacity:0}84.38%{opacity:1}100%{opacity:1}}</style>
+@keyframes orrery-lod-payments-detail{0%{opacity:0}32.5%{opacity:0}34.38%{opacity:1}82.5%{opacity:1}84.38%{opacity:0}100%{opacity:0}}
+@keyframes orrery-lod-payments-summary{0%{opacity:1}32.5%{opacity:1}34.38%{opacity:0}82.5%{opacity:0}84.38%{opacity:1}100%{opacity:1}}
+@keyframes orrery-caption-0{0%{opacity:1}25%{opacity:1}26.88%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-1{0%{opacity:0}32.5%{opacity:0}34.38%{opacity:1}50%{opacity:1}51.88%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-2{0%{opacity:0}57.5%{opacity:0}59.38%{opacity:1}75%{opacity:1}76.88%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-3{0%{opacity:0}82.5%{opacity:0}84.38%{opacity:1}100%{opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
 <g class="view" data-view="overview" data-title="Commerce platform" data-size="1562 403">
-<g class="camera" style="animation:orrery-camera 16s linear infinite">
+<clipPath id="orrery-stage-overview"><rect width="1562" height="329"/></clipPath>
+<g class="stage" clip-path="url(#orrery-stage-overview)">
+<g class="camera" data-stage="1562 329" style="animation:orrery-camera 16s linear infinite">
 <g class="state" data-state="0" style="animation:orrery-state-0 16s linear infinite">
 <g class="groups">
 <g class="group gk-tier st-on" data-group="storefront" data-bbox="20 80 247 184" data-state="on">
@@ -91,32 +93,32 @@
 <path class="edge edge-sync" data-edge="web->catalog" data-kind="sync" d="M112 156 L137 156 L137 228 L162 228" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->catalog" data-load="0.6" d="M112 156 L137 156 L137 228 L150 228" style="stroke-width:3.3;animation-duration:1.5s"/>
 <path class="edge edge-sync need" data-edge="checkout->pay-api" data-kind="sync" data-lod="detail" data-for="payments" d="M255 132 L672 132" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="checkout->pay-api" data-load="0.5" data-lod="detail" data-for="payments" d="M255 132 L660 132" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="M255 132 L660 132" style="stroke-width:3;animation-duration:1.8s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="checkout->pay-api" data-lod="summary" data-for="payments" d="M255 132 L640.5 132" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="checkout->pay-api" data-load="0.5" data-lod="summary" data-for="payments" d="M255 132 L628.5 132" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="checkout->pay-api" data-load="0.5" d="M255 132 L628.5 132" style="stroke-width:3;animation-duration:1.8s"/></g>
 <text class="edge-label" x="458.8" y="121">charge</text>
 <path class="edge edge-sync need" data-edge="checkout->login" data-kind="sync" data-lod="detail" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L344 233" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="checkout->login" data-load="0.4" data-lod="detail" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L332 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="detail" data-for="identity"><path class="flow" data-flow="checkout->login" data-load="0.4" d="M255 148 L299.5 148 L299.5 233 L332 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="checkout->login" data-lod="summary" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L332 233" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="checkout->login" data-load="0.4" data-lod="summary" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L320 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="summary" data-for="identity"><path class="flow-summary" data-flow-summary="checkout->login" data-load="0.4" d="M255 148 L299.5 148 L299.5 233 L320 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->ledger" data-kind="sync" data-lod="detail" data-for="payments" d="M796 116 L876 116" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->ledger" data-load="0.5" data-lod="detail" data-for="payments" d="M796 116 L864 116" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="0.5" d="M796 116 L864 116" style="stroke-width:3;animation-duration:1.8s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->ledger-replica" data-kind="sync" data-lod="detail" data-for="payments" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1028 132" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->ledger-replica" data-load="0" data-lod="detail" data-for="payments" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1016 132" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger-replica" data-load="0" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1016 132" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge edge-replication" data-edge="ledger->ledger-replica" data-kind="replication" data-lod="detail" data-for="payments" d="M978 116 L1028 116" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="ledger->ledger-replica" data-load="0.2" data-lod="detail" data-for="payments" d="M978 116 L1016 116" style="stroke-width:2.1;animation-duration:2.5s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="ledger->ledger-replica" data-load="0.2" d="M978 116 L1016 116" style="stroke-width:2.1;animation-duration:2.5s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->tokens" data-kind="sync" data-lod="detail" data-for="payments" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1260.5 148" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->tokens" data-load="0.3" data-lod="detail" data-for="payments" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1248.5 148" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->tokens" data-load="0.3" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1248.5 148" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->stripe" data-kind="sync" data-lod="detail" data-for="payments" d="M796 140 L831 140 L831 197 L1462 197" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->stripe" data-load="0.3" data-lod="detail" data-for="payments" d="M796 140 L831 140 L831 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->stripe" data-load="0.3" d="M796 140 L831 140 L831 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="pay-api->stripe" data-lod="summary" data-for="payments" d="M1404.5 197 L1462 197" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="pay-api->stripe" data-load="0.3" data-lod="summary" data-for="payments" d="M1404.5 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="pay-api->stripe" data-load="0.3" d="M1404.5 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->adyen" data-kind="sync" data-lod="detail" data-for="payments" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1462 285" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->adyen" data-load="0" data-lod="detail" data-for="payments" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->adyen" data-load="0" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="pay-api->adyen" data-lod="summary" data-for="payments" d="M1404.5 213 L1437 213 L1437 285 L1462 285" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="pay-api->adyen" data-load="0" data-lod="summary" data-for="payments" d="M1404.5 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="pay-api->adyen" data-load="0" d="M1404.5 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge edge-sync need" data-edge="login->sessions" data-kind="sync" data-lod="detail" data-for="identity" d="M424 233 L464 233" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="login->sessions" data-load="0.4" data-lod="detail" data-for="identity" d="M424 233 L452 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="detail" data-for="identity"><path class="flow" data-flow="login->sessions" data-load="0.4" d="M424 233 L452 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 </g>
 <g class="nodes">
 <g class="node kind-gateway st-on" data-node="web" data-kind="gateway" data-state="on" data-bbox="32 124 80 48" transform="translate(32 124)">
@@ -206,32 +208,32 @@
 <path class="edge edge-sync" data-edge="web->catalog" data-kind="sync" d="M112 156 L137 156 L137 228 L162 228" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->catalog" data-load="0.6" d="M112 156 L137 156 L137 228 L150 228" style="stroke-width:3.3;animation-duration:1.5s"/>
 <path class="edge edge-sync need" data-edge="checkout->pay-api" data-kind="sync" data-lod="detail" data-for="payments" d="M255 132 L672 132" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="checkout->pay-api" data-load="0.5" data-lod="detail" data-for="payments" d="M255 132 L660 132" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="M255 132 L660 132" style="stroke-width:3;animation-duration:1.8s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="checkout->pay-api" data-lod="summary" data-for="payments" d="M255 132 L640.5 132" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="checkout->pay-api" data-load="0.5" data-lod="summary" data-for="payments" d="M255 132 L628.5 132" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="checkout->pay-api" data-load="0.5" d="M255 132 L628.5 132" style="stroke-width:3;animation-duration:1.8s"/></g>
 <text class="edge-label" x="458.8" y="121">charge</text>
 <path class="edge edge-sync need" data-edge="checkout->login" data-kind="sync" data-lod="detail" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L344 233" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="checkout->login" data-load="0.4" data-lod="detail" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L332 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="detail" data-for="identity"><path class="flow" data-flow="checkout->login" data-load="0.4" d="M255 148 L299.5 148 L299.5 233 L332 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="checkout->login" data-lod="summary" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L332 233" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="checkout->login" data-load="0.4" data-lod="summary" data-for="identity" d="M255 148 L299.5 148 L299.5 233 L320 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="summary" data-for="identity"><path class="flow-summary" data-flow-summary="checkout->login" data-load="0.4" d="M255 148 L299.5 148 L299.5 233 L320 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->ledger" data-kind="sync" data-lod="detail" data-for="payments" d="M796 116 L876 116" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->ledger" data-load="0" data-lod="detail" data-for="payments" d="M796 116 L864 116" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="0" d="M796 116 L864 116" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->ledger-replica" data-kind="sync" data-lod="detail" data-for="payments" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1028 132" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->ledger-replica" data-load="0.5" data-lod="detail" data-for="payments" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1016 132" style="stroke-width:3;animation-duration:1.8s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger-replica" data-load="0.5" d="M796 124 L851 124 L851 165 L1003 165 L1003 132 L1016 132" style="stroke-width:3;animation-duration:1.8s"/></g>
 <path class="edge edge-replication" data-edge="ledger->ledger-replica" data-kind="replication" data-lod="detail" data-for="payments" d="M978 116 L1028 116" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="ledger->ledger-replica" data-load="0" data-lod="detail" data-for="payments" d="M978 116 L1016 116" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="ledger->ledger-replica" data-load="0" d="M978 116 L1016 116" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->tokens" data-kind="sync" data-lod="detail" data-for="payments" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1260.5 148" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->tokens" data-load="0.3" data-lod="detail" data-for="payments" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1248.5 148" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->tokens" data-load="0.3" d="M796 132 L841 132 L841 181 L1235.5 181 L1235.5 148 L1248.5 148" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->stripe" data-kind="sync" data-lod="detail" data-for="payments" d="M796 140 L831 140 L831 197 L1462 197" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->stripe" data-load="0.3" data-lod="detail" data-for="payments" d="M796 140 L831 140 L831 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->stripe" data-load="0.3" d="M796 140 L831 140 L831 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="pay-api->stripe" data-lod="summary" data-for="payments" d="M1404.5 197 L1462 197" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="pay-api->stripe" data-load="0.3" data-lod="summary" data-for="payments" d="M1404.5 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="pay-api->stripe" data-load="0.3" d="M1404.5 197 L1450 197" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-sync need" data-edge="pay-api->adyen" data-kind="sync" data-lod="detail" data-for="payments" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1462 285" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="pay-api->adyen" data-load="0" data-lod="detail" data-for="payments" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->adyen" data-load="0" d="M796 148 L821 148 L821 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge-summary edge-sync need" data-edge-summary="pay-api->adyen" data-lod="summary" data-for="payments" d="M1404.5 213 L1437 213 L1437 285 L1462 285" marker-end="url(#arrow)"/>
-<path class="flow-summary" data-flow-summary="pay-api->adyen" data-load="0" data-lod="summary" data-for="payments" d="M1404.5 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/>
+<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="pay-api->adyen" data-load="0" d="M1404.5 213 L1437 213 L1437 285 L1450 285" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <path class="edge edge-sync need" data-edge="login->sessions" data-kind="sync" data-lod="detail" data-for="identity" d="M424 233 L464 233" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="login->sessions" data-load="0.4" data-lod="detail" data-for="identity" d="M424 233 L452 233" style="stroke-width:2.7;animation-duration:2s"/>
+<g class="lod" data-lod="detail" data-for="identity"><path class="flow" data-flow="login->sessions" data-load="0.4" d="M424 233 L452 233" style="stroke-width:2.7;animation-duration:2s"/></g>
 </g>
 <g class="nodes">
 <g class="node kind-gateway st-degraded" data-node="web" data-kind="gateway" data-state="degraded" data-bbox="32 124 80 48" transform="translate(32 124)">
@@ -287,10 +289,13 @@
 <text class="node-label" x="76.5" y="24">Sessions</text>
 </g>
 </g>
+</g>
+</g>
+</g>
+<g class="state" data-state="1" data-role="legend" style="animation:orrery-state-1 16s linear infinite">
 <g class="legend" transform="translate(20 337)">
 <g transform="translate(0 0)"><rect width="14" height="14" rx="3" style="fill:#fffbeb;stroke:#d97706;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">degraded</tspan>: Working with reduced redundancy or capacity</text></g>
 <g transform="translate(0 20)"><rect width="14" height="14" rx="3" style="fill:#fef2f2;stroke:#dc2626;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">failed</tspan>: Broken</text></g>
-</g>
 </g>
 </g>
 <text class="step-note" x="20" y="391" style="animation:orrery-caption-0 16s linear infinite">The platform. Payments and Identity are closed.</text>

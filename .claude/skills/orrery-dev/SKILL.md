@@ -70,6 +70,8 @@ named there, then the code.
 | `packages/runtime` | the browser runtime bundled into every rendered SVG |
 | `packages/cli` | `orrery validate` / `orrery render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) |
 | `tools/inspect.mjs` | the loop script above |
+| `tools/frames.mjs` | frames of any animated file over a time window, every track frozen exactly (resvg, no browser) |
+| `tools/browser-frames.mjs` | the same in headless Chromium (`PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright`): the check of record for camera and level-of-detail transitions, since it runs the real CSS engine |
 | `site/` | examples page (`node site/build.mjs`, `node site/serve.mjs 8080`) |
 | `PRD.md` | scope, milestones, open questions |
 

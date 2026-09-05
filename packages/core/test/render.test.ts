@@ -164,7 +164,8 @@ describe("renderSvg: collapsed groups as level of detail (R11)", () => {
     const end = summary![1]!.split(" L").at(-1)!.split(" ").map(Number);
     const onEdge = Math.abs(end[0]! - bx) < 1 || Math.abs(end[0]! - (bx + bw)) < 1 || Math.abs(end[1]! - by) < 1 || Math.abs(end[1]! - (by + bh)) < 1;
     expect(onEdge).toBe(true);
-    expect(svg).toMatch(/<path class="flow-summary" data-flow-summary="checkout->pay-api"/);
+    expect(svg).toMatch(/<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="checkout->pay-api"/);
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="[\d.]+" d="/); // the flow keeps its own dash animation
     expect(svg).toMatch(/\[data-lod="detail"\]\{opacity:0/);
     // a component outside any closed group carries no level-of-detail attribute
     expect(svg).toMatch(/<g class="node[^"]*" data-node="web"[^>]*>/);
@@ -176,7 +177,7 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
   it("emits one layout, state layers only where the scenario moment differs, a camera track and level-of-detail tracks", async () => {
     const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
     // one scene group with a camera animation wrapping the state layers
-    expect(svg).toMatch(/<g class="camera" style="animation:orrery-camera 16s linear infinite">/);
+    expect(svg).toMatch(/<g class="camera" data-stage="[\d.]+ [\d.]+" style="animation:orrery-camera 16s linear infinite">/);
     const states = [...svg.matchAll(/<g class="state" data-state="(\d)" style="animation:orrery-state-\d 16s linear infinite">/g)];
     expect(states.map((m) => m[1])).toEqual(["0", "1"]); // healthy, and ledger failed
     // the ledger is drawn once per state layer, at the same place
@@ -192,20 +193,36 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     const [bx, by, bw, bh] = svg.match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     const [, W, H] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!.map(Number) as [unknown, number, number];
     const t = cam.match(/32\.5%\{transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/)!.slice(1).map(Number);
-    expect(t[0]).toBeCloseTo(W / 2, 0); expect(t[1]).toBeCloseTo((H - 24) / 2, 0); // the caption strip is outside the camera's frame
+    // the camera frames the drawing alone: legend and caption are a fixed strip below it
+    const [, sw, sh] = svg.match(/<g class="camera" data-stage="([\d.]+) ([\d.]+)"/)!.map(Number) as [unknown, number, number];
+    expect(sw).toBe(W); expect(sh).toBeLessThan(H - 24);
+    // the moving picture is clipped to the stage, so nothing spills over the legend and caption while it moves
+    expect(svg).toContain(`<clipPath id="orrery-stage-overview"><rect width="${sw}" height="${sh}"/></clipPath>`);
+    expect(svg).toMatch(/<g class="stage" clip-path="url\(#orrery-stage-overview\)">\n<g class="camera"/);
+    expect(t[0]).toBeCloseTo(sw / 2, 0); expect(t[1]).toBeCloseTo(sh / 2, 0);
     expect(t[3]).toBeCloseTo(-(bx + bw / 2), 0); expect(t[4]).toBeCloseTo(-(by + bh / 2), 0);
-    expect(t[2]).toBeGreaterThan(1);
+    expect(t[2]).toBeCloseTo(Math.min(sw / (bw + 48), sh / (bh + 48)), 3); // fits the frame with 24px of air
     // level of detail: payments' detail is visible exactly while focused, its summary the reverse; identity never opens
     expect(svg).toMatch(/\[data-lod="detail"\]\[data-for~="payments"\]\{animation:orrery-lod-payments-detail 16s linear infinite\}/);
-    // phases never overlap: detail appears after the camera has arrived (32.5 → 34.38) and is gone before it leaves (75 → 76.88)
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}75%\{opacity:1\}76\.88%\{opacity:0\}100%\{opacity:0\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}26\.88%\{opacity:0\}82\.5%\{opacity:0\}84\.38%\{opacity:1\}100%\{opacity:1\}\}/);
+    // the level of detail resolves only once the camera has settled (32.5 → 34.38 in, 82.5 → 84.38 out): the box is
+    // never empty and its connections never vanish while the camera moves
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}82\.5%\{opacity:1\}84\.38%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}32\.5%\{opacity:1\}34\.38%\{opacity:0\}82\.5%\{opacity:0\}84\.38%\{opacity:1\}100%\{opacity:1\}\}/);
     expect(svg).not.toContain("orrery-lod-identity");
     // state layers crossfade at the scenario moment (scene 2) and back at the loop
     expect(svg).toMatch(/@keyframes orrery-state-1\{0%\{opacity:0\}50%\{opacity:0\}59\.38%\{opacity:1\}100%\{opacity:1\}\}/);
     expect(svg).toMatch(/@keyframes orrery-state-0\{0%\{opacity:1\}50%\{opacity:1\}59\.38%\{opacity:0\}100%\{opacity:0\}\}/);
-    // captions per scene
+    // captions per scene, staged so two never overlap: the old one is gone before the camera moves, the new one
+    // appears after it settles (scene 1 arrives 32.5 → 34.38, leaves 50 → 51.88)
     expect(svg).toContain(">The ledger fails. The API runs reduced on the replica.</text>");
+    expect(svg).toMatch(/@keyframes orrery-caption-1\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}50%\{opacity:1\}51\.88%\{opacity:0\}100%\{opacity:0\}\}/);
+    // the legend is a fixed strip, not part of the moving picture: one per state layer, outside the camera
+    // (the healthy layer shows nothing in its legend, so only the failed layer has one)
+    const hud = svg.indexOf('<g class="state" data-state="1" data-role="legend"');
+    expect(hud).toBeGreaterThan(svg.indexOf('<g class="camera"'));
+    expect(svg.slice(svg.indexOf('<g class="camera"'), hud)).not.toContain('class="legend"');
+    expect(svg).toMatch(/<g class="state" data-state="1" data-role="legend" style="animation:orrery-state-1 16s linear infinite">\n<g class="legend"/);
+    expect(svg).not.toMatch(/data-state="0" data-role="legend"/);
   });
   it("scenes across different views fall back to a crossfade between whole views", async () => {
     const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "payments"], seconds: 3 } });

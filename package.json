@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^22",
+    "playwright": "1.55",
     "typescript": "^5.6",
     "vitest": "^3"
   },

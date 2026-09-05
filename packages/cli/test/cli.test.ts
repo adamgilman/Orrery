@@ -242,6 +242,6 @@ describe("orrery render --tour", () => {
     const own = run("render", join(fixtures, "valid/drill-down.json"), "--tour");
     expect(own.code).toBe(0);
     expect(own.out).toContain('<g class="camera"'); // one drawing, a camera, state layers
-    expect((own.out.match(/<g class="state"/g) ?? []).length).toBe(2);
+    expect((own.out.match(/<g class="state" data-state="\d+" style=/g) ?? []).length).toBe(2); // two pictures; the legend strip is a separate layer
   });
 });
