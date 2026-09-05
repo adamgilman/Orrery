@@ -15,7 +15,7 @@ inference. Two layers, as in the specification:
 - **Representation**, owned by the renderer: looks, glyphs, frames, lines, animation, legend. Presets, all
   replaceable.
 
-Navigation (views, outline, zoom, step-through, drill-down, morph) is what the runtime builds on top of those.
+Navigation (views, zoom, step-through, drill-down, morph) is what the runtime builds on top of those.
 
 If something cannot be expressed in the model it is not a feature. If the tool has to know what "degraded" means,
 or work out what a failure does to the rest of the system, the design is wrong: it is the author's diagram.
@@ -24,8 +24,8 @@ Specification: [docs/MODEL.md](docs/MODEL.md), with numbered invariants.
 Three tests every release must pass:
 
 1. **The README test.** The rendered SVG dropped into a GitHub README shows animated flow, with no plugin.
-2. **The click-through test.** The *same file* opened directly in a browser is fully interactive: outline, state
-   changes, scenarios, views, drill-down.
+2. **The click-through test.** The *same file* opened directly in a browser is interactive with clicks and the
+   keyboard alone: state changes, scenarios, views, drill-down. No panel; a page brings its own controls.
 3. **The agent test.** An AI agent given only MODEL.md, the JSON Schema and the CLI can grow a model through the
    progressive walk (components, groups, connections, scenarios, views, own vocabulary), validating first time at
    each step, and gets the pictures it expected.
@@ -35,7 +35,7 @@ Three tests every release must pass:
 | Role | Who | What they do |
 |---|---|---|
 | Author | AI coding agent (Claude Code, Cursor, etc.), occasionally a human | Writes `*.orrery.json`, runs `validate` and `render`, looks at the result with `yarn inspect` |
-| Navigator | Engineer, architect, reviewer | Opens the interactive SVG/HTML, walks the outline, flips components off, plays failure scenarios |
+| Navigator | Engineer, architect, reviewer | Opens the interactive SVG or a page built on it, drills into groups, steps components through states, plays failure scenarios |
 | Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG or GIF |
 
 ## 3. Scope
@@ -49,8 +49,9 @@ Three tests every release must pass:
   gives direction and order, never coordinates. Engines are replaceable behind `LayoutEngine`.
 - **Render**: one standalone SVG; CSS animation of flow and pulse; looks and kinds rendered exactly as bound;
   legend in the author's words; ghosts for one-ended connections in scoped views.
-- **Runtime** (inside the SVG): outline, zoom, click and state bar to set any state, scenarios with step-through,
-  view morph, drill-down with a camera, keyboard, hover focus.
+- **Runtime** (inside the SVG): an engine with no user interface of its own. Clicks and the keyboard work in the
+  standalone file; a page mounts the engine and builds its own controls from the interface it exposes (views,
+  scenarios, states, focus, play, change events with a snapshot).
 - **What-ifs without a scenario**: `render --set <state>=<ids>`.
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
   from the frame tooling (M4).
@@ -92,7 +93,7 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 |---|---|---|
 | `@orrery/core` | JSON Schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
 | `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
-| `@orrery/runtime` | Vanilla JS inlined into the SVG: panel, outline, camera, state changes, scenarios, view morph. Budget 25 KB gzipped (currently ~6) | never React |
+| `@orrery/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
 | `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
 | `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
@@ -126,7 +127,7 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 
 | # | Deliverable | Done when |
 |---|---|---|
-| N1 | **Browser click-through by a human**; fix what only eyes can find (panel width, morph feel, legend placement). | The user reports the interactive file works on desktop Safari/Chrome |
+| N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). | The user reports the interactive file works on desktop Safari/Chrome |
 | N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
 | N3 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
 | M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |

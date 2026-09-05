@@ -73,8 +73,10 @@ width, dash pattern and flow colour.
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
 **Interactive.** The same SVG file, opened directly instead of through an image tag, runs a small embedded runtime:
-an outline to navigate, click a component to step it through your states, step through scenarios, switch views with
-a morph, click a closed group to drill in, keyboard shortcuts. No page, no build, no server. Try the checkout:
+click a component to step it through your states, click a closed group to drill in and Escape to step back out,
+arrow keys to select, digits to switch views with a morph, brackets to step a scenario. No panel: the file is purely
+the diagram. For a page with controls, the same engine exposes them to your own JavaScript (see the spec in
+`docs/superpowers/specs/2026-09-05-two-paths-design.md`). No page, no build, no server. Try the checkout:
 [open it interactive](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text).
 

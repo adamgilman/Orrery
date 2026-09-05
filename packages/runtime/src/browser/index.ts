@@ -2,7 +2,6 @@ import { flowDuration, flowStyle } from "@orrery/core/flow";
 import { lookOf } from "@orrery/core/looks";
 import type { Model } from "@orrery/core/types";
 import { fitView, transformOf, zoomToBox, type Box, type Camera, type Size } from "./camera.js";
-import { buildPanel, h, PANEL_W } from "./panel.js";
 import { phaseOf } from "./phase.js";
 import { Session } from "./session.js";
 
@@ -15,13 +14,53 @@ const RUNTIME_CSS = `
 .node,.edge,.flow,.edge-label{transition:opacity .15s}
 `;
 
-export interface BootOptions { size?: Size }
-export interface Runtime {
+export interface MountOptions { size?: Size }
+
+/** What the diagram shows right now. Emitted after every change; enough to build any control from. */
+export interface Snapshot {
+  view: string;
+  /** Closed groups the reader has opened, outermost first. */
+  open: string[];
+  focus: string | null;
+  scenario: { id: string; step: number; steps: number; note?: string } | null;
+  /** Every entity, as drawn. */
+  states: Record<string, { state: string; reason?: string }>;
+  selected: string | null;
+  playing: boolean;
+}
+
+/**
+ * The engine's interface: what a page builds its controls from and calls. The engine has no user interface of its
+ * own; inside the diagram, clicks and the keyboard keep working with no page code at all (MODEL.md R11, the spec
+ * docs/superpowers/specs/2026-09-05-two-paths-design.md).
+ */
+export interface Orrery {
+  readonly views: { id: string; title: string }[];
+  readonly scenarios: { id: string; label: string; steps: number }[];
+  readonly states: { name: string; description?: string }[];
+  /** Groups in the current view; `closed` says whether `focus` can open it. */
+  groups(): { id: string; label: string; closed: boolean }[];
   showView(id: string): void;
+  /** Open a closed group (and the closed groups above it) and close the camera on it; `null` closes everything. */
+  focus(groupId: string | null): void;
+  /** One level back out. False when already at the top. */
+  back(): boolean;
   setScenario(id: string | null, step?: number): void;
+  next(): void;
+  prev(): void;
   setState(id: string, state: string): void;
+  /** Step an entity through the author's states in definition order; `by` -1 steps back. */
+  cycle(id: string, by?: number): void;
   reset(): void;
-  /** Remove the panel and every listener. */
+  select(id: string | null): void;
+  zoomTo(id: string): void;
+  fit(): void;
+  /** Play the model's tour if it has one, else the current view's scenario. Any interaction stops it. */
+  play(): void;
+  stop(): void;
+  on(event: "change", fn: (s: Snapshot) => void): () => void;
+  snapshot(): Snapshot;
+  /** Remove every listener and timer; the diagram stays as it is. */
   destroy(): void;
 }
 type EntityType = "node" | "group";
@@ -29,7 +68,7 @@ type EntityType = "node" | "group";
 const bbox = (el: Element): Box => { const [x = 0, y = 0, width = 0, height = 0] = (el.getAttribute("data-bbox") ?? "").split(" ").map(Number); return { x, y, width, height }; };
 const layerSize = (g: Element): Size => { const [width = 1, height = 1] = (g.getAttribute("data-size") ?? "").split(" ").map(Number); return { width, height }; };
 
-export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
+export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const modelText = root.querySelector("#orrery-model")?.textContent;
   if (!modelText) throw new Error("orrery: no embedded model");
   const model = JSON.parse(modelText) as Model;
@@ -41,14 +80,14 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const viewIds = [...new Set([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => g.getAttribute("data-view")!))];
   const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
   /** The groups a focus opens in a view: the focus and every closed group above it, outermost first. */
-  const openFor = (viewId: string, focus: string | null): string => {
+  const openFor = (viewId: string, focus: string | null): string[] => {
     const collapse = new Set(model.views.find((v) => v.id === viewId)?.collapse ?? []);
     const open: string[] = [];
     for (let cur: string | undefined = focus ?? undefined; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
-    return open.join(" ");
+    return open;
   };
   const screen = (): Size => opts.size ?? { width: window.innerWidth, height: window.innerHeight };
-  const frame = { left: PANEL_W, margin: MARGIN };
+  const frame = { left: 0, margin: MARGIN };
   const ac = new AbortController();
   const on = <T extends EventTarget>(t: T, type: string, fn: (ev: Event) => void) => t.addEventListener(type, fn, { signal: ac.signal });
 
@@ -62,8 +101,10 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   let autoplayTimer: ReturnType<typeof setInterval> | undefined;
   let sceneTimer: ReturnType<typeof setTimeout> | undefined;
   let sceneNote: string | undefined;
-  let touring = false;
+  let playing = false;
+  let focusId: string | null = null;
   const history: string[] = [];
+  const listeners = new Set<(s: Snapshot) => void>();
 
   // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
   for (const layer of layers.values()) {
@@ -78,16 +119,29 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
   style.textContent = RUNTIME_CSS;
   root.insertBefore(style, scene);
-  const panel = buildPanel(model, viewIds.map((id) => ({ id, title: layers.get(layerKey(id, ""))?.getAttribute("data-title") ?? id })));
-  root.appendChild(panel.host);
 
-  const dotColor = (state: string) => (state === model.states.default ? "#16a34a" : lookOf(model.states.define[state]!).stroke ?? "#94a3b8");
   const active = () => layers.get(activeKey)!;
   const elOf = (id: string, type: EntityType) => active().querySelector<SVGGElement>(type === "node" ? `[data-node="${id}"]:not([data-ghost])` : `[data-group="${id}"]`);
+  const typeOf = (id: string): EntityType => (model.groups.some((g) => g.id === id) ? "group" : "node");
+
+  /* ---- the snapshot, and telling the page ---- */
+  let lastEffective = session.effective();
+  const snapshot = (): Snapshot => {
+    const states: Snapshot["states"] = {};
+    for (const e of [...lastEffective.components, ...lastEffective.groups]) states[e.id] = { state: e.state, ...(e.reason !== undefined ? { reason: e.reason } : {}) };
+    const sc = session.scenario;
+    const note = sceneNote ?? session.note();
+    return {
+      view: activeId(), open: openFor(activeId(), focusId), focus: focusId,
+      scenario: sc ? { id: sc.id, step: sc.step, steps: session.stepCount(), ...(note ? { note } : {}) } : null,
+      states, selected: selected?.id ?? null, playing,
+    };
+  };
+  const emit = () => { const s = snapshot(); for (const fn of listeners) fn(s); };
 
   /* ---- write the effective model into every layer ---- */
   const apply = () => {
-    const d = session.effective();
+    const d = (lastEffective = session.effective());
     const entities = new Map<string, { state: string; reason?: string }>([...d.components.map((c) => [c.id, c] as const), ...d.groups.map((g) => [g.id, g] as const)]);
     const conns = new Map(d.connections.map((c) => [c.key, c]));
     for (const layer of layers.values()) {
@@ -116,20 +170,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
         if (next && c.load > 0) next.currentTime = phase * flowDuration(c.load) * 1000;
       }
     }
-    for (const dot of panel.outline.querySelectorAll<HTMLElement>("li .orrery-dot")) {
-      const st = entities.get(dot.parentElement!.getAttribute("data-id")!)?.state ?? model.states.default;
-      dot.style.background = dotColor(st);
-    }
-    syncStateBar();
-    panel.step.textContent = session.scenario ? `${session.scenario.step} / ${session.stepCount()}` : "";
-    panel.note.textContent = sceneNote ?? session.note();
-    panel.prev.disabled = !session.scenario || session.scenario.step <= 1;
-    panel.next.disabled = !session.scenario || session.scenario.step >= session.stepCount();
-  };
-  /** The state bar shows the selected entity's declared state (what a click would change), not its derived one. */
-  const syncStateBar = () => {
-    const cur = selected ? session.current(selected.id) : undefined;
-    for (const b of panel.stateBar.querySelectorAll<HTMLElement>("button")) b.classList.toggle("is-on", b.getAttribute("data-state") === cur);
+    emit();
   };
 
   /* ---- camera ---- */
@@ -148,121 +189,85 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const fit = (animate: boolean) => { zoomed = false; tween(fitView(layerSize(active()), screen(), frame), animate); };
   const zoomTo = (id: string, type: EntityType) => { const el = elOf(id, type); if (el) { zoomed = true; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), true); } };
 
-  /* ---- outline and selection ---- */
+  /* ---- selection: the entities of the active layer, in outline order (components first, then groups and what they hold) ---- */
   const order: { id: string; type: EntityType }[] = [];
-  const rebuildOutline = () => {
-    panel.outline.innerHTML = ""; order.length = 0;
+  const rebuildOrder = () => {
+    order.length = 0;
     const layer = active();
     const shown = (id: string) => layer.querySelector(`[data-node="${id}"]:not([data-ghost]),[data-group="${id}"]`) !== null;
     const groupIn = new Set(model.groups.filter((g) => shown(g.id)).map((g) => g.id));
     const topLevel = (parent: string | undefined, container: string | undefined) => container === parent || (parent === undefined && (container === undefined || !groupIn.has(container)));
-    const add = (id: string, type: EntityType, label: string, depth: number) => {
-      const li = h("li"); li.setAttribute("data-id", id); li.setAttribute("data-type", type); li.style.paddingLeft = `${6 + depth * 14}px`;
-      const dot = h("span", "orrery-dot"); li.appendChild(dot);
-      li.appendChild(h("span", undefined, label));
-      on(li, "click", () => { select(id, type); zoomTo(id, type); });
-      panel.outline.appendChild(li); order.push({ id, type });
+    const walk = (parent: string | undefined) => {
+      for (const c of model.components) if (shown(c.id) && topLevel(parent, c.group)) order.push({ id: c.id, type: "node" });
+      for (const g of model.groups) if (groupIn.has(g.id) && topLevel(parent, g.parent)) { order.push({ id: g.id, type: "group" }); walk(g.id); }
     };
-    const walk = (parent: string | undefined, depth: number) => {
-      for (const c of model.components) if (shown(c.id) && topLevel(parent, c.group)) add(c.id, "node", c.label, depth);
-      for (const g of model.groups) if (groupIn.has(g.id) && topLevel(parent, g.parent)) { add(g.id, "group", g.label, depth); walk(g.id, depth + 1); }
-    };
-    walk(undefined, 0);
+    walk(undefined);
   };
   const select = (id: string | null, type: EntityType = "node") => {
     root.querySelectorAll(".is-selected").forEach((e) => e.classList.remove("is-selected"));
-    panel.outline.querySelectorAll(".is-active").forEach((e) => e.classList.remove("is-active"));
     selected = id ? { id, type } : null;
-    if (id) { elOf(id, type)?.classList.add("is-selected"); panel.outline.querySelector(`li[data-id="${id}"]`)?.classList.add("is-active"); }
-    syncStateBar();
+    if (id) elOf(id, type)?.classList.add("is-selected");
   };
 
-  /* ---- interactions ---- */
-  const setState = (id: string, state: string) => { session.set(id, state); apply(); };
+  /* ---- playing: the tour, or the view's scenario, until the first interaction ---- */
+  const stop = () => {
+    const was = playing;
+    playing = false; sceneNote = undefined;
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; }
+    if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; }
+    if (was) emit();
+  };
+  const playTour = () => {
+    const tour = model.tour!;
+    playing = true;
+    const scene = (k: number) => {
+      const sc = tour.scenes[k]!;
+      if (sc.view !== activeId()) showView(sc.view, true);
+      session.replaceOverrides(sc.set);
+      session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
+      sceneNote = sc.note;
+      if ((sc.focus ?? null) !== focusId) focus(sc.focus ?? null, true, true); else apply();
+      sceneTimer = setTimeout(() => scene((k + 1) % tour.scenes.length), sc.seconds * 1000);
+    };
+    scene(0);
+  };
+  const playScenario = () => {
+    const play = model.views.find((v) => v.id === activeId())?.play;
+    if (!play) return;
+    const n = model.scenarios.find((s) => s.id === play.scenario)?.steps.length ?? 0;
+    if (!n) return;
+    playing = true;
+    let k = 0;
+    setScenario(null, 1, true);
+    autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k, true); }, play.seconds * 1000);
+  };
+  const play = () => { stop(); if (model.tour) playTour(); else playScenario(); };
+
+  /* ---- what the interface does ---- */
+  const setState = (id: string, state: string) => { stop(); session.set(id, state); apply(); };
+  const cycle = (id: string, by = 1) => { stop(); session.cycle(id, by); apply(); };
+  const setScenario = (id: string | null, step = 1, byPlayer = false) => { if (!byPlayer) stop(); session.setScenario(id, step); apply(); };
+  const reset = () => { stop(); session.reset(); select(null); if (focusId) { history.length = 0; focus(null); } else { apply(); fit(true); } };
+
   /** Drill-down (R11): the focused group and the groups above it are open; the layer with that set of open groups shows, by a morph, and the camera closes on the focus. */
-  let focusId: string | null = null;
-  const focus = (groupId: string | null, animate = true) => {
+  const focus = (groupId: string | null, animate = true, byPlayer = false) => {
+    if (!byPlayer) stop();
     focusId = groupId;
-    const target = layerKey(activeId(), openFor(activeId(), groupId));
-    const settle = () => { if (groupId) zoomTo(groupId, "group"); else fit(animate); };
+    const target = layerKey(activeId(), openFor(activeId(), groupId).join(" "));
+    const settle = () => { if (groupId) zoomTo(groupId, "group"); else fit(animate); apply(); };
     if (target === activeKey || !layers.has(target)) settle(); else morphTo(target, settle);
   };
-  /** Clicking a closed group focuses it. */
+  const back = (): boolean => {
+    if (history.length) { const to = history.pop()!; focus(to || null); return true; }
+    if (focusId) { focus(null); return true; }
+    return false;
+  };
   const drillInto = (groupId: string): boolean => {
     if (!active().querySelector(`[data-group="${groupId}"][data-collapsed]`)) return false;
     history.push(focusId ?? "");
     focus(groupId);
     return true;
   };
-  on(scene, "click", (ev) => {
-    const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
-    if (!g) return;
-    const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
-    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
-    select(id, g.hasAttribute("data-node") ? "node" : "group");
-    // A click walks the author's states in order; shift+click walks back.
-    session.cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);
-    apply();
-  });
-  on(scene, "mouseover", (ev) => {
-    const g = (ev.target as Element).closest?.("[data-node]") as SVGGElement | null;
-    const layer = active();
-    layer.querySelectorAll(".is-hot").forEach((e) => e.classList.remove("is-hot"));
-    layer.classList.toggle("has-hover", !!g);
-    if (!g) return;
-    const id = g.getAttribute("data-node")!;
-    g.classList.add("is-hot");
-    for (const c of model.connections) if (c.from === id || c.to === id) {
-      layer.querySelectorAll(`[data-edge="${c.key}"],[data-flow="${c.key}"]`).forEach((e) => e.classList.add("is-hot")); // both levels of detail
-      layer.querySelector(`[data-node="${c.from === id ? c.to : c.from}"]`)?.classList.add("is-hot");
-    }
-  });
-  on(scene, "mouseleave", () => { const layer = active(); layer.classList.remove("has-hover"); layer.querySelectorAll(".is-hot").forEach((e) => e.classList.remove("is-hot")); });
-  for (const b of panel.stateBar.querySelectorAll<HTMLButtonElement>("button")) on(b, "click", () => { if (selected) setState(selected.id, b.getAttribute("data-state")!); });
-
-  const setScenario = (id: string | null, step = 1) => { session.setScenario(id, step); panel.scenarios.value = session.scenario?.id ?? ""; apply(); };
-
-  /** Play the active view's scenario on its timer: base, each step, loop. Any interaction stops it. */
-  const stopAutoplay = () => { touring = false; sceneNote = undefined; if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; } if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; } };
-  /** Play the model's scenes on their timers with the morph: view, scenario moment, overrides, caption. Any interaction stops it. */
-  const startTour = () => {
-    stopAutoplay();
-    const tour = model.tour;
-    if (!tour) return;
-    touring = true;
-    const play = (k: number) => {
-      const sc = tour.scenes[k]!;
-      if (sc.view !== activeId()) showView(sc.view, true);
-      session.replaceOverrides(sc.set);
-      session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
-      panel.scenarios.value = session.scenario?.id ?? "";
-      sceneNote = sc.note;
-      apply();
-      if ((sc.focus ?? null) !== focusId) focus(sc.focus ?? null);
-      sceneTimer = setTimeout(() => play((k + 1) % tour.scenes.length), sc.seconds * 1000);
-    };
-    play(0);
-  };
-  const startAutoplay = () => {
-    if (touring) return;
-    stopAutoplay();
-    const play = model.views.find((v) => v.id === activeId())?.play;
-    if (!play) return;
-    const n = model.scenarios.find((s) => s.id === play.scenario)?.steps.length ?? 0;
-    if (!n) return;
-    let k = 0;
-    setScenario(null);
-    autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k); }, play.seconds * 1000);
-  };
-  for (const t of [scene, panel.host]) on(t, "click", stopAutoplay);
-  on(document, "keydown", stopAutoplay);
-  on(panel.scenarios, "change", stopAutoplay);
-  on(panel.views, "change", stopAutoplay);
-  on(panel.scenarios, "change", () => setScenario(panel.scenarios.value || null, 1));
-  on(panel.prev, "click", () => session.scenario && setScenario(session.scenario.id, session.scenario.step - 1));
-  on(panel.next, "click", () => session.scenario && setScenario(session.scenario.id, session.scenario.step + 1));
-  const reset = () => { session.reset(); panel.scenarios.value = ""; apply(); select(null); fit(true); };
-  on(panel.reset, "click", reset);
 
   /* ---- switching layers with a morph: shared components slide, frames resize, the rest fades ---- */
   const morphTo = (key: string, after: () => void) => {
@@ -274,12 +279,12 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       const b = bbox(g);
       if (twin) { const t = bbox(twin); moves.push({ el: g, dx: t.x - b.x, dy: t.y - b.y, b }); } else g.style.opacity = "0";
     }
-    // Groups present in both views grow or shrink their frame: a closed box opens into the frame it stands for.
-    const frames: { rect: SVGRectElement; a: Box; b: Box }[] = [];
+    // Groups present in both layers slide and resize their frame: a closed box opens into the frame it stands for.
+    const frames: { el: SVGGElement; rect: SVGRectElement; a: Box; b: Box }[] = [];
     for (const g of from.querySelectorAll<SVGGElement>("[data-group]")) {
       const twin = to.querySelector<SVGGElement>(`[data-group="${g.getAttribute("data-group")}"]`);
       const rect = g.querySelector<SVGRectElement>(".group-box");
-      if (twin && rect) { frames.push({ rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text").forEach((t) => (t.style.opacity = "0")); }
+      if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.summary-open").forEach((t) => (t.style.opacity = "0")); }
       else g.style.opacity = "0";
     }
     from.querySelectorAll<SVGElement>(".edges, .legend").forEach((e) => (e.style.opacity = "0"));
@@ -289,49 +294,74 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       if (handle) clearTimeout(handle);
       morphing = null;
       for (const m of moves) m.el.setAttribute("transform", `translate(${m.b.x} ${m.b.y})`);
-      for (const f of frames) { f.rect.setAttribute("x", String(f.a.x)); f.rect.setAttribute("y", String(f.a.y)); f.rect.setAttribute("width", String(f.a.width)); f.rect.setAttribute("height", String(f.a.height)); }
+      for (const f of frames) { f.el.setAttribute("transform", `translate(${f.a.x} ${f.a.y})`); f.rect.setAttribute("width", String(f.a.width)); f.rect.setAttribute("height", String(f.a.height)); }
       from.querySelectorAll<SVGElement>("[style]").forEach((e) => (e.style.opacity = ""));
       from.style.display = "none"; to.style.display = "";
-      activeKey = key; panel.views.value = activeId();
-      rebuildOutline(); apply();
+      activeKey = key;
+      rebuildOrder();
       if (selected) select(selected.id, selected.type);
       after();
     };
     morphing = finish;
     const step = () => {
       const t = Math.min(1, (Date.now() - start) / dur), e = 1 - Math.pow(1 - t, 3);
+      const lerp = (p: number, q: number) => p + (q - p) * e;
       for (const m of moves) m.el.setAttribute("transform", `translate(${m.b.x + m.dx * e} ${m.b.y + m.dy * e})`);
       for (const f of frames) {
-        const lerp = (p: number, q: number) => p + (q - p) * e;
-        f.rect.setAttribute("x", String(lerp(f.a.x, f.b.x))); f.rect.setAttribute("y", String(lerp(f.a.y, f.b.y)));
+        // Frames are drawn at (0,0) inside a translated group: slide the group and grow the rect.
+        f.el.setAttribute("transform", `translate(${lerp(f.a.x, f.b.x)} ${lerp(f.a.y, f.b.y)})`);
         f.rect.setAttribute("width", String(lerp(f.a.width, f.b.width))); f.rect.setAttribute("height", String(lerp(f.a.height, f.b.height)));
       }
       if (t < 1) handle = setTimeout(step, 16); else finish();
     };
     if (moves.length || frames.length) step(); else finish();
   };
-  const showView = (id: string, byTour = false) => {
+  const showView = (id: string, byPlayer = false) => {
     const key = layerKey(id, "");
     if (!layers.has(key) || key === activeKey) return;
-    if (!byTour) stopAutoplay();
+    if (!byPlayer) stop();
     focusId = null; history.length = 0;
-    morphTo(key, () => { fit(true); startAutoplay(); });
+    morphTo(key, () => { fit(true); apply(); if (!byPlayer) playScenario(); });
   };
-  on(panel.views, "change", () => showView(panel.views.value));
 
-  /* ---- keyboard ---- */
+  /* ---- inside the diagram: clicks, hover, keyboard; no page code needed ---- */
+  on(scene, "click", (ev) => {
+    const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
+    if (!g) return;
+    stop();
+    const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
+    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
+    select(id, g.hasAttribute("data-node") ? "node" : "group");
+    // A click walks the author's states in order; shift+click walks back.
+    cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);
+  });
+  on(scene, "mouseover", (ev) => {
+    const g = (ev.target as Element).closest?.("[data-node]") as SVGGElement | null;
+    const layer = active();
+    layer.querySelectorAll(".is-hot").forEach((e) => e.classList.remove("is-hot"));
+    layer.classList.toggle("has-hover", !!g);
+    if (!g) return;
+    const id = g.getAttribute("data-node")!;
+    g.classList.add("is-hot");
+    for (const c of model.connections) if (c.from === id || c.to === id) {
+      layer.querySelectorAll(`[data-edge="${c.key}"],[data-flow="${c.key}"]`).forEach((e) => e.classList.add("is-hot"));
+      layer.querySelector(`[data-node="${c.from === id ? c.to : c.from}"]`)?.classList.add("is-hot");
+    }
+  });
+  on(scene, "mouseleave", () => { const layer = active(); layer.classList.remove("has-hover"); layer.querySelectorAll(".is-hot").forEach((e) => e.classList.remove("is-hot")); });
   on(document, "keydown", (ev) => {
     const k = (ev as KeyboardEvent).key;
     if ((ev as KeyboardEvent).metaKey || (ev as KeyboardEvent).ctrlKey || (ev as KeyboardEvent).altKey) return;
     if ((ev.target as Element)?.closest?.("select,button,input,textarea")) return;
     let handled = true;
     if (k === "ArrowDown" || k === "ArrowUp") {
+      stop();
       const i = selected ? order.findIndex((o) => o.id === selected!.id) : -1;
       const n = order[Math.min(order.length - 1, Math.max(0, i + (k === "ArrowDown" ? 1 : -1)))];
-      if (n) select(n.id, n.type);
-    } else if (k === "Enter" && selected) zoomTo(selected.id, selected.type);
-    else if (k === "f" && selected) { session.cycle(selected.id); apply(); }
-    else if (k === "Escape") { if (history.length) { const back = history.pop()!; focus(back || null); } else { select(null); if (focusId) focus(null); else fit(true); } }
+      if (n) { select(n.id, n.type); emit(); }
+    } else if (k === "Enter" && selected) { stop(); zoomTo(selected.id, selected.type); }
+    else if (k === "f" && selected) cycle(selected.id);
+    else if (k === "Escape") { stop(); if (!back()) { select(null); fit(true); emit(); } }
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);
     else if (/^[1-9]$/.test(k)) { const id = viewIds[Number(k) - 1]; if (id) showView(id); }
@@ -340,15 +370,31 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   });
   on(window, "resize", () => { if (!zoomed) fit(false); });
 
-  rebuildOutline(); apply(); fit(false); if (model.tour) startTour(); else startAutoplay();
+  rebuildOrder(); fit(false); apply(); play();
   return {
-    showView, setScenario, setState, reset,
-    destroy: () => { ac.abort(); stopAutoplay(); if (cameraTimer) clearTimeout(cameraTimer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
+    views: viewIds.map((id) => ({ id, title: layers.get(layerKey(id, ""))?.getAttribute("data-title") ?? id })),
+    scenarios: model.scenarios.map((s) => ({ id: s.id, label: s.label, steps: s.steps.length })),
+    states: Object.values(model.states.define).map((d) => ({ name: d.name, ...(d.description !== undefined ? { description: d.description } : {}) })),
+    groups: () => model.groups.filter((g) => active().querySelector(`[data-group="${g.id}"]`)).map((g) => ({ id: g.id, label: g.label, closed: active().querySelector(`[data-group="${g.id}"][data-collapsed]`) !== null })),
+    showView: (id) => showView(id),
+    focus: (g) => { if (g && g !== focusId) history.push(focusId ?? ""); focus(g); },
+    back: () => { stop(); return back(); },
+    setScenario: (id, step) => setScenario(id, step),
+    next: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step + 1); },
+    prev: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step - 1); },
+    setState, cycle, reset,
+    select: (id) => { select(id, id ? typeOf(id) : "node"); emit(); },
+    zoomTo: (id) => zoomTo(id, typeOf(id)),
+    fit: () => fit(true),
+    play, stop,
+    on: (_event, fn) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
+    snapshot,
+    destroy: () => { ac.abort(); stop(); if (cameraTimer) clearTimeout(cameraTimer); if (morphing) morphing(); listeners.clear(); style.remove(); },
   };
 }
 
-// Auto-boot when this script runs inside an Orrery SVG opened as a document.
+// Mount when this script runs inside an Orrery SVG opened as a document.
 if (typeof document !== "undefined") {
   const r = document.documentElement;
-  if (r && r.getAttribute("data-orrery") === "1" && r.tagName.toLowerCase() === "svg" && !r.querySelector(".orrery-panel")) boot(r as unknown as SVGSVGElement);
+  if (r && r.getAttribute("data-orrery") === "1" && r.tagName.toLowerCase() === "svg" && !r.hasAttribute("data-mounted")) { r.setAttribute("data-mounted", "1"); mount(r as unknown as SVGSVGElement); }
 }
