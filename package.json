@@ -12,7 +12,8 @@
     "typecheck": "tsc -b --noEmit",
     "orrery": "node packages/cli/dist/main.js",
     "examples": "yarn build && node tools/examples.mjs",
-    "inspect": "node tools/inspect.mjs"
+    "inspect": "node tools/inspect.mjs",
+    "site": "node site/build.mjs && node site/landing/build.mjs"
   },
   "devDependencies": {
     "@types/node": "^22",

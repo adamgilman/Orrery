@@ -55,7 +55,7 @@ pre{margin:0;background:#0f172a;color:#e2e8f0;padding:14px;border-radius:8px;ove
 .hint{color:var(--muted);font-size:13px;margin:8px 0 0}
 nav{padding:0 32px 8px;font-size:14px}nav a{margin-right:14px}
 </style></head><body>
-<header><h1>Orrery examples</h1><p>Every example, rendered. Rebuilt with <code>node site/build.mjs</code>.</p></header>
+<header><h1>Orrery examples</h1><p>Every example, rendered. <a href="/">Back to the front page.</a></p></header>
 <nav>${sources.map((f) => { const n = basename(f).replace(/\.orrery\.json$|\.json$/, ""); return `<a href="#${n}">${n}</a>`; }).join("")}</nav>
 <main>${cards.join("\n")}</main>
 <script>
@@ -64,5 +64,5 @@ document.querySelectorAll(".card").forEach(card => card.querySelectorAll(".tabs 
   card.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.dataset.pane === b.dataset.tab));
 })));
 </script></body></html>`;
-writeFileSync(join(out, "index.html"), html);
+writeFileSync(join(out, "examples.html"), html);
 console.log(`built ${sources.length} examples into site/dist`);

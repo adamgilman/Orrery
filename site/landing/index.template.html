@@ -1,0 +1,277 @@
+<title>Orrery</title>
+<meta name="description" content="Architecture diagrams that are alive: interactive, animated models of complex systems, written as a file.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --night:#0F1526; --night-2:#161D31; --on-night:#E6E9F0; --on-night-muted:#9AA3B8;
+  --paper:#F4F5F7; --paper-2:#EBEDF1; --ink:#141A2A; --ink-muted:#5B6478; --rule:#D6DAE3;
+  --dial:#FBFBFC; --dial-edge:#D9DDE6;
+  --brass:#C9A15A; --brass-dim:rgba(201,161,90,.45);
+  --flow:#2563EB; --flow-ink:#1D4ED8;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --measure:64ch;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --paper:#12182A; --paper-2:#1A2136; --ink:#E6E9F0; --ink-muted:#A0A8BC; --rule:#2A3350; --flow-ink:#7AA2FF; }
+}
+:root[data-theme="dark"]{ --paper:#12182A; --paper-2:#1A2136; --ink:#E6E9F0; --ink-muted:#A0A8BC; --rule:#2A3350; --flow-ink:#7AA2FF; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--flow-ink);text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--flow);outline-offset:3px}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h2{font-size:clamp(2rem,4vw,3rem);line-height:1.08}
+h3{font-size:1.5rem;line-height:1.2}
+p{margin:0}
+.o-wrap{max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+.o-eyebrow{font:500 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.o-lede{font-size:1.25rem;line-height:1.5;max-width:var(--measure)}
+.o-body{max-width:var(--measure);color:var(--ink);}
+.o-body + .o-body{margin-top:1em}
+.o-muted{color:var(--ink-muted)}
+code,pre{font-family:var(--mono);font-size:.875rem}
+pre{margin:0;padding:18px 20px;background:var(--night);color:var(--on-night);border-radius:6px;overflow-x:auto;line-height:1.55;font-size:.8125rem}
+pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
+
+/* ---------- header ---------- */
+.o-head{background:var(--night);color:var(--on-night)}
+.o-head .o-wrap{display:flex;align-items:baseline;justify-content:space-between;padding-top:28px;padding-bottom:8px}
+.o-mark{font-family:var(--serif);font-size:1.75rem;color:var(--on-night);letter-spacing:.005em}
+.o-mark small{font-family:var(--sans);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin-left:14px;vertical-align:.35em}
+.o-nav{display:flex;gap:28px;font-size:.9rem}.o-nav a{color:var(--on-night-muted)}.o-nav a:hover{color:var(--on-night);text-decoration:none}
+
+/* ---------- hero: the instrument plate ---------- */
+.o-hero{background:var(--night);color:var(--on-night);position:relative;overflow:hidden}
+.o-hero .o-wrap{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,80px);align-items:center;padding-top:clamp(48px,7vw,104px);padding-bottom:clamp(56px,7vw,112px)}
+.o-hero h1{font-size:clamp(3.25rem,7.2vw,6.75rem);line-height:.98;letter-spacing:-.02em}
+.o-hero h1 em{font-style:italic;color:var(--brass)}
+.o-hero .o-lede{color:var(--on-night-muted);margin-top:28px}
+.o-hero .o-lede strong{color:var(--on-night);font-weight:500}
+.o-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:36px;align-items:center}
+.o-btn{display:inline-block;padding:12px 20px;border-radius:6px;font:500 .95rem/1 var(--sans);background:var(--flow);color:#fff;border:1px solid var(--flow)}
+.o-btn:hover{background:var(--flow-ink);border-color:var(--flow-ink);text-decoration:none}
+.o-btn.o-ghost{background:transparent;color:var(--on-night);border-color:rgba(230,233,240,.28)}
+.o-btn.o-ghost:hover{border-color:var(--on-night)}
+.o-plate{position:relative;justify-self:end;width:100%;max-width:440px}
+.o-orbits{position:absolute;inset:-22% -22% -22% -22%;width:144%;height:144%;pointer-events:none;opacity:.9}
+.o-orbits circle{fill:none;stroke:var(--brass-dim);stroke-width:.6}
+.o-orbits .o-tick{stroke:var(--brass);stroke-width:1.2}
+.o-spin{transform-origin:50% 50%;animation:o-turn 140s linear infinite}
+.o-spin.o-slow{animation-duration:220s;animation-direction:reverse}
+@keyframes o-turn{to{transform:rotate(360deg)}}
+.o-dial{position:relative;background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px;box-shadow:0 30px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(201,161,90,.18)}
+.o-dial svg{display:block;width:100%;height:auto}
+.o-dial-caption{margin-top:14px;font-size:.85rem;color:var(--on-night-muted);max-width:44ch}
+.o-dial-caption b{color:var(--on-night);font-weight:500}
+
+/* ---------- sections ---------- */
+.o-section{padding:clamp(56px,7vw,112px) 0}
+.o-section + .o-section{border-top:1px solid var(--rule)}
+.o-section-head{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,4vw,64px);align-items:end;margin-bottom:clamp(32px,4vw,56px)}
+.o-section-head .o-eyebrow{margin-bottom:14px}
+.o-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(24px,4vw,56px)}
+.o-three h3{margin-bottom:12px}
+.o-three p{color:var(--ink-muted)}
+.o-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,40px);align-items:start}
+.o-figure{background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px}
+.o-figure svg{display:block;width:100%;height:auto;max-height:520px}
+.o-figure figcaption{margin-top:14px;font-size:.875rem;color:#5B6478;line-height:1.5}
+.o-figure figcaption b{color:#141A2A;font-weight:500}
+.o-wide{margin-top:clamp(24px,3vw,40px)}
+.o-wide svg{max-height:none}
+.o-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:start;margin-top:clamp(24px,3vw,40px)}
+.o-list{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.o-list li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;padding-top:18px;border-top:1px solid var(--rule)}
+.o-list li:first-child{border-top:0;padding-top:0}
+.o-list .o-term{font-family:var(--serif);font-size:1.35rem;line-height:1.2}
+.o-list p{color:var(--ink-muted)}
+.o-quote{font-family:var(--serif);font-size:clamp(1.5rem,2.4vw,2rem);line-height:1.25;max-width:30ch;color:var(--ink)}
+.o-quote em{color:var(--brass)}
+.o-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:32px}
+.o-facts div{border-top:1px solid var(--rule);padding-top:14px}
+.o-facts .o-num{font-family:var(--serif);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.o-facts p{color:var(--ink-muted);font-size:.9rem;margin-top:6px}
+
+/* ---------- close ---------- */
+.o-close{background:var(--night);color:var(--on-night)}
+.o-close .o-wrap{padding-top:clamp(64px,8vw,128px);padding-bottom:clamp(48px,6vw,96px)}
+.o-close h2{font-size:clamp(2.5rem,5.5vw,4.5rem);max-width:16ch}
+.o-close h2 em{font-style:italic;color:var(--brass)}
+.o-close .o-lede{color:var(--on-night-muted);margin-top:22px}
+.o-foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:clamp(48px,6vw,96px);padding-top:24px;border-top:1px solid rgba(230,233,240,.14);font-size:.85rem;color:var(--on-night-muted)}
+.o-foot a{color:var(--on-night-muted)}.o-foot a:hover{color:var(--on-night)}
+
+@media (max-width:900px){
+  .o-hero .o-wrap,.o-section-head,.o-pair,.o-split{grid-template-columns:1fr}
+  .o-plate{justify-self:start;max-width:420px}
+  .o-three,.o-facts{grid-template-columns:1fr}
+  .o-list li{grid-template-columns:1fr;gap:6px}
+  .o-nav{display:none}
+}
+@media (prefers-reduced-motion: reduce){ .o-spin{animation:none} .flow{animation:none !important} }
+</style>
+
+<header class="o-head">
+  <div class="o-wrap">
+    <div class="o-mark">Orrery <small>open source</small></div>
+    <nav class="o-nav">
+      <a href="#model">Why a model</a>
+      <a href="#crank">Failure</a>
+      <a href="#vocabulary">Vocabulary</a>
+      <a href="https://github.com/adamgilman/Orrery/blob/main/docs/MODEL.md">Specification</a>
+      <a href="https://github.com/adamgilman/Orrery">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<section class="o-hero">
+  <div class="o-wrap">
+    <div>
+      <p class="o-eyebrow">Architecture diagrams for people who explain systems</p>
+      <h1 style="margin-top:22px">Diagrams that are <em>alive.</em></h1>
+      <p class="o-lede">An orrery is a working model of the heavens: turn the crank and the planets move. <strong>Orrery does the same for your architecture.</strong> Write the model as a file, and the diagram animates its traffic, fails and recovers on command, and explains what it derived, in your organisation's own words.</p>
+      <div class="o-cta">
+        <a class="o-btn" href="https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg">Open an interactive model</a>
+        <a class="o-btn o-ghost" href="https://github.com/adamgilman/Orrery/blob/main/docs/MODEL.md">Read the specification</a>
+      </div>
+    </div>
+    <div class="o-plate">
+      <svg class="o-orbits" viewBox="0 0 400 400" aria-hidden="true">
+        <g class="o-spin">
+          <circle cx="200" cy="200" r="120"/><circle cx="200" cy="200" r="150"/><circle cx="200" cy="200" r="184"/>
+          <line class="o-tick" x1="200" y1="16" x2="200" y2="26"/><line class="o-tick" x1="320" y1="200" x2="330" y2="200"/>
+        </g>
+        <g class="o-spin o-slow">
+          <circle cx="200" cy="200" r="90" stroke-dasharray="2 6"/>
+          <circle cx="200" cy="200" r="198" stroke-dasharray="1 9"/>
+          <circle cx="200" cy="110" r="2.2" fill="#C9A15A" stroke="none"/>
+        </g>
+      </svg>
+      <div class="o-dial"><!--svg:solar--></div>
+      <p class="o-dial-caption"><b>A plain SVG file.</b> In a README it animates with no plugin. Opened in a browser, the same file is an instrument: an outline, a scenario player, click to fail a component.</p>
+    </div>
+  </div>
+</section>
+
+<section class="o-section" id="model">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Why a model</p><h2>Not a picture of the system. A model of it.</h2></div>
+      <p class="o-lede o-muted">Most architecture diagrams are drawings that happen to be about software. They cannot tell you what breaks when a database goes down, because nothing in the file knows what a database is for. Orrery starts from what your components need, and derives the drawing, the animation and the failure behaviour from that.</p>
+    </div>
+    <div class="o-three">
+      <div><h3>Written, not drawn</h3><p>A JSON file names components, connections, groups and needs. Layout is automatic and deterministic, so the same file always renders the same bytes and a diff in review is a diff in meaning.</p></div>
+      <div><h3>Alive</h3><p>Traffic flows along connections at the load you declared. Fail a component and the consequences propagate through the needs you wrote: a service degrades onto its replica, a gateway degrades behind it, dead paths stop flowing.</p></div>
+      <div><h3>In your words</h3><p>Healthy, impaired, brownout, outage: your states, your kinds, your meanings. The engine reads only mechanics, rank, availability, flow and cascade, and the legend teaches every reader your vocabulary.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="o-section" id="crank">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Turn the crank</p><h2>Fail the primary. Watch the system answer.</h2></div>
+      <p class="o-lede o-muted">Nothing on the right was drawn by hand. One line in a scenario declares the primary database failed. The engine works out that the worker fails with it, the API runs degraded on its replica, the web tier degrades behind the API, and which connections stop carrying traffic.</p>
+    </div>
+    <div class="o-pair">
+      <figure class="o-figure"><!--svg:failover--><figcaption><b>Healthy.</b> The API needs either the primary or the replica; the web tier needs the API; the worker needs the primary alone. Darker lines are needs.</figcaption></figure>
+      <figure class="o-figure"><!--svg:failover-failed--><figcaption><b>Primary failed.</b> Red pulses, amber is reduced redundancy, the failover path lights up with the load the primary carried. Every derived state carries a reason.</figcaption></figure>
+    </div>
+    <div class="o-split">
+      <pre><code>{ <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"needs"</span>: [ { <span class="k">"any"</span>: [<span class="s">"db"</span>, <span class="s">"replica"</span>] } ] },
+{ <span class="k">"id"</span>: <span class="s">"web"</span>, <span class="k">"needs"</span>: [<span class="s">"api"</span>] },
+
+<span class="k">"scenarios"</span>: [ { <span class="k">"id"</span>: <span class="s">"db-fails"</span>, <span class="k">"steps"</span>: [
+  { <span class="k">"note"</span>: <span class="s">"Primary goes down"</span>, <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span> } }
+] } ]</code></pre>
+      <div>
+        <p class="o-body">That is the whole of it. A need lists alternatives in order of preference, a quorum is a <code>min</code>, a nice-to-have call names a gentler outcome. Scenarios are cumulative steps that set and restore states; propagation fills in everything else.</p>
+        <p class="o-body o-muted">Try a what-if without writing a scenario: <code>orrery render app.json --set failed=db</code>. In the interactive file, click the component.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="o-section" id="vocabulary">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Your vocabulary</p><h2>Degraded means something different at every company.</h2></div>
+      <p class="o-lede o-muted">So the tool does not define it. You bind your own state names to looks and mechanics, and your own kinds to glyphs and frames. Below, a trading platform whose organisation says healthy, impaired, brownout, outage and drained, two sequencers into a quorum loss.</p>
+    </div>
+    <figure class="o-figure o-wide"><!--svg:quorum--><figcaption><b>Two sequencers out of three in outage.</b> The quorum group is impaired, both matchers and their cells are in outage, the edge gateway with them, the region impaired. The legend is the author's, not ours.</figcaption></figure>
+    <div class="o-split">
+      <pre><code><span class="k">"states"</span>: {
+  <span class="k">"default"</span>: <span class="s">"healthy"</span>,
+  <span class="k">"needs"</span>: { <span class="k">"unmet"</span>: <span class="s">"outage"</span>, <span class="k">"reduced"</span>: <span class="s">"impaired"</span> },
+  <span class="k">"replace"</span>: <span class="n">true</span>,
+  <span class="k">"define"</span>: {
+    <span class="k">"healthy"</span>:  { <span class="k">"rank"</span>: <span class="n">0</span> },
+    <span class="k">"impaired"</span>: { <span class="k">"look"</span>: <span class="s">"warn"</span> },
+    <span class="k">"brownout"</span>: { <span class="k">"look"</span>: { <span class="k">"stroke"</span>: <span class="s">"#7c3aed"</span>, <span class="k">"pulse"</span>: <span class="n">true</span> } },
+    <span class="k">"outage"</span>:   { <span class="k">"look"</span>: <span class="s">"alert"</span>, <span class="k">"rank"</span>: <span class="n">3</span>, <span class="k">"available"</span>: <span class="n">false</span>, <span class="k">"flows"</span>: <span class="s">"stop"</span> },
+    <span class="k">"drained"</span>:  { <span class="k">"look"</span>: <span class="s">"muted"</span>, <span class="k">"rank"</span>: <span class="n">3</span>, <span class="k">"available"</span>: <span class="n">false</span>, <span class="k">"cascade"</span>: <span class="s">"children"</span> }
+  }
+}</code></pre>
+      <ul class="o-list">
+        <li><span class="o-term">Look</span><p>How a state is drawn: a preset, or your own stroke, fill, dash and pulse.</p></li>
+        <li><span class="o-term">Rank</span><p>Severity order. Propagation only ever moves an entity up it.</p></li>
+        <li><span class="o-term">Available</span><p>Whether an entity in this state counts toward what needs it.</p></li>
+        <li><span class="o-term">Flows</span><p>Whether traffic still moves through it.</p></li>
+        <li><span class="o-term">Cascade</span><p>Whether switching a region off switches off everything inside it.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="o-section" id="places">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">One file</p><h2>The same file, wherever the reader is.</h2></div>
+      <p class="o-lede o-muted">There is no export step and no hosted viewer. The SVG your build produces is animated wherever an image can be shown, and interactive wherever it can be opened.</p>
+    </div>
+    <div class="o-three">
+      <div><h3>In a README</h3><p>GitHub renders it through an image tag. Traffic animates, states show, no plugin, no build, and it reads on a phone.</p></div>
+      <div><h3>In a browser</h3><p>Opened directly, a six-kilobyte runtime inside the file adds an outline, a scenario player, view switching with a morph, and click-to-fail with live propagation.</p></div>
+      <div><h3>In review</h3><p>Views drill into a group or a subset. Any scenario step renders as a static picture, so a design review or an incident writeup shows the exact moment it discusses.</p></div>
+    </div>
+    <figure class="o-figure o-wide" style="max-width:560px"><!--svg:checkout-data--><figcaption><b>A scoped view.</b> The data tier of a checkout service, drawn top-down for the page it lives on. The API outside the scope is a ghost, so nothing is dropped silently.</figcaption></figure>
+  </div>
+</section>
+
+<section class="o-section" id="agents">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Written by agents, read by humans</p><h2>Designed so a coding agent gets it right first time.</h2></div>
+      <div>
+        <p class="o-lede o-muted">Every property in the schema explains itself. Unknown properties are errors. Every error is a JSON pointer and a sentence. A fresh agent given only the specification, the schema and the command line has grown a model through every step, from components to a replaced vocabulary, validating first time at each.</p>
+        <div class="o-facts">
+          <div><div class="o-num">4</div><p>independent fresh-agent walks, from a blank file to scenarios</p></div>
+          <div><div class="o-num">0</div><p>validation failures on the required path of the last walk</p></div>
+          <div><div class="o-num">1</div><p>file: model, views, scenarios, vocabulary and runtime</p></div>
+        </div>
+      </div>
+    </div>
+    <pre><code>$ orrery validate platform.orrery.json
+platform.orrery.json:/components/11/needs/0: "history" needs "maps" but no connection joins them; add one
+platform.orrery.json:/scenarios/1/steps/0/set/failed: unknown state "failed"; known: healthy, impaired, brownout, outage, maintenance</code></pre>
+  </div>
+</section>
+
+<section class="o-close">
+  <div class="o-wrap">
+    <h2>Set your system <em>in motion.</em></h2>
+    <p class="o-lede">Open source, MIT licensed, TypeScript. One command from a JSON file to a diagram that moves.</p>
+    <div class="o-cta">
+      <a class="o-btn" href="https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg">Open an interactive model</a>
+      <a class="o-btn o-ghost" href="https://github.com/adamgilman/Orrery">View on GitHub</a>
+    </div>
+    <div class="o-foot">
+      <span>Orrery. An orrery is a mechanical model of the solar system; you turn the crank and watch the parts move.</span>
+      <span><a href="https://github.com/adamgilman/Orrery/blob/main/docs/MODEL.md">Specification</a> · <a href="https://github.com/adamgilman/Orrery/blob/main/README.md">README</a> · MIT</span>
+    </div>
+  </div>
+</section>

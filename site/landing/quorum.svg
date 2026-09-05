@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1396.5 370" width="1396.5" height="370" data-orrery="1">
+<title>Trading platform</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.badge{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:end;dominant-baseline:central}
+.node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge.need{stroke:#475569;stroke-width:2}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
+.legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
+.kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.kind-mainframe .node-box{fill:#fefce8}
+.gk-region .group-box{stroke-dasharray:8 6}
+.gk-zone .group-box{stroke-dasharray:3 5}
+.gk-cluster .group-box{stroke:#94a3b8}
+.gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.gk-cell .group-box{stroke:#0891b2;fill:#ecfeff;fill-opacity:0.4;stroke-dasharray:8 6}
+.st-impaired .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .node-label{fill:#92400e}
+.st-impaired .group-label{fill:#92400e}
+.st-brownout .node-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .group-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .node-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .group-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .node-label{fill:#991b1b}
+.st-outage .group-label{fill:#991b1b}
+.st-drained .node-box{stroke-dasharray:4 4}
+.st-drained .group-box{stroke-dasharray:4 4}
+.st-drained{opacity:0.45}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="overview" data-title="Trading platform" data-size="1396.5 370">
+<g class="groups">
+<g class="group gk-region st-impaired" data-group="eu" data-bbox="313.5 20 798.5 280" data-state="impaired">
+<title>Cell A, Cell B unavailable</title>
+<rect class="group-box" x="313.5" y="20" width="798.5" height="280" rx="10"/>
+<text class="group-label" x="325.5" y="36">EU</text>
+</g>
+<g class="group gk-cell st-outage" data-group="cell-a" data-bbox="325.5 56 134 96" data-state="outage" data-pulse="1">
+<title>needs Matcher (0 of 1 available)</title>
+<rect class="group-box" x="325.5" y="56" width="134" height="96" rx="10"/>
+<text class="group-label" x="337.5" y="72">Cell A</text>
+</g>
+<g class="group gk-cell st-outage" data-group="cell-b" data-bbox="325.5 192 134 96" data-state="outage" data-pulse="1">
+<title>needs Matcher (0 of 1 available)</title>
+<rect class="group-box" x="325.5" y="192" width="134" height="96" rx="10"/>
+<text class="group-label" x="337.5" y="208">Cell B</text>
+</g>
+<g class="group gk-cluster st-impaired" data-group="consensus" data-bbox="628 113 472 122" data-state="impaired">
+<title>Sequencer 1, Sequencer 2 unavailable</title>
+<rect class="group-box" x="628" y="113" width="472" height="122" rx="10"/>
+<text class="group-label" x="640" y="129">Sequencer quorum</text>
+</g>
+<g class="group gk-boundary st-healthy" data-group="settlement" data-bbox="1250.5 55 126 96" data-state="healthy">
+<rect class="group-box" x="1250.5" y="55" width="126" height="96" rx="10"/>
+<text class="group-label" x="1262.5" y="71">Settlement</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync need" data-edge="edge->cell-a" data-kind="sync" d="M168 92 L325.5 92" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="edge->cell-a" data-load="0" d="M168 92 L313.5 92" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="232" y="81">orders</text>
+<path class="edge edge-sync need" data-edge="edge->cell-b" data-kind="sync" d="M168 108 L281 108 L281 228 L325.5 228" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="edge->cell-b" data-load="0" d="M168 108 L281 108 L281 228 L313.5 228" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="232" y="119">orders</text>
+<path class="edge edge-sync need" data-edge="match-a->consensus" data-kind="sync" d="M447.5 124 L603 124 L603 153.7 L628 153.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="match-a->consensus" data-load="0" d="M447.5 124 L603 124 L603 153.7 L616 153.7" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="547.5" y="135">sequence</text>
+<path class="edge edge-sync need" data-edge="match-b->consensus" data-kind="sync" d="M447.5 244 L492 244 L492 194.3 L628 194.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="match-b->consensus" data-load="0" d="M447.5 244 L492 244 L492 194.3 L616 194.3" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="547.5" y="205.3">sequence</text>
+<path class="edge edge-replication" data-edge="seq-1->seq-2" data-kind="replication" d="M756 199 L806 199" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="seq-1->seq-2" data-load="0" d="M768 199 L794 199" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="seq-2->seq-3" data-kind="replication" d="M922 199 L972 199" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="seq-2->seq-3" data-load="0" d="M934 199 L960 199" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="seq-3->seq-1" data-kind="replication" d="M972 183 L947 183 L947 149 L781 149 L781 183 L756 183" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="seq-3->seq-1" data-load="0" d="M960 183 L947 183 L947 149 L781 149 L781 183 L768 183" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-async need" data-edge="match-a->settlement" data-kind="async" d="M447.5 108 L492 108 L492 87 L1250.5 87" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="match-a->settlement" data-load="0" d="M447.5 108 L492 108 L492 87 L1238.5 87" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="1180" y="76">fills</text>
+<path class="edge edge-async need" data-edge="match-b->settlement" data-kind="async" d="M447.5 260 L1225.5 260 L1225.5 119 L1250.5 119" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="match-b->settlement" data-load="0" d="M447.5 260 L1225.5 260 L1225.5 119 L1238.5 119" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="1180" y="271">fills</text>
+</g>
+<g class="nodes">
+<g class="node kind-gateway st-outage" data-node="edge" data-kind="gateway" data-state="outage" data-pulse="1" data-bbox="20 76 148 48" transform="translate(20 76)">
+<title>needs Cell A or Cell B (0 of 1 available)</title>
+<rect class="node-box" width="148" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="92" y="24">Edge gateway</text>
+</g>
+<g class="node kind-matcher st-outage" data-node="match-a" data-kind="matcher" data-state="outage" data-pulse="1" data-bbox="337.5 92 110 48" transform="translate(337.5 92)">
+<title>needs Sequencer 1 or Sequencer 2 or Sequencer 3 (1 of 2 available)</title>
+<rect class="node-box" width="110" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 8h4l2-5 2 10 2-5h4"/></g>
+<text class="node-label" x="73" y="24">Matcher</text>
+</g>
+<g class="node kind-matcher st-outage" data-node="match-b" data-kind="matcher" data-state="outage" data-pulse="1" data-bbox="337.5 228 110 48" transform="translate(337.5 228)">
+<title>needs Sequencer 1 or Sequencer 2 or Sequencer 3 (1 of 2 available)</title>
+<rect class="node-box" width="110" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 8h4l2-5 2 10 2-5h4"/></g>
+<text class="node-label" x="73" y="24">Matcher</text>
+</g>
+<g class="node kind-service st-outage" data-node="seq-1" data-kind="service" data-state="outage" data-pulse="1" data-bbox="640 167 116 48" transform="translate(640 167)">
+<rect class="node-box" width="116" height="48" rx="8"/>
+<text class="node-label" x="58" y="24">Sequencer 1</text>
+</g>
+<g class="node kind-service st-outage" data-node="seq-2" data-kind="service" data-state="outage" data-pulse="1" data-bbox="806 175 116 48" transform="translate(806 175)">
+<rect class="node-box" width="116" height="48" rx="8"/>
+<text class="node-label" x="58" y="24">Sequencer 2</text>
+</g>
+<g class="node kind-service st-healthy" data-node="seq-3" data-kind="service" data-state="healthy" data-bbox="972 167 116 48" transform="translate(972 167)">
+<rect class="node-box" width="116" height="48" rx="8"/>
+<text class="node-label" x="58" y="24">Sequencer 3</text>
+</g>
+<g class="node kind-mainframe st-healthy" data-node="ledger" data-kind="mainframe" data-state="healthy" data-bbox="1262.5 91 102 48" transform="translate(1262.5 91)">
+<rect class="node-box" width="102" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
+<text class="node-label" x="69" y="24">Ledger</text>
+</g>
+</g>
+<g class="legend" transform="translate(20 328)">
+<g transform="translate(0 0)"><rect width="14" height="14" rx="3" style="fill:#fffbeb;stroke:#d97706;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">impaired</tspan>: Serving, redundancy or latency SLO breached</text></g>
+<g transform="translate(0 20)"><rect width="14" height="14" rx="3" style="fill:#fef2f2;stroke:#dc2626;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">outage</tspan>: Customer-visible failure</text></g>
+</g>
+</g>
+</g>
+</svg>
