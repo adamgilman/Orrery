@@ -8,16 +8,23 @@ export { freezeTracks, parseKeyframes, valuesAt } from "./keyframes.js";
 
 const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => join(import.meta.dirname, "../fonts", f));
 
-/** Remove a balanced <g ...>...</g> element starting at `start`. Returns the string without it. */
-function dropElement(svg: string, start: number): string {
-  let depth = 0, i = start;
+/** Index just past the `</g>` that closes the <g> opening at `start`. */
+function closeOf(svg: string, start: number): number {
+  let depth = 0;
   const re = /<g[\s>]|<\/g>/g;
   re.lastIndex = start;
   for (let m = re.exec(svg); m; m = re.exec(svg)) {
     depth += m[0] === "</g>" ? -1 : 1;
-    if (depth === 0) { i = m.index + 4; break; }
+    if (depth === 0) return m.index + 4;
   }
-  return svg.slice(0, start) + svg.slice(i);
+  return svg.length;
+}
+/** Remove a balanced <g ...>...</g> element starting at `start`. */
+const dropElement = (svg: string, start: number): string => svg.slice(0, start) + svg.slice(closeOf(svg, start));
+/** Remove the tags of a balanced <g ...>...</g> starting at `start`, keeping what is inside. */
+function unwrapElement(svg: string, start: number): string {
+  const end = closeOf(svg, start), open = svg.indexOf(">", start) + 1;
+  return svg.slice(0, start) + svg.slice(open, end - 4) + svg.slice(end);
 }
 
 /**
@@ -40,7 +47,8 @@ export function activeView(svg: string): string {
   const detailGroup = new RegExp(`<g class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}>`, "g");
   for (let m = detailGroup.exec(out); m; m = detailGroup.exec(out)) { out = dropElement(out, m.index); detailGroup.lastIndex = m.index; }
   out = out.replace(new RegExp(`<(path|text) class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
-  out = out.replace(new RegExp(`<g class="lod" data-lod="summary" data-for="[^"]*">(<path class="flow"${ATTRS}/>)</g>`, "g"), "$1");
+  const summaryWrap = '<g class="lod" data-lod="summary" data-for="';
+  for (let i = out.indexOf(summaryWrap); i >= 0; i = out.indexOf(summaryWrap, i)) out = unwrapElement(out, i);
   out = out.replace(/ data-lod="summary" data-for="[^"]*"/g, "");
   // Scene captions are shown one at a time by CSS; the still keeps the first.
   out = out.replace(/<text class="step-note"[^>]*style="animation:orrery-caption-(?!0 )[^"]*"[^>]*>[^<]*<\/text>\n?/g, "");

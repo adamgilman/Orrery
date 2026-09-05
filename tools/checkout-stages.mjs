@@ -29,7 +29,7 @@ const stages = {
     components, connections,
     scenarios: [{ id: "cache-maintenance", label: "Session cache maintenance", steps: [{
       note: "The cache cluster is drained: checkout continues for guests",
-      set: { drained: ["sessions", "cache-a", "cache-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },
+      set: { drained: ["sessions", "cache-a", "cache-b", "redis-a", "aof-a", "redis-b", "aof-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },
     }] }],
   },
 };

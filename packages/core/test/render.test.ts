@@ -168,19 +168,18 @@ describe("renderSvg: collapsed groups as level of detail (R11)", () => {
     // members and the sub-group inside are detail
     expect(svg).toMatch(/<g class="node[^"]*" data-node="ledger"[^>]*data-lod="detail" data-for="payments"/);
     expect(svg).toMatch(/<g class="group[^"]*" data-group="pay-core"[^>]*data-lod="detail" data-for="payments"/);
-    // an internal connection is detail; an inbound one has a detail path to the member and a summary path cut at the frame
-    expect(svg).toMatch(/<path class="edge[^"]*" data-edge="pay-api->ledger"[^>]*data-lod="detail" data-for="payments"/);
-    expect(svg).toMatch(/<path class="edge[^"]*" data-edge="checkout->pay-api"[^>]*data-lod="detail" data-for="payments"/);
-    // the summary path is an ordinary edge, same key, cut at the payments frame boundary
-    const summary = svg.match(/<path class="edge edge-sync" data-edge="checkout->pay-api" data-kind="sync" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
+    // a connection is drawn once per level it can be seen at, each drawing wrapped in the conditions that show it:
+    // an internal connection only while payments is open; an inbound one whole while open, cut at the frame while closed
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="edge edge-sync" data-edge="pay-api->ledger" data-kind="sync" d="[^"]+" marker-end="url\(#arrow\)"\/>\n<path class="flow" data-flow="pay-api->ledger"/);
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="edge edge-sync" data-edge="checkout->pay-api"/);
+    const summary = svg.match(/<g class="lod" data-lod="summary" data-for="payments"><path class="edge edge-sync" data-edge="checkout->pay-api" data-kind="sync" d="([^"]+)" marker-end="url\(#arrow\)"\/>\n<path class="flow" data-flow="checkout->pay-api"/);
     expect(summary).toBeTruthy();
     const [bx, by, bw, bh] = between(svg, 'data-group="payments"').match(/data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     const end = summary![1]!.split(" L").at(-1)!.split(" ").map(Number);
     const onEdge = Math.abs(end[0]! - bx) < 1 || Math.abs(end[0]! - (bx + bw)) < 1 || Math.abs(end[1]! - by) < 1 || Math.abs(end[1]! - (by + bh)) < 1;
     expect(onEdge).toBe(true);
-    // flows keep their own dash animation, so the level-of-detail track sits on a wrapper; the summary flow is a plain flow too
-    expect(svg).toMatch(/<g class="lod" data-lod="summary" data-for="payments"><path class="flow" data-flow="checkout->pay-api" data-load="[\d.]+" d="/);
-    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="[\d.]+" d="/);
+    // the paths themselves carry no level attribute: one animation per element, and a flow keeps its own dash animation
+    expect(svg).not.toMatch(/<path class="(?:edge|flow)[^>]*data-lod=/);
     expect(svg).not.toMatch(/edge-summary|flow-summary/);
     expect(svg).toMatch(/\[data-lod="detail"\]\{opacity:0/);
     // a component outside any closed group carries no level-of-detail attribute
@@ -239,6 +238,28 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(svg.slice(svg.indexOf('<g class="camera"'), hud)).not.toContain('class="legend"');
     expect(svg).toMatch(/<g class="state" data-state="1" data-role="legend" style="animation:orrery-state-1 16s linear infinite">\n<g class="legend"/);
     expect(svg).not.toMatch(/data-state="0" data-role="legend"/);
+  });
+  it("a closed group inside a closed group: focusing the inner one keeps the outer one open (R11, R12)", async () => {
+    const svg = await render(fixture("nested-drill"), new FakeLayoutEngine(), { tour: true });
+    // the inner frame is detail of the outer group, and carries its own summary
+    expect(svg).toMatch(/<g class="group[^"]*" data-group="inner"[^>]*data-collapsed="1"[^>]*data-lod="detail" data-for="outer"/);
+    expect(svg).toMatch(/<g class="lod-summary" data-lod="summary" data-for="inner">/);
+    expect(svg).toMatch(/<g class="node[^"]*" data-node="x"[^>]*data-lod="detail" data-for="inner"/);
+    expect(svg).toMatch(/<g class="node[^"]*" data-node="y"[^>]*data-lod="detail" data-for="outer"/);
+    // outer's detail is on while the focus is outer or anything inside it (scenes 2 and 3); inner's only in scene 3
+    expect(svg).toMatch(/@keyframes orrery-lod-outer-detail\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}82\.5%\{opacity:1\}84\.38%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-inner-detail\{0%\{opacity:0\}57\.5%\{opacity:0\}59\.38%\{opacity:1\}82\.5%\{opacity:1\}84\.38%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-inner-summary\{0%\{opacity:1\}57\.5%\{opacity:1\}59\.38%\{opacity:0\}82\.5%\{opacity:0\}84\.38%\{opacity:1\}100%\{opacity:1\}\}/);
+    // x->y crosses inner's frame only: cut at inner while outer is open and inner closed; whole while inner is open
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="outer"><g class="lod" data-lod="summary" data-for="inner"><path class="edge edge-dataflow" data-edge="x->y"/);
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="inner"><path class="edge edge-dataflow" data-edge="x->y"/);
+    expect((svg.match(/data-edge="x->y"/g) ?? []).length).toBe(2);
+    expect((svg.match(/data-edge="app->outer"/g) ?? []).length).toBe(1); // ends on the frame: nothing to cut
+    // the camera closes on the inner frame in scene 3
+    const [bx, by, bw, bh] = svg.match(/data-group="inner" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
+    const cam = svg.match(/@keyframes orrery-camera\{.*?\}\}(?=\n|<)/)![0];
+    const t = cam.match(/57\.5%\{transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/)!.slice(1).map(Number);
+    expect(t[3]).toBeCloseTo(-(bx + bw / 2), 0); expect(t[4]).toBeCloseTo(-(by + bh / 2), 0);
   });
   it("scenes across different views fall back to a crossfade between whole views", async () => {
     const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "payments"], seconds: 3 } });

@@ -173,7 +173,10 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     for (const layer of layers.values()) for (const el of layer.querySelectorAll<SVGElement>(`[data-lod][data-for~="${groupId}"]`))
       el.style.opacity = (el.getAttribute("data-lod") === "detail") === open ? "1" : "0";
   };
-  const resolve = (groupId: string | null) => { for (const g of model.groups) setOpen(g.id, g.id === groupId); };
+  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
+  /** A group is open while the focus is on it or on anything inside it, so an inner group opens within its outer one. */
+  const opens = (g: string, focus: string | null) => { for (let cur: string | undefined = focus ?? undefined; cur !== undefined; cur = parentOf.get(cur)) if (cur === g) return true; return false; };
+  const resolve = (groupId: string | null) => { for (const g of model.groups) setOpen(g.id, opens(g.id, groupId)); };
   let resolveTimer: ReturnType<typeof setTimeout> | undefined;
   /** As in the file's own tour: the camera moves over an unchanging picture, and the level of detail resolves once it has settled. */
   const focus = (groupId: string | null, animate = true) => {
@@ -194,7 +197,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     if (!g) return;
     // Hidden detail is not clickable: a click on a member of a closed, unfocused group is a click on the group.
     const hiddenIn = g.getAttribute("data-lod") === "detail" ? (g.getAttribute("data-for") ?? "").split(" ")[0] : undefined;
-    if (hiddenIn && hiddenIn !== focusId) g = active().querySelector<SVGGElement>(`[data-group="${hiddenIn}"]`) ?? g;
+    if (hiddenIn && !opens(hiddenIn, focusId)) g = active().querySelector<SVGGElement>(`[data-group="${hiddenIn}"]`) ?? g;
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
     if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
     select(id, g.hasAttribute("data-node") ? "node" : "group");

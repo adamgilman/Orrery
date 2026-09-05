@@ -13,6 +13,18 @@
       "label": "Session cache",
       "kind": "cluster",
       "parent": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cluster",
+      "parent": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cluster",
+      "parent": "sessions"
     }
   ],
   "states": {
@@ -72,16 +84,28 @@
       "group": "data"
     },
     {
-      "id": "cache-a",
-      "label": "Node A",
+      "id": "redis-a",
+      "label": "Redis",
       "kind": "cache",
-      "group": "sessions"
+      "group": "cache-a"
     },
     {
-      "id": "cache-b",
-      "label": "Node B",
+      "id": "aof-a",
+      "label": "Append-only file",
+      "kind": "storage",
+      "group": "cache-a"
+    },
+    {
+      "id": "redis-b",
+      "label": "Redis",
       "kind": "cache",
-      "group": "sessions"
+      "group": "cache-b"
+    },
+    {
+      "id": "aof-b",
+      "label": "Append-only file",
+      "kind": "storage",
+      "group": "cache-b"
     }
   ],
   "connections": [
@@ -112,6 +136,24 @@
       "from": "api",
       "to": "sessions",
       "load": 0.5
+    },
+    {
+      "from": "redis-a",
+      "to": "aof-a",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "redis-b",
+      "to": "aof-b",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "cache-a",
+      "to": "cache-b",
+      "kind": "replication",
+      "load": 0.2
     }
   ],
   "scenarios": [
@@ -125,7 +167,11 @@
             "drained": [
               "sessions",
               "cache-a",
-              "cache-b"
+              "cache-b",
+              "redis-a",
+              "aof-a",
+              "redis-b",
+              "aof-b"
             ],
             "brownout": {
               "api": "guest checkout only: no saved carts"

@@ -24,14 +24,24 @@
       "kind": "database"
     },
     {
-      "id": "cache-a",
-      "label": "Node A",
+      "id": "redis-a",
+      "label": "Redis",
       "kind": "cache"
     },
     {
-      "id": "cache-b",
-      "label": "Node B",
+      "id": "aof-a",
+      "label": "Append-only file",
+      "kind": "storage"
+    },
+    {
+      "id": "redis-b",
+      "label": "Redis",
       "kind": "cache"
+    },
+    {
+      "id": "aof-b",
+      "label": "Append-only file",
+      "kind": "storage"
     }
   ]
 }

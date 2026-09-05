@@ -1,0 +1,24 @@
+{
+  "title": "Nested drill-down",
+  "direction": "down",
+  "groups": [
+    { "id": "outer", "label": "Outer", "kind": "cluster" },
+    { "id": "inner", "label": "Inner", "kind": "cluster", "parent": "outer" }
+  ],
+  "components": [
+    { "id": "app", "label": "App", "kind": "client" },
+    { "id": "x", "label": "X", "kind": "cache", "group": "inner" },
+    { "id": "y", "label": "Y", "kind": "storage", "group": "outer" }
+  ],
+  "connections": [
+    { "from": "app", "to": "outer", "load": 0.5 },
+    { "from": "x", "to": "y", "kind": "dataflow", "load": 0.3 }
+  ],
+  "views": [{ "id": "overview", "collapse": ["outer", "inner"] }],
+  "tour": { "seconds": 4, "scenes": [
+    { "view": "overview", "note": "Closed." },
+    { "view": "overview", "focus": "outer", "note": "Inside Outer: Y, and Inner still closed." },
+    { "view": "overview", "focus": "inner", "note": "Inside Inner: X." },
+    { "view": "overview", "note": "Back out." }
+  ] }
+}

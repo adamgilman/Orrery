@@ -149,9 +149,15 @@ function midpoint(pts: Point[]): Point {
 
 const pulses = (model: Model, state: string) => !!lookOf(model.states.define[state]!).pulse;
 
-/** Level of detail (R11): the nearest closed ancestor of an entity, if any. Its content is hidden until that group is in focus. */
-type Lod = { closedBy: (id: string) => string | undefined };
-const lodAttr = (lod: Lod, id: string) => { const g = lod.closedBy(id); return g ? ` data-lod="detail" data-for="${escAttr(g)}"` : ""; };
+/**
+ * Level of detail (R11). `closedChain(id)` lists the closed groups containing an entity, outermost first; an entity
+ * is hidden until the nearest of them is open, and opening a group opens every group above it. Any depth.
+ */
+type Lod = { closedChain: (id: string) => string[] };
+const lodAttr = (lod: Lod, id: string) => { const g = lod.closedChain(id).at(-1); return g ? ` data-lod="detail" data-for="${escAttr(g)}"` : ""; };
+/** One condition on visibility: `detail` shows while `g` is open, `summary` while it is closed. Nested when several apply. */
+const lodWrap = (conditions: { level: "detail" | "summary"; g: string }[], inner: string) =>
+  conditions.reduceRight((acc, c) => `<g class="lod" data-lod="${c.level}" data-for="${escAttr(c.g)}">${acc}</g>`, inner);
 
 function groupMarkup(g: Group, model: Model, layout: LayoutResult, lod: Lod): string {
   const b = layout.groups[g.id];
@@ -215,34 +221,37 @@ function connectionMarkup(c: Connection, model: Model, layout: LayoutResult, lod
   const route = layout.edges[c.key];
   if (!route) throw new Error(`layout returned no route for connection ${c.key}`);
   const key = escAttr(c.key);
-  const fromClosed = lod.closedBy(c.from), toClosed = lod.closedBy(c.to);
-  const closedGroups = [...new Set([fromClosed, toClosed].filter((g): g is string => g !== undefined))];
-  const level = (l: "detail" | "summary") => ` data-lod="${l}" data-for="${escAttr(closedGroups.join(" "))}"`;
   const markers = ` marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}`;
   const trimForArrows = (pts: Point[]) => (c.bidirectional ? trimStart(trimEnd(pts, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(pts, ARROW_LENGTH));
   const flowColour = lineOf(model.kinds.connections[c.kind]!).flow;
   const flowCss = flowStyle(c.load) + (flowColour ? `;stroke:${css(flowColour)}` : "");
-  /** An edge and its flow along `pts`. A flow animates its own dashes, so its level-of-detail track lives on a wrapper: one animation per element. */
-  const drawn = (pts: Point[], lodAttrs: string): string[] => {
-    const flow = `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(trimForArrows(pts))}" style="${flowCss}"/>`;
-    return [
-      `<path class="edge edge-${escAttr(c.kind)}" data-edge="${key}" data-kind="${escAttr(c.kind)}"${lodAttrs} d="${pathD(pts)}"${markers}/>`,
-      lodAttrs ? `<g class="lod"${lodAttrs}>${flow}</g>` : flow,
-    ];
-  };
-  const parts = drawn(route.points, closedGroups.length ? level("detail") : "");
-  // A connection crossing into a closed group is also drawn cut at the frame: its summary level of detail.
-  if (closedGroups.length && fromClosed !== toClosed) {
+  const drawn = (pts: Point[]) =>
+    `<path class="edge edge-${escAttr(c.kind)}" data-edge="${key}" data-kind="${escAttr(c.kind)}" d="${pathD(pts)}"${markers}/>\n` +
+    `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(trimForArrows(pts))}" style="${flowCss}"/>`;
+  // Closed groups around each end, outermost first. Those around both ends hide the whole connection while closed;
+  // the rest each offer a cut: the line stops at that frame while it is closed and the frames above it are open.
+  const from = lod.closedChain(c.from), to = lod.closedChain(c.to);
+  let shared = 0;
+  while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared++;
+  const common = from.slice(0, shared), fromCuts = from.slice(shared), toCuts = to.slice(shared);
+  const variants: string[] = [];
+  for (let i = 0; i <= fromCuts.length; i++) for (let j = 0; j <= toCuts.length; j++) {
+    const conditions: { level: "detail" | "summary"; g: string }[] = [];
+    if (common.length && i === 0 && j === 0) conditions.push({ level: "detail", g: common.at(-1)! }); // implied otherwise
+    if (i > 0) conditions.push({ level: "detail", g: fromCuts[i - 1]! });
+    if (j > 0) conditions.push({ level: "detail", g: toCuts[j - 1]! });
+    if (i < fromCuts.length) conditions.push({ level: "summary", g: fromCuts[i]! });
+    if (j < toCuts.length) conditions.push({ level: "summary", g: toCuts[j]! });
     let pts = route.points;
-    if (toClosed) pts = clipAtBox(pts, layout.groups[toClosed]!);
-    if (fromClosed) pts = clipAtBox(pts.slice().reverse(), layout.groups[fromClosed]!).reverse();
-    if (pts.length >= 2) parts.push(...drawn(pts, level("summary")));
+    if (j < toCuts.length) pts = clipAtBox(pts, layout.groups[toCuts[j]!]!);
+    if (i < fromCuts.length) pts = clipAtBox(pts.slice().reverse(), layout.groups[fromCuts[i]!]!).reverse();
+    if (pts.length >= 2) variants.push(lodWrap(conditions, drawn(pts)));
   }
   if (c.label !== undefined) {
     const m = route.labelAt ?? (({ x, y }) => ({ x, y: y - 8 }))(midpoint(route.points));
-    parts.push(`<text class="edge-label" x="${num(m.x)}" y="${num(m.y)}">${esc(c.label)}</text>`);
+    variants.push(`<text class="edge-label" x="${num(m.x)}" y="${num(m.y)}">${esc(c.label)}</text>`);
   }
-  return parts.join("\n");
+  return variants.join("\n");
 }
 
 /** Legend rows for every non-default state used in this (scoped, declared) model (R9). Empty when none. */
@@ -266,7 +275,7 @@ export function renderView(model: Model, layout: LayoutResult): { picture: strin
   const closed = new Set(model.groups.filter((g) => g.collapsed !== undefined).map((g) => g.id));
   const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
   const groupOf = new Map(model.components.map((c) => [c.id, c.group] as const));
-  const lod: Lod = { closedBy: (id) => { for (let cur = groupOf.get(id) ?? parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; } };
+  const lod: Lod = { closedChain: (id) => { const out: string[] = []; for (let cur = groupOf.get(id) ?? parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) out.unshift(cur); return out; } };
   const picture = [
     `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout, lod)).join("\n")}\n</g>`,
     `<g class="edges">\n${model.connections.map((c) => connectionMarkup(c, model, layout, lod)).join("\n")}\n</g>`,
@@ -371,7 +380,10 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     const stage = { width, height: layout.height };
     const focusOf = (k: number) => scenes[k]!.scene.focus;
     const cameraAt = (k: number) => { const g = focusOf(k); return g && layout.groups[g] ? cameraFor(layout.groups[g]!, stage) : "none"; };
-    const focused = [...new Set(scenes.map((s) => s.scene.focus).filter((g): g is string => g !== undefined))];
+    // A group is open while the focus is on it or on anything inside it, so an inner group opens within its outer one.
+    const parentOf = new Map(base.groups.map((g) => [g.id, g.parent] as const));
+    const opens = (g: string, focus: string | undefined) => { for (let cur = focus; cur !== undefined; cur = parentOf.get(cur)) if (cur === g) return true; return false; };
+    const focused = [...new Set(scenes.flatMap((s) => { const out: string[] = []; for (let cur = s.scene.focus; cur !== undefined; cur = parentOf.get(cur)) out.push(cur); return out; }))];
     const stateLayer = (i: number) => `animation:orrery-state-${i} ${num(total)}s linear infinite`;
     const css = [
       `@keyframes orrery-camera{${track(cameraAt, (v) => `transform:${v}`, move, "animation-timing-function:ease-in-out;")}}`,
@@ -379,8 +391,8 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       ...focused.flatMap((g) => [
         `[data-lod="detail"][data-for~="${g}"]{animation:orrery-lod-${g}-detail ${num(total)}s linear infinite}`,
         `[data-lod="summary"][data-for~="${g}"]{animation:orrery-lod-${g}-summary ${num(total)}s linear infinite}`,
-        `@keyframes orrery-lod-${g}-detail{${track((k) => focusOf(k) === g, opacity, arrive)}}`,
-        `@keyframes orrery-lod-${g}-summary{${track((k) => focusOf(k) !== g, opacity, arrive)}}`,
+        `@keyframes orrery-lod-${g}-detail{${track((k) => opens(g, focusOf(k)), opacity, arrive)}}`,
+        `@keyframes orrery-lod-${g}-summary{${track((k) => !opens(g, focusOf(k)), opacity, arrive)}}`,
       ]),
       ...scenes.map((_, k) => `@keyframes orrery-caption-${k}{${track((j) => j === k, opacity, staged)}}`),
     ].join("\n");

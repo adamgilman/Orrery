@@ -247,6 +247,28 @@ describe("runtime drill-down", () => {
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
     expect(opacity(root, '[data-node="ledger"]')).toBe("0");
   });
+  it("opens a closed group inside an open one, keeping the outer one open; Escape steps back out one level", async () => {
+    const root = await doc("nested-drill");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    click(vis(root, '[data-group="outer"]'));
+    vi.advanceTimersByTime(800);
+    expect(opacity(root, '[data-node="y"]')).toBe("1");
+    expect(opacity(root, '.lod-summary[data-for="inner"]')).toBe("1"); // inner is still closed
+    expect(opacity(root, '[data-node="x"]')).toBe("0");
+    click(vis(root, '.lod-summary[data-for="inner"]'));
+    vi.advanceTimersByTime(800);
+    expect(opacity(root, '[data-node="x"]')).toBe("1");
+    expect(opacity(root, '[data-node="y"]')).toBe("1"); // outer stays open around it
+    expect(opacity(root, '.lod-summary[data-for="outer"]')).toBe("0");
+    key("Escape");
+    vi.advanceTimersByTime(800);
+    expect(opacity(root, '[data-node="x"]')).toBe("0");
+    expect(opacity(root, '[data-node="y"]')).toBe("1");
+    key("Escape");
+    vi.advanceTimersByTime(800);
+    expect(opacity(root, '[data-node="y"]')).toBe("0");
+    expect(opacity(root, '.lod-summary[data-for="outer"]')).toBe("1");
+  });
   it("a click on a hidden member counts as a click on its closed group", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });

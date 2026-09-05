@@ -54,13 +54,14 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 
 ![Data tier](examples/checkout/5-views-data.svg)
 
-**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box.
-Open it and you are inside, looking at the nodes it is made of. Close it and you are back at the whole system.
-Nothing is redrawn; the detail is in the model, folded away until the reader wants it. This image plays that as a
-four-scene `tour`: the whole system, inside the cache, one node fails, back out. In the interactive file, click any
-closed group to open it.
+**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box. Open it and you
+are inside, looking at the two nodes it is made of. Open a node and you are inside that: a Redis process and its
+append-only file. Close them and you are back at the whole system. Nothing is redrawn; the detail is in the model,
+folded away until the reader wants it, as many levels deep as the model goes. This image plays that as a five-scene
+`tour`: the whole system, inside the cache, inside node A, Redis dies, back out. In the interactive file, click any
+closed group to open it and press Escape to step back out.
 
-![Closed, inside, a node fails, back out](examples/checkout/6-drill-down-tour.svg)
+![The whole system, inside the cache, inside a node, Redis dies, back out](examples/checkout/6-drill-down-tour.svg)
 
 **7. Your vocabulary.** States and kinds are yours to name: bind them to looks, and the legend teaches the reader
 your words. The same checkout in one company's words, healthy, impaired, brownout, outage and drained. Drain the

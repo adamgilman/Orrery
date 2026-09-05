@@ -13,6 +13,18 @@
       "label": "Session cache",
       "kind": "cluster",
       "parent": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cluster",
+      "parent": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cluster",
+      "parent": "sessions"
     }
   ],
   "components": [
@@ -39,16 +51,28 @@
       "group": "data"
     },
     {
-      "id": "cache-a",
-      "label": "Node A",
+      "id": "redis-a",
+      "label": "Redis",
       "kind": "cache",
-      "group": "sessions"
+      "group": "cache-a"
     },
     {
-      "id": "cache-b",
-      "label": "Node B",
+      "id": "aof-a",
+      "label": "Append-only file",
+      "kind": "storage",
+      "group": "cache-a"
+    },
+    {
+      "id": "redis-b",
+      "label": "Redis",
       "kind": "cache",
-      "group": "sessions"
+      "group": "cache-b"
+    },
+    {
+      "id": "aof-b",
+      "label": "Append-only file",
+      "kind": "storage",
+      "group": "cache-b"
     }
   ],
   "connections": [
@@ -79,6 +103,24 @@
       "from": "api",
       "to": "sessions",
       "load": 0.5
+    },
+    {
+      "from": "redis-a",
+      "to": "aof-a",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "redis-b",
+      "to": "aof-b",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "cache-a",
+      "to": "cache-b",
+      "kind": "replication",
+      "load": 0.2
     }
   ],
   "scenarios": [
@@ -105,18 +147,28 @@
       ]
     },
     {
-      "id": "node-fails",
-      "label": "A cache node fails",
+      "id": "redis-fails",
+      "label": "A cache process dies",
       "steps": [
         {
-          "note": "Node A goes down",
+          "note": "Redis on node A dies",
           "set": {
-            "failed": "cache-a",
+            "failed": {
+              "redis-a": "out of memory",
+              "cache-a": "its process is down"
+            },
             "degraded": {
               "sessions": "one node left",
               "api": "sessions load slowly"
             }
-          }
+          },
+          "load": [
+            {
+              "from": "cache-a",
+              "to": "cache-b",
+              "load": 0
+            }
+          ]
         }
       ]
     }
@@ -130,7 +182,7 @@
       "id": "data",
       "title": "Data tier",
       "scope": "data",
-      "direction": "right"
+      "direction": "down"
     }
   ]
 }
