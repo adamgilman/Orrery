@@ -64,7 +64,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 .o-spin.o-slow{animation-duration:220s;animation-direction:reverse}
 @keyframes o-turn{to{transform:rotate(360deg)}}
 .o-dial{position:relative;background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px;box-shadow:0 30px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(201,161,90,.18)}
-.o-dial svg{display:block;width:100%;height:auto}
+.o-dial svg{display:block;width:100%;height:auto;max-width:100%}
 .o-dial-caption{margin-top:14px;font-size:.85rem;color:var(--on-night-muted);max-width:44ch}
 .o-dial-caption b{color:var(--on-night);font-weight:500}
 
@@ -78,11 +78,12 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 .o-three p{color:var(--ink-muted)}
 .o-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,40px);align-items:start}
 .o-figure{background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px}
-.o-figure svg{display:block;width:100%;height:auto;max-height:520px}
+.o-figure svg{display:block;width:100%;height:auto}
+.o-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.o-scroll svg{min-width:960px}
 .o-figure figcaption{margin-top:14px;font-size:.875rem;color:#5B6478;line-height:1.5}
 .o-figure figcaption b{color:#141A2A;font-weight:500}
 .o-wide{margin-top:clamp(24px,3vw,40px)}
-.o-wide svg{max-height:none}
 .o-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:start;margin-top:clamp(24px,3vw,40px)}
 .o-list{list-style:none;margin:0;padding:0;display:grid;gap:18px}
 .o-list li{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;padding-top:18px;border-top:1px solid var(--rule)}
@@ -107,7 +108,9 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 
 @media (max-width:900px){
   .o-hero .o-wrap,.o-section-head,.o-pair,.o-split{grid-template-columns:1fr}
-  .o-plate{justify-self:start;max-width:420px}
+  .o-plate{justify-self:start;max-width:420px;width:100%}
+  .o-figure{padding:12px}
+  .o-scroll svg{min-width:820px}
   .o-three,.o-facts{grid-template-columns:1fr}
   .o-list li{grid-template-columns:1fr;gap:6px}
   .o-nav{display:none}
@@ -200,7 +203,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
       <div><p class="o-eyebrow">Your vocabulary</p><h2>Degraded means something different at every company.</h2></div>
       <p class="o-lede o-muted">So the tool does not define it. You bind your own state names to looks and mechanics, and your own kinds to glyphs and frames. Below, a trading platform whose organisation says healthy, impaired, brownout, outage and drained, two sequencers into a quorum loss.</p>
     </div>
-    <figure class="o-figure o-wide"><!--svg:quorum--><figcaption><b>Playing on a timer, no script.</b> The scenario steps every four seconds: one sequencer out and the matchers impaired; two out, quorum lost, both cells and the edge in outage; then a brownout while the second sequencer catches up. The legend is the author's, not ours.</figcaption></figure>
+    <figure class="o-figure o-wide"><div class="o-scroll"><!--svg:quorum--></div><figcaption><b>Playing on a timer, no script.</b> The scenario steps every four seconds: one sequencer out and the matchers impaired; two out, quorum lost, both cells and the edge in outage; then a brownout while the second sequencer catches up. The legend is the author's, not ours.</figcaption></figure>
     <div class="o-split">
       <pre><code><span class="k">"states"</span>: {
   <span class="k">"default"</span>: <span class="s">"healthy"</span>,
