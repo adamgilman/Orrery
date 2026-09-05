@@ -224,5 +224,31 @@
         "note": "Back out: the closed boxes carry the state."
       }
     ]
-  }
+  },
+  "exports": [
+    {
+      "id": "overview"
+    },
+    {
+      "id": "primary-fails",
+      "play": "db-fails"
+    },
+    {
+      "id": "primary-failed",
+      "scenario": "db-fails",
+      "step": 1
+    },
+    {
+      "id": "inside-the-cache",
+      "focus": "sessions"
+    },
+    {
+      "id": "inside-node-a",
+      "focus": "cache-a"
+    },
+    {
+      "id": "drill-down",
+      "tour": true
+    }
+  ]
 }

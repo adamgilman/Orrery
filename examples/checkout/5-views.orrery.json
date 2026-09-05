@@ -190,5 +190,15 @@
         "sessions"
       ]
     }
+  ],
+  "exports": [
+    {
+      "id": "5-views-overview",
+      "view": "overview"
+    },
+    {
+      "id": "5-views-data",
+      "view": "data"
+    }
   ]
 }

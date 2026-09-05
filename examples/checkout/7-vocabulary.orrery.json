@@ -165,6 +165,13 @@
       "load": 0.2
     }
   ],
+  "exports": [
+    {
+      "id": "7-vocabulary-play",
+      "play": "cache-maintenance",
+      "seconds": 4
+    }
+  ],
   "scenarios": [
     {
       "id": "cache-maintenance",

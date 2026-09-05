@@ -155,5 +155,17 @@
         "sessions"
       ]
     }
+  ],
+  "exports": [
+    {
+      "id": "4-scenarios-failed",
+      "scenario": "db-fails",
+      "step": 1
+    },
+    {
+      "id": "4-scenarios-play",
+      "play": "db-fails",
+      "seconds": 3
+    }
   ]
 }

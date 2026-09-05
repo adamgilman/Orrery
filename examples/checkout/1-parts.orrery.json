@@ -28,5 +28,10 @@
       "label": "Session cache",
       "kind": "cache"
     }
+  ],
+  "exports": [
+    {
+      "id": "1-parts"
+    }
   ]
 }

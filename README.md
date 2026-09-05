@@ -45,9 +45,18 @@ pre-rendered layers switched by CSS. The interactive file plays the same steps o
 
 ![Primary fails, playing](examples/checkout/4-scenarios-play.svg)
 
+The pictures a model produces are declared in the file, next to the views and scenarios they draw from, and one
+command writes them all, so the images in your docs come from the same commit as the system:
+
+```json
+"exports": [
+  { "id": "4-scenarios-failed", "scenario": "db-fails", "step": 1 },
+  { "id": "4-scenarios-play", "play": "db-fails", "seconds": 3 }
+]
+```
+
 ```sh
-orrery render examples/checkout/4-scenarios.orrery.json --scenario db-fails -o failed.svg    # one step, still
-orrery render examples/checkout/4-scenarios.orrery.json --play db-fails --every 3 -o play.svg   # every step, on a loop
+orrery export examples/checkout/4-scenarios.orrery.json --out docs/diagrams   # writes 4-scenarios-failed.svg and 4-scenarios-play.svg
 ```
 
 **5. Views.** One model, many drawings. A view scopes to a group and chooses its own direction; what lies outside is
@@ -104,32 +113,46 @@ yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one vie
   "direction": "down",
   "groups": [
     {"id": "data", "label": "Data", "kind": "tier"},
-    {"id": "sessions", "label": "Session cache", "kind": "cluster", "parent": "data"}
+    {"id": "sessions", "label": "Session cache", "kind": "cluster", "parent": "data"},
+    {"id": "cache-a", "label": "Node A", "kind": "cluster", "parent": "sessions"},
+    {"id": "cache-b", "label": "Node B", "kind": "cluster", "parent": "sessions"}
   ],
   "components": [
     {"id": "web", "label": "Storefront", "kind": "client"},
     {"id": "api", "label": "Checkout API", "kind": "service"},
     {"id": "db", "label": "Orders DB", "kind": "database", "group": "data"},
     {"id": "replica", "label": "Read replica", "kind": "database", "group": "data"},
-    {"id": "cache-a", "label": "Node A", "kind": "cache", "group": "sessions"},
-    {"id": "cache-b", "label": "Node B", "kind": "cache", "group": "sessions"}
+    {"id": "redis-a", "label": "Redis", "kind": "cache", "group": "cache-a"},
+    {"id": "aof-a", "label": "Append-only file", "kind": "storage", "group": "cache-a"},
+    {"id": "redis-b", "label": "Redis", "kind": "cache", "group": "cache-b"},
+    {"id": "aof-b", "label": "Append-only file", "kind": "storage", "group": "cache-b"}
   ],
   "connections": [
     {"from": "web", "to": "api", "load": 0.8},
     {"from": "api", "to": "db", "load": 0.6, "label": "writes"},
     {"id": "failover", "from": "api", "to": "replica", "load": 0},
     {"from": "db", "to": "replica", "kind": "replication", "load": 0.2},
-    {"from": "api", "to": "sessions", "load": 0.5}
+    {"from": "api", "to": "sessions", "load": 0.5},
+    {"from": "redis-a", "to": "aof-a", "kind": "dataflow", "load": 0.3},
+    {"from": "redis-b", "to": "aof-b", "kind": "dataflow", "load": 0.3},
+    {"from": "cache-a", "to": "cache-b", "kind": "replication", "load": 0.2}
+  ],
+  "views": [
+    {"id": "overview", "title": "Overview", "collapse": ["sessions"]}
   ],
   "scenarios": [
     {"id": "db-fails", "label": "Primary fails", "steps": [{"note": "Orders DB goes down", "set": {"failed": "db", "degraded": {"api": "reads from the replica; writes are queued", "web": "checkout is slower"}}, "load": [{"id": "failover", "load": 0.6}]}]}
+  ],
+  "exports": [
+    {"id": "4-scenarios-failed", "scenario": "db-fails", "step": 1},
+    {"id": "4-scenarios-play", "play": "db-fails", "seconds": 3}
   ]
 }
 ```
 
 That is stage 4 of the checkout above, verbatim. The file grows progressively: components alone render; groups
 arrange them; connections add flow; scenarios say what happens, step by step, with reasons and loads; views scope
-and drill in. Try any what-if without a scenario:
+and drill in; exports name the pictures to write. Try any what-if without a scenario:
 
 ```sh
 orrery render app.json --set failed=db

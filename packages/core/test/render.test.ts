@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, PULSE_PERIOD, applySet, render, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
+import { FakeLayoutEngine, PULSE_PERIOD, applySet, render, renderExport, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
@@ -179,6 +179,31 @@ describe("renderSvg: closed groups (R11)", () => {
     expect(closed).toContain('data-group="outer"');
     expect(closed).not.toContain('data-group="inner"');
     expect(closed).not.toContain('data-node="y"');
+  });
+});
+
+describe("render: focus and exports", () => {
+  it("focus renders the layout with that group and the groups above it open, as a still", async () => {
+    const n = fixture("nested-drill");
+    const svg = await render(n, new FakeLayoutEngine(), { focus: "inner" });
+    expect(svg).toMatch(/<g class="view" data-view="overview" data-open="outer inner"/);
+    expect(svg).toContain('data-node="x"');
+    expect(svg).not.toContain('class="camera"');
+    expect(svg).not.toContain("<script");
+    await expect(render(n, new FakeLayoutEngine(), { focus: "app" })).rejects.toThrow(/"app" is not a closed group in view "overview"/);
+  });
+  it("renderExport maps every kind of export onto render", async () => {
+    const a = fixture("alternatives");
+    const by = Object.fromEntries(a.exports.map((x) => [x.id, x]));
+    expect(await renderExport(a, new FakeLayoutEngine(), by["overview"]!)).toBe(await render(a, new FakeLayoutEngine(), { view: "overview" }));
+    expect(await renderExport(a, new FakeLayoutEngine(), by["orders-down"]!)).toContain('data-node="orders" data-kind="database" data-state="failed"');
+    expect(await renderExport(a, new FakeLayoutEngine(), by["failover-loop"]!)).toMatch(/orrery-play-overview-0 10s step-end infinite/);
+    const whatIf = await renderExport(a, new FakeLayoutEngine(), by["what-if"]!);
+    expect(whatIf).toContain('data-node="fraud" data-kind="function" data-state="failed"');
+    expect(whatIf).toContain("<title>no fraud scoring</title>");
+    const n = fixture("nested-drill");
+    expect(await renderExport(n, new FakeLayoutEngine(), n.exports[3]!)).toContain('class="camera"');
+    expect(await renderExport(n, new FakeLayoutEngine(), n.exports[2]!)).toMatch(/data-open="outer inner"/);
   });
 });
 

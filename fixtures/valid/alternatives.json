@@ -179,5 +179,30 @@
         "seconds": 2
       }
     }
+  ],
+  "exports": [
+    {
+      "id": "overview",
+      "view": "overview"
+    },
+    {
+      "id": "orders-down",
+      "scenario": "orders-failover",
+      "step": 1
+    },
+    {
+      "id": "failover-loop",
+      "play": "orders-failover",
+      "seconds": 2
+    },
+    {
+      "id": "what-if",
+      "set": {
+        "failed": "fraud",
+        "degraded": {
+          "api": "no fraud scoring"
+        }
+      }
+    }
   ]
 }

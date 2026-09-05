@@ -117,7 +117,12 @@ export interface Model {
   scenarios: Scenario[];
   /** Views shown in turn on a timer: CSS crossfade in the file, the morph in the runtime. */
   tour?: Tour;
+  /** The files `orrery export` writes. Never undefined after validation. */
+  exports: Export[];
 }
+
+/** One file the model produces (4.9): a view at a moment, a scenario playing, the inside of a group, or the tour. */
+export interface Export { id: string; view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true }
 
 /** One moment of a tour: a view, optionally at a point in a scenario, with states set for the scene, a caption and its own duration. */
 export interface Scene { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }

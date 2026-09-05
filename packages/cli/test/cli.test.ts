@@ -248,3 +248,35 @@ describe("orrery render --tour", () => {
     expect(own.out).toMatch(/@keyframes orrery-pos-payments\{/); // the focused frame slides and grows
   });
 });
+
+describe("orrery export", () => {
+  it("writes every export of the model to <dir>/<id>.svg and prints each path", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const r = run("export", join(fixtures, "valid/nested-drill.json"), "--out", dir);
+    expect(r.err).toBe("");
+    expect(r.code).toBe(0);
+    expect(r.out.trim().split("\n")).toEqual(["overview", "inside-outer", "inside-inner", "story"].map((id) => join(dir, `${id}.svg`)));
+    const inside = readFileSync(join(dir, "inside-inner.svg"), "utf8");
+    expect(inside).toMatch(/data-open="outer inner"/);
+    expect(inside).not.toMatch(/<script/);
+    expect(readFileSync(join(dir, "story.svg"), "utf8")).toContain('class="camera"');
+    expect(readFileSync(join(dir, "overview.svg"), "utf8")).not.toContain('data-node="y"');
+  });
+  it("refuses a model with no exports, an invalid model, and stray options", () => {
+    const none = run("export", join(fixtures, "valid/minimal.json"));
+    expect(none.code).toBe(1);
+    expect(none.err).toContain("declares no exports");
+    expect(run("export", join(fixtures, "invalid/export-unknown-view.json")).code).toBe(1);
+    expect(run("export", join(fixtures, "valid/nested-drill.json"), "--view", "overview").code).toBe(2);
+    expect(run("validate", join(fixtures, "valid/nested-drill.json")).out).toContain(", 4 exports");
+  });
+  it("render --focus is the same still as an export with a focus", () => {
+    const r = run("render", join(fixtures, "valid/nested-drill.json"), "--focus", "outer");
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/data-open="outer"/);
+    expect(r.out).not.toMatch(/<script/);
+    const bad = run("render", join(fixtures, "valid/nested-drill.json"), "--focus", "app");
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain("is not a closed group");
+  });
+});

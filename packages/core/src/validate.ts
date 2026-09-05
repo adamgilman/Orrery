@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
-import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
+import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -67,6 +67,7 @@ interface Raw {
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
   tour?: { seconds: number; views?: string[]; scenes?: { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
+  exports?: { id: string; view?: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
 }
 
 /* ---------- vocabulary ---------- */
@@ -288,7 +289,43 @@ export function validate(input: unknown): ValidationResult {
     tour = { seconds: t.seconds, scenes };
   }
 
+  /* exports (S16): the files this model produces */
+  const exportIds = new Set<string>();
+  const exports: Export[] = (raw.exports ?? []).map((x, k) => {
+    const base = `/exports/${k}`;
+    if (exportIds.has(x.id)) err(`${base}/id`, `duplicate export id "${x.id}"`);
+    exportIds.add(x.id);
+    const viewId = x.view ?? views[0]!.id;
+    const view = views.find((v) => v.id === viewId);
+    if (!view) err(`${base}/view`, `unknown view "${viewId}"`);
+    if (x.tour) {
+      if (!tour) err(`${base}/tour`, "the model has no tour");
+      for (const f of ["view", "focus", "scenario", "step", "set", "play", "seconds"] as const) if (x[f] !== undefined) err(`${base}/${f}`, "a tour export takes no other field");
+      return { id: x.id, view: viewId, tour: true };
+    }
+    if (x.focus !== undefined) {
+      if (!groupIds.has(x.focus)) err(`${base}/focus`, componentIds.has(x.focus) ? `"${x.focus}" is not a group` : `unknown group "${x.focus}"`);
+      else if (view && !(view.collapse ?? []).includes(x.focus)) err(`${base}/focus`, `"${x.focus}" is not closed in view "${viewId}"; list it in the view's collapse`);
+    }
+    const scenario = x.scenario !== undefined ? scenarios.find((sc) => sc.id === x.scenario) : undefined;
+    if (x.scenario !== undefined && !scenario) err(`${base}/scenario`, `unknown scenario "${x.scenario}"`);
+    if (x.step !== undefined && scenario && (x.step < 1 || x.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
+    if (x.step !== undefined && x.scenario === undefined) err(`${base}/step`, "step needs a scenario");
+    if (x.play !== undefined && !scenarios.some((sc) => sc.id === x.play)) err(`${base}/play`, `unknown scenario "${x.play}"`);
+    if (x.play !== undefined && x.scenario !== undefined) err(`${base}/play`, "play and scenario are exclusive: a loop, or one moment");
+    if (x.seconds !== undefined && x.play === undefined) err(`${base}/seconds`, "seconds needs play");
+    const set: Record<string, string[]> = Object.create(null);
+    const reasons: Record<string, string> = Object.create(null);
+    for (const [state, entry] of Object.entries(x.set ?? {})) {
+      if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
+      set[state] = idsOf(entry);
+      Object.assign(reasons, reasonsOf(entry));
+      for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
+    }
+    return { id: x.id, view: viewId, ...opt("focus", x.focus), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
+  });
+
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour) };
+  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
 }

@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/exports/0/tour",
+    "message": "the model has no tour"
+  },
+  {
+    "pointer": "/exports/0/focus",
+    "message": "a tour export takes no other field"
+  }
+]

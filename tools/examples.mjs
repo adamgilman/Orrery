@@ -1,31 +1,17 @@
-// Re-render every example to SVG. Usage: yarn examples
+// Re-render every example. Usage: yarn examples
 // The README and the landing page tell one story, a checkout system built up a stage at a time: tools/checkout-stages.mjs
-// derives examples/checkout/*.orrery.json from examples/checkout.orrery.json, and the manifest below renders each stage.
+// derives examples/checkout/*.orrery.json from examples/checkout.orrery.json, and every picture is one of a file's own
+// `exports`, written by `orrery export`. The two interactive files are rendered whole.
 import { execFileSync } from "node:child_process";
+import { copyFileSync, readdirSync } from "node:fs";
 const cli = "packages/cli/dist/main.js";
+const run = (...args) => execFileSync("node", [cli, ...args], { encoding: "utf8" });
 execFileSync("node", ["tools/checkout-stages.mjs"], { stdio: "inherit" });
-const jobs = [
-  ["examples/solar-system.orrery.json", [], "examples/solar-system.svg"],
-  ["examples/checkout.orrery.json", [], "examples/checkout.svg"], // the interactive file the README and landing page link to
-  ["examples/checkout/1-parts.orrery.json", ["--static"], "examples/checkout/1-parts.svg"],
-  ["examples/checkout/2-groups.orrery.json", ["--static"], "examples/checkout/2-groups.svg"],
-  ["examples/checkout/3-connections.orrery.json", ["--static"], "examples/checkout/3-connections.svg"],
-  ["examples/checkout/4-scenarios.orrery.json", ["--static", "--scenario", "db-fails"], "examples/checkout/4-scenarios-failed.svg"],
-  ["examples/checkout/4-scenarios.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "examples/checkout/4-scenarios-play.svg"],
-  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "overview"], "examples/checkout/5-views-overview.svg"],
-  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "data"], "examples/checkout/5-views-data.svg"],
-  ["examples/checkout/6-drill-down.orrery.json", ["--static"], "examples/checkout/6-drill-down.svg"],
-  ["examples/checkout/6-drill-down.orrery.json", ["--tour"], "examples/checkout/6-drill-down-tour.svg"],
-  ["examples/checkout/7-vocabulary.orrery.json", ["--static", "--play", "cache-maintenance", "--every", "4"], "examples/checkout/7-vocabulary-play.svg"],
-  // static renders the landing page inlines
-  ["examples/solar-system.orrery.json", ["--static"], "site/landing/solar.svg"],
-  ["examples/checkout/4-scenarios.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"],
-  ["examples/checkout/7-vocabulary.orrery.json", ["--static", "--play", "cache-maintenance", "--every", "4"], "site/landing/vocabulary-play.svg"],
-  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "data"], "site/landing/data-view.svg"],
-  ["examples/checkout/6-drill-down.orrery.json", ["--tour"], "site/landing/drill-down-tour.svg"],
-];
-for (const [src, args, out] of jobs) {
-  execFileSync("node", [cli, "render", src, ...args, "-o", out], { stdio: "inherit" });
-  const size = execFileSync("grep", ["-o", 'viewBox="[^"]*"', out], { encoding: "utf8" }).trim();
-  console.log(`${out.padEnd(48)} ${size}`);
+run("render", "examples/solar-system.orrery.json", "-o", "examples/solar-system.svg");
+run("render", "examples/checkout.orrery.json", "-o", "examples/checkout.svg"); // the interactive file the README and landing page link to
+for (const f of ["examples/checkout.orrery.json", ...readdirSync("examples/checkout").filter((f) => f.endsWith(".orrery.json")).map((f) => `examples/checkout/${f}`)]) {
+  for (const line of run("export", f, "--out", "examples/checkout").trim().split("\n")) console.log(line);
 }
+// the landing page inlines these
+run("render", "examples/solar-system.orrery.json", "--static", "-o", "site/landing/solar.svg");
+for (const [from, to] of [["4-scenarios-play", "failover-play"], ["7-vocabulary-play", "vocabulary-play"], ["5-views-data", "data-view"], ["6-drill-down-tour", "drill-down-tour"]]) copyFileSync(`examples/checkout/${from}.svg`, `site/landing/${to}.svg`);

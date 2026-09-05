@@ -224,5 +224,18 @@
         "note": "Back out: the closed boxes carry the state."
       }
     ]
-  }
+  },
+  "exports": [
+    {
+      "id": "6-drill-down"
+    },
+    {
+      "id": "6-drill-down-inside",
+      "focus": "cache-a"
+    },
+    {
+      "id": "6-drill-down-tour",
+      "tour": true
+    }
+  ]
 }

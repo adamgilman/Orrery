@@ -121,3 +121,18 @@ describe("validate: warnings", () => {
     expect(model("alternatives") && validate(load(join(fixtures, "valid", "alternatives.json")))).toMatchObject({ warnings: [] });
   });
 });
+
+describe("validate: exports (S16)", () => {
+  it("normalises exports: the first view by default, play with its seconds, a set with reasons, a tour entry alone", () => {
+    const m = model("alternatives");
+    expect(m.exports).toEqual([
+      { id: "overview", view: "overview" },
+      { id: "orders-down", view: "overview", scenario: "orders-failover", step: 1 },
+      { id: "failover-loop", view: "overview", play: { scenario: "orders-failover", seconds: 2 } },
+      { id: "what-if", view: "overview", set: { failed: ["fraud"], degraded: ["api"] }, reasons: { api: "no fraud scoring" } },
+    ]);
+    expect(model("nested-drill").exports.map((x) => x.id)).toEqual(["overview", "inside-outer", "inside-inner", "story"]);
+    expect(model("nested-drill").exports[3]).toEqual({ id: "story", view: "overview", tour: true });
+    expect(model("minimal").exports).toEqual([]);
+  });
+});

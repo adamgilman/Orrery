@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/exports/0/play",
+    "message": "play and scenario are exclusive"
+  },
+  {
+    "pointer": "/exports/1/seconds",
+    "message": "seconds needs play"
+  }
+]

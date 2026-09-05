@@ -5,7 +5,7 @@ import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } fr
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
-import type { Component, Connection, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
+import type { Component, Connection, Export, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
 import { scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -532,12 +532,23 @@ export interface RenderOptions {
   /** Scenario id to apply before rendering; `step` selects how far (default: all steps). */
   scenario?: string;
   step?: number;
-  /** Ad-hoc declared-state overrides: state name → entity ids. Applied after the scenario. */
+  /** A what-if: state name → entity ids, applied after the scenario; `reasons` gives entities their explanation. */
   set?: Record<string, string[]>;
+  reasons?: Record<string, string>;
   /** Play a scenario on a timer in the rendered view, overriding the view's own `play`. Ignored with `scenario`. */
   play?: { scenario: string; seconds?: number };
   /** Render a tour of views instead of one view: `true` for the model's own tour, or an explicit list. */
   tour?: true | { views: string[]; seconds?: number };
+  /** A closed group to draw open, with the closed groups above it: a still of the inside (R11). */
+  focus?: string;
+}
+/** The groups a focus opens in a view: the focus and every closed group above it, outermost first. */
+export function openFor(model: Model, view: View, focus: string | undefined): string[] {
+  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
+  const collapse = new Set(view.collapse ?? []);
+  const open: string[] = [];
+  for (let cur = focus; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
+  return open;
 }
 const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
   options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
@@ -558,14 +569,29 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   const view = selectView(model, options.view);
   const play = playOf(view, options);
   if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
-  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}) });
+  if (options.focus !== undefined && !(view.collapse ?? []).includes(options.focus)) throw new ModelError(`"${options.focus}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
+  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}) });
   let title = view.title ?? model.title;
   if (options.scenario !== undefined) {
     const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
     title = `${model.title ?? "Model"} - ${label} (${d.step}/${d.steps})${d.note !== undefined ? `: ${d.note}` : ""}`;
   }
-  const layer = await layerFor(d.model, view, engine, play, title ?? view.id);
+  const layer = await layerFor(d.model, view, engine, play, title ?? view.id, undefined, openFor(model, view, options.focus));
   return wrapDocument(model, title, [layer], []);
+}
+
+/** Render one of the model's `exports` (MODEL.md 4.9): an enclosed file, CSS animation only. */
+export function renderExport(model: Model, engine: LayoutEngine, x: Export): Promise<string> {
+  if (x.tour) return render(model, engine, { tour: true });
+  return render(model, engine, {
+    view: x.view,
+    ...(x.focus !== undefined ? { focus: x.focus } : {}),
+    ...(x.scenario !== undefined ? { scenario: x.scenario } : {}),
+    ...(x.step !== undefined ? { step: x.step } : {}),
+    ...(x.set ? { set: x.set } : {}),
+    ...(x.reasons ? { reasons: x.reasons } : {}),
+    ...(x.play ? { play: x.play } : {}),
+  });
 }
 
 export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number } }
@@ -581,17 +607,11 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
   const first = selectView(model, options.view);
   const layers: ViewLayer[] = [];
-  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
   for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
     const play = view === first ? playOf(view, options) : view.play;
     if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
     layers.push(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id));
-    const collapse = new Set(view.collapse ?? []);
-    for (const g of view.collapse ?? []) {
-      const open: string[] = [];
-      for (let cur: string | undefined = g; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
-      layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open));
-    }
+    for (const g of view.collapse ?? []) layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, openFor(model, view, g)));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(declared).replace(/]]>/g, "]]\\u003e");

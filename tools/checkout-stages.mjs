@@ -9,12 +9,15 @@ const topLevel = (c) => !["cache-a", "cache-b"].includes(c.group);
 const parts = [...components.filter(topLevel).map(bare), { id: "sessions", label: "Session cache", kind: "cache" }];
 const closedViews = [{ id: "overview", title: "Overview", collapse: ["sessions"] }, { id: "data", title: "Data tier", scope: "data", direction: "down", collapse: ["sessions"] }];
 const stages = {
-  "1-parts": { title: "Checkout: the parts", direction: "right", components: parts },
-  "2-groups": { title: "Checkout: grouped", direction: "right", groups, components, views: [closedViews[0]] },
-  "3-connections": { title: "Checkout: connected", direction, groups, components, connections, views: [closedViews[0]] },
-  "4-scenarios": { title: "Checkout: what happens", direction, groups, components, connections, scenarios: scenarios.filter((s) => s.id === "db-fails"), views: [closedViews[0]] },
-  "5-views": { title: "Checkout: views", direction, groups, components, connections, scenarios, views: closedViews },
-  "6-drill-down": { title: "Checkout: drill down", direction, groups, components, connections, scenarios, views, tour },
+  "1-parts": { title: "Checkout: the parts", direction: "right", components: parts, exports: [{ id: "1-parts" }] },
+  "2-groups": { title: "Checkout: grouped", direction: "right", groups, components, views: [closedViews[0]], exports: [{ id: "2-groups" }] },
+  "3-connections": { title: "Checkout: connected", direction, groups, components, connections, views: [closedViews[0]], exports: [{ id: "3-connections" }] },
+  "4-scenarios": { title: "Checkout: what happens", direction, groups, components, connections, scenarios: scenarios.filter((s) => s.id === "db-fails"), views: [closedViews[0]],
+    exports: [{ id: "4-scenarios-failed", scenario: "db-fails", step: 1 }, { id: "4-scenarios-play", play: "db-fails", seconds: 3 }] },
+  "5-views": { title: "Checkout: views", direction, groups, components, connections, scenarios, views: closedViews,
+    exports: [{ id: "5-views-overview", view: "overview" }, { id: "5-views-data", view: "data" }] },
+  "6-drill-down": { title: "Checkout: drill down", direction, groups, components, connections, scenarios, views, tour,
+    exports: [{ id: "6-drill-down" }, { id: "6-drill-down-inside", focus: "cache-a" }, { id: "6-drill-down-tour", tour: true }] },
   // The same system in one company's words. The session cache is a nice-to-have for this team: drained for
   // maintenance, checkout runs on for guests, a brownout. Nothing in the tool knows these names.
   "7-vocabulary": {
@@ -30,6 +33,7 @@ const stages = {
       },
     },
     components, connections,
+    exports: [{ id: "7-vocabulary-play", play: "cache-maintenance", seconds: 4 }],
     scenarios: [{ id: "cache-maintenance", label: "Session cache maintenance", steps: [{
       note: "The cache cluster is drained: checkout continues for guests",
       set: { drained: ["sessions", "cache-a", "cache-b", "redis-a", "aof-a", "redis-b", "aof-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },

@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { ModelError, render, renderDocument, validate, type ValidationError } from "@orrery/core";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { ModelError, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 import { RUNTIME_SOURCE } from "@orrery/runtime";
 
@@ -14,10 +15,14 @@ export const USAGE = `Usage:
                  [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
                  [--play <id>]           --static; --step <n> (1-based) stops after step n (default: last).
                  [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
-                 [--tour [<ids>]]        (repeatable; applied after the scenario).
+                 [--tour [<ids>]]        (repeatable; applied after the scenario). --focus draws a closed
+                 [--focus <group>]       group open, a still of the inside (implies --static).
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
                                          the file, so they play inside <img>. --every: seconds per step or view.
+  orrery export <file> [--out <dir>]     Write every entry of the model's "exports" to <dir>/<id>.svg: enclosed
+                                         files, CSS animation only, no script. Default <dir> is the current
+                                         directory. Prints one line per file.
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -29,7 +34,7 @@ export class CliError extends Error {
 }
 interface Io { stdout(s: string): void; stderr(s: string): void }
 
-const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every"]);
+const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--focus", "--out"]);
 /** Flags whose value may be omitted (then the model's own declaration is used). */
 const OPTIONAL_VALUE_FLAGS = new Set(["--tour"]);
 const BOOL_FLAGS = new Set(["--static"]);
@@ -91,7 +96,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.includes("--help") || rest.includes("-h") || command === "--help" || command === "-h" || command === "help") { io.stdout(USAGE + "\n"); return 0; }
   try {
-    if (command !== "validate" && command !== "render") throw new CliError(USAGE, 2);
+    if (command !== "validate" && command !== "render" && command !== "export") throw new CliError(USAGE, 2);
     const args = parseArgs(rest);
     const [file, ...extra] = args.positionals;
     if (!file) throw new CliError(USAGE, 2);
@@ -99,10 +104,27 @@ export async function main(argv: string[], io: Io): Promise<number> {
     if (command === "validate") {
       if (args.values.size || args.flags.size) throw new CliError("validate takes no options", 2);
       const m = loadModel(file, io);
-      io.stdout(`OK: ${m.components.length} components, ${m.connections.length} connections, ${m.groups.length} groups, ${m.views.length} views${m.scenarios.length ? `, ${m.scenarios.length} scenarios` : ""}\n`);
+      io.stdout(`OK: ${m.components.length} components, ${m.connections.length} connections, ${m.groups.length} groups, ${m.views.length} views${m.scenarios.length ? `, ${m.scenarios.length} scenarios` : ""}${m.exports.length ? `, ${m.exports.length} exports` : ""}\n`);
       return 0;
     }
-    const out = one(args, "-o"), view = one(args, "--view"), scenario = one(args, "--scenario"), stepRaw = one(args, "--step");
+    if (command === "export") {
+      const dir = one(args, "--out") ?? ".";
+      for (const flag of args.values.keys()) if (flag !== "--out") throw new CliError(`export takes only --out, not ${flag}`, 2);
+      if (args.flags.size) throw new CliError(`export takes only --out`, 2);
+      const m = loadModel(file, io);
+      if (!m.exports.length) throw new CliError(`${file}: the model declares no exports; add an "exports" list (docs/MODEL.md 4.9)`);
+      try { mkdirSync(dir, { recursive: true }); } catch (e) { throw new CliError(`${dir}: ${(e as Error).message}`); }
+      for (const x of m.exports) {
+        const target = join(dir, `${x.id}.svg`);
+        let svg: string;
+        try { svg = await renderExport(m, new ElkLayoutEngine(), x); } catch (e) { if (e instanceof ModelError) throw new CliError(`${file}: export "${x.id}": ${e.message}`); throw e; }
+        try { writeFileSync(target, svg); } catch (e) { throw new CliError(`${target}: ${(e as Error).message}`); }
+        io.stdout(`${target}\n`);
+      }
+      return 0;
+    }
+    const out = one(args, "-o"), view = one(args, "--view"), scenario = one(args, "--scenario"), stepRaw = one(args, "--step"), focus = one(args, "--focus");
+    if (args.values.has("--out")) throw new CliError("--out is for export; render writes one file with -o", 2);
     if (stepRaw !== undefined && scenario === undefined) throw new CliError("--step requires --scenario", 2);
     const step = stepRaw !== undefined ? Number(stepRaw) : undefined;
     if (step !== undefined && !Number.isInteger(step)) throw new CliError(`--step must be an integer, got "${stepRaw}"`, 2);
@@ -116,13 +138,13 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const play = playId !== undefined ? { scenario: playId, ...(every !== undefined ? { seconds: every } : {}) } : undefined;
     const tour = tourIds !== undefined ? { views: tourIds.split(",").map((x) => x.trim()).filter(Boolean), ...(every !== undefined ? { seconds: every } : {}) } : tourOwn ? (true as const) : undefined;
     if (tour === true && every !== undefined) throw new CliError("--every with --tour needs an explicit list of views", 2);
-    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined;
+    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined || focus !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
       const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}) };
       svg = isStatic
-        ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}) })
+        ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}), ...(focus !== undefined ? { focus } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });
     } catch (e) {
       if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`);

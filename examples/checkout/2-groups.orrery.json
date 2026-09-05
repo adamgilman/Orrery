@@ -83,5 +83,10 @@
         "sessions"
       ]
     }
+  ],
+  "exports": [
+    {
+      "id": "2-groups"
+    }
   ]
 }

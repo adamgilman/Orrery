@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/exports/0/focus",
+    "message": "is not closed in view \"open\""
+  },
+  {
+    "pointer": "/exports/1/focus",
+    "message": "is not a group"
+  }
+]

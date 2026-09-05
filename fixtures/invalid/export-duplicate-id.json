@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "id": "g"
+    }
+  ],
+  "components": [
+    {
+      "id": "a"
+    },
+    {
+      "id": "p",
+      "group": "g"
+    }
+  ],
+  "connections": [
+    {
+      "from": "a",
+      "to": "p"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "collapse": [
+        "g"
+      ]
+    },
+    {
+      "id": "open"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "failed": "a"
+          }
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "id": "x"
+    },
+    {
+      "id": "x"
+    }
+  ]
+}
