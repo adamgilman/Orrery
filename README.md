@@ -54,11 +54,11 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 
 ![Data tier](examples/checkout/5-views-data.svg)
 
-**6. Drill down.** A view can draw a group closed. The reader sees a box with a name and a count, and what is inside
-stays hidden. Open it and the camera moves in; the members appear once it has settled. It is one drawing, so nothing
-jumps. This image plays a four-scene `tour` with no script: the session cache closed, then open, then one node fails
-and the step marks the cluster and the API degraded, then back out. In the interactive file the tour plays until you
-click, and a click on any closed group opens it.
+**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box, a name and a count.
+Open it and you are inside, looking at the nodes it is made of. Close it and you are back at the whole system.
+Nothing is redrawn; the detail is in the model, folded away until the reader wants it. This image plays that as a
+four-scene `tour`: the whole system, inside the cache, one node fails, back out. In the interactive file, click any
+closed group to open it.
 
 ![Closed, inside, a node fails, back out](examples/checkout/6-drill-down-tour.svg)
 
