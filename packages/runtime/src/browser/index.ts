@@ -47,6 +47,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
   let autoplay: ReturnType<typeof setInterval> | undefined;
+  const history: string[] = [];
 
   // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
   for (const layer of layers.values()) {
@@ -162,10 +163,19 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
 
   /* ---- interactions ---- */
   const setState = (id: string, state: string) => { session.set(id, state); apply(); };
+  /** A closed group opens into the view scoped to it, if the model has one. */
+  const drillInto = (groupId: string): boolean => {
+    const target = model.views.find((v) => v.scope === groupId);
+    if (!target || !layers.has(target.id) || target.id === activeId) return false;
+    history.push(activeId);
+    showView(target.id);
+    return true;
+  };
   on(scene, "click", (ev) => {
     const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
     if (!g) return;
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
+    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && drillInto(id)) return;
     select(id, g.hasAttribute("data-node") ? "node" : "group");
     if ((ev as MouseEvent).shiftKey) session.cycle(id); else session.toggle(id, model.states.needs.unmet);
     apply();
@@ -222,13 +232,22 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       const b = bbox(g);
       if (twin) { const t = bbox(twin); moves.push({ el: g, dx: t.x - b.x, dy: t.y - b.y, b }); } else g.style.opacity = "0";
     }
-    from.querySelectorAll<SVGElement>(".edges, .groups, .legend").forEach((e) => (e.style.opacity = "0"));
+    // Groups present in both views grow or shrink their frame: a closed box opens into the frame it stands for.
+    const frames: { rect: SVGRectElement; a: Box; b: Box }[] = [];
+    for (const g of from.querySelectorAll<SVGGElement>("[data-group]")) {
+      const twin = to.querySelector<SVGGElement>(`[data-group="${g.getAttribute("data-group")}"]`);
+      const rect = g.querySelector<SVGRectElement>(".group-box");
+      if (twin && rect) { frames.push({ rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text").forEach((t) => (t.style.opacity = "0")); }
+      else g.style.opacity = "0";
+    }
+    from.querySelectorAll<SVGElement>(".edges, .legend").forEach((e) => (e.style.opacity = "0"));
     const start = Date.now(), dur = 350;
     let handle: ReturnType<typeof setTimeout> | undefined;
     const finish = () => {
       if (handle) clearTimeout(handle);
       morphing = null;
       for (const m of moves) m.el.setAttribute("transform", `translate(${m.b.x} ${m.b.y})`);
+      for (const f of frames) { f.rect.setAttribute("x", String(f.a.x)); f.rect.setAttribute("y", String(f.a.y)); f.rect.setAttribute("width", String(f.a.width)); f.rect.setAttribute("height", String(f.a.height)); }
       from.querySelectorAll<SVGElement>("[style]").forEach((e) => (e.style.opacity = ""));
       from.style.display = "none"; to.style.display = "";
       activeId = id; panel.views.value = id;
@@ -241,9 +260,14 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     const step = () => {
       const t = Math.min(1, (Date.now() - start) / dur), e = 1 - Math.pow(1 - t, 3);
       for (const m of moves) m.el.setAttribute("transform", `translate(${m.b.x + m.dx * e} ${m.b.y + m.dy * e})`);
+      for (const f of frames) {
+        const lerp = (p: number, q: number) => p + (q - p) * e;
+        f.rect.setAttribute("x", String(lerp(f.a.x, f.b.x))); f.rect.setAttribute("y", String(lerp(f.a.y, f.b.y)));
+        f.rect.setAttribute("width", String(lerp(f.a.width, f.b.width))); f.rect.setAttribute("height", String(lerp(f.a.height, f.b.height)));
+      }
       if (t < 1) handle = setTimeout(step, 16); else finish();
     };
-    if (moves.length) step(); else finish();
+    if (moves.length || frames.length) step(); else finish();
   };
   on(panel.views, "change", () => showView(panel.views.value));
 
@@ -259,7 +283,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       if (n) select(n.id, n.type);
     } else if (k === "Enter" && selected) zoomTo(selected.id, selected.type);
     else if (k === "f" && selected) { session.toggle(selected.id, model.states.needs.unmet); apply(); }
-    else if (k === "Escape") { select(null); fit(true); }
+    else if (k === "Escape") { const back = history.pop(); if (back) showView(back); else { select(null); fit(true); } }
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);
     else if (/^[1-9]$/.test(k)) { const id = [...layers.keys()][Number(k) - 1]; if (id) showView(id); }

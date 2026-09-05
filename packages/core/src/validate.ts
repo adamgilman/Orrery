@@ -61,7 +61,7 @@ interface Raw {
   components: { id: string; label?: string; kind: string; group?: string; state?: string; needs: (string | RawNeed)[]; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: Connection["kind"]; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
-  views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number } }[];
+  views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
 }
 
@@ -176,7 +176,10 @@ export function validate(input: unknown): ValidationResult {
     connections.push({ key, from: c.from, to: c.to, kind: c.kind, load: c.load, bidirectional: c.bidirectional, ...opt("id", c.id), ...opt("label", c.label), ...opt("meta", c.meta) });
   });
   const connected = (a: string, b: string) => connections.some((c) => (c.from === a && c.to === b) || (c.from === b && c.to === a));
-  const connectedOrViaGroup = (component: string, alt: string) => connected(component, alt) || ancestors(alt).some((g) => connected(component, g));
+  // A need is joined by a connection to the alternative itself, to a group containing it, or to something inside it.
+  const inside = (id: string, groupId: string) => ancestors(id).includes(groupId);
+  const connectedOrViaGroup = (component: string, alt: string) =>
+    connected(component, alt) || ancestors(alt).some((g) => connected(component, g)) || connections.some((c) => (c.from === component && inside(c.to, alt)) || (c.to === component && inside(c.from, alt)));
   // W1: an entity connected both to a group and to something inside it, in either direction.
   connections.forEach((c, i) => {
     for (const anc of ancestors(c.to)) if (connections.some((o) => o.from === c.from && o.to === anc)) warnings.push(new ValidationWarning(`/connections/${i}`, `"${c.from}" connects to "${c.to}" and also to its group "${anc}"; both lines will be drawn`));
@@ -217,7 +220,12 @@ export function validate(input: unknown): ValidationResult {
       if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/only/${k}`, `"${id}" is not inside scope "${v.scope}"`);
     });
     if (v.play && !raw.scenarios.some((sc) => sc.id === v.play!.scenario)) err(`/views/${i}/play/scenario`, `unknown scenario "${v.play.scenario}"`);
-    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play) };
+    v.collapse?.forEach((id, k) => {
+      if (componentIds.has(id)) return err(`/views/${i}/collapse/${k}`, `"${id}" is not a group`);
+      if (!groupIds.has(id)) return err(`/views/${i}/collapse/${k}`, `unknown group "${id}"`);
+      if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/collapse/${k}`, `"${id}" is not inside scope "${v.scope}"`);
+    });
+    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play), ...opt("collapse", v.collapse) };
   });
 
   /* scenarios */

@@ -1,0 +1,29 @@
+{
+  "groups": [
+    {
+      "id": "g"
+    },
+    {
+      "id": "h"
+    }
+  ],
+  "components": [
+    {
+      "id": "a",
+      "group": "g"
+    },
+    {
+      "id": "b",
+      "group": "h"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "scope": "g",
+      "collapse": [
+        "h"
+      ]
+    }
+  ]
+}

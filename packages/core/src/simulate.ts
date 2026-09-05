@@ -86,6 +86,7 @@ export function propagate(input: Model): Model {
     for (const alt of need.any) {
       for (const conn of between(c.id, alt)) needMarks.add(conn.key);
       for (const g of ancestors(alt)) for (const conn of between(c.id, g.id)) needMarks.add(conn.key);
+      for (const conn of input.connections) if ((conn.from === c.id && ancestors(conn.to).some((g) => g.id === alt)) || (conn.to === c.id && ancestors(conn.from).some((g) => g.id === alt))) needMarks.add(conn.key);
     }
     const firstAvail = need.any.find((a) => entity(a) !== undefined && available(state(a)));
     const target = firstAvail !== undefined ? from(c.id, firstAvail)[0] : undefined;

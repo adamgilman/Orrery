@@ -320,7 +320,7 @@
           "needs": {
             "type": "array",
             "default": [],
-            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives with the states to enter when the need is unmet or only partly met. Every alternative must be connected to this component (either direction) and must not be a group that contains it. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
+            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives with the states to enter when the need is unmet or only partly met. Every alternative must be joined to this component by a connection: to it, to a group containing it, or into it when it is a group. It must not be a group that contains this component. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
             "items": {
               "oneOf": [
                 {
@@ -566,6 +566,16 @@
                 "description": "Seconds each step stays on screen."
               }
             }
+          },
+          "collapse": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "description": "Group ids drawn closed in this view: one box with the group's label and a count, members hidden, connections to members attached to the box. Health still derives from what is inside. Pair it with a second view whose 'scope' is the group, and the interactive file opens the box on click."
           }
         }
       }

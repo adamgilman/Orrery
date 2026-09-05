@@ -2,6 +2,9 @@
 <title>Trading platform - Sequencer quorum loss (2/3): Second out: quorum lost, both matchers in outage, edge in outage</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+.group.collapsed .group-box{fill:#ffffff;fill-opacity:1;stroke-width:2}
+.collapsed-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central;letter-spacing:0;text-transform:none;stroke:none}
+.group-count{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}

@@ -208,3 +208,29 @@ describe("runtime autoplay", () => {
     expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4"); // timer stopped
   });
 });
+
+describe("runtime drill-down", () => {
+  let rt: Runtime;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("clicking a collapsed group opens the view scoped to it; Escape returns to the previous view", async () => {
+    const root = await doc("drill-down");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    click(vis(root, '[data-group="payments"]'));
+    vi.advanceTimersByTime(400);
+    expect([...root.querySelectorAll(".view")].map((l) => `${l.getAttribute("data-view")}:${(l as HTMLElement).style.display || "shown"}`)).toEqual(["overview:none", "payments:shown", "identity:none"]);
+    expect(state(root, "payments")).toBe("on"); // opening is navigation, not a state change
+    key("Escape");
+    vi.advanceTimersByTime(400);
+    expect([...root.querySelectorAll(".view")].map((l) => (l as HTMLElement).style.display)).toEqual(["", "none", "none"]);
+  });
+  it("the morph grows the closed box into the open frame", async () => {
+    const root = await doc("drill-down");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    const closed = vis(root, '[data-group="payments"] .group-box');
+    const before = closed.getAttribute("width");
+    click(vis(root, '[data-group="payments"]'));
+    vi.advanceTimersByTime(100);
+    expect(closed.getAttribute("width")).not.toBe(before); // mid-morph, the box is growing
+  });
+});

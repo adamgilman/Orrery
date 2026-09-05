@@ -105,6 +105,9 @@ function vocabularyCss(model: Model): string {
 const BASE_STYLE = `
 .group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px ${FONT};fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+.group.collapsed .group-box{fill:#ffffff;fill-opacity:1;stroke-width:2}
+.collapsed-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central;letter-spacing:0;text-transform:none;stroke:none}
+.group-count{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -143,6 +146,14 @@ const pulses = (model: Model, state: string) => !!lookOf(model.states.define[sta
 function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
   const b = layout.groups[g.id];
   if (!b) throw new Error(`layout returned no box for group ${g.id}`);
+  if (g.collapsed !== undefined) return [
+    `<g class="group gk-${g.kind} st-${g.state} collapsed" data-group="${escAttr(g.id)}" data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}" data-state="${escAttr(g.state)}" data-collapsed="${g.collapsed}"${pulses(model, g.state) ? ' data-pulse="1"' : ""}>`,
+    ...(g.reason !== undefined ? [`<title>${esc(g.reason)}</title>`] : []),
+    `<rect class="group-box" x="${num(b.x)}" y="${num(b.y)}" width="${num(b.width)}" height="${num(b.height)}" rx="10"/>`,
+    `<text class="group-label collapsed-label" x="${num(b.x + b.width / 2)}" y="${num(b.y + b.height / 2 - 7)}">${esc(g.label)}</text>`,
+    `<text class="group-count" x="${num(b.x + b.width / 2)}" y="${num(b.y + b.height / 2 + 11)}">${g.collapsed} inside</text>`,
+    `</g>`,
+  ].join("\n");
   return [
     `<g class="group gk-${g.kind} st-${g.state}" data-group="${escAttr(g.id)}" data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}" data-state="${escAttr(g.state)}"${pulses(model, g.state) ? ' data-pulse="1"' : ""}>`,
     ...(g.reason !== undefined ? [`<title>${esc(g.reason)}</title>`] : []),

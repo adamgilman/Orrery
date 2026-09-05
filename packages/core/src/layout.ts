@@ -4,7 +4,7 @@ import type { Direction } from "./types.js";
 export interface LayoutGraph {
   direction: Direction;
   /** Containers. `labelHeight` is the band reserved at the top of the frame for its title. */
-  groups?: { id: string; parent?: string; labelHeight: number }[];
+  groups?: { id: string; parent?: string; labelHeight: number; emptySize?: { width: number; height: number } }[];
   nodes: { id: string; width: number; height: number; group?: string }[];
   edges: { id: string; from: string; to: string; label?: { width: number; height: number } }[];
 }
@@ -57,7 +57,7 @@ export class FakeLayoutEngine implements LayoutEngine {
     // Items placed in the row: real nodes plus empty groups as pseudo-nodes.
     const items = [
       ...graph.nodes.map((n, i) => ({ id: n.id, width: n.width, height: n.height, group: n.group, i, empty: false })),
-      ...empties.map((g, i) => ({ id: g.id, width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight, group: g.parent, i: graph.nodes.length + i, empty: true })),
+      ...empties.map((g, i) => ({ id: g.id, width: (g.emptySize ?? EMPTY_GROUP).width, height: (g.emptySize?.height ?? EMPTY_GROUP.height + g.labelHeight), group: g.parent, i: graph.nodes.length + i, empty: true })),
     ].sort((a, b) => { const pa = path(a.group), pb = path(b.group); return pa < pb ? -1 : pa > pb ? 1 : a.i - b.i; });
     const horizontal = graph.direction === "right";
     const maxDepth = groups.reduce((m, g) => Math.max(m, depthOf(g.id)), 0);

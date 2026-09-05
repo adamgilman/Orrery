@@ -54,7 +54,7 @@ export class ElkLayoutEngine implements LayoutEngine {
         layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight},left=${GROUP_PADDING},bottom=${GROUP_PADDING},right=${GROUP_PADDING}]` },
         children: [],
         // An empty group is a black box: give it a size, since ELK sizes compound nodes from their children.
-        ...(empty.has(g.id) ? { width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight } : {}),
+        ...(empty.has(g.id) ? (g.emptySize ?? { width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight }) : {}),
       });
     }
     const root: ElkNode = {

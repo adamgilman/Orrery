@@ -19,6 +19,7 @@ const readme = {
   "kinds": [[]], "groups": [[]], "connection-kinds": [[]],
   "failover": [[], ["--scenario", "db-fails"], ["--static", "--play", "db-fails", "--every", "3"]],
   "views": [["--view", "overview"], ["--view", "billing"]],
+  "drill-down": [["--static"], ["--static", "--view", "payments"]],
 };
 for (const [name, renders] of Object.entries(readme))
   renders.forEach((args, i) => jobs.push([`examples/readme/${name}.orrery.json`, args, `examples/readme/${name}${i ? (args.includes("--play") ? "-play" : `-${args.at(-1)}`) : ""}.svg`]));

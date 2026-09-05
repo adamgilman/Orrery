@@ -145,6 +145,7 @@ connection and need pointing at it keeps working.
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group becomes the outer frame and only its descendants are shown. |
 | `only` | array of entity id | | Restrict to these entities; a group id means the group and everything in it. Groups containing a selected entity are shown. Combines with `scope` by intersection. |
+| `collapse` | array of group id | | Groups drawn closed in this view: one box with the label and a count of hidden components; members and their internal connections are hidden; connections to members re-attach to the box, merged by pair. Health is unchanged: the box shows what its contents derive. Pair with a view whose `scope` is the group, and the runtime opens the box on click (R11). |
 | `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view: the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
 
 Connections with exactly one end inside a view are drawn to a ghost of the outside entity at the view's edge
@@ -180,9 +181,9 @@ A need is an entry in a component's `needs` array. Two forms:
   need is met with reduced redundancy (5.2). Both default from `states.needs`. A nice-to-have call is
   `"unmet": "degraded"` (or whatever your low-rank state is called).
 
-Every alternative must be an entity that is connected to the needing component, either directly in either
-direction or through a connection to a group containing it, and must not be a group that contains the needing
-component (S9). Needs add no lines; they make existing lines matter, and those lines are drawn darker (R3). A
+Every alternative must be joined to the needing component by a connection, in either direction: to the alternative
+itself, to a group containing it, or to something inside it when the alternative is a group. It must not be a group
+that contains the needing component (S9). Needs add no lines; they make existing lines matter, and those lines are drawn darker (R3). A
 need on a group is the progressive form: need the black box now, refine to the component inside it once the box
 is opened.
 
@@ -314,13 +315,13 @@ kept and the outside end becomes a ghost at the top level (R4).
 |---|---|---|
 | S1 | Component and group ids are unique and share one id space. | validate.test: invalid fixtures `duplicate-id`, `id-clash-component-group` |
 | S2 | Connection ids (when given), view ids and scenario ids are unique within their kind. | invalid fixtures `duplicate-connection-id`, `duplicate-view-id`, `scenario-duplicate-id` |
-| S3 | Every reference resolves: component→group, group→parent, connection ends, view scope and `only`, scenario `set`/`restore`/`load`, need alternatives. | invalid fixtures `unknown-*`, `scenario-unknown-*` |
+| S3 | Every reference resolves: component→group, group→parent, connection ends, view scope, `only` and `collapse` (groups inside the scope), scenario `set`/`restore`/`load`, need alternatives. | invalid fixtures `unknown-*`, `scenario-unknown-*`, `collapse-*` |
 | S4 | Groups form a forest: no cycles, no self-parent. | invalid fixture `group-cycle` |
 | S5 | No connection from an entity to itself, nor between an entity and one of its own ancestors or descendants. | invalid fixtures `self-connection`, `connection-to-ancestor` |
 | S6 | Two connections between the same ordered pair must both carry ids. | invalid fixture `parallel-without-ids` |
 | S7 | A connection reference by `{from,to}` must be unambiguous; otherwise the reference must use `id`. | invalid fixture `ambiguous-connection-ref`; valid fixture `parallel` |
 | S8 | A scenario step changes at least one thing and names each entity at most once across `set` and `restore`. | invalid fixtures `scenario-empty-step`, `scenario-conflicting-verbs` |
-| S9 | Every need alternative is an entity connected to the needing component (directly or via a containing group) and not an ancestor of it. | invalid fixtures `need-without-connection`, `need-on-ancestor`; valid fixture `own-vocabulary` |
+| S9 | Every need alternative is joined to the needing component by a connection: to it, to a group containing it, or into it when it is a group; and it is not an ancestor of the component. | invalid fixtures `need-without-connection`, `need-on-ancestor`; valid fixtures `own-vocabulary`, `drill-down` |
 | S10 | `min ≤ |any|`, `min ≥ 1`, `any` not empty, no duplicate alternatives, a component does not need itself. | invalid fixtures `need-shape`, `need-min-zero`, `need-empty-any`, `need-duplicate-alternatives` |
 | S11 | Every schema property has a description; unknown properties are errors. | schema.test; invalid fixture `unknown-property` |
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
@@ -346,6 +347,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R7 | A connection whose end is a group attaches to that group's frame; an empty group is drawn as a frame of minimum size. | layoutContract "(group endpoints)" |
 | R8 | An entity is drawn by its state's look and its kind's glyph or frame, never by the names; a custom look or kind renders exactly its style object. | render.test "looks and kinds (R8)" |
 | R9 | A legend lists every non-default state used in a view with its look and description. | render.test "legend (R9)" |
+| R11 | A collapsed group is one closed box: nothing inside is drawn, connections to hidden members attach to it with merged loads, its count is shown, and its state is the group's derived state. The runtime opens it into the view scoped to it, morphing the box into the frame, and Escape returns. | view.test "collapsed groups (R11)"; render.test "collapsed groups (R11)"; boot.test "drill-down" |
 | R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 
 ## 7. Non-goals (v1)

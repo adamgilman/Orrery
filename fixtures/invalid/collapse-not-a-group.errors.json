@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/views/0/collapse/0",
+    "message": "\"a\" is not a group"
+  },
+  {
+    "pointer": "/views/1/collapse/0",
+    "message": "unknown group \"zzz\""
+  }
+]

@@ -66,6 +66,8 @@ export interface Group {
   reason?: string;
   description?: string;
   meta?: Record<string, unknown>;
+  /** Set by view scoping when the group is drawn closed: how many components are hidden inside. */
+  collapsed?: number;
 }
 
 export interface Connection {
@@ -95,6 +97,8 @@ export interface View {
   only?: string[];
   /** Cycle this scenario's steps on a timer: as CSS layers in the file, and in the runtime until the reader interacts. */
   play?: Play;
+  /** Groups drawn closed in this view: one box, members hidden, connections re-attached. */
+  collapse?: string[];
 }
 
 export interface ScenarioStep {

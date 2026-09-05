@@ -142,3 +142,16 @@ describe("renderDocument / render: a view that plays a scenario (R10)", () => {
     expect(svg).not.toContain('class="step"');
   });
 });
+
+describe("renderSvg: collapsed groups (R11)", () => {
+  it("draws a closed box with the label and a count, and marks it as collapsed", async () => {
+    const m = fixture("drill-down");
+    const svg = await render(m, new FakeLayoutEngine(), { view: "overview" });
+    expect(svg).toMatch(/<g class="group gk-boundary st-on collapsed" data-group="payments"[^>]*data-collapsed="4"/);
+    const box = between(svg, 'data-group="payments"');
+    expect(box).toContain(">Payments</text>");
+    expect(box).toContain(">4 inside</text>");
+    expect(svg).not.toContain('data-node="ledger"');
+    expect(svg).toMatch(/data-edge="checkout->payments"/);
+  });
+});
