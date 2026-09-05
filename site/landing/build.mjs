@@ -33,7 +33,8 @@ function orrery(size, earthSeconds, cls) {
   for (let d = 0; d < 360; d++) ticks.push(tick(d, d % 90 === 0 ? 14 : d % 30 === 0 ? 9 : 4, d % 30 === 0 ? 1 : 0.5));
   const bodies = orbits.map((p, i) => {
     const dur = (p.years * earthSeconds).toFixed(2), delay = (-(i * 7.3) % (p.years * earthSeconds)).toFixed(2);
-    const moon = p.moon ? `<g class="o-turn" style="animation-duration:${(p.moon.years * earthSeconds).toFixed(2)}s" transform-origin="${(c + p.a).toFixed(2)} ${c}"><circle cx="${(c + p.a + p.moon.dist).toFixed(2)}" cy="${c}" r="${p.moon.r}" fill="#E9E4D6"/></g>` : "";
+    // The moon turns about the Earth: its origin is the Earth's position in this group's own user space.
+    const moon = p.moon ? `<g class="o-turn" style="animation-duration:${(p.moon.years * earthSeconds).toFixed(2)}s;transform-origin:${(c + p.a).toFixed(2)}px ${c}px"><circle cx="${(c + p.a + p.moon.dist).toFixed(2)}" cy="${c}" r="${p.moon.r}" fill="#E9E4D6"/></g>` : "";
     return `<g class="o-turn" style="animation-duration:${dur}s;animation-delay:${delay}s"><circle cx="${(c + p.a).toFixed(2)}" cy="${c}" r="${p.r}" fill="${p.fill}"/>${moon}<title>${p.name}, ${p.years} years</title></g>`;
   }).join("");
   return `<svg class="${cls}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
