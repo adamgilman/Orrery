@@ -700,11 +700,14 @@
     "tour": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "views"
-      ],
-      "description": "Show views in turn on a timer. The rendered file carries each view as a layer and crossfades between them with CSS, so it plays inside an image tag; the interactive runtime tours the views with its morph until the reader interacts.",
+      "description": "A story told over the model on a timer: scenes shown in turn, each a view at a moment of a scenario. The rendered file carries each scene as a layer and crossfades between them with CSS, so it plays inside an image tag; the interactive runtime plays the scenes with its morph until the reader interacts. Give 'views' for a plain tour of views, or 'scenes' for the full form.",
       "properties": {
+        "seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 4,
+          "description": "Seconds a scene stays on screen unless it says otherwise."
+        },
         "views": {
           "type": "array",
           "minItems": 2,
@@ -713,13 +716,70 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
           },
-          "description": "View ids in the order shown. Loops."
+          "description": "Shorthand: these views in turn, each for 'seconds'."
         },
-        "seconds": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "default": 4,
-          "description": "Seconds each view stays on screen."
+        "scenes": {
+          "type": "array",
+          "minItems": 2,
+          "description": "The scenes in order. Loops.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "view"
+            ],
+            "properties": {
+              "view": {
+                "type": "string",
+                "description": "View id shown in this scene."
+              },
+              "scenario": {
+                "type": "string",
+                "description": "Scenario applied in this scene, up to 'step' (default: all steps)."
+              },
+              "step": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "How far into the scenario, 1-based."
+              },
+              "set": {
+                "type": "object",
+                "minProperties": 1,
+                "description": "Declared-state overrides for this scene, state name to entity id(s).",
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                },
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      }
+                    }
+                  ]
+                }
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Caption for the scene. Defaults to the view's title, plus the scenario step's note."
+              },
+              "seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "How long this scene stays. Defaults to the tour's seconds."
+              }
+            }
+          }
         }
       }
     }

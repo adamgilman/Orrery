@@ -1,0 +1,14 @@
+[
+  {
+    "pointer": "/tour/scenes/1/scenario",
+    "message": "unknown scenario \"zzz\""
+  },
+  {
+    "pointer": "/tour/scenes/2/step",
+    "message": "between 1 and 1"
+  },
+  {
+    "pointer": "/tour/scenes/3/set/broken",
+    "message": "unknown state \"broken\""
+  }
+]

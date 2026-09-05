@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "views": [
+    {
+      "id": "v"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "failed": "a"
+          }
+        }
+      ]
+    }
+  ],
+  "tour": {
+    "scenes": [
+      {
+        "view": "v"
+      },
+      {
+        "view": "v",
+        "scenario": "zzz"
+      },
+      {
+        "view": "v",
+        "scenario": "s",
+        "step": 9
+      },
+      {
+        "view": "v",
+        "set": {
+          "broken": "a"
+        }
+      }
+    ]
+  }
+}

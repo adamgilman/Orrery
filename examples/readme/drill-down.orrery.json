@@ -213,11 +213,28 @@
     }
   ],
   "tour": {
-    "views": [
-      "overview",
-      "payments",
-      "identity"
-    ],
-    "seconds": 4
+    "seconds": 4,
+    "scenes": [
+      {
+        "view": "overview",
+        "note": "The platform. Payments and Identity are closed boxes."
+      },
+      {
+        "view": "payments",
+        "note": "Inside Payments: the API needs the ledger or its replica."
+      },
+      {
+        "view": "payments",
+        "scenario": "ledger-fails",
+        "step": 1,
+        "note": "The ledger fails. The API runs reduced on the replica."
+      },
+      {
+        "view": "overview",
+        "scenario": "ledger-fails",
+        "step": 1,
+        "note": "Back outside: the closed box and the checkout that needs it are amber."
+      }
+    ]
   }
 }

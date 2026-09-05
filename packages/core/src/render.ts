@@ -258,34 +258,65 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
 }
 
 /**
- * A tour (R12): several views, each a complete layer, crossfaded by CSS with the declared period and captioned
- * with the view's title. Pure CSS, so it plays inside <img>; the runtime tours with its morph instead.
+ * A tour (R12): scenes, each a complete layer of a view at a moment of a scenario, centred on one canvas and
+ * crossfaded by CSS with each scene's own duration. Pure CSS, so it plays inside <img>; the runtime plays the scenes
+ * with its morph instead.
  */
-async function tourLayer(declared: Model, tour: Tour, engine: LayoutEngine, model: Model): Promise<ViewLayer> {
-  const views = tour.views.map((id) => selectView(model, id));
-  const frames = [];
-  for (const v of views) frames.push(await layerFor(declared, v, engine, undefined, v.title ?? model.title ?? v.id));
-  const width = Math.max(...frames.map((f) => f.width)), height = Math.max(...frames.map((f) => f.height)) + 24;
-  const n = frames.length, total = n * tour.seconds, fade = 5;
-  const pct = (k: number) => num((k / n) * 100);
+async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Record<string, string[]> | undefined): Promise<ViewLayer> {
+  // Two passes: measure every scene, then render each shifted to the centre of the shared canvas, so every
+  // coordinate in the file stays absolute (the frame tooling reads them as they are).
+  const scenes = tour.scenes.map((sc) => {
+    const view = selectView(model, sc.view);
+    const merged = { ...(set ?? {}), ...(sc.set ?? {}) };
+    const d = declare(model, { ...(sc.scenario !== undefined ? { scenario: sc.scenario } : {}), ...(sc.step !== undefined ? { step: sc.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}) });
+    const title = view.title ?? model.title ?? view.id;
+    return { sc, view, declared: d.model, title, caption: sc.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title) };
+  });
+  const measured = [];
+  for (const s of scenes) measured.push(await layerFor(s.declared, s.view, engine, undefined, s.title));
+  const canvasW = Math.max(...measured.map((m) => m.width)), canvasH = Math.max(...measured.map((m) => m.height));
+  const frames: { layer: ViewLayer; caption: string; seconds: number }[] = [];
+  for (const [i, s] of scenes.entries()) {
+    const m = measured[i]!;
+    const layer = await layerFor(s.declared, s.view, engine, undefined, s.title, { dx: Math.round((canvasW - m.width) / 2), dy: Math.round((canvasH - m.height) / 2) });
+    frames.push({ layer, caption: s.caption, seconds: s.sc.seconds });
+  }
+  const width = canvasW, height = canvasH + 24;
+  const total = frames.reduce((a, f) => a + f.seconds, 0), fade = 5, n = frames.length;
+  const starts = frames.map((_, k) => frames.slice(0, k).reduce((a, f) => a + f.seconds, 0));
+  const pct = (k: number) => num(((starts[k] ?? total) / total) * 100);
+  const at = (k: number) => Number(pct(k));
   const css = frames.map((_, k) => k === 0
-    ? `@keyframes orrery-tour-0{0%{opacity:1}${pct(1)}%{opacity:1}${num(Number(pct(1)) + fade)}%{opacity:0}${100 - fade}%{opacity:0}100%{opacity:1}}`
+    ? `@keyframes orrery-tour-0{0%{opacity:1}${pct(1)}%{opacity:1}${num(at(1) + fade)}%{opacity:0}${100 - fade}%{opacity:0}100%{opacity:1}}`
     : k === n - 1
-      ? `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(Number(pct(k)) + fade)}%{opacity:1}${100 - fade}%{opacity:1}100%{opacity:0}}`
-      : `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(Number(pct(k)) + fade)}%{opacity:1}${pct(k + 1)}%{opacity:1}${num(Number(pct(k + 1)) + fade)}%{opacity:0}100%{opacity:0}}`).join("\n");
+      ? `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(at(k) + fade)}%{opacity:1}${100 - fade}%{opacity:1}100%{opacity:0}}`
+      : `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(at(k) + fade)}%{opacity:1}${pct(k + 1)}%{opacity:1}${num(at(k + 1) + fade)}%{opacity:0}100%{opacity:0}}`).join("\n");
   const markup = frames.map((f, k) => [
-    `<g class="tour" data-frame="${k}" data-view="${escAttr(f.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
-    f.markup,
-    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.title)}</text>`,
+    `<g class="tour" data-frame="${k}" data-view="${escAttr(f.layer.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
+    f.layer.markup,
+    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.caption)}</text>`,
     `</g>`,
   ].join("\n")).join("\n");
-  return { view: views[0]!, title: model.title ?? views[0]!.id, width, height, markup, css };
+  const first = frames[0]!.layer;
+  return { view: first.view, title: model.title ?? first.view.id, width, height, markup, css };
+}
+
+/** Move every box and route by (dx, dy); the canvas grows to keep containing them. */
+function shiftLayout(l: LayoutResult, dx: number, dy: number): LayoutResult {
+  const box = (b: { x: number; y: number; width: number; height: number }) => ({ ...b, x: b.x + dx, y: b.y + dy });
+  return {
+    width: l.width + dx, height: l.height + dy,
+    nodes: Object.fromEntries(Object.entries(l.nodes).map(([k, b]) => [k, box(b)])),
+    groups: Object.fromEntries(Object.entries(l.groups).map(([k, b]) => [k, box(b)])),
+    edges: Object.fromEntries(Object.entries(l.edges).map(([k, e]) => [k, { points: e.points.map((p) => ({ x: p.x + dx, y: p.y + dy })), ...(e.labelAt ? { labelAt: { x: e.labelAt.x + dx, y: e.labelAt.y + dy } } : {}) }])),
+  };
 }
 
 /** Lay out and render one view of a declared (un-propagated) model, playing a scenario when asked. */
-async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string): Promise<ViewLayer> {
+async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string, shift?: { dx: number; dy: number }): Promise<ViewLayer> {
   const base = scopeModel(propagate(declared), view);
-  const layout = await engine.layout(toLayoutGraph(base));
+  let layout = await engine.layout(toLayoutGraph(base));
+  if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   const v = play ? playingLayer(declared, view, play, layout) : renderView(base, layout);
   return { view, title, ...v };
 }
@@ -334,11 +365,15 @@ const playOf = (view: View, options: { play?: { scenario: string; seconds?: numb
 /** Select a view, apply scenario/overrides, propagate, scope, lay out and render one static view. */
 export async function render(model: Model, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
   if (options.tour) {
-    const tour: Tour = options.tour === true
-      ? model.tour ?? (() => { throw new ModelError("the model declares no tour; give --tour a list of view ids"); })()
-      : { views: options.tour.views, seconds: options.tour.seconds ?? 4 };
-    const d = declare(model, { ...(options.set ? { set: options.set } : {}) });
-    return wrapDocument(model, model.title, [await tourLayer(d.model, tour, engine, model)], []);
+    let tour: Tour;
+    if (options.tour === true) {
+      if (!model.tour) throw new ModelError("the model declares no tour; give --tour a list of view ids");
+      tour = model.tour;
+    } else {
+      const seconds = options.tour.seconds ?? 4;
+      tour = { seconds, scenes: options.tour.views.map((view) => ({ view, seconds })) };
+    }
+    return wrapDocument(model, model.title, [await tourLayer(model, tour, engine, options.set)], []);
   }
   const view = selectView(model, options.view);
   const play = playOf(view, options);

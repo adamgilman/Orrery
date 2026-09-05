@@ -241,6 +241,6 @@ describe("orrery render --tour", () => {
     expect(r.out).not.toMatch(/<script/);
     const own = run("render", join(fixtures, "valid/drill-down.json"), "--tour");
     expect(own.code).toBe(0);
-    expect((own.out.match(/<g class="tour"/g) ?? []).length).toBe(3);
+    expect((own.out.match(/<g class="tour"/g) ?? []).length).toBe(4);
   });
 });

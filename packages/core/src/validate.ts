@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_NEED_OUTCOMES, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
-import type { Component, ComponentKindDef, Connection, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Need, Scenario, ScenarioStep, StateDef, States, View } from "./types.js";
+import type { Component, ComponentKindDef, Connection, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Need, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -63,7 +63,7 @@ interface Raw {
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
-  tour?: { views: string[]; seconds: number };
+  tour?: { seconds: number; views?: string[]; scenes?: { view: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number }[] };
 }
 
 /* ---------- vocabulary ---------- */
@@ -274,9 +274,33 @@ export function validate(input: unknown): ValidationResult {
     return { id: sc.id, label: sc.label ?? sc.id, steps };
   });
 
-  raw.tour?.views.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
+  /* tour: a plain list of views, or scenes */
+  let tour: Tour | undefined;
+  if (raw.tour) {
+    const t = raw.tour;
+    if (!t.views && !t.scenes) err("/tour", "give views or scenes");
+    t.views?.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
+    type RawScene = { view: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number };
+    const rawScenes: RawScene[] = t.scenes ?? (t.views ?? []).map((view) => ({ view }));
+    const scenes: Scene[] = rawScenes.map((sc, k) => {
+      const base = t.scenes ? `/tour/scenes/${k}` : `/tour/views/${k}`;
+      if (t.scenes && !viewIds.has(sc.view)) err(`${base}/view`, `unknown view "${sc.view}"`);
+      const scenario = sc.scenario !== undefined ? scenarios.find((x) => x.id === sc.scenario) : undefined;
+      if (sc.scenario !== undefined && !scenario) err(`${base}/scenario`, `unknown scenario "${sc.scenario}"`);
+      if (sc.step !== undefined && scenario && (sc.step < 1 || sc.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
+      if (sc.step !== undefined && sc.scenario === undefined) err(`${base}/step`, "step needs a scenario");
+      const set: Record<string, string[]> = Object.create(null);
+      for (const [state, ids] of Object.entries(sc.set ?? {})) {
+        if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
+        set[state] = list(ids);
+        for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
+      }
+      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...opt("note", sc.note) };
+    });
+    tour = { seconds: t.seconds, scenes };
+  }
 
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", raw.tour) };
+  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour) };
   return { ok: true, model, warnings };
 }

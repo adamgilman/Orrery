@@ -66,6 +66,12 @@ export class Session {
     this.scenario = null;
   }
 
+  /** Replace every override at once (a tour scene's `set`). */
+  replaceOverrides(set: Record<string, string[]> | undefined): void {
+    this.overrides.clear();
+    for (const [state, ids] of Object.entries(set ?? {})) for (const id of ids) this.overrides.set(id, state);
+  }
+
   /** The propagated model for the current situation. */
   effective(): Model {
     const set: Record<string, string[]> = Object.create(null);

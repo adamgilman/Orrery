@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "tour": {
+    "seconds": 2
+  }
+}

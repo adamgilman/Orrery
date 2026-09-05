@@ -171,9 +171,26 @@ describe("render: a tour of views (R12)", () => {
     expect(svg).toContain('data-collapsed="4"'); // the overview frame is the closed one
     expect(svg).toContain('data-node="ledger"'); // the payments frame is open
   });
-  it("uses the model's own tour when the file declares one", async () => {
+  it("uses the model's own tour when the file declares one: scenes with scenario moments, captions and per-scene timing", async () => {
     const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
-    expect((svg.match(/<g class="tour"/g) ?? []).length).toBe(3);
+    const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)" style="animation:orrery-tour-\d (\d+)s linear infinite">/g)];
+    expect(frames.map((f) => f[2])).toEqual(["overview", "payments", "payments", "overview"]);
+    expect(frames[0]![3]).toBe("16");
+    const frame = (k: number) => svg.slice(svg.indexOf(`data-frame="${k}"`), k < 3 ? svg.indexOf(`data-frame="${k + 1}"`) : svg.length);
+    expect(frame(2)).toMatch(/data-node="ledger"[^>]*data-state="failed"/);
+    expect(frame(2)).toMatch(/data-node="pay-api"[^>]*data-state="degraded"/);
+    expect(frame(3)).toMatch(/data-group="payments"[^>]*data-state="degraded"/);
+    expect(frame(3)).toContain(">Back outside: the closed box and the checkout that needs it are amber.</text>");
+    // scenes are centred on the shared canvas by shifting their coordinates, never by a transform
+    expect(frame(1)).not.toContain("<g transform=");
+    const x = (k: number, id: string) => Number(frame(k).match(new RegExp(`data-node="${id}"[^>]*data-bbox="([\\d.]+)`))![1]);
+    expect(x(1, "pay-api")).toBeGreaterThan(100); // the narrow payments view sits mid-canvas, not at the left edge
+  });
+  it("honours per-scene seconds in the keyframe timing", async () => {
+    const m = fixture("drill-down");
+    const svg = await render({ ...m, tour: { seconds: 2, scenes: [{ view: "overview", seconds: 6 }, { view: "payments", seconds: 2 }] } }, new FakeLayoutEngine(), { tour: true });
+    expect(svg).toMatch(/orrery-tour-0 8s linear infinite/);
+    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:1\}75%\{opacity:1\}80%\{opacity:0\}95%\{opacity:0\}100%\{opacity:1\}\}/);
   });
   it("rejects a tour naming an unknown view", async () => {
     await expect(render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "nope"] } })).rejects.toThrow(/unknown view "nope"/);

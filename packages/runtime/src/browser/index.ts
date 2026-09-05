@@ -47,6 +47,9 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
   let autoplay: ReturnType<typeof setInterval> | undefined;
+  let sceneTimer: ReturnType<typeof setTimeout> | undefined;
+  let sceneNote: string | undefined;
+  let touring = false;
   const history: string[] = [];
 
   // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
@@ -106,7 +109,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     }
     syncStateBar();
     panel.step.textContent = session.scenario ? `${session.scenario.step} / ${session.stepCount()}` : "";
-    panel.note.textContent = session.note();
+    panel.note.textContent = sceneNote ?? session.note();
     panel.prev.disabled = !session.scenario || session.scenario.step <= 1;
     panel.next.disabled = !session.scenario || session.scenario.step >= session.stepCount();
   };
@@ -200,16 +203,24 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const setScenario = (id: string | null, step = 1) => { session.setScenario(id, step); panel.scenarios.value = session.scenario?.id ?? ""; apply(); };
 
   /** Play the active view's scenario on its timer: base, each step, loop. Any interaction stops it. */
-  let touring = false;
-  const stopAutoplay = () => { touring = false; if (autoplay) { clearInterval(autoplay); autoplay = undefined; } };
-  /** Tour the model's views on its timer with the morph. Any interaction stops it. */
+  const stopAutoplay = () => { touring = false; sceneNote = undefined; if (autoplay) { clearInterval(autoplay); autoplay = undefined; } if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; } };
+  /** Play the model's scenes on their timers with the morph: view, scenario moment, overrides, caption. Any interaction stops it. */
   const startTour = () => {
     stopAutoplay();
     const tour = model.tour;
     if (!tour) return;
     touring = true;
-    let k = tour.views.indexOf(activeId);
-    autoplay = setInterval(() => { k = (k + 1) % tour.views.length; showView(tour.views[k]!, true); }, tour.seconds * 1000);
+    const play = (k: number) => {
+      const sc = tour.scenes[k]!;
+      showView(sc.view, true);
+      session.replaceOverrides(sc.set);
+      session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
+      panel.scenarios.value = session.scenario?.id ?? "";
+      sceneNote = sc.note;
+      apply();
+      sceneTimer = setTimeout(() => play((k + 1) % tour.scenes.length), sc.seconds * 1000);
+    };
+    play(0);
   };
   const startAutoplay = () => {
     if (touring) return;

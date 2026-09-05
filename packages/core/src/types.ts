@@ -127,7 +127,9 @@ export interface Model {
   tour?: Tour;
 }
 
-export interface Tour { views: string[]; seconds: number }
+/** One moment of a tour: a view, optionally at a point in a scenario, with overrides, a caption and its own duration. */
+export interface Scene { view: string; scenario?: string; step?: number; set?: Record<string, string[]>; note?: string; seconds: number }
+export interface Tour { seconds: number; scenes: Scene[] }
 
 /** Anything with an id and a state: a component or a group. */
 export type Entity = Component | Group;

@@ -239,19 +239,27 @@ describe("runtime tour", () => {
   let rt: Runtime;
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
-  it("tours the model's views on its timer with the morph, and stops on the first interaction", async () => {
+  it("plays the model's scenes on their timer with the morph and scenario moments, and stops on the first interaction", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     const shown = () => [...root.querySelectorAll(".view")].find((l) => (l as HTMLElement).style.display !== "none")!.getAttribute("data-view");
     expect(shown()).toBe("overview");
+    expect(root.querySelector(".orrery-note")!.textContent).toBe("The platform. Payments and Identity are closed boxes.");
     vi.advanceTimersByTime(4000 + 400);
     expect(shown()).toBe("payments");
     vi.advanceTimersByTime(4000 + 400);
-    expect(shown()).toBe("identity");
+    expect(shown()).toBe("payments");
+    expect(state(root, "ledger")).toBe("failed");
+    expect(root.querySelector(".orrery-note")!.textContent).toMatch(/The ledger fails/);
     vi.advanceTimersByTime(4000 + 400);
     expect(shown()).toBe("overview");
-    key("ArrowDown");
-    vi.advanceTimersByTime(20000);
+    expect(state(root, "payments")).toBe("degraded");
+    vi.advanceTimersByTime(4000 + 400);
     expect(shown()).toBe("overview");
+    expect(state(root, "payments")).toBe("on"); // looped to scene one: the scenario is gone
+    key("ArrowDown");
+    vi.advanceTimersByTime(30000);
+    expect(shown()).toBe("overview");
+    expect(state(root, "payments")).toBe("on");
   });
 });
