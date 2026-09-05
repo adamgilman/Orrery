@@ -83,8 +83,6 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
 .o-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,40px);align-items:start}
 .o-figure{background:var(--dial);border:1px solid var(--dial-edge);border-radius:10px;padding:18px}
 .o-figure svg{display:block;width:100%;height:auto}
-.o-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.o-scroll svg{min-width:960px}
 .o-figure figcaption{margin-top:14px;font-size:.875rem;color:#5B6478;line-height:1.5}
 .o-figure figcaption b{color:#141A2A;font-weight:500}
 .o-wide{margin-top:clamp(24px,3vw,40px)}
@@ -120,7 +118,6 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
   .o-dial,.o-dial-caption,.o-plate-note{margin-left:0}
   .o-orrery-close{right:-60%;width:160vw;opacity:.35}
   .o-figure{padding:12px}
-  .o-scroll svg{min-width:820px}
   .o-list li{grid-template-columns:1fr;gap:6px}
   .o-nav{display:none}
 }
@@ -204,7 +201,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
       <div><p class="o-eyebrow">Your vocabulary</p><h2>Degraded means something different at every company.</h2></div>
       <p class="o-lede o-muted">So the tool does not define it. You bind your own state names to looks and mechanics, and your own kinds to glyphs and frames. Below, the same checkout in one company's words: healthy, impaired, brownout, outage and drained. For this team the session cache is a nice-to-have, so its need names a gentler outcome.</p>
     </div>
-    <figure class="o-figure o-wide"><div class="o-scroll"><!--svg:vocabulary-play--></div><figcaption><b>Playing on a timer, no script.</b> Every four seconds the cache cluster is drained for maintenance: <code>drained</code> cascades to the nodes inside, checkout runs on for guests in a brownout, and the storefront behind it is impaired. The legend is the author's, not ours.</figcaption></figure>
+    <figure class="o-figure o-wide" style="max-width:560px"><!--svg:vocabulary-play--><figcaption><b>Playing on a timer, no script.</b> Every four seconds the cache cluster is drained for maintenance: <code>drained</code> cascades to the nodes inside, checkout runs on for guests in a brownout, and the storefront behind it is impaired. The legend is the author's, not ours.</figcaption></figure>
     <div class="o-split">
       <pre><code><span class="k">"states"</span>: {
   <span class="k">"default"</span>: <span class="s">"healthy"</span>,
