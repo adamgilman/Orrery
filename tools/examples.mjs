@@ -1,32 +1,31 @@
 // Re-render every example to SVG. Usage: yarn examples
-// examples/*.orrery.json render as-is; examples/readme/* follow the manifest below (views and scenario steps).
+// The README and the landing page tell one story, a checkout system built up a stage at a time: tools/checkout-stages.mjs
+// derives examples/checkout/*.orrery.json from examples/checkout.orrery.json, and the manifest below renders each stage.
 import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
 const cli = "packages/cli/dist/main.js";
-const jobs = readdirSync("examples").filter((f) => f.endsWith(".orrery.json")).map((f) => [`examples/${f}`, [], `examples/${f.replace(/\.orrery\.json$/, ".svg")}`]);
-jobs.push(["fixtures/valid/fan-out.json", [], "examples/fan-out.svg"]);
-for (const f of readdirSync("examples/next").filter((f) => f.endsWith(".orrery.json"))) jobs.push([`examples/next/${f}`, [], `examples/next/${f.replace(/\.orrery\.json$/, ".svg")}`]);
-jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--scenario", "quorum", "--step", "2"], "examples/next/4-own-vocabulary-quorum.svg"]);
-// static renders the landing page inlines
-jobs.push(["examples/solar-system.orrery.json", ["--static"], "site/landing/solar.svg"]);
-jobs.push(["examples/readme/failover.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"]);
-jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--static", "--play", "quorum", "--every", "4"], "site/landing/quorum.svg"]);
-jobs.push(["examples/checkout.orrery.json", ["--static", "--view", "data"], "site/landing/checkout-data.svg"]);
-jobs.push(["examples/readme/drill-down.orrery.json", ["--tour"], "site/landing/drill-down-tour.svg"]);
-jobs.push(["examples/checkout.orrery.json", ["--scenario", "db-failover", "--step", "2"], "examples/checkout-db-failover.svg"]);
-jobs.push(["examples/checkout.orrery.json", ["--view", "data"], "examples/checkout-data.svg"]);
-jobs.push(["examples/checkout.orrery.json", ["--view", "region"], "examples/checkout-region.svg"]);
-const readme = {
-  "kinds": [[]], "groups": [[]], "connection-kinds": [[]],
-  "failover": [[], ["--scenario", "db-fails"], ["--static", "--play", "db-fails", "--every", "3"]],
-  "views": [["--view", "overview"], ["--view", "billing"]],
-  "drill-down": [["--static"], ["--static", "--view", "payments"], ["--tour"]],
-  "drill-mini": [["--static"], ["--tour"]],
-};
-for (const [name, renders] of Object.entries(readme))
-  renders.forEach((args, i) => jobs.push([`examples/readme/${name}.orrery.json`, args, `examples/readme/${name}${i ? (args.includes("--play") ? "-play" : args.includes("--tour") ? "-tour" : `-${args.at(-1)}`) : ""}.svg`]));
+execFileSync("node", ["tools/checkout-stages.mjs"], { stdio: "inherit" });
+const jobs = [
+  ["examples/solar-system.orrery.json", [], "examples/solar-system.svg"],
+  ["examples/checkout.orrery.json", [], "examples/checkout.svg"], // the interactive file the README and landing page link to
+  ["examples/checkout/1-parts.orrery.json", ["--static"], "examples/checkout/1-parts.svg"],
+  ["examples/checkout/2-groups.orrery.json", ["--static"], "examples/checkout/2-groups.svg"],
+  ["examples/checkout/3-connections.orrery.json", ["--static"], "examples/checkout/3-connections.svg"],
+  ["examples/checkout/4-needs.orrery.json", ["--static", "--scenario", "db-fails"], "examples/checkout/4-needs-failed.svg"],
+  ["examples/checkout/4-needs.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "examples/checkout/4-needs-play.svg"],
+  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "overview"], "examples/checkout/5-views-overview.svg"],
+  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "data"], "examples/checkout/5-views-data.svg"],
+  ["examples/checkout/6-drill-down.orrery.json", ["--static"], "examples/checkout/6-drill-down.svg"],
+  ["examples/checkout/6-drill-down.orrery.json", ["--tour"], "examples/checkout/6-drill-down-tour.svg"],
+  ["examples/checkout/7-vocabulary.orrery.json", ["--static", "--play", "cache-maintenance", "--every", "4"], "examples/checkout/7-vocabulary-play.svg"],
+  // static renders the landing page inlines
+  ["examples/solar-system.orrery.json", ["--static"], "site/landing/solar.svg"],
+  ["examples/checkout/4-needs.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"],
+  ["examples/checkout/7-vocabulary.orrery.json", ["--static", "--play", "cache-maintenance", "--every", "4"], "site/landing/vocabulary-play.svg"],
+  ["examples/checkout/5-views.orrery.json", ["--static", "--view", "data"], "site/landing/data-view.svg"],
+  ["examples/checkout/6-drill-down.orrery.json", ["--tour"], "site/landing/drill-down-tour.svg"],
+];
 for (const [src, args, out] of jobs) {
   execFileSync("node", [cli, "render", src, ...args, "-o", out], { stdio: "inherit" });
   const size = execFileSync("grep", ["-o", 'viewBox="[^"]*"', out], { encoding: "utf8" }).trim();
-  console.log(`${out.padEnd(44)} ${size}`);
+  console.log(`${out.padEnd(48)} ${size}`);
 }

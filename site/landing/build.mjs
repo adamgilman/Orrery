@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const dir = new URL(".", import.meta.url).pathname;
 let html = readFileSync(join(dir, "index.template.html"), "utf8");
-for (const name of ["solar", "failover-play", "quorum", "checkout-data", "drill-down-tour"]) {
+for (const name of ["solar", "failover-play", "vocabulary-play", "data-view", "drill-down-tour"]) {
   // Inline the SVG. Keep width/height (the intrinsic size browsers scale from) and add an explicit aspect ratio;
   // drop the document title so the page's own text carries.
   const raw = readFileSync(join(dir, `${name}.svg`), "utf8");

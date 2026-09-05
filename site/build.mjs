@@ -10,8 +10,8 @@ const out = join(root, "site/dist");
 mkdirSync(join(out, "svg"), { recursive: true });
 
 const sources = [
-  ...readdirSync(join(root, "examples/readme")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/readme", f)),
   ...readdirSync(join(root, "examples")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples", f)),
+  ...readdirSync(join(root, "examples/checkout")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/checkout", f)),
   ...readdirSync(join(root, "fixtures/valid")).filter((f) => !readdirSync(join(root, "examples")).includes(f.replace(/\.json$/, ".orrery.json"))).map((f) => join(root, "fixtures/valid", f)),
 ];
 

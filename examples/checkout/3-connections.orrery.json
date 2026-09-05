@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout: connected",
+  "direction": "down",
+  "groups": [
+    {
+      "id": "data",
+      "label": "Data",
+      "kind": "tier"
+    },
+    {
+      "id": "sessions",
+      "label": "Session cache",
+      "kind": "cluster",
+      "parent": "data"
+    }
+  ],
+  "components": [
+    {
+      "id": "web",
+      "label": "Storefront",
+      "kind": "client"
+    },
+    {
+      "id": "api",
+      "label": "Checkout API",
+      "kind": "service"
+    },
+    {
+      "id": "db",
+      "label": "Orders DB",
+      "kind": "database",
+      "group": "data"
+    },
+    {
+      "id": "replica",
+      "label": "Read replica",
+      "kind": "database",
+      "group": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cache",
+      "group": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cache",
+      "group": "sessions"
+    }
+  ],
+  "connections": [
+    {
+      "from": "web",
+      "to": "api",
+      "load": 0.8
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "load": 0.6,
+      "label": "writes"
+    },
+    {
+      "id": "failover",
+      "from": "api",
+      "to": "replica",
+      "load": 0
+    },
+    {
+      "from": "db",
+      "to": "replica",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "api",
+      "to": "sessions",
+      "load": 0.5
+    }
+  ]
+}

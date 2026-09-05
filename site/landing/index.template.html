@@ -36,7 +36,7 @@ p{margin:0}
 code,pre{font-family:var(--mono);font-size:.875rem}
 pre{margin:0;padding:18px 20px;background:var(--night);color:var(--on-night);border-radius:6px;overflow-x:auto;max-width:100%;line-height:1.55;font-size:.8125rem}
 .o-pair>*,.o-split>*{min-width:0}
-pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
+pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#6b7385;font-style:italic}
 
 /* ---------- header ---------- */
 .o-head{background:var(--night);color:var(--on-night)}
@@ -179,16 +179,16 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Turn the crank</p><h2>Fail the primary. Watch the system answer.</h2></div>
-      <p class="o-lede o-muted">Nothing here was drawn by hand. One line in a scenario declares the primary database failed. The engine works out that the worker fails with it, the API runs degraded on its replica, the web tier degrades behind the API, and which connections stop carrying traffic. The figure plays the scenario on a timer, with no script.</p>
+      <p class="o-lede o-muted">Nothing here was drawn by hand. One line in a scenario declares the primary database failed. The engine works out that the checkout API runs degraded on its read replica, the storefront degrades behind the API, and which connections stop carrying traffic. The figure plays the scenario on a timer, with no script.</p>
     </div>
     <div class="o-pair">
-      <figure class="o-figure"><!--svg:failover-play--><figcaption><b>Healthy, then the primary fails, every three seconds.</b> The API needs either the primary or the replica; the web tier needs the API; the worker needs the primary alone. Darker lines are needs. When the primary goes: red pulses, amber is reduced redundancy, the failover path lights up with the load the primary carried, and every derived state carries a reason.</figcaption></figure>
+      <figure class="o-figure"><!--svg:failover-play--><figcaption><b>Healthy, then the primary fails, every three seconds.</b> The API needs either the primary or the replica, and the session cache; the storefront needs the API. Darker lines are needs. When the primary goes: red pulses, amber is reduced redundancy, the failover path lights up with the load the primary carried, and every derived state carries a reason.</figcaption></figure>
       <div>
-        <pre><code>{ <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"needs"</span>: [ { <span class="k">"any"</span>: [<span class="s">"db"</span>, <span class="s">"replica"</span>] } ] },
+        <pre><code>{ <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"needs"</span>: [ { <span class="k">"any"</span>: [<span class="s">"db"</span>, <span class="s">"replica"</span>] }, <span class="s">"sessions"</span> ] },
 { <span class="k">"id"</span>: <span class="s">"web"</span>, <span class="k">"needs"</span>: [<span class="s">"api"</span>] },
 
 <span class="k">"scenarios"</span>: [ { <span class="k">"id"</span>: <span class="s">"db-fails"</span>, <span class="k">"steps"</span>: [
-  { <span class="k">"note"</span>: <span class="s">"Primary goes down"</span>, <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span> } }
+  { <span class="k">"note"</span>: <span class="s">"Orders DB goes down"</span>, <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span> } }
 ] } ],
 <span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"loop"</span>, <span class="k">"play"</span>: { <span class="k">"scenario"</span>: <span class="s">"db-fails"</span>, <span class="k">"seconds"</span>: <span class="n">3</span> } } ]</code></pre>
         <p class="o-body" style="margin-top:20px">That is the whole of it. A need lists alternatives in order of preference, a quorum is a <code>min</code>, a nice-to-have call names a gentler outcome. Scenarios are cumulative steps that set and restore states; a view that <code>play</code>s one carries every step as a layer and cycles them with CSS, so it moves wherever an image can be shown.</p>
@@ -202,9 +202,9 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Your vocabulary</p><h2>Degraded means something different at every company.</h2></div>
-      <p class="o-lede o-muted">So the tool does not define it. You bind your own state names to looks and mechanics, and your own kinds to glyphs and frames. Below, a trading platform whose organisation says healthy, impaired, brownout, outage and drained, two sequencers into a quorum loss.</p>
+      <p class="o-lede o-muted">So the tool does not define it. You bind your own state names to looks and mechanics, and your own kinds to glyphs and frames. Below, the same checkout in one company's words: healthy, impaired, brownout, outage and drained. For this team the session cache is a nice-to-have, so its need names a gentler outcome.</p>
     </div>
-    <figure class="o-figure o-wide"><div class="o-scroll"><!--svg:quorum--></div><figcaption><b>Playing on a timer, no script.</b> The scenario steps every four seconds: one sequencer out and the matchers impaired; two out, quorum lost, both cells and the edge in outage; then a brownout while the second sequencer catches up. The legend is the author's, not ours.</figcaption></figure>
+    <figure class="o-figure o-wide"><div class="o-scroll"><!--svg:vocabulary-play--></div><figcaption><b>Playing on a timer, no script.</b> Every four seconds the cache cluster is drained for maintenance: <code>drained</code> cascades to the nodes inside, checkout runs on for guests in a brownout, and the storefront behind it is impaired. The legend is the author's, not ours.</figcaption></figure>
     <div class="o-split">
       <pre><code><span class="k">"states"</span>: {
   <span class="k">"default"</span>: <span class="s">"healthy"</span>,
@@ -217,13 +217,15 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
     <span class="k">"outage"</span>:   { <span class="k">"look"</span>: <span class="s">"alert"</span>, <span class="k">"rank"</span>: <span class="n">3</span>, <span class="k">"available"</span>: <span class="n">false</span>, <span class="k">"flows"</span>: <span class="s">"stop"</span> },
     <span class="k">"drained"</span>:  { <span class="k">"look"</span>: <span class="s">"muted"</span>, <span class="k">"rank"</span>: <span class="n">3</span>, <span class="k">"available"</span>: <span class="n">false</span>, <span class="k">"cascade"</span>: <span class="s">"children"</span> }
   }
-}</code></pre>
+},
+<span class="c">// the API's need on the cache, with its own outcome</span>
+{ <span class="k">"any"</span>: [<span class="s">"sessions"</span>], <span class="k">"unmet"</span>: <span class="s">"brownout"</span> }</code></pre>
       <ul class="o-list">
         <li><span class="o-term">Look</span><p>How a state is drawn: a preset, or your own stroke, fill, dash and pulse.</p></li>
         <li><span class="o-term">Rank</span><p>Severity order. Propagation only ever moves an entity up it.</p></li>
         <li><span class="o-term">Available</span><p>Whether an entity in this state counts toward what needs it.</p></li>
         <li><span class="o-term">Flows</span><p>Whether traffic still moves through it.</p></li>
-        <li><span class="o-term">Cascade</span><p>Whether switching a region off switches off everything inside it.</p></li>
+        <li><span class="o-term">Cascade</span><p>Whether draining a cluster drains everything inside it.</p></li>
       </ul>
     </div>
   </div>
@@ -233,16 +235,16 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Drill down</p><h2>Close what the reader does not need yet.</h2></div>
-      <p class="o-lede o-muted">A view can draw a group closed: its real footprint with its name and a count, members hidden, connections into it stopping at its frame. It is all one drawing, so opening a group is a camera move, not a new picture. The figure plays a four-scene story with no script: the camera closes on Payments and its members appear, the ledger fails in there, and the camera pulls back with the box and the checkout that needs it turned amber. The interactive file plays the same scenes with its camera until you click, and a click on any closed group focuses it.</p>
+      <p class="o-lede o-muted">A view can draw a group closed: its real footprint with its name and a count, members hidden, connections into it stopping at its frame. It is all one drawing, so opening a group is a camera move, not a new picture. The figure plays a four-scene story with no script: the camera closes on the session cache and its two nodes appear, one node fails in there, and the camera pulls back with the closed box and the API that needs it turned amber. The interactive file plays the same scenes with its camera until you click, and a click on any closed group focuses it.</p>
     </div>
-    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Four scenes, sixteen seconds, one drawing.</b> Checkout needs Payments and Identity, and the darker lines say so. Inside Payments, the API needs the ledger or its replica, the card vault, and one of two providers. When the ledger fails, the API runs reduced, and outside, the closed box carries that state.</figcaption></figure>
+    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Four scenes, sixteen seconds, one drawing.</b> The API needs the session cache as a whole, and the darker line says so. Inside, two nodes. When one fails the cluster is degraded, so is the API, and outside, the closed box carries that state.</figcaption></figure>
     <div class="o-split">
-      <pre><code><span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"payments"</span>, <span class="s">"identity"</span>] } ],
+      <pre><code><span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"sessions"</span>] } ],
 <span class="k">"tour"</span>: { <span class="k">"seconds"</span>: <span class="n">4</span>, <span class="k">"scenes"</span>: [
   { <span class="k">"view"</span>: <span class="s">"overview"</span> },
-  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"payments"</span> },
-  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"payments"</span>, <span class="k">"scenario"</span>: <span class="s">"ledger-fails"</span> },
-  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"scenario"</span>: <span class="s">"ledger-fails"</span> }
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"sessions"</span> },
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"sessions"</span>, <span class="k">"scenario"</span>: <span class="s">"node-fails"</span> },
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"scenario"</span>: <span class="s">"node-fails"</span> }
 ] }</code></pre>
       <p class="o-body o-muted">One view, one story. A <code>tour</code> lists scenes: a view, a group to focus on, a moment of a scenario, a caption. Nothing is duplicated and nothing can drift: the same components, connections and needs draw every scene, so a change to the model is a change to all of them.</p>
     </div>
@@ -260,7 +262,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
       <div><h3>In a browser</h3><p>Opened directly, a six-kilobyte runtime inside the file adds an outline, a scenario player, view switching with a morph, and click-to-fail with live propagation.</p></div>
       <div><h3>In review</h3><p>Views drill into a group or a subset. Any scenario step renders as a static picture, so a design review or an incident writeup shows the exact moment it discusses.</p></div>
     </div>
-    <figure class="o-figure o-wide" style="max-width:560px"><!--svg:checkout-data--><figcaption><b>A scoped view.</b> The data tier of a checkout service, drawn top-down for the page it lives on. The API outside the scope is a ghost, so nothing is dropped silently.</figcaption></figure>
+    <figure class="o-figure o-wide" style="max-width:560px"><!--svg:data-view--><figcaption><b>A scoped view.</b> The data tier of the checkout, drawn left to right for the page it lives on. The API outside the scope is a ghost, so nothing is dropped silently.</figcaption></figure>
   </div>
 </section>
 

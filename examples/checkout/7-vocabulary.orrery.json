@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
-  "title": "Checkout",
+  "title": "Checkout, in our words",
   "direction": "down",
   "groups": [
     {
@@ -15,6 +15,54 @@
       "parent": "data"
     }
   ],
+  "states": {
+    "replace": true,
+    "default": "healthy",
+    "needs": {
+      "unmet": "outage",
+      "reduced": "impaired"
+    },
+    "define": {
+      "healthy": {
+        "look": "normal",
+        "rank": 0,
+        "available": true,
+        "description": "Within SLO"
+      },
+      "impaired": {
+        "look": "warn",
+        "rank": 1,
+        "available": true,
+        "description": "Serving; redundancy or latency SLO breached"
+      },
+      "brownout": {
+        "look": {
+          "stroke": "#7c3aed",
+          "fill": "#f5f3ff",
+          "text": "#5b21b6",
+          "pulse": true
+        },
+        "rank": 1,
+        "available": true,
+        "description": "Serving with a feature switched off"
+      },
+      "outage": {
+        "look": "alert",
+        "rank": 3,
+        "available": false,
+        "flows": "stop",
+        "description": "Customer-visible failure"
+      },
+      "drained": {
+        "look": "muted",
+        "rank": 3,
+        "available": false,
+        "flows": "stop",
+        "cascade": "children",
+        "description": "Deliberately out of rotation"
+      }
+    }
+  },
   "components": [
     {
       "id": "web",
@@ -35,7 +83,12 @@
             "replica"
           ]
         },
-        "sessions"
+        {
+          "any": [
+            "sessions"
+          ],
+          "unmet": "brownout"
+        }
       ]
     },
     {
@@ -93,72 +146,18 @@
       "load": 0.5
     }
   ],
-  "views": [
-    {
-      "id": "overview",
-      "title": "Overview",
-      "collapse": [
-        "sessions"
-      ]
-    },
-    {
-      "id": "data",
-      "title": "Data tier",
-      "scope": "data",
-      "direction": "right"
-    }
-  ],
   "scenarios": [
     {
-      "id": "db-fails",
-      "label": "Primary fails",
+      "id": "cache-maintenance",
+      "label": "Session cache maintenance",
       "steps": [
         {
-          "note": "Orders DB goes down",
+          "note": "The cache cluster is drained: checkout continues for guests",
           "set": {
-            "failed": "db"
-          }
-        }
-      ]
-    },
-    {
-      "id": "node-fails",
-      "label": "A cache node fails",
-      "steps": [
-        {
-          "note": "Node A goes down",
-          "set": {
-            "failed": "cache-a"
+            "drained": "sessions"
           }
         }
       ]
     }
-  ],
-  "tour": {
-    "seconds": 4,
-    "scenes": [
-      {
-        "view": "overview",
-        "note": "The session cache is closed: its footprint, its name, a count."
-      },
-      {
-        "view": "overview",
-        "focus": "sessions",
-        "note": "Inside: two cache nodes."
-      },
-      {
-        "view": "overview",
-        "focus": "sessions",
-        "scenario": "node-fails",
-        "step": 1,
-        "note": "Node A fails; the cluster is degraded, and so is the API that needs it."
-      },
-      {
-        "view": "overview",
-        "scenario": "node-fails",
-        "step": 1,
-        "note": "Back out: the closed box carries the state."
-      }
-    ]
-  }
+  ]
 }

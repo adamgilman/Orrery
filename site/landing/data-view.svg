@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 677.5 386" width="677.5" height="386" data-orrery="1">
+<title>Data tier</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+[data-lod="detail"]{opacity:0}
+.group[data-collapsed] .group-box{fill-opacity:.7}
+.summary-label{font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.summary-count{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.badge{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:end;dominant-baseline:central}
+.node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.edge.need{stroke:#475569;stroke-width:2}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
+.legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
+.kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.gk-region .group-box{stroke-dasharray:8 6}
+.gk-zone .group-box{stroke-dasharray:3 5}
+.gk-cluster .group-box{stroke:#94a3b8}
+.gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.st-degraded .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-degraded .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-degraded .node-label{fill:#92400e}
+.st-degraded .group-label{fill:#92400e}
+.st-failed .node-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-failed .group-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-failed .node-label{fill:#991b1b}
+.st-failed .group-label{fill:#991b1b}
+.st-off .node-box{stroke-dasharray:4 4}
+.st-off .group-box{stroke-dasharray:4 4}
+.st-off{opacity:0.45}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="data" data-title="Data tier" data-size="677.5 386">
+<g class="groups">
+<g class="group gk-tier st-on" data-group="data" data-bbox="309.5 20 348 346" data-state="on">
+<rect class="group-box" x="309.5" y="20" width="348" height="346" rx="10"/>
+<text class="group-label" x="321.5" y="36">Data</text>
+</g>
+<g class="group gk-cluster st-on" data-group="sessions" data-bbox="321.5 56 126 184" data-state="on">
+<rect class="group-box" x="321.5" y="56" width="126" height="184" rx="10"/>
+<text class="group-label" x="333.5" y="72">Session cache</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync need" data-edge="api->db" data-kind="sync" d="M144 290 L179 290 L179 304 L322 304" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.6" d="M144 290 L179 290 L179 304 L310 304" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="228" y="315">writes</text>
+<path class="edge edge-sync need" data-edge="failover" data-kind="sync" d="M144 302 L169 302 L169 349 L277 349 L277 353 L472.5 353 L472.5 320 L497.5 320" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="failover" data-load="0" d="M144 302 L169 302 L169 349 L277 349 L277 353 L472.5 353 L472.5 320 L485.5 320" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M447 304 L497.5 304" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M447 304 L485.5 304" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync need" data-edge="api->sessions" data-kind="sync" d="M144 278 L277 278 L277 148 L321.5 148" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->sessions" data-load="0.5" d="M144 278 L277 278 L277 148 L309.5 148" style="stroke-width:3;animation-duration:1.8s"/>
+</g>
+<g class="nodes">
+<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="322 280 125 48" transform="translate(322 280)">
+<rect class="node-box" width="125" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="80.5" y="24">Orders DB</text>
+</g>
+<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="497.5 288 148 48" transform="translate(497.5 288)">
+<rect class="node-box" width="148" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="92" y="24">Read replica</text>
+</g>
+<g class="node kind-cache st-on" data-node="cache-a" data-kind="cache" data-state="on" data-bbox="333.5 92 102 48" transform="translate(333.5 92)">
+<rect class="node-box" width="102" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="69" y="24">Node A</text>
+</g>
+<g class="node kind-cache st-on" data-node="cache-b" data-kind="cache" data-state="on" data-bbox="333.5 180 102 48" transform="translate(333.5 180)">
+<rect class="node-box" width="102" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="69" y="24">Node B</text>
+</g>
+<g class="node st-on" data-node="api" data-kind="service" data-state="on" data-ghost="1" data-bbox="20 266 124 48" transform="translate(20 266)">
+<rect class="node-box" width="124" height="48" rx="8"/>
+<text class="node-label" x="62" y="24">Checkout API</text>
+</g>
+</g>
+</g>
+</g>
+</svg>

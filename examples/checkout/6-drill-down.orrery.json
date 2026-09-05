@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
-  "title": "Checkout",
+  "title": "Checkout: drill down",
   "direction": "down",
   "groups": [
     {
@@ -93,21 +93,6 @@
       "load": 0.5
     }
   ],
-  "views": [
-    {
-      "id": "overview",
-      "title": "Overview",
-      "collapse": [
-        "sessions"
-      ]
-    },
-    {
-      "id": "data",
-      "title": "Data tier",
-      "scope": "data",
-      "direction": "right"
-    }
-  ],
   "scenarios": [
     {
       "id": "db-fails",
@@ -132,6 +117,21 @@
           }
         }
       ]
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data tier",
+      "scope": "data",
+      "direction": "right"
     }
   ],
   "tour": {

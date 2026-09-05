@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
-  "title": "Checkout",
+  "title": "Checkout: what needs what",
   "direction": "down",
   "groups": [
     {
@@ -93,21 +93,6 @@
       "load": 0.5
     }
   ],
-  "views": [
-    {
-      "id": "overview",
-      "title": "Overview",
-      "collapse": [
-        "sessions"
-      ]
-    },
-    {
-      "id": "data",
-      "title": "Data tier",
-      "scope": "data",
-      "direction": "right"
-    }
-  ],
   "scenarios": [
     {
       "id": "db-fails",
@@ -120,45 +105,6 @@
           }
         }
       ]
-    },
-    {
-      "id": "node-fails",
-      "label": "A cache node fails",
-      "steps": [
-        {
-          "note": "Node A goes down",
-          "set": {
-            "failed": "cache-a"
-          }
-        }
-      ]
     }
-  ],
-  "tour": {
-    "seconds": 4,
-    "scenes": [
-      {
-        "view": "overview",
-        "note": "The session cache is closed: its footprint, its name, a count."
-      },
-      {
-        "view": "overview",
-        "focus": "sessions",
-        "note": "Inside: two cache nodes."
-      },
-      {
-        "view": "overview",
-        "focus": "sessions",
-        "scenario": "node-fails",
-        "step": 1,
-        "note": "Node A fails; the cluster is degraded, and so is the API that needs it."
-      },
-      {
-        "view": "overview",
-        "scenario": "node-fails",
-        "step": 1,
-        "note": "Back out: the closed box carries the state."
-      }
-    ]
-  }
+  ]
 }

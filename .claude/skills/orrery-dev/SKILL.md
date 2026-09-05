@@ -33,7 +33,7 @@ States and kinds are author-defined. The engine (`simulate.ts`) reads only mecha
 2. `yarn test` until green. For renderer changes, review the snapshot diff before `yarn test -u`.
 3. Look at the result:
    ```
-   yarn inspect examples/three-tier.orrery.json      # or any .orrery.json / .svg
+   yarn inspect examples/checkout.orrery.json        # or any .orrery.json / .svg
    ```
    It writes `.orrery-inspect/<name>/`: `static.png` (t=0), `frame-NN.png`, `sheet.png` (all frames tiled), `report.json`, `rendered.svg`, and exits 1 on any problem. Open `sheet.png` with the Read tool and actually look: overlaps, labels on lines, arrowheads hidden, dashes not advancing between tiles.
 4. Turn anything you saw into an assertion. Geometry goes in `packages/core/test/layoutContract.ts` (runs against every engine). Pixel facts go in `packages/raster/test`.

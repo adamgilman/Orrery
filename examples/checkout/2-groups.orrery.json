@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout: grouped",
+  "direction": "right",
+  "groups": [
+    {
+      "id": "data",
+      "label": "Data",
+      "kind": "tier"
+    },
+    {
+      "id": "sessions",
+      "label": "Session cache",
+      "kind": "cluster",
+      "parent": "data"
+    }
+  ],
+  "components": [
+    {
+      "id": "web",
+      "label": "Storefront",
+      "kind": "client"
+    },
+    {
+      "id": "api",
+      "label": "Checkout API",
+      "kind": "service"
+    },
+    {
+      "id": "db",
+      "label": "Orders DB",
+      "kind": "database",
+      "group": "data"
+    },
+    {
+      "id": "replica",
+      "label": "Read replica",
+      "kind": "database",
+      "group": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cache",
+      "group": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cache",
+      "group": "sessions"
+    }
+  ]
+}
