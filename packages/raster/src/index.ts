@@ -38,7 +38,10 @@ export function activeView(svg: string): string {
   const detailGroup = new RegExp(`<g class="[^"]*"${A}data-lod="detail"${A}>`, "g");
   for (let m = detailGroup.exec(out); m; m = detailGroup.exec(out)) { out = dropElement(out, m.index); detailGroup.lastIndex = m.index; }
   out = out.replace(new RegExp(`<(path|text) class="[^"]*"${A}data-lod="detail"${A}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
-  out = out.replace(/<path class="flow-summary" data-flow-summary=/g, '<path class="flow" data-flow=').replace(/<path class="edge-summary/g, '<path class="edge');
+  out = out.replace(/<path class="flow-summary" data-flow-summary=/g, '<path class="flow" data-flow=').replace(/<path class="edge-summary/g, '<path class="edge')
+    .replace(/ data-lod="summary" data-for="[^"]*"/g, "");
+  // Scene captions are shown one at a time by CSS; the still keeps the first.
+  out = out.replace(/<text class="step-note"[^>]*style="animation:orrery-caption-(?!0 )[^"]*"[^>]*>[^<]*<\/text>\n?/g, "");
   // camera tracks are CSS animations; the still is the identity camera
   return out;
 }

@@ -49,9 +49,11 @@ describe("tours in the frame tooling", () => {
     expect((one.match(/<g class="state"/g) ?? []).length).toBe(1);
     expect(one).not.toMatch(/<[^>]*data-lod="detail"/); // no hidden elements remain (the stylesheet still names the attribute)
     expect(one).not.toContain('data-node="ledger"');
-    expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api"/); // the summary stands in for the cut connection
+    expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="/); // the summary stands in for the cut connection
     const report = inspect(svg, { fps: 5, durationMs: 400 });
     expect(report.problems).toEqual([]);
+    expect(report.connections.map((c) => c.key)).toEqual(["web->checkout", "web->catalog", "checkout->pay-api", "checkout->login", "pay-api->stripe", "pay-api->adyen"]);
+    expect((one.match(/class="step-note"/g) ?? []).length).toBe(1); // one caption in the still
   });
   it("activeView keeps only the first frame of a crossfading tour of different views", async () => {
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));
