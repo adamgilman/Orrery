@@ -46,7 +46,7 @@
 <text class="group-label" x="270.5" y="172.4">Edge</text>
 </g>
 <g class="group gk-region st-degraded" data-group="region" data-bbox="417.5 20 1624.5 308" data-state="degraded">
-<title>Application is degraded</title>
+<title>Application is degraded; Data is degraded; Async is degraded</title>
 <rect class="group-box" x="417.5" y="20" width="1624.5" height="308" rx="10"/>
 <text class="group-label" x="429.5" y="36">us-east-1</text>
 </g>
@@ -56,12 +56,12 @@
 <text class="group-label" x="449" y="94">Application</text>
 </g>
 <g class="group gk-tier st-degraded" data-group="data" data-bbox="1600 73 430 210" data-state="degraded">
-<title>Orders DB unavailable, using Session cache</title>
+<title>Orders DB unavailable</title>
 <rect class="group-box" x="1600" y="73" width="430" height="210" rx="10"/>
 <text class="group-label" x="1612" y="89">Data</text>
 </g>
 <g class="group gk-tier st-degraded" data-group="async" data-bbox="994 82 541 122" data-state="degraded">
-<title>Fulfilment worker unavailable, using Order events</title>
+<title>Fulfilment worker unavailable</title>
 <rect class="group-box" x="994" y="82" width="541" height="122" rx="10"/>
 <text class="group-label" x="1006" y="98">Async</text>
 </g>

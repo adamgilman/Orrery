@@ -432,5 +432,62 @@
       "label": "predict",
       "load": 0.5
     }
+  ],
+  "scenarios": [
+    {
+      "id": "primary-db-outage",
+      "label": "Trip DB primary goes down, then an etcd node too",
+      "steps": [
+        {
+          "note": "Primary trip DB crashes. Trip service falls back to the replica; reads keep working, writes queue.",
+          "set": {
+            "outage": "trip-db"
+          }
+        },
+        {
+          "note": "While repairing, etcd-1 is also lost. Config quorum is 2 of 3, so it still holds.",
+          "set": {
+            "outage": "etcd-1"
+          }
+        },
+        {
+          "note": "To protect the replica, pricing and ETA predictions are switched to brownout.",
+          "set": {
+            "brownout": [
+              "pricing",
+              "eta-model"
+            ]
+          }
+        },
+        {
+          "note": "etcd-1 returns. Quorum back to full strength.",
+          "restore": "etcd-1"
+        },
+        {
+          "note": "Primary DB restored; brownout lifted.",
+          "restore": [
+            "trip-db",
+            "pricing",
+            "eta-model"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data-tier-maintenance",
+      "label": "Planned maintenance on the whole data tier",
+      "steps": [
+        {
+          "note": "Data tier taken out for maintenance. Everything inside it goes with it.",
+          "set": {
+            "maintenance": "data"
+          }
+        },
+        {
+          "note": "Maintenance over.",
+          "restore": "data"
+        }
+      ]
+    }
   ]
 }

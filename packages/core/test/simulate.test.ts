@@ -138,3 +138,22 @@ describe("applyScenario (B7)", () => {
     expect(() => applySet(fixture("minimal"), { failed: ["zzz"] })).toThrow(/unknown entity "zzz"/);
   });
 });
+
+describe("propagate: group state is independent of member order (B9)", () => {
+  it("a group with one degraded member is reduced whichever member is listed first", () => {
+    const build = (order: string[]) => {
+      const r = validate({
+        groups: [{ id: "edge" }],
+        components: [...order.map((id) => ({ id, group: "edge" })), { id: "svc" }],
+        connections: [{ from: "svc", to: "edge" }],
+        scenarios: [],
+      });
+      if (!r.ok) throw new Error(JSON.stringify(r.errors));
+      return r.model;
+    };
+    for (const order of [["a", "b"], ["b", "a"]]) {
+      const m = propagate(applySet(build(order), { degraded: ["a"] }));
+      expect(st(m, "edge"), order.join(",")).toBe("degraded");
+    }
+  });
+});

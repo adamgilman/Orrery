@@ -208,7 +208,7 @@ exists overrides it; defining a new name extends the set; `replace: true` discar
 | Field | Meaning |
 |---|---|
 | `look` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object: `stroke`, `fill`, `text` (colours), `dash` (boolean), `pulse` (boolean, animated outline), `opacity` (0..1). The renderer emits exactly this; nothing else about a state is visual. |
-| `rank` | Severity order, integer ≥ 0. Propagation only ever raises rank; the highest applies. Ties keep the declared state. |
+| `rank` | Severity order, integer ≥ 0; default 1 for a state you define, so set 0 explicitly on your baseline state. Propagation only ever raises rank; the highest applies. Ties keep the declared state. |
 | `available` | Whether an entity in this state counts toward a need's `min`. |
 | `flows` | `keep`: connections touching the entity keep their load. `stop`: they carry no flow. |
 | `cascade` | `none`: the state is about the entity alone. `children`: every descendant of a group in this state is set to it too (declared states only, so it cannot loop). |
@@ -232,8 +232,9 @@ exists overrides it; defining a new name extends the set; `replace: true` discar
 ```
 
 Preset glyphs: `service` (none), `database`, `queue`, `cache`, `gateway`, `client`, `storage`, `function`,
-`external` (no glyph, dashed box). Preset frames: `tier`, `region`, `zone`, `cluster`, `boundary`. Kinds have no
-mechanics; they are vocabulary with a picture.
+`external` (no glyph, dashed box). Preset frames: `tier`, `region`, `zone`, `cluster`, `boundary`; a group kind's
+`frame` may name a preset (`"frame": "region"`) or give a style object as above. Kinds have no mechanics; they are
+vocabulary with a picture.
 
 ## 5. Semantics
 
@@ -243,10 +244,11 @@ Every entity has a declared state (default `states.default`) and an effective st
 never lower-ranked than declared. An entity is **available** when its effective state's `available` is true.
 
 Groups: a non-empty group behaves as if it had one need, `{ "any": [its direct members], "min": 1 }`, with the
-document's default outcomes. So it takes `needs.unmet` when no member is available, `needs.reduced` when the need
-is met with reduced redundancy, and otherwise keeps its declared state. An empty group's effective state is its
-declared state. A group's state reaches its members only through `cascade: children`. One mechanic, no special
-case.
+document's default outcomes, evaluated **without preference order**: members are a set, not a ranked list, so the
+group's state never depends on the order they are declared in. It takes `needs.unmet` when no member is available,
+`needs.reduced` when any member is unavailable or above the default rank, and otherwise keeps its declared state. An
+empty group's effective state is its declared state. A group's state reaches its members only through
+`cascade: children`.
 
 ### 5.2 Propagation
 
@@ -310,7 +312,7 @@ Each is enforced where stated and proven by the named test. `S` structural (vali
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | propagate | simulate: reasons |
 | B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | applyScenario | simulate: cumulative |
 | B8 | A state reaches descendants by containment only when its `cascade` is `children`; otherwise members are affected only through their own needs. | propagate | simulate: cascade-children, no-cascade |
-| B9 | A non-empty group's effective state derives from its direct members per 5.1, floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group |
+| B9 | A non-empty group's effective state derives from its direct members per 5.1, independent of member order, floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group, member-order |
 | B10 | The engine references no state or kind by name: `replace: true` with different names and the same mechanics yields identical propagation. | propagate | simulate: renamed-states |
 | R1 | The file never contains coordinates; layout is deterministic. | schema, engines | layoutContract: deterministic |
 | R2 | Rendering is byte-deterministic for the same model. | renderer | render: deterministic, cli: deterministic |
@@ -364,6 +366,11 @@ Decisions from the principal-engineer review of 2026-09-05, so the reasoning is 
   names bound to looks (`normal`, `warn`, `alert`, `muted`, `highlight`) and mechanics (`rank`, `available`,
   `flows`, `cascade`), needs name their own outcome states, and the default block reproduces the old behaviour so
   small files stay small. Scenario verbs became `set: { state: ids }` so new state names need no new verbs.
+- **Fourth fresh-agent walk** (2026-09-05, after implementation): five progressive steps, zero validation failures,
+  every propagated state as predicted. It found that a group's state depended on member declaration order (the
+  implicit group need inherited the component rule about the first available alternative); fixed: group members are
+  an unordered set. Wants recorded in the PRD backlog: partial-capability alternatives (read-only replica), per-need
+  flow behaviour, quorum on a group itself, a scenario description, per-direction load.
 - **Made the vocabulary fully the author's** (2026-09-05, latest). Even the default outcome names leaked
   meaning into the engine, and looks and kinds were closed lists. Now `states` has `default`, `needs` outcomes,
   `replace`, and `define` with preset or custom looks; `kinds` does the same for components and groups with preset

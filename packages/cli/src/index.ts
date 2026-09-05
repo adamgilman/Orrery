@@ -12,7 +12,7 @@ export const USAGE = `Usage:
                  [--scenario <id>]       (outline, zoom, click to change state, scenarios). Deterministic.
                  [--step <n>]            --view: which view is shown first. --static: one view, no runtime.
                  [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
-                                         --static; --step <n> stops after step n (default: the last step).
+                                         --static; --step <n> (1-based) stops after step n (default: last).
                                          --set failed=db,cache  declares states for a one-off what-if
                                          (repeatable; applied after the scenario).
   orrery --help

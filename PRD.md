@@ -293,6 +293,10 @@ kept here so the model grows from evidence rather than guesswork:
 - ~~Node attributes beyond label: technology, description, replica count~~ done: `tech`, `description`, `replicas`, `meta`. Multi-line labels: open.
 - ~~Bidirectional edges~~ done.
 - Group-level layout direction (region left-to-right, a tier inside it top-to-bottom): open.
+- From the fourth walk (new model): an alternative with partial capability (a read-only replica satisfies reads but
+  not writes); per-need flow behaviour (drop traffic instead of shifting it); a quorum on a group itself rather than
+  on a consumer; a `description` on a scenario; per-direction load on a bidirectional connection; semantic checks
+  after schema errors in one round trip.
 - ~~Inactive/failover edges as state~~ done: needs with alternatives, load shifts automatically.
 - View-level emphasis: highlight a subset on the full topology: lands with interactions (M3b).
 - ~~Subcommand `--help`, scope semantics~~ done.

@@ -33,17 +33,19 @@ export function propagate(input: Model): Model {
 
   // 2. needs to a fixed point. Groups get an implicit need over their direct members.
   const state = (id: string) => entities.get(id)!.state;
-  const needsOf = (e: Entity): Need[] => {
+  // A group's implicit need has no preference order among members, so it is evaluated order-independently.
+  const needsOf = (e: Entity): (Need & { unordered?: true })[] => {
     if ("needs" in e) return e.needs;
     const m = members.get(e.id) ?? [];
-    return m.length ? [{ any: m, min: 1, unmet: input.states.needs.unmet, reduced: input.states.needs.reduced }] : [];
+    return m.length ? [{ any: m, min: 1, unmet: input.states.needs.unmet, reduced: input.states.needs.reduced, unordered: true }] : [];
   };
-  const evaluate = (need: Need): { state: string; reason: string } | null => {
+  const evaluate = (need: Need & { unordered?: true }): { state: string; reason: string } | null => {
     const avail = need.any.filter((a) => available(state(a)));
     const missing = need.any.filter((a) => !available(state(a)));
     if (avail.length < need.min) return { state: need.unmet, reason: `needs ${need.any.map(label).join(" or ")} (${avail.length} of ${need.min} available)` };
-    if (missing.length) return { state: need.reduced, reason: `${missing.map(label).join(", ")} unavailable, using ${label(avail[0]!)}` };
-    if (rank(state(avail[0]!)) > baseRank) return { state: need.reduced, reason: `${label(avail[0]!)} is ${state(avail[0]!)}` };
+    if (missing.length) return { state: need.reduced, reason: need.unordered ? `${missing.map(label).join(", ")} unavailable` : `${missing.map(label).join(", ")} unavailable, using ${label(avail[0]!)}` };
+    const above = need.unordered ? avail.filter((a) => rank(state(a)) > baseRank) : avail.slice(0, 1).filter((a) => rank(state(a)) > baseRank);
+    if (above.length) return { state: need.reduced, reason: above.map((a) => `${label(a)} is ${state(a)}`).join("; ") };
     return null;
   };
   for (let changed = true, guard = 0; changed && guard <= entities.size; guard++) {

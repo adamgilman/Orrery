@@ -640,11 +640,11 @@
                     "properties": {
                       "from": {
                         "type": "string",
-                        "description": "Initiating component id (with 'to')."
+                        "description": "Initiating entity id (with 'to'); a component or a group."
                       },
                       "to": {
                         "type": "string",
-                        "description": "Target component id (with 'from')."
+                        "description": "Target entity id (with 'from'); a component or a group."
                       },
                       "id": {
                         "type": "string",
