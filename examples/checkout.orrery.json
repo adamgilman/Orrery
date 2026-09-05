@@ -1,5 +1,5 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Checkout service",
   "direction": "right",
   "groups": [
@@ -32,7 +32,7 @@
       "parent": "region"
     }
   ],
-  "nodes": [
+  "components": [
     {
       "id": "browser",
       "label": "Browser",
@@ -42,13 +42,26 @@
       "id": "cdn",
       "label": "CDN",
       "kind": "gateway",
-      "group": "edge"
+      "group": "edge",
+      "needs": [
+        "api"
+      ]
     },
     {
       "id": "api",
       "label": "Checkout API",
       "kind": "service",
-      "group": "app"
+      "group": "app",
+      "needs": [
+        "cache",
+        {
+          "any": [
+            "db",
+            "replica"
+          ]
+        },
+        "psp"
+      ]
     },
     {
       "id": "pricing",
@@ -84,7 +97,10 @@
       "id": "worker",
       "label": "Fulfilment worker",
       "kind": "service",
-      "group": "async"
+      "group": "async",
+      "needs": [
+        "db"
+      ]
     },
     {
       "id": "s3",
@@ -98,7 +114,7 @@
       "kind": "external"
     }
   ],
-  "edges": [
+  "connections": [
     {
       "from": "browser",
       "to": "cdn",
@@ -108,8 +124,7 @@
     {
       "from": "cdn",
       "to": "api",
-      "load": 0.8,
-      "dependsOn": true
+      "load": 0.8
     },
     {
       "from": "api",
@@ -119,24 +134,20 @@
     {
       "from": "api",
       "to": "cache",
-      "load": 0.6,
-      "dependsOn": true
+      "load": 0.6
     },
     {
       "from": "api",
       "to": "db",
       "load": 0.5,
-      "label": "writes",
-      "dependsOn": true
+      "label": "writes"
     },
     {
       "id": "api-reads",
       "from": "api",
       "to": "replica",
       "load": 0.0,
-      "label": "reads (failover)",
-      "fallback": true,
-      "fallbackFor": "api->db"
+      "label": "reads (failover)"
     },
     {
       "from": "db",
@@ -148,8 +159,7 @@
       "from": "api",
       "to": "psp",
       "load": 0.3,
-      "label": "charge",
-      "dependsOn": true
+      "label": "charge"
     },
     {
       "from": "api",
@@ -173,8 +183,7 @@
     {
       "from": "worker",
       "to": "db",
-      "load": 0.1,
-      "dependsOn": true
+      "load": 0.1
     }
   ],
   "views": [
@@ -200,40 +209,34 @@
       "steps": [
         {
           "note": "Orders DB goes down",
-          "nodes": {
-            "db": {
-              "state": "failed"
-            }
+          "set": {
+            "failed": "db"
           }
         },
         {
           "note": "Reads fail over to the replica",
-          "edges": {
-            "api-reads": {
+          "load": [
+            {
+              "id": "api-reads",
               "load": 0.5
             }
-          }
+          ]
         },
         {
           "note": "Primary back, catching up",
-          "nodes": {
-            "db": {
-              "state": "degraded"
-            }
+          "set": {
+            "degraded": "db"
           }
         },
         {
           "note": "Recovered",
-          "nodes": {
-            "db": {
-              "state": "on"
-            }
-          },
-          "edges": {
-            "api-reads": {
+          "restore": "db",
+          "load": [
+            {
+              "id": "api-reads",
               "load": 0
             }
-          }
+          ]
         }
       ]
     },
@@ -243,10 +246,8 @@
       "steps": [
         {
           "note": "Provider returns 5xx",
-          "nodes": {
-            "psp": {
-              "state": "failed"
-            }
+          "set": {
+            "failed": "psp"
           }
         }
       ]

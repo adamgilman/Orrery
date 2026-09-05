@@ -1,18 +1,62 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Edge kinds",
   "direction": "down",
-  "nodes": [
-    { "id": "api", "label": "API", "kind": "service" },
-    { "id": "db", "label": "DB", "kind": "database" },
-    { "id": "queue", "label": "Queue", "kind": "queue" },
-    { "id": "replica", "label": "Replica", "kind": "database" },
-    { "id": "lake", "label": "Data lake", "kind": "storage" }
+  "components": [
+    {
+      "id": "api",
+      "label": "API",
+      "kind": "service"
+    },
+    {
+      "id": "db",
+      "label": "DB",
+      "kind": "database"
+    },
+    {
+      "id": "queue",
+      "label": "Queue",
+      "kind": "queue"
+    },
+    {
+      "id": "replica",
+      "label": "Replica",
+      "kind": "database"
+    },
+    {
+      "id": "lake",
+      "label": "Data lake",
+      "kind": "storage"
+    }
   ],
-  "edges": [
-    { "from": "api", "to": "db", "kind": "sync", "load": 0.7, "label": "sync" },
-    { "from": "api", "to": "queue", "kind": "async", "load": 0.4, "label": "async" },
-    { "from": "db", "to": "replica", "kind": "replication", "load": 0.3, "label": "replication" },
-    { "from": "queue", "to": "lake", "kind": "dataflow", "load": 0.5, "label": "dataflow" }
+  "connections": [
+    {
+      "from": "api",
+      "to": "db",
+      "kind": "sync",
+      "load": 0.7,
+      "label": "sync"
+    },
+    {
+      "from": "api",
+      "to": "queue",
+      "kind": "async",
+      "load": 0.4,
+      "label": "async"
+    },
+    {
+      "from": "db",
+      "to": "replica",
+      "kind": "replication",
+      "load": 0.3,
+      "label": "replication"
+    },
+    {
+      "from": "queue",
+      "to": "lake",
+      "kind": "dataflow",
+      "load": 0.5,
+      "label": "dataflow"
+    }
   ]
 }

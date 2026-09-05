@@ -1,5 +1,5 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Payments platform",
   "direction": "right",
   "groups": [
@@ -24,36 +24,67 @@
       "kind": "boundary"
     }
   ],
-  "nodes": [
+  "components": [
     {
       "id": "checkout",
       "label": "Merchant checkout",
       "kind": "client",
-      "group": "edge"
+      "group": "edge",
+      "needs": [
+        "api-gw"
+      ]
     },
     {
       "id": "api-gw",
       "label": "API gateway",
       "kind": "gateway",
-      "group": "edge"
+      "group": "edge",
+      "needs": [
+        "payments-svc"
+      ]
     },
     {
       "id": "payments-svc",
       "label": "Payments service",
       "kind": "service",
-      "group": "core"
+      "group": "core",
+      "needs": [
+        {
+          "any": [
+            "pay-db-primary",
+            "pay-db-replica"
+          ]
+        },
+        {
+          "any": [
+            "stripe",
+            "adyen"
+          ]
+        }
+      ]
     },
     {
       "id": "fraud-svc",
       "label": "Fraud scoring",
       "kind": "service",
-      "group": "core"
+      "group": "core",
+      "needs": [
+        "fraud-cache"
+      ]
     },
     {
       "id": "ledger-svc",
       "label": "Ledger writer",
       "kind": "service",
-      "group": "core"
+      "group": "core",
+      "needs": [
+        {
+          "any": [
+            "pay-db-primary",
+            "pay-db-replica"
+          ]
+        }
+      ]
     },
     {
       "id": "events",
@@ -92,20 +123,18 @@
       "group": "external"
     }
   ],
-  "edges": [
+  "connections": [
     {
       "from": "checkout",
       "to": "api-gw",
       "label": "HTTPS",
-      "load": 0.8,
-      "dependsOn": true
+      "load": 0.8
     },
     {
       "from": "api-gw",
       "to": "payments-svc",
       "label": "gRPC",
-      "load": 0.8,
-      "dependsOn": true
+      "load": 0.8
     },
     {
       "from": "payments-svc",
@@ -117,23 +146,19 @@
       "from": "fraud-svc",
       "to": "fraud-cache",
       "label": "features",
-      "load": 0.6,
-      "dependsOn": true
+      "load": 0.6
     },
     {
       "from": "payments-svc",
       "to": "pay-db-primary",
       "label": "read/write",
-      "load": 0.8,
-      "dependsOn": true
+      "load": 0.8
     },
     {
       "from": "payments-svc",
       "to": "pay-db-replica",
       "label": "failover",
-      "load": 0,
-      "fallback": true,
-      "fallbackFor": "payments-svc->pay-db-primary"
+      "load": 0
     },
     {
       "from": "pay-db-primary",
@@ -146,16 +171,13 @@
       "from": "payments-svc",
       "to": "stripe",
       "label": "authorize/capture",
-      "load": 0.7,
-      "dependsOn": true
+      "load": 0.7
     },
     {
       "from": "payments-svc",
       "to": "adyen",
       "label": "standby",
-      "load": 0,
-      "fallback": true,
-      "fallbackFor": "payments-svc->stripe"
+      "load": 0
     },
     {
       "from": "payments-svc",
@@ -175,16 +197,13 @@
       "from": "ledger-svc",
       "to": "pay-db-primary",
       "label": "append entries",
-      "load": 0.4,
-      "dependsOn": true
+      "load": 0.4
     },
     {
       "from": "ledger-svc",
       "to": "pay-db-replica",
       "label": "failover",
-      "load": 0,
-      "fallback": true,
-      "fallbackFor": "ledger-svc->pay-db-primary"
+      "load": 0
     }
   ],
   "scenarios": [
@@ -194,38 +213,44 @@
       "steps": [
         {
           "note": "The primary payments database crashes. Services that depend on it degrade onto their standby replica path.",
-          "nodes": {
-            "pay-db-primary": {
-              "state": "failed"
-            }
+          "set": {
+            "failed": "pay-db-primary"
           }
         },
         {
           "note": "Replica is promoted; traffic is switched to it.",
-          "edges": {
-            "payments-svc->pay-db-replica": {
+          "load": [
+            {
+              "from": "payments-svc",
+              "to": "pay-db-replica",
               "load": 0.8
             },
-            "ledger-svc->pay-db-replica": {
+            {
+              "from": "ledger-svc",
+              "to": "pay-db-replica",
               "load": 0.4
             },
-            "payments-svc->pay-db-primary": {
+            {
+              "from": "payments-svc",
+              "to": "pay-db-primary",
               "load": 0
             },
-            "ledger-svc->pay-db-primary": {
+            {
+              "from": "ledger-svc",
+              "to": "pay-db-primary",
               "load": 0
             },
-            "pay-db-primary->pay-db-replica": {
+            {
+              "from": "pay-db-primary",
+              "to": "pay-db-replica",
               "load": 0
             }
-          }
+          ]
         },
         {
           "note": "Old primary is taken out of service for rebuild; the platform runs fully on the promoted replica.",
-          "nodes": {
-            "pay-db-primary": {
-              "state": "off"
-            }
+          "set": {
+            "off": "pay-db-primary"
           }
         }
       ]
@@ -236,22 +261,24 @@
       "steps": [
         {
           "note": "Stripe goes down. Payments service degrades and its standby Adyen path becomes available.",
-          "nodes": {
-            "stripe": {
-              "state": "failed"
-            }
+          "set": {
+            "failed": "stripe"
           }
         },
         {
           "note": "Card traffic is routed to Adyen.",
-          "edges": {
-            "payments-svc->adyen": {
+          "load": [
+            {
+              "from": "payments-svc",
+              "to": "adyen",
               "load": 0.7
             },
-            "payments-svc->stripe": {
+            {
+              "from": "payments-svc",
+              "to": "stripe",
               "load": 0
             }
-          }
+          ]
         }
       ]
     }

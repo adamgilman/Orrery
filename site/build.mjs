@@ -24,7 +24,7 @@ const cards = sources.map((file) => {
   const d = JSON.parse(json);
   return `
 <section class="card" id="${name}">
-  <h2>${esc(d.title ?? name)} <span class="meta">${d.nodes.length} nodes · ${d.edges.length} edges · direction ${d.direction ?? "right"}</span></h2>
+  <h2>${esc(d.title ?? name)} <span class="meta">${d.components.length} components · ${(d.connections ?? []).length} connections · direction ${d.direction ?? "right"}</span></h2>
   <div class="tabs">
     <button data-tab="img" class="on">as &lt;img&gt; (how GitHub shows it)</button>
     <button data-tab="inline">inline SVG</button>

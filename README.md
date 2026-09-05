@@ -29,14 +29,14 @@ also the outline for navigation.
 
 ![Nested groups](examples/readme/groups.svg)
 
-**Edge kinds and load.** Sync, async, replication and dataflow edges are drawn differently. Load drives the speed and
-weight of the flow.
+**Connection kinds and load.** Sync, async, replication and dataflow connections are drawn differently. Load drives
+the speed and weight of the flow.
 
 ![Edge kinds](examples/readme/edge-kinds.svg)
 
-**Failure scenarios.** Edges declare dependencies and fallbacks. A scenario marks one node failed and the tool works out
-the rest: the worker fails with the primary, the API degrades onto its replica, the web tier degrades behind the API,
-and traffic moves off the dead paths. Healthy first, then one step into the scenario.
+**Failure scenarios.** Components declare what they need, with alternatives. A scenario marks one component failed
+and the tool works out the rest: the worker fails with the primary, the API degrades onto its replica, the web tier
+degrades behind the API, and traffic moves off the dead paths. Healthy first, then one step into the scenario.
 
 ![Failover, healthy](examples/readme/failover.svg)
 
@@ -63,8 +63,8 @@ A larger example, a checkout service with three tiers, a region, an external pro
 
 ## Status
 
-Milestone 3 of the [PRD](PRD.md): the diagram is a model, and the file is interactive. Next: sequence and walkthrough
-views, GIF export, and an MCP server.
+The model is specified in [docs/MODEL.md](docs/MODEL.md) and the file is interactive. Next: sequence and walkthrough
+views, GIF export, and an MCP server. See the [PRD](PRD.md).
 
 ## Quick start
 
@@ -75,44 +75,52 @@ node packages/cli/dist/main.js render examples/three-tier.orrery.json -o out.svg
 node packages/cli/dist/main.js render examples/three-tier.orrery.json --static -o out.svg
 ```
 
-## Writing a diagram
+## Writing a model
 
 ```json
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
-  "direction": "right",
-  "groups": [ { "id": "data", "label": "Data", "kind": "tier" } ],
-  "nodes": [
-    { "id": "web", "label": "Web", "kind": "gateway" },
-    { "id": "api", "label": "API" },
-    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" }
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "direction": "down",
+  "groups": [ { "id": "data", "label": "Data tier" } ],
+  "components": [
+    { "id": "web", "kind": "gateway", "needs": ["api"] },
+    { "id": "api", "label": "Checkout API", "needs": [ { "any": ["orders", "replica"] } ] },
+    { "id": "orders",  "label": "Orders DB", "kind": "database", "group": "data" },
+    { "id": "replica", "label": "Replica",   "kind": "database", "group": "data" }
   ],
-  "edges": [
+  "connections": [
     { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" },
-    { "from": "api", "to": "db", "load": 0.4 }
+    { "from": "api", "to": "orders", "load": 0.6 },
+    { "from": "api", "to": "replica", "load": 0 },
+    { "from": "orders", "to": "replica", "kind": "replication", "load": 0.2 }
   ],
-  "views": [ { "id": "overview" }, { "id": "data", "scope": "data", "direction": "down" } ]
+  "scenarios": [ { "id": "orders-down", "steps": [
+    { "note": "Primary goes down", "set": { "failed": "orders" } },
+    { "note": "Recovered",         "restore": "orders" } ] } ]
 }
 ```
 
-The top level is the model: `groups`, `nodes`, `edges`. `views` are drawings of it; leave them out for one view of
-everything, or add several and pick one with `render --view <id>`.
+The file grows progressively: components alone render; connections add flow; `needs` make connections matter;
+alternatives, quorum and outcome states enrich them; scenarios record what-ifs; views drill in. Try any what-if
+without a scenario:
+
+```sh
+orrery render app.json --set failed=orders
+```
+
+Your vocabulary, not ours. The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A
+`states` block binds your own names to looks (preset or custom style) and mechanics (rank, availability, flow,
+cascade); a `kinds` block does the same for component and group kinds. The engine never reads a name.
 
 Rules an agent needs to know:
 
 - Never write coordinates. Layout is automatic and deterministic; `direction` is the only hint.
-- Node order in JSON is the order on the canvas within a rank, so put important things first.
-- Kinds are a small fixed vocabulary. Nodes: service, database, queue, cache, gateway, client, storage, function, external.
-  Groups: tier, region, zone, cluster, boundary. Edges: sync, async, replication, dataflow.
-- Edge ids default to `from->to`. Two edges between the same nodes need explicit ids.
-- `load` is 0 to 1. Zero hides the flow, one is the fastest and thickest.
-- `dependsOn: true` on an edge means the source cannot work without the target; `"soft"` means it only degrades.
-  `fallback: true` marks a standby edge that takes over when the dependency it covers is down. Name that dependency
-  with `fallbackFor` when the source has more than one. Node `state` is on, off, degraded, or failed.
-- Scenarios are ordered, cumulative steps that override states and loads. Propagation does the rest.
+- Order in the file is order on the canvas within a rank, so list the important things first.
+- Connections carry no health semantics. A component's `needs` do, and every need must have a connection.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
-The full schema lives at [packages/core/schema/v1.json](packages/core/schema/v1.json).
+The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md). The schema is
+[packages/core/schema/v1.json](packages/core/schema/v1.json).
 
 ## Development
 

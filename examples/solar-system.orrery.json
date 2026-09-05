@@ -1,18 +1,53 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "The solar system, as a service",
   "direction": "down",
-  "nodes": [
-    { "id": "sun", "label": "Sun" },
-    { "id": "venus", "label": "Venus" },
-    { "id": "earth", "label": "Earth" },
-    { "id": "mars", "label": "Mars" },
-    { "id": "moon", "label": "Moon" }
+  "components": [
+    {
+      "id": "sun",
+      "label": "Sun"
+    },
+    {
+      "id": "venus",
+      "label": "Venus"
+    },
+    {
+      "id": "earth",
+      "label": "Earth"
+    },
+    {
+      "id": "mars",
+      "label": "Mars"
+    },
+    {
+      "id": "moon",
+      "label": "Moon"
+    }
   ],
-  "edges": [
-    { "from": "sun", "to": "venus", "load": 0.9, "label": "heat" },
-    { "from": "sun", "to": "earth", "load": 0.7, "label": "sunlight" },
-    { "from": "sun", "to": "mars", "load": 0.3, "label": "solar wind" },
-    { "from": "earth", "to": "moon", "load": 0.2, "label": "tides" }
+  "connections": [
+    {
+      "from": "sun",
+      "to": "venus",
+      "load": 0.9,
+      "label": "heat"
+    },
+    {
+      "from": "sun",
+      "to": "earth",
+      "load": 0.7,
+      "label": "sunlight"
+    },
+    {
+      "from": "sun",
+      "to": "mars",
+      "load": 0.3,
+      "label": "solar wind"
+    },
+    {
+      "from": "earth",
+      "to": "moon",
+      "load": 0.2,
+      "label": "tides"
+    }
   ]
 }

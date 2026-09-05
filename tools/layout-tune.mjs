@@ -1,10 +1,10 @@
 // ELK option sweep over the compound examples, scored by tools/layout-score.mjs. Usage: node tools/layout-tune.mjs
 import { readFileSync } from "node:fs";
-import { validate, toLayoutGraph, scopeDiagram, selectView } from "@orrery/core";
+import { validate, toLayoutGraph, scopeModel, selectView } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 import { score } from "./layout-score.mjs";
 const files = ["examples/checkout.orrery.json", "examples/agent-test-2.orrery.json", "examples/three-tier.orrery.json"];
-const graphs = files.map((f) => { const d = validate(JSON.parse(readFileSync(f, "utf8"))).diagram; return toLayoutGraph(scopeDiagram(d, selectView(d))); });
+const graphs = files.map((f) => { const d = validate(JSON.parse(readFileSync(f, "utf8"))).model; return toLayoutGraph(scopeModel(d, selectView(d))); });
 const variants = {
   "baseline": {},
   "favorStraightEdges": { "elk.layered.nodePlacement.favorStraightEdges": "true" },

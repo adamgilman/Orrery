@@ -1,22 +1,89 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Failover",
   "direction": "down",
-  "nodes": [
-    { "id": "web", "label": "Web", "kind": "gateway" },
-    { "id": "api", "label": "API", "kind": "service" },
-    { "id": "db", "label": "Primary", "kind": "database" },
-    { "id": "replica", "label": "Replica", "kind": "database" },
-    { "id": "worker", "label": "Worker", "kind": "function" }
+  "components": [
+    {
+      "id": "web",
+      "label": "Web",
+      "kind": "gateway",
+      "needs": [
+        "api"
+      ]
+    },
+    {
+      "id": "api",
+      "label": "API",
+      "kind": "service",
+      "needs": [
+        {
+          "any": [
+            "db",
+            "replica"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "label": "Primary",
+      "kind": "database"
+    },
+    {
+      "id": "replica",
+      "label": "Replica",
+      "kind": "database"
+    },
+    {
+      "id": "worker",
+      "label": "Worker",
+      "kind": "function",
+      "needs": [
+        "db"
+      ]
+    }
   ],
-  "edges": [
-    { "from": "web", "to": "api", "load": 0.8, "dependsOn": true },
-    { "from": "api", "to": "db", "load": 0.6, "dependsOn": true },
-    { "from": "api", "to": "replica", "fallback": true, "label": "failover" },
-    { "from": "db", "to": "replica", "load": 0.2, "kind": "replication" },
-    { "from": "worker", "to": "db", "load": 0.2, "dependsOn": true }
+  "connections": [
+    {
+      "from": "web",
+      "to": "api",
+      "load": 0.8
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "load": 0.6
+    },
+    {
+      "from": "api",
+      "to": "replica",
+      "label": "failover",
+      "load": 0
+    },
+    {
+      "from": "db",
+      "to": "replica",
+      "load": 0.2,
+      "kind": "replication"
+    },
+    {
+      "from": "worker",
+      "to": "db",
+      "load": 0.2
+    }
   ],
   "scenarios": [
-    { "id": "db-fails", "label": "Primary fails", "steps": [ { "note": "Primary goes down", "nodes": { "db": { "state": "failed" } } } ] }
+    {
+      "id": "db-fails",
+      "label": "Primary fails",
+      "steps": [
+        {
+          "note": "Primary goes down",
+          "set": {
+            "failed": "db"
+          }
+        }
+      ]
+    }
   ]
 }

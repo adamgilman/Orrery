@@ -1,5 +1,5 @@
 {
-  "$schema": "https://orrery.dev/schema/v1.json",
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Nested groups",
   "direction": "down",
   "groups": [
@@ -27,7 +27,7 @@
       "parent": "region"
     }
   ],
-  "nodes": [
+  "components": [
     {
       "id": "cdn",
       "label": "CDN",
@@ -52,7 +52,7 @@
       "group": "pci"
     }
   ],
-  "edges": [
+  "connections": [
     {
       "from": "cdn",
       "to": "app",

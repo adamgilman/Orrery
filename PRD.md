@@ -178,6 +178,14 @@ One JSON file in, one animated SVG out, proven on GitHub. No groups, no icons, n
 
 **Packages in M0** (pnpm workspace, vitest): `@orrery/core` (schema, validator, model, `LayoutEngine` interface, SVG renderer), `@orrery/layout-elk` (the only importer of elkjs), `orrery` (CLI). Splitting `core` further waits until a second consumer exists.
 
+### Status (2026-09-05, later): the model specification is implemented
+
+`docs/MODEL.md` is now the implemented shape: components/connections/groups vocabulary, author-defined states and
+kinds with looks and mechanics, `needs` with alternatives/quorum/outcomes on the component, connections and needs to
+groups (including empty groups), views with `scope` and `only` and ghosts for one-ended connections, scenarios with
+`set`/`restore`/`load`, `render --set` for one-off what-ifs, validator warnings, legend. Engine, renderer, runtime
+and CLI all moved in three commits; 205 tests. Examples migrated. The old shape is gone.
+
 ### Status (2026-09-05)
 
 M3 shipped: the runtime lives inside the raw SVG. `orrery render` now emits the interactive document by default: every

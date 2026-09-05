@@ -27,7 +27,7 @@ if (file.endsWith(".svg")) svg = readFileSync(file, "utf8");
 else {
   const r = validate(JSON.parse(readFileSync(file, "utf8")));
   if (!r.ok) { for (const e of r.errors) console.error(`${file}:${e}`); process.exit(1); }
-  svg = await render(r.diagram, new ElkLayoutEngine());
+  svg = await render(r.model, new ElkLayoutEngine());
 }
 writeFileSync(join(out, "rendered.svg"), svg);
 

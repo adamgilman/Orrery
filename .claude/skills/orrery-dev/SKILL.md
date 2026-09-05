@@ -8,6 +8,17 @@ description: Develop Orrery itself (the animated architecture diagram tool in th
 Orrery turns a JSON model into a standalone animated SVG. You are changing the tool, not drawing a diagram.
 North Star: a diagram is a model, not a picture. Every visual behaviour derives from the model.
 
+## Vocabulary
+
+The file speaks the user's language: **components, connections, groups, needs, states, kinds, views, scenarios**
+(`docs/MODEL.md` is the specification, with numbered invariants). Internals below `toLayoutGraph` speak graph:
+nodes and edges, and the SVG uses `data-node` / `data-edge` / `data-flow` (keyed by connection key). Keep that
+boundary in `packages/core/src/measure.ts`; never let "node" or "edge" reach a user-facing message.
+
+States and kinds are author-defined. The engine (`simulate.ts`) reads only mechanics (`rank`, `available`,
+`flows`, `cascade`, need outcomes); the renderer reads only looks, glyphs and frames. If you find yourself writing
+`=== "failed"` anywhere, stop: that is invariant B10.
+
 ## Rules that are enforced by tests (do not fight them)
 
 - Failing test first, then code. `yarn test` builds every package and runs unit, contract, snapshot, pixel and CLI e2e tests.
@@ -40,14 +51,14 @@ A zero-load edge must never change. If you change dash pattern, period or durati
 a flow region, so a node, label or base edge that moves between frames is a failure. `diffs.png` paints changed pixels
 red over a faded frame; it is the fastest way to see what an animation change actually did.
 
-## Model semantics (M2)
+## Model semantics
 
-`propagate()` in `packages/core/src/simulate.ts` is the single source of truth for failure behaviour; it is pure and
-fixed-point. `applyScenario()` layers cumulative step overrides on the base model, then propagates. Rendering never
-computes state itself: it reads `node.state`, `node.reason` and effective `edge.load` from the propagated model.
-Failed nodes pulse (`PULSE_PERIOD`, linear triangle wave) and `freezeFrame` freezes that too; `inspect` treats failed
-node boxes as allowed motion. Adding a state or animation means: constant in core, freeze rule in raster, region
-extractor in raster, then the tests that use them.
+`propagate()` in `packages/core/src/simulate.ts` is the single source of truth (MODEL.md §5): cascade first, then
+needs to a fixed point, then loads. `applySet()` and `applyScenario()` layer declared states on the base model.
+Rendering never computes state; it reads effective `state`, `reason`, connection `load` and `need` from the
+propagated model. Any state whose look pulses gets `data-pulse="1"`, and `freezeFrame` freezes every pulse rule;
+`inspect` treats pulsing boxes as allowed motion. Adding a mechanic means: MODEL.md invariant first, then the test
+named there, then the code.
 
 ## Layout of the repo
 

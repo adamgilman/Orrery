@@ -1,7 +1,7 @@
 // Score a layout so ELK tuning is measured, not eyeballed. Usage: node tools/layout-score.mjs <file.orrery.json> [--view id]
 // Prints bends, total edge length, edges passing through unrelated nodes, edges crossing group frames, and canvas area.
 import { readFileSync } from "node:fs";
-import { validate, toLayoutGraph, scopeDiagram, selectView } from "@orrery/core";
+import { validate, toLayoutGraph, scopeModel, selectView } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 
 export function score(graph, r) {
@@ -34,7 +34,7 @@ export function score(graph, r) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const file = process.argv[2];
   const vi = process.argv.indexOf("--view");
-  const d = validate(JSON.parse(readFileSync(file, "utf8"))).diagram;
-  const g = toLayoutGraph(scopeDiagram(d, selectView(d, vi > 0 ? process.argv[vi + 1] : undefined)));
+  const d = validate(JSON.parse(readFileSync(file, "utf8"))).model;
+  const g = toLayoutGraph(scopeModel(d, selectView(d, vi > 0 ? process.argv[vi + 1] : undefined)));
   console.log(JSON.stringify(score(g, await new ElkLayoutEngine().layout(g))));
 }
