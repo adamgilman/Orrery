@@ -226,7 +226,7 @@ export function renderView(model: Model, layout: LayoutResult): { markup: string
   return { markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
 }
 
-interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string }
+interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string; layout?: LayoutResult }
 
 /**
  * A view that plays a scenario (R10): the base model and every step, each a complete render on the same layout,
@@ -272,7 +272,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     const title = view.title ?? model.title ?? view.id;
     return { sc, view, declared: d.model, title, caption: sc.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title) };
   });
-  const measured = [];
+  const measured: ViewLayer[] = [];
   for (const s of scenes) measured.push(await layerFor(s.declared, s.view, engine, undefined, s.title));
   const canvasW = Math.max(...measured.map((m) => m.width)), canvasH = Math.max(...measured.map((m) => m.height));
   const frames: { layer: ViewLayer; caption: string; seconds: number }[] = [];
@@ -282,15 +282,44 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     frames.push({ layer, caption: s.caption, seconds: s.sc.seconds });
   }
   const width = canvasW, height = canvasH + 24;
-  const total = frames.reduce((a, f) => a + f.seconds, 0), fade = 5, n = frames.length;
+  const n = frames.length, total = frames.reduce((a, f) => a + f.seconds, 0);
+  const fadeS = Math.min(1.2, Math.min(...frames.map((f) => f.seconds)));
   const starts = frames.map((_, k) => frames.slice(0, k).reduce((a, f) => a + f.seconds, 0));
-  const pct = (k: number) => num(((starts[k] ?? total) / total) * 100);
-  const at = (k: number) => Number(pct(k));
-  const css = frames.map((_, k) => k === 0
-    ? `@keyframes orrery-tour-0{0%{opacity:1}${pct(1)}%{opacity:1}${num(at(1) + fade)}%{opacity:0}${100 - fade}%{opacity:0}100%{opacity:1}}`
-    : k === n - 1
-      ? `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(at(k) + fade)}%{opacity:1}${100 - fade}%{opacity:1}100%{opacity:0}}`
-      : `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(at(k) + fade)}%{opacity:1}${pct(k + 1)}%{opacity:1}${num(at(k + 1) + fade)}%{opacity:0}100%{opacity:0}}`).join("\n");
+  const pc = (sec: number) => { const v = Math.round((sec / total) * 10000) / 100; return `${v}%`; };
+  const fmt = (v: number) => String(Math.round(v * 100) / 100);
+
+  // Transitions. Between a view that collapses a group and the view scoped to it, the camera zooms: the overview
+  // scales up around the closed box while the detail scales in from the box's rectangle, with one shared mapping so
+  // box and frame coincide throughout. Everything else crossfades.
+  type Transition = { enterOf: string; exitOf: string; zoom: boolean };
+  const drawn = (k: number) => { const m = measured[k]!; return { x: Math.round((canvasW - m.width) / 2), y: Math.round((canvasH - m.height) / 2), w: m.width, h: m.height }; };
+  const mapping = (box: { x: number; y: number; width: number; height: number }, rect: { x: number; y: number; w: number; h: number }) => {
+    const sc = Math.min(box.width / rect.w, box.height / rect.h);
+    const bc = { x: box.x + box.width / 2, y: box.y + box.height / 2 }, tc = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+    return {
+      detailStart: `translate(${fmt(bc.x)}px, ${fmt(bc.y)}px) scale(${fmt(sc)}) translate(${fmt(-tc.x)}px, ${fmt(-tc.y)}px)`,
+      overviewEnd: `translate(${fmt(tc.x)}px, ${fmt(tc.y)}px) scale(${fmt(1 / sc)}) translate(${fmt(-bc.x)}px, ${fmt(-bc.y)}px)`,
+    };
+  };
+  /** How scene i hands over to scene j: what j's transform is as it enters, what i's is as it leaves. */
+  const transition = (i: number, j: number): Transition => {
+    const vi = scenes[i]!.view, vj = scenes[j]!.view, li = frames[i]!.layer.layout!, lj = frames[j]!.layer.layout!;
+    const into = vj.scope !== undefined && vi.collapse?.includes(vj.scope) ? vj.scope : undefined;
+    if (into && li.groups[into]) { const m = mapping(li.groups[into]!, drawn(j)); return { enterOf: m.detailStart, exitOf: m.overviewEnd, zoom: true }; }
+    const outOf = vi.scope !== undefined && vj.collapse?.includes(vi.scope) ? vi.scope : undefined;
+    if (outOf && lj.groups[outOf]) { const m = mapping(lj.groups[outOf]!, drawn(i)); return { enterOf: m.overviewEnd, exitOf: m.detailStart, zoom: true }; }
+    return { enterOf: "none", exitOf: "none", zoom: false };
+  };
+  const hidden = (t: string) => `opacity:0;transform:${t}`, shown = "opacity:1;transform:none", ease = "animation-timing-function:ease-in-out;";
+  const css = frames.map((_, k) => {
+    const enter = transition((k + n - 1) % n, k), exit = transition(k, (k + 1) % n);
+    const s0 = starts[k]!, s1 = k + 1 < n ? starts[k + 1]! : total;
+    const stops: [string, string][] = k < n - 1
+      ? [["0%", hidden(enter.enterOf)], [pc(s0), (enter.zoom ? ease : "") + hidden(enter.enterOf)], [pc(s0 + fadeS), shown], [pc(s1), (exit.zoom ? ease : "") + shown], [pc(s1 + fadeS), hidden(exit.exitOf)], ["100%", hidden(enter.enterOf)]]
+      : [["0%", (exit.zoom ? ease : "") + shown], [pc(fadeS), hidden(exit.exitOf)], [pc(s0), (enter.zoom ? ease : "") + hidden(enter.enterOf)], [pc(s0 + fadeS), shown], ["100%", shown]];
+    const dedup = stops.filter(([p], i) => i === 0 || p !== stops[i - 1]![0]);
+    return `@keyframes orrery-tour-${k}{${dedup.map(([p, v]) => `${p}{${v}}`).join("")}}`;
+  }).join("\n");
   const markup = frames.map((f, k) => [
     `<g class="tour" data-frame="${k}" data-view="${escAttr(f.layer.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
     f.layer.markup,
@@ -318,7 +347,7 @@ async function layerFor(declared: Model, view: View, engine: LayoutEngine, play:
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   const v = play ? playingLayer(declared, view, play, layout) : renderView(base, layout);
-  return { view, title, ...v };
+  return { view, title, ...v, layout };
 }
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>

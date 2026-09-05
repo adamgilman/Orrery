@@ -90,7 +90,7 @@ the id.
 | `groups` | array | `[]` | See 4.4. |
 | `views` | array | one view of everything | See 4.5. |
 | `scenarios` | array | `[]` | See 4.6. |
-| `tour` | `{ seconds, scenes }` or `{ seconds, views }` | | A story told on a timer. Each scene is a view at a moment: `{ view, scenario?, step?, set?, note?, seconds? }`; `views` is shorthand for one scene per view. In the file, a CSS crossfade between complete layers, so it plays inside an image tag; in the runtime, the morph and the scenario player, until the reader interacts (R12). |
+| `tour` | `{ seconds, scenes }` or `{ seconds, views }` | | A story told on a timer. Each scene is a view at a moment: `{ view, scenario?, step?, set?, note?, seconds? }`; `views` is shorthand for one scene per view. In the file, CSS transitions between complete layers, a zoom where a closed group opens or closes and a crossfade elsewhere, so it plays inside an image tag; in the runtime, the morph and the scenario player, until the reader interacts (R12). |
 
 ### 4.2 Component
 
@@ -349,7 +349,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R8 | An entity is drawn by its state's look and its kind's glyph or frame, never by the names; a custom look or kind renders exactly its style object. | render.test "looks and kinds (R8)" |
 | R9 | A legend lists every non-default state used in a view with its look and description. | render.test "legend (R9)" |
 | R11 | A collapsed group is one closed box: nothing inside is drawn, connections to hidden members attach to it with merged loads, its count is shown, and its state is the group's derived state. The runtime opens it into the view scoped to it, morphing the box into the frame, and Escape returns. | view.test "collapsed groups (R11)"; render.test "collapsed groups (R11)"; boot.test "drill-down" |
-| R12 | A tour is one complete layer per scene, centred on the largest size, crossfaded by CSS with each scene's duration and captioned with its note; frame tooling inspects the first; the runtime plays the scenes with the morph and the scenario player, stopped by the first interaction. | render.test "tour of views (R12)"; raster document.test "tours"; boot.test "runtime tour" |
+| R12 | A tour is one complete layer per scene, centred on the largest size and captioned with its note. Between a view that collapses a group and the view scoped to it, the transition is a zoom: the overview scales up around the closed box while the detail scales in from the box's rectangle under one shared mapping, and the reverse zooms out; other transitions crossfade. Frame tooling inspects the first scene; the runtime plays the scenes with the morph and the scenario player, stopped by the first interaction. | render.test "tour of views (R12)"; raster document.test "tours"; boot.test "runtime tour" |
 | R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 
 ## 7. Non-goals (v1)

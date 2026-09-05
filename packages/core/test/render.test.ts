@@ -162,8 +162,9 @@ describe("render: a tour of views (R12)", () => {
     const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)" style="animation:orrery-tour-(\d) (\d+)s linear infinite">/g)];
     expect(frames.map((f) => f[2])).toEqual(["overview", "payments", "identity"]);
     expect(frames.every((f) => f[4] === "12")).toBe(true);
-    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:1\}33\.3%\{opacity:1\}38\.3%\{opacity:0\}95%\{opacity:0\}100%\{opacity:1\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-tour-1\{0%\{opacity:0\}33\.3%\{opacity:0\}38\.3%\{opacity:1\}66\.7%\{opacity:1\}71\.7%\{opacity:0\}100%\{opacity:0\}\}/);
+    // 12 s cycle, 1.2 s transitions = 10 % windows at each boundary; scene 1 enters at 33.3 % and leaves at 66.7 %
+    expect(svg).toMatch(/@keyframes orrery-tour-1\{0%\{opacity:0;[^}]*\}33\.33%\{[^}]*opacity:0;[^}]*\}43\.33%\{opacity:1;transform:none\}66\.67%\{[^}]*opacity:1;transform:none\}76\.67%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:0;[^}]*\}10%\{opacity:1;transform:none\}33\.33%\{[^}]*opacity:1;transform:none\}43\.33%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
     expect(svg).toContain(">Inside Payments</text>");
     const [, w, h] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
     expect(Number(w)).toBeGreaterThan(0);
@@ -186,11 +187,34 @@ describe("render: a tour of views (R12)", () => {
     const x = (k: number, id: string) => Number(frame(k).match(new RegExp(`data-node="${id}"[^>]*data-bbox="([\\d.]+)`))![1]);
     expect(x(1, "pay-api")).toBeGreaterThan(100); // the narrow payments view sits mid-canvas, not at the left edge
   });
+  it("zooms into a collapsed group and back out, and crossfades everywhere else (R12)", async () => {
+    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
+    const kf = (k: number) => svg.match(new RegExp(`@keyframes orrery-tour-${k}\\{.*?\\}\\}(?=\\n|<)`))![0];
+    // scene 0 (overview, payments closed) → scene 1 (inside payments): overview zooms up around the box, detail grows from it
+    expect(kf(0)).toMatch(/transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\) translate\([\d.-]+px, [\d.-]+px\)/);
+    expect(kf(1)).toMatch(/transform:translate\([\d.-]+px, [\d.-]+px\) scale\(0\.[\d]+\) translate/);
+    expect(kf(1)).toContain("animation-timing-function:ease-in-out");
+    // the detail's start transform maps its own drawing onto the closed box
+    const box = svg.slice(svg.indexOf('data-frame="0"')).match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number);
+    const [bx, by, bw, bh] = box as [number, number, number, number];
+    const start = kf(1).match(/transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\)/)!;
+    expect(Number(start[1])).toBeCloseTo(bx + bw / 2, 0);
+    expect(Number(start[2])).toBeCloseTo(by + bh / 2, 0);
+    expect(Number(start[3])).toBeLessThan(1);
+    // scene 1 → scene 2 is the same layout with a state change: a plain crossfade (the 100% stop only repeats the entry)
+    const mid = kf(1).slice(kf(1).indexOf("opacity:1"), kf(1).indexOf("100%"));
+    expect(mid).not.toMatch(/scale\(/);
+    // scene 2 → scene 3 zooms back out: the detail shrinks into the box, the overview settles from the zoomed state
+    expect(kf(2)).toMatch(/opacity:1;transform:none\}[\d.]+%\{opacity:0;transform:translate/);
+    expect(kf(3)).toMatch(/opacity:0;transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\)/);
+  });
+
   it("honours per-scene seconds in the keyframe timing", async () => {
     const m = fixture("drill-down");
     const svg = await render({ ...m, tour: { seconds: 2, scenes: [{ view: "overview", seconds: 6 }, { view: "payments", seconds: 2 }] } }, new FakeLayoutEngine(), { tour: true });
     expect(svg).toMatch(/orrery-tour-0 8s linear infinite/);
-    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:1\}75%\{opacity:1\}80%\{opacity:0\}95%\{opacity:0\}100%\{opacity:1\}\}/);
+    // 8 s cycle: scene 0 holds 6 s, so it leaves at 75 % with a 1.2 s (15 %) transition
+    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:0;[^}]*\}15%\{opacity:1;transform:none\}75%\{[^}]*opacity:1;transform:none\}90%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
   });
   it("rejects a tour naming an unknown view", async () => {
     await expect(render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "nope"] } })).rejects.toThrow(/unknown view "nope"/);

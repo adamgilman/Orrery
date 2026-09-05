@@ -54,8 +54,9 @@ orrery render examples/readme/failover.orrery.json --play db-fails --every 3 -o 
 ![Billing only](examples/readme/views-billing.svg)
 
 **Drill down.** A view can draw a group closed, one box with a count of what is inside, and a second view opens it.
-This image plays a four-scene story with no script: the overview, inside Payments, the ledger failing in there, and back
-outside with the closed box and the checkout that needs it turned amber. A `tour` in the model is a list of scenes, each
+This image plays a four-scene story with no script: the camera zooms into the Payments box until it becomes the open
+frame, the ledger fails in there, and the camera zooms back out to the overview with the closed box and the checkout
+that needs it turned amber. A `tour` in the model is a list of scenes, each
 a view at a moment of a scenario with its own caption and duration; the interactive file plays the same scenes with its
 morph until you click, and a click on any closed box opens it.
 
