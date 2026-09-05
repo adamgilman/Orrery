@@ -44,6 +44,11 @@ Three tests every release must pass:
 
 ## 4. Model and views
 
+> **Superseded by [docs/MODEL.md](docs/MODEL.md) (2026-09-05).** The vocabulary is now components/connections/groups,
+> dependencies are `needs` on the component, scenarios use verbs, and every invariant is numbered there. The section
+> below is kept for history; the schema at `packages/core/schema/v1.next.json` is the formal shape awaiting implementation.
+
+
 One model, many views. The file's top level *is* the model: `nodes`, `groups`, `edges` describe what exists.
 `views` describe how to draw it. `scenarios` and `interactions` are timelines the runtime can play over any view.
 Design principle: three view families (topology, deployment, dynamic) over one model, one timeline mechanism.

@@ -1,0 +1,453 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Orrery model v1",
+  "description": "An architecture model: components, the connections between them, the groups they sit in, what each component needs to stay healthy, plus views (drawings) and scenarios (what-ifs) over that model. Specification: docs/MODEL.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "components"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema URL, for editor validation and completion."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Title of the system. Shown on views that do not set their own."
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "right",
+        "down"
+      ],
+      "default": "right",
+      "description": "Default flow direction for views: connections run left-to-right (\"right\") or top-to-bottom (\"down\"). The only layout hint at this level; positions are computed automatically and are deterministic. Narrow, top-down diagrams read best on phones."
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The running things: services, databases, queues, clients, external systems. A component is one deployment in one place; the same code in two regions is two components. Order matters: components that end up side by side keep this order, so list the important ones first.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique handle, shared id space with groups. Letters, digits, '_', '.', '-'; starts with a letter or digit."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name. Defaults to the id."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "service",
+              "database",
+              "queue",
+              "cache",
+              "gateway",
+              "client",
+              "storage",
+              "function",
+              "external"
+            ],
+            "default": "service",
+            "description": "What the component is. Picks the glyph and box style; carries no health semantics. 'client' covers people and devices; 'external' is a system outside your control (drawn dashed)."
+          },
+          "group": {
+            "type": "string",
+            "description": "Id of the group this component sits in. Omit for top level."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off",
+              "degraded",
+              "failed"
+            ],
+            "default": "on",
+            "description": "Declared health in the base model. 'off' is intentional (maintenance, decommissioned) and drawn dimmed; 'failed' is broken, drawn red and pulsing; 'degraded' is partially working, drawn amber. Propagation only ever worsens a component from its declared state."
+          },
+          "needs": {
+            "type": "array",
+            "default": [],
+            "description": "What this component cannot work without. Each entry is either a component id (a hard need with one way to satisfy it) or an object listing alternatives. Every alternative must be connected to this component (either direction). Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+                  "description": "A component id: hard need, single alternative."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "any"
+                  ],
+                  "properties": {
+                    "any": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "description": "Alternatives that satisfy this need, in order of preference. The first healthy one carries shifted load."
+                    },
+                    "min": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "default": 1,
+                      "description": "How many alternatives must be healthy for the need to be met (quorum). Must not exceed the number of alternatives."
+                    },
+                    "soft": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "An unmet soft need degrades the component instead of failing it: a nice-to-have call."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many instances run. Drawn as a stacked box with the count. No health semantics in v1."
+          },
+          "tech": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Technology, drawn as a sublabel: 'PostgreSQL 16', 'Node 22'."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One or two sentences. Shown as a tooltip and in the outline."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "default": [],
+      "description": "What one component does to another: calls it, publishes to it, replicates to it, streams data to it. Directed from the initiator ('from') to the target ('to'). Connections carry no health semantics; see 'needs' for that. Two connections between the same pair must both have ids.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Initiating component id."
+          },
+          "to": {
+            "type": "string",
+            "description": "Target component id. The arrowhead is drawn here."
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Optional handle. Required when the same pair of components has more than one connection, so scenarios can tell them apart."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "sync",
+              "async",
+              "replication",
+              "dataflow"
+            ],
+            "default": "sync",
+            "description": "How it is drawn: sync solid, async dashed, replication dotted, dataflow thick. No health semantics."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short text on the line: protocol or purpose."
+          },
+          "load": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.5,
+            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow. 0 hides the flow. Relative intensity, not real units. Shifts automatically when a need's alternative goes down."
+          },
+          "bidirectional": {
+            "type": "boolean",
+            "default": false,
+            "description": "Draw arrowheads at both ends. The flow still animates from 'from' to 'to'."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "default": [],
+      "description": "Containers drawn as labelled frames: tiers, regions, zones, clusters, trust boundaries. Nest with 'parent'. The hierarchy is also the outline for navigation. Groups are meaning, not layout hints.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique handle, shared id space with components."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Frame title. Defaults to the id."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tier",
+              "region",
+              "zone",
+              "cluster",
+              "boundary"
+            ],
+            "default": "tier",
+            "description": "What the container represents; each has a distinct frame: tier (solid, tinted), region (dashed), zone (dotted), cluster (solid, darker), boundary (red dashed, no fill, for trust boundaries)."
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the enclosing group. Omit for top level. Cycles are rejected."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+          }
+        }
+      }
+    },
+    "views": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Drawings of the model. Optional: without it, one topology view of everything is rendered. Pick one with `orrery render --view <id>`. Connections with one end outside a view are drawn to a ghost of the outside component, never dropped.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique view id."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Title for this view. Defaults to the document title."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "topology"
+            ],
+            "default": "topology",
+            "description": "Kind of drawing. Only 'topology' exists today; 'sequence' and 'walkthrough' are reserved."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "right",
+              "down"
+            ],
+            "description": "Flow direction for this view. Defaults to the document direction."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Group id to drill into: that group becomes the outer frame and only its descendants are shown."
+          },
+          "only": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "description": "Show only these components (and the groups containing them). Combines with 'scope' by intersection."
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "default": [],
+      "description": "Named what-if stories. Each step changes declared states with verbs, or a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --fail <id>`.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "steps"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique scenario id."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human title. Defaults to the id."
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Ordered changes. A step must change at least one thing and may name a component under only one verb.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "note": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "What happens in this step, shown during step-through."
+                },
+                "fail": {
+                  "description": "Component id(s) whose state becomes 'failed'.",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "uniqueItems": true
+                    }
+                  ]
+                },
+                "degrade": {
+                  "description": "Component id(s) whose state becomes 'degraded'.",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "uniqueItems": true
+                    }
+                  ]
+                },
+                "off": {
+                  "description": "Component id(s) switched off (intentional, drawn dimmed).",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "uniqueItems": true
+                    }
+                  ]
+                },
+                "restore": {
+                  "description": "Component id(s) returned to their base-model state.",
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "uniqueItems": true
+                    }
+                  ]
+                },
+                "load": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "Connection load overrides. Refer to a connection by its ends, or by 'id' when the pair has several connections. Rarely needed: load shifts automatically when an alternative goes down.",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "load"
+                    ],
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "description": "Initiating component id (with 'to')."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Target component id (with 'from')."
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Connection id, instead of from/to."
+                      },
+                      "load": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "New relative load, 0 to 1."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
