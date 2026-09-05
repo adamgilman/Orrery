@@ -222,20 +222,22 @@ describe("runtime drill-down", () => {
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
     click(vis(root, '[data-group="payments"]'));
     vi.advanceTimersByTime(100);
-    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("0"); // the summary is gone before the camera moves
-    expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
-    vi.advanceTimersByTime(700);
+    // the camera moves over an unchanging picture: the summary and its connections hold until it has settled
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
+    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
+    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
+    vi.advanceTimersByTime(700);
     expect(opacity(root, '[data-node="ledger"]')).toBe("1");
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("0");
     expect(opacity(root, '[data-node="login"]')).toBe("0"); // identity stays closed
     expect(state(root, "payments")).toBe("on"); // focusing is navigation, not a state change
     key("Escape");
     vi.advanceTimersByTime(50);
-    expect(opacity(root, '[data-node="ledger"]')).toBe("0"); // detail is gone before the camera pulls back
+    expect(opacity(root, '[data-node="ledger"]')).toBe("1"); // detail holds while the camera pulls back
     vi.advanceTimersByTime(800);
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
+    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
   });
   it("a click on a hidden member counts as a click on its closed group", async () => {
     const root = await doc("drill-down");

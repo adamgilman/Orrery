@@ -157,15 +157,17 @@ describe("renderSvg: collapsed groups as level of detail (R11)", () => {
     // an internal connection is detail; an inbound one has a detail path to the member and a summary path cut at the frame
     expect(svg).toMatch(/<path class="edge[^"]*" data-edge="pay-api->ledger"[^>]*data-lod="detail" data-for="payments"/);
     expect(svg).toMatch(/<path class="edge[^"]*" data-edge="checkout->pay-api"[^>]*data-lod="detail" data-for="payments"/);
-    const summary = svg.match(/<path class="edge-summary[^"]*" data-edge-summary="checkout->pay-api" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
+    // the summary path is an ordinary edge, same key, cut at the payments frame boundary
+    const summary = svg.match(/<path class="edge edge-sync need" data-edge="checkout->pay-api" data-kind="sync" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
     expect(summary).toBeTruthy();
-    // the summary path ends on the payments frame boundary
     const [bx, by, bw, bh] = between(svg, 'data-group="payments"').match(/data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     const end = summary![1]!.split(" L").at(-1)!.split(" ").map(Number);
     const onEdge = Math.abs(end[0]! - bx) < 1 || Math.abs(end[0]! - (bx + bw)) < 1 || Math.abs(end[1]! - by) < 1 || Math.abs(end[1]! - (by + bh)) < 1;
     expect(onEdge).toBe(true);
-    expect(svg).toMatch(/<g class="lod" data-lod="summary" data-for="payments"><path class="flow-summary" data-flow-summary="checkout->pay-api"/);
-    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="[\d.]+" d="/); // the flow keeps its own dash animation
+    // flows keep their own dash animation, so the level-of-detail track sits on a wrapper; the summary flow is a plain flow too
+    expect(svg).toMatch(/<g class="lod" data-lod="summary" data-for="payments"><path class="flow" data-flow="checkout->pay-api" data-load="[\d.]+" d="/);
+    expect(svg).toMatch(/<g class="lod" data-lod="detail" data-for="payments"><path class="flow" data-flow="pay-api->ledger" data-load="[\d.]+" d="/);
+    expect(svg).not.toMatch(/edge-summary|flow-summary/);
     expect(svg).toMatch(/\[data-lod="detail"\]\{opacity:0/);
     // a component outside any closed group carries no level-of-detail attribute
     expect(svg).toMatch(/<g class="node[^"]*" data-node="web"[^>]*>/);

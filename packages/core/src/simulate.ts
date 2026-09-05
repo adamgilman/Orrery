@@ -1,4 +1,4 @@
-import type { Component, Connection, Entity, Group, Model, Need } from "./types.js";
+import type { Component, Entity, Group, Model, Need } from "./types.js";
 
 /** A request the model cannot satisfy: unknown view, scenario, state, entity, or step. Callers report it, not a stack. */
 export class ModelError extends Error {}
@@ -160,12 +160,4 @@ export function declare(model: Model, d: Declaration = {}): { model: Model; step
   const set: Record<string, string[]> = Object.create(null);
   for (const [id, s] of states) set[s] = [...(set[s] ?? []), id];
   return { model: applySet(model, set, Object.fromEntries(loads)), ...(step !== undefined && steps !== undefined ? { step, steps } : {}), ...(note !== undefined ? { note } : {}) };
-}
-
-export interface ScenarioState { model: Model; scenarioId: string; step: number; steps: number; note?: string }
-
-/** Apply a scenario's steps 1..step (cumulative; default: all) and propagate. Pure. */
-export function applyScenario(input: Model, scenarioId: string, step?: number): ScenarioState {
-  const d = declare(input, { scenario: scenarioId, ...(step !== undefined ? { step } : {}) });
-  return { model: propagate(d.model), scenarioId, step: d.step!, steps: d.steps!, ...(d.note !== undefined ? { note: d.note } : {}) };
 }

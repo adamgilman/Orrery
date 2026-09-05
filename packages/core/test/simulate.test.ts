@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { applyScenario, applySet, propagate, scopeModel, validate, type Model } from "../src/index.js";
+import { applySet, declare, propagate, scopeModel, validate, type Model } from "../src/index.js";
 
 const fixture = (name: string): Model => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
@@ -113,25 +113,27 @@ describe("propagate: names do not matter (B10)", () => {
   });
 });
 
-describe("applyScenario (B7)", () => {
+describe("scenario steps (B7)", () => {
+  const at = (m: Model, scenario: string, step?: number) => { const d = declare(m, { scenario, ...(step !== undefined ? { step } : {}) }); return { ...d, model: propagate(d.model) }; };
   it("applies steps cumulatively, restores to base, and reports the note", () => {
     const m = fixture("alternatives");
-    const s1 = applyScenario(m, "orders-failover", 1);
+    const s1 = at(m, "orders-failover", 1);
     expect(st(s1.model, "api")).toBe("degraded");
     expect(s1.note).toMatch(/Primary goes down/);
-    const s2 = applyScenario(m, "orders-failover", 2);
+    const s2 = at(m, "orders-failover", 2);
     expect(st(s2.model, "orders")).toBe("failed");
     expect(st(s2.model, "api")).toBe("degraded");
-    const s3 = applyScenario(m, "orders-failover", 3);
+    const s3 = at(m, "orders-failover", 3);
     expect(st(s3.model, "api")).toBe("failed");
     expect(st(s3.model, "web")).toBe("failed");
-    const s4 = applyScenario(m, "orders-failover");
+    const s4 = at(m, "orders-failover");
     expect(s4.step).toBe(4);
+    expect(s4.steps).toBe(4);
     expect(s4.model.components.every((c) => c.state === "on")).toBe(true);
   });
   it("rejects unknown scenarios and steps out of range", () => {
-    expect(() => applyScenario(fixture("alternatives"), "nope")).toThrow(/unknown scenario "nope".*orders-failover/);
-    expect(() => applyScenario(fixture("alternatives"), "orders-failover", 9)).toThrow(/between 1 and 4/);
+    expect(() => at(fixture("alternatives"), "nope")).toThrow(/unknown scenario "nope".*orders-failover/);
+    expect(() => at(fixture("alternatives"), "orders-failover", 9)).toThrow(/between 1 and 4/);
   });
   it("applySet rejects unknown states and entities", () => {
     expect(() => applySet(fixture("minimal"), { broken: ["a"] })).toThrow(/unknown state "broken"/);

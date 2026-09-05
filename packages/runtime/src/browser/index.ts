@@ -12,7 +12,8 @@ const RUNTIME_CSS = `
 .scene .node.is-selected .node-box{stroke:#2563eb;stroke-width:2.5;filter:drop-shadow(0 0 6px rgba(37,99,235,.45))}
 .scene .group.is-selected .group-box{stroke:#2563eb;stroke-width:2}
 .view.has-hover .node:not(.is-hot),.view.has-hover .edge:not(.is-hot),.view.has-hover .flow:not(.is-hot),.view.has-hover .edge-label:not(.is-hot){opacity:.18;transition:opacity .15s}
-.node,.edge,.flow,.edge-label{transition:opacity .15s}`;
+.node,.edge,.flow,.edge-label{transition:opacity .15s}
+[data-lod]{transition:opacity .3s}`;
 
 export interface BootOptions { size?: Size }
 export interface Runtime {
@@ -44,9 +45,9 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   let selected: { id: string; type: EntityType } | null = null;
   let camera: Camera = { k: 1, tx: 0, ty: 0 };
   let zoomed = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let cameraTimer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
-  let autoplay: ReturnType<typeof setInterval> | undefined;
+  let autoplayTimer: ReturnType<typeof setInterval> | undefined;
   let sceneTimer: ReturnType<typeof setTimeout> | undefined;
   let sceneNote: string | undefined;
   let touring = false;
@@ -121,14 +122,14 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
 
   /* ---- camera ---- */
   const tween = (to: Camera, animate: boolean) => {
-    if (timer) clearTimeout(timer);
+    if (cameraTimer) clearTimeout(cameraTimer);
     if (!animate) { camera = to; scene.setAttribute("transform", transformOf(to)); return; }
     const from = camera, start = Date.now(), dur = 300;
     const step = () => {
       const t = Math.min(1, (Date.now() - start) / dur), e = 1 - Math.pow(1 - t, 3);
       camera = t < 1 ? { k: from.k + (to.k - from.k) * e, tx: from.tx + (to.tx - from.tx) * e, ty: from.ty + (to.ty - from.ty) * e } : to;
       scene.setAttribute("transform", transformOf(camera));
-      if (t < 1) timer = setTimeout(step, 16);
+      if (t < 1) cameraTimer = setTimeout(step, 16);
     };
     step();
   };
@@ -166,27 +167,20 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
 
   /* ---- interactions ---- */
   const setState = (id: string, state: string) => { session.set(id, state); apply(); };
-  /** Level of detail: a closed group in focus shows its members and hides its summary; the camera closes on it. */
+  /** Level of detail: a closed group in focus shows its members instead of its summary; the camera closes on it. */
   let focusId: string | null = null;
-  /** Set the two levels of a group: `detail` and `summary` each shown or hidden. */
-  const setLevels = (groupId: string, detail: boolean, summary: boolean) => {
+  const setOpen = (groupId: string, open: boolean) => {
     for (const layer of layers.values()) for (const el of layer.querySelectorAll<SVGElement>(`[data-lod][data-for~="${groupId}"]`))
-      el.style.opacity = (el.getAttribute("data-lod") === "detail" ? detail : summary) ? "1" : "0";
+      el.style.opacity = (el.getAttribute("data-lod") === "detail") === open ? "1" : "0";
   };
-  const reveal = (groupId: string | null) => { for (const g of model.groups) setLevels(g.id, g.id === groupId, g.id !== groupId); };
-  let revealTimer: ReturnType<typeof setTimeout> | undefined;
-  /**
-   * Three phases, never overlapping: what leaves fades in place, the camera moves with the box empty, what arrives
-   * appears once the camera has settled.
-   */
+  const resolve = (groupId: string | null) => { for (const g of model.groups) setOpen(g.id, g.id === groupId); };
+  let resolveTimer: ReturnType<typeof setTimeout> | undefined;
+  /** As in the file's own tour: the camera moves over an unchanging picture, and the level of detail resolves once it has settled. */
   const focus = (groupId: string | null, animate = true) => {
-    const leaving = focusId;
     focusId = groupId;
-    if (revealTimer) clearTimeout(revealTimer);
-    if (leaving) setLevels(leaving, false, false);
-    if (groupId) setLevels(groupId, false, false);
-    const move = () => { if (groupId) zoomTo(groupId, "group"); else fit(animate); revealTimer = setTimeout(() => reveal(groupId), 300); };
-    revealTimer = setTimeout(move, leaving || groupId ? 150 : 0);
+    if (resolveTimer) clearTimeout(resolveTimer);
+    if (groupId) zoomTo(groupId, "group"); else fit(animate);
+    resolveTimer = setTimeout(() => resolve(groupId), animate ? 300 : 0);
   };
   /** Clicking a closed group focuses it. */
   const drillInto = (groupId: string): boolean => {
@@ -216,8 +210,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     const id = g.getAttribute("data-node")!;
     g.classList.add("is-hot");
     for (const c of model.connections) if (c.from === id || c.to === id) {
-      layer.querySelector(`[data-edge="${c.key}"]`)?.classList.add("is-hot");
-      layer.querySelector(`[data-flow="${c.key}"]`)?.classList.add("is-hot");
+      layer.querySelectorAll(`[data-edge="${c.key}"],[data-flow="${c.key}"]`).forEach((e) => e.classList.add("is-hot")); // both levels of detail
       layer.querySelector(`[data-node="${c.from === id ? c.to : c.from}"]`)?.classList.add("is-hot");
     }
   });
@@ -227,7 +220,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const setScenario = (id: string | null, step = 1) => { session.setScenario(id, step); panel.scenarios.value = session.scenario?.id ?? ""; apply(); };
 
   /** Play the active view's scenario on its timer: base, each step, loop. Any interaction stops it. */
-  const stopAutoplay = () => { touring = false; sceneNote = undefined; if (autoplay) { clearInterval(autoplay); autoplay = undefined; } if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; } };
+  const stopAutoplay = () => { touring = false; sceneNote = undefined; if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; } if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; } };
   /** Play the model's scenes on their timers with the morph: view, scenario moment, overrides, caption. Any interaction stops it. */
   const startTour = () => {
     stopAutoplay();
@@ -256,7 +249,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     if (!n) return;
     let k = 0;
     setScenario(null);
-    autoplay = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k); }, play.seconds * 1000);
+    autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k); }, play.seconds * 1000);
   };
   for (const t of [scene, panel.host]) on(t, "click", stopAutoplay);
   on(document, "keydown", stopAutoplay);
@@ -340,10 +333,10 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   });
   on(window, "resize", () => { if (!zoomed) fit(false); });
 
-  rebuildOutline(); apply(); reveal(null); fit(false); if (model.tour) startTour(); else startAutoplay();
+  rebuildOutline(); apply(); resolve(null); fit(false); if (model.tour) startTour(); else startAutoplay();
   return {
     showView, setScenario, setState, reset,
-    destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (revealTimer) clearTimeout(revealTimer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
+    destroy: () => { ac.abort(); stopAutoplay(); if (cameraTimer) clearTimeout(cameraTimer); if (resolveTimer) clearTimeout(resolveTimer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
   };
 }
 

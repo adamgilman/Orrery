@@ -54,7 +54,7 @@ red over a faded frame; it is the fastest way to see what an animation change ac
 ## Model semantics
 
 `propagate()` in `packages/core/src/simulate.ts` is the single source of truth (MODEL.md §5): cascade first, then
-needs to a fixed point, then loads. `applySet()` and `applyScenario()` layer declared states on the base model.
+needs to a fixed point, then loads. `declare()` folds a scenario position and overrides into the declared model (`applySet()` underneath); everything renders or plays `propagate(declare(...))`.
 Rendering never computes state; it reads effective `state`, `reason`, connection `load` and `need` from the
 propagated model. Any state whose look pulses gets `data-pulse="1"`, and `freezeFrame` freezes every pulse rule;
 `inspect` treats pulsing boxes as allowed motion. Adding a mechanic means: MODEL.md invariant first, then the test
@@ -71,6 +71,7 @@ named there, then the code.
 | `packages/cli` | `orrery validate` / `orrery render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) |
 | `tools/inspect.mjs` | the loop script above |
 | `tools/frames.mjs` | frames of any animated file over a time window, every track frozen exactly (resvg, no browser) |
+| `tools/layout-score.mjs`, `tools/layout-tune.mjs` | score a layout (bends, length, frame crossings) and sweep ELK options over the compound examples, so layout tuning is measured |
 | `tools/browser-frames.mjs` | the same in headless Chromium (`PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright`): the check of record for camera and level-of-detail transitions, since it runs the real CSS engine |
 | `site/` | examples page (`node site/build.mjs`, `node site/serve.mjs 8080`) |
 | `PRD.md` | scope, milestones, open questions |

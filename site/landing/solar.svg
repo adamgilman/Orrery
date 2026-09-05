@@ -6,8 +6,6 @@
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .summary-count{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.edge-summary{fill:none;stroke:#94a3b8;stroke-width:1.5}.edge-summary.need{stroke:#475569;stroke-width:2}
-.flow-summary{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}

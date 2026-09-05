@@ -6,8 +6,6 @@
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .summary-count{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.edge-summary{fill:none;stroke:#94a3b8;stroke-width:1.5}.edge-summary.need{stroke:#475569;stroke-width:2}
-.flow-summary{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -67,20 +65,20 @@
 <g class="edges">
 <path class="edge edge-sync need" data-edge="app->api" data-kind="sync" data-lod="detail" data-for="orders" d="M197 68 L197 151.5" marker-end="url(#arrow)"/>
 <g class="lod" data-lod="detail" data-for="orders"><path class="flow" data-flow="app->api" data-load="0.7" d="M197 68 L197 139.5" style="stroke-width:3.6;animation-duration:1.3s"/></g>
-<path class="edge-summary edge-sync need" data-edge-summary="app->api" data-lod="summary" data-for="orders" d="M197 68 L197 115.5" marker-end="url(#arrow)"/>
-<g class="lod" data-lod="summary" data-for="orders"><path class="flow-summary" data-flow-summary="app->api" data-load="0.7" d="M197 68 L197 103.5" style="stroke-width:3.6;animation-duration:1.3s"/></g>
+<path class="edge edge-sync need" data-edge="app->api" data-kind="sync" data-lod="summary" data-for="orders" d="M197 68 L197 115.5" marker-end="url(#arrow)"/>
+<g class="lod" data-lod="summary" data-for="orders"><path class="flow" data-flow="app->api" data-load="0.7" d="M197 68 L197 103.5" style="stroke-width:3.6;animation-duration:1.3s"/></g>
 <path class="edge edge-sync need" data-edge="api->db" data-kind="sync" data-lod="detail" data-for="orders" d="M170 199.5 L170 259.5" marker-end="url(#arrow)"/>
 <g class="lod" data-lod="detail" data-for="orders"><path class="flow" data-flow="api->db" data-load="0.5" d="M170 199.5 L170 247.5" style="stroke-width:3;animation-duration:1.8s"/></g>
 <path class="edge edge-sync" data-edge="api->ship" data-kind="sync" data-lod="detail" data-for="orders shipping" d="M197 199.5 L197 234.5 L257.5 234.5 L257.5 352 L94 352 L94 420.5" marker-end="url(#arrow)"/>
 <g class="lod" data-lod="detail" data-for="orders shipping"><path class="flow" data-flow="api->ship" data-load="0.3" d="M197 199.5 L197 234.5 L257.5 234.5 L257.5 352 L94 352 L94 408.5" style="stroke-width:2.4;animation-duration:2.3s"/></g>
-<path class="edge-summary edge-sync" data-edge-summary="api->ship" data-lod="summary" data-for="orders shipping" d="M257.5 319.5 L257.5 352 L94 352 L94 384.5" marker-end="url(#arrow)"/>
-<g class="lod" data-lod="summary" data-for="orders shipping"><path class="flow-summary" data-flow-summary="api->ship" data-load="0.3" d="M257.5 319.5 L257.5 352 L94 352 L94 372.5" style="stroke-width:2.4;animation-duration:2.3s"/></g>
+<path class="edge edge-sync" data-edge="api->ship" data-kind="sync" data-lod="summary" data-for="orders shipping" d="M257.5 319.5 L257.5 352 L94 352 L94 384.5" marker-end="url(#arrow)"/>
+<g class="lod" data-lod="summary" data-for="orders shipping"><path class="flow" data-flow="api->ship" data-load="0.3" d="M257.5 319.5 L257.5 352 L94 352 L94 372.5" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-async need" data-edge="ship->carriers" data-kind="async" data-lod="detail" data-for="shipping" d="M94 468.5 L94 508.5" marker-end="url(#arrow)"/>
 <g class="lod" data-lod="detail" data-for="shipping"><path class="flow" data-flow="ship->carriers" data-load="0.3" d="M94 468.5 L94 496.5" style="stroke-width:2.4;animation-duration:2.3s"/></g>
 <path class="edge edge-async" data-edge="api->mail" data-kind="async" data-lod="detail" data-for="orders" d="M224 199.5 L224 224.5 L273.5 224.5 L273.5 384.5" marker-end="url(#arrow)"/>
 <g class="lod" data-lod="detail" data-for="orders"><path class="flow" data-flow="api->mail" data-load="0.2" d="M224 199.5 L224 224.5 L273.5 224.5 L273.5 372.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
-<path class="edge-summary edge-async" data-edge-summary="api->mail" data-lod="summary" data-for="orders" d="M273.5 319.5 L273.5 384.5" marker-end="url(#arrow)"/>
-<g class="lod" data-lod="summary" data-for="orders"><path class="flow-summary" data-flow-summary="api->mail" data-load="0.2" d="M273.5 319.5 L273.5 372.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
+<path class="edge edge-async" data-edge="api->mail" data-kind="async" data-lod="summary" data-for="orders" d="M273.5 319.5 L273.5 384.5" marker-end="url(#arrow)"/>
+<g class="lod" data-lod="summary" data-for="orders"><path class="flow" data-flow="api->mail" data-load="0.2" d="M273.5 319.5 L273.5 372.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
 </g>
 <g class="nodes">
 <g class="node kind-client st-on" data-node="app" data-kind="client" data-state="on" data-bbox="157 20 80 48" transform="translate(157 20)">

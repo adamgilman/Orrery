@@ -32,12 +32,13 @@ function easeInOut(x: number): number {
   return by((lo + hi) / 2);
 }
 
-interface Xf { a: number; b: number; s: number; c: number; d: number }
-const parseXf = (v: string): Xf => {
-  if (v === "none") return { a: 0, b: 0, s: 1, c: 0, d: 0 };
+/** The renderer's camera transform: translate to the stage centre, scale, translate the focus centre to the origin. */
+interface CameraTransform { tx: number; ty: number; scale: number; cx: number; cy: number }
+const parseCamera = (v: string): CameraTransform => {
+  if (v === "none") return { tx: 0, ty: 0, scale: 1, cx: 0, cy: 0 };
   const m = v.match(/translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/);
   if (!m) throw new Error(`unsupported transform "${v}"`);
-  return { a: Number(m[1]), b: Number(m[2]), s: Number(m[3]), c: Number(m[4]), d: Number(m[5]) };
+  return { tx: Number(m[1]), ty: Number(m[2]), scale: Number(m[3]), cx: Number(m[4]), cy: Number(m[5]) };
 };
 const lerp = (p: number, q: number, t: number) => p + (q - p) * t;
 
@@ -55,7 +56,10 @@ export function valuesAt(kf: Keyframes, phase: number): Record<string, string> {
     const a = prev.decls[prop]!, b = next.decls[prop]!;
     if (prop === "opacity") out[prop] = String(Math.round(lerp(Number(a), Number(b), t) * 1000) / 1000);
     else if (prop === "visibility") out[prop] = t < 1 ? a : b; // discrete
-    else if (prop === "transform") { const x = parseXf(a), y = parseXf(b); const r = { a: lerp(x.a, y.a, t), b: lerp(x.b, y.b, t), s: lerp(x.s, y.s, t), c: lerp(x.c, y.c, t), d: lerp(x.d, y.d, t) }; out[prop] = `translate(${r.a.toFixed(2)} ${r.b.toFixed(2)}) scale(${r.s.toFixed(4)}) translate(${r.c.toFixed(2)} ${r.d.toFixed(2)})`; }
+    else if (prop === "transform") {
+      const x = parseCamera(a), y = parseCamera(b);
+      out[prop] = `translate(${lerp(x.tx, y.tx, t).toFixed(2)} ${lerp(x.ty, y.ty, t).toFixed(2)}) scale(${lerp(x.scale, y.scale, t).toFixed(4)}) translate(${lerp(x.cx, y.cx, t).toFixed(2)} ${lerp(x.cy, y.cy, t).toFixed(2)})`;
+    }
     else out[prop] = t < 1 ? a : b;
   }
   return out;

@@ -38,10 +38,9 @@ export function scopeModel(model: Model, view: View): Model {
   const groups = model.groups.filter((g) => shownGroups.has(g.id))
     .map((g) => { if (g.id !== view.scope) return g; const { parent, ...root } = g; return root; })
     .map((g) => (collapsed.has(g.id) ? { ...g, collapsed: hiddenCount.get(g.id) ?? 0 } : g));
-  const rewired = new Map(model.connections.map((c) => [c.key, c]));
   const components: Component[] = model.components.filter((c) => shown.has(c.id));
   const ghosts = new Map<string, Component>();
-  const connections = [...rewired.values()].filter((c) => {
+  const connections = model.connections.filter((c) => {
     const a = shown.has(c.from), b = shown.has(c.to);
     if (!a && !b) return false;
     for (const end of [c.from, c.to]) if (!shown.has(end) && !ghosts.has(end)) {

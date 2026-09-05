@@ -34,15 +34,14 @@ export function activeView(svg: string): string {
   // A playing view stacks one layer per step, a tour one per state; the still picture is the first.
   const steps = /<g class="(?:step|tour|state)" data-(?:step|frame|state)="(\d+)"/g;
   for (let m = steps.exec(out); m; m = steps.exec(out)) if (m[1] !== "0") { out = dropElement(out, m.index); steps.lastIndex = m.index; }
-  // Level of detail at rest: hidden detail goes, summaries become the ordinary elements the checks understand.
+  // Level of detail at rest: hidden detail goes; summaries become the ordinary elements the checks understand.
   // Attribute-aware matching: keys like "a->b" put a ">" inside quoted attribute values.
-  const A = String.raw`(?:[^>"]|"[^"]*")*`;
-  const detailGroup = new RegExp(`<g class="[^"]*"${A}data-lod="detail"${A}>`, "g");
+  const ATTRS = String.raw`(?:[^>"]|"[^"]*")*`;
+  const detailGroup = new RegExp(`<g class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}>`, "g");
   for (let m = detailGroup.exec(out); m; m = detailGroup.exec(out)) { out = dropElement(out, m.index); detailGroup.lastIndex = m.index; }
-  out = out.replace(new RegExp(`<(path|text) class="[^"]*"${A}data-lod="detail"${A}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
-  out = out.replace(/<g class="lod" data-lod="summary" data-for="[^"]*">(<path class="flow-summary" [^>]*\/>)<\/g>/g, "$1");
-  out = out.replace(/<path class="flow-summary" data-flow-summary=/g, '<path class="flow" data-flow=').replace(/<path class="edge-summary/g, '<path class="edge')
-    .replace(/ data-lod="summary" data-for="[^"]*"/g, "");
+  out = out.replace(new RegExp(`<(path|text) class="[^"]*"${ATTRS}data-lod="detail"${ATTRS}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
+  out = out.replace(new RegExp(`<g class="lod" data-lod="summary" data-for="[^"]*">(<path class="flow"${ATTRS}/>)</g>`, "g"), "$1");
+  out = out.replace(/ data-lod="summary" data-for="[^"]*"/g, "");
   // Scene captions are shown one at a time by CSS; the still keeps the first.
   out = out.replace(/<text class="step-note"[^>]*style="animation:orrery-caption-(?!0 )[^"]*"[^>]*>[^<]*<\/text>\n?/g, "");
   // The still is the resting picture: no cycle, no camera, no level-of-detail track left on what survives.

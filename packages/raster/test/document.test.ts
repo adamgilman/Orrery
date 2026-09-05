@@ -50,6 +50,8 @@ describe("tours in the frame tooling", () => {
     expect(one).not.toMatch(/<[^>]*data-lod="detail"/); // no hidden elements remain (the stylesheet still names the attribute)
     expect(one).not.toContain('data-node="ledger"');
     expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api" data-load="0.5" d="/); // the summary stands in for the cut connection
+    expect(one).not.toContain('class="lod"'); // no level-of-detail wrapper or attribute survives
+    expect(one).not.toContain(' data-lod="summary"');
     const report = inspect(svg, { fps: 5, durationMs: 400 });
     expect(report.problems).toEqual([]);
     expect(report.connections.map((c) => c.key)).toEqual(["web->checkout", "web->catalog", "checkout->pay-api", "checkout->login", "pay-api->stripe", "pay-api->adyen"]);

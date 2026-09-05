@@ -335,7 +335,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | B4 | Flow follows 5.3: load leaves unavailable alternatives, lands on the first available one, parallel connections are summed. | simulate.test "loads (B4)" |
 | B5 | Propagation terminates on any graph including cycles. | simulate.test "(B1, B5)"; valid fixture `cycle` |
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | simulate.test "(B2, B3, B6)" |
-| B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | simulate.test "applyScenario (B7)" |
+| B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | simulate.test "scenario steps (B7)" |
 | B8 | A state reaches descendants by containment only when its `cascade` is `children`, only when its rank is strictly higher, nearest ancestor first on ties; otherwise members are affected only through their own needs. | simulate.test "groups and cascade (B8, B9)", "cascade ties and nesting (B8)" |
 | B9 | A non-empty group's effective state derives from its direct members per 5.1, independent of member order, floored by its declared state; an empty group's is its declared state. | simulate.test "(B8, B9)", "independent of member order (B9)" |
 | B10 | The engine references no state or kind by name: `replace: true` with different names and the same mechanics yields identical propagation. | simulate.test "names do not matter (B10)" |

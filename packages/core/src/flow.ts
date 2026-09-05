@@ -12,7 +12,7 @@ export function flowDuration(load: number): number {
   return Math.round((0.5 + (1 - load) * 2.5) * 10) / 10;
 }
 
-export function flowWidth(load: number): number {
+function flowWidth(load: number): number {
   return 1.5 + load * 3;
 }
 

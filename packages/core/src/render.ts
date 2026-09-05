@@ -2,7 +2,7 @@ import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
 import { GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
-import { LOOK_PRESETS, lookOf } from "./looks.js";
+import { lookOf } from "./looks.js";
 export { LOOK_PRESETS, lookOf } from "./looks.js";
 import { declare, ModelError, propagate } from "./simulate.js";
 import type { Component, Connection, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
@@ -109,8 +109,6 @@ const BASE_STYLE = `
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .summary-count{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.edge-summary{fill:none;stroke:#94a3b8;stroke-width:1.5}.edge-summary.need{stroke:#475569;stroke-width:2}
-.flow-summary{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -211,29 +209,26 @@ function connectionMarkup(c: Connection, layout: LayoutResult, lod: Lod): string
   const route = layout.edges[c.key];
   if (!route) throw new Error(`layout returned no route for connection ${c.key}`);
   const key = escAttr(c.key);
-  const gf = lod.closedBy(c.from), gt = lod.closedBy(c.to);
-  const fors = [...new Set([gf, gt].filter((g): g is string => g !== undefined))];
-  const detail = fors.length ? ` data-lod="detail" data-for="${escAttr(fors.join(" "))}"` : "";
-  const flowPts = c.bidirectional ? trimStart(trimEnd(route.points, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(route.points, ARROW_LENGTH);
-  // A flow path animates its own dashes, so its level-of-detail track lives on a wrapper: one animation per element.
-  const wrap = (inner: string, lodAttrs: string) => (lodAttrs ? `<g class="lod"${lodAttrs}>${inner}</g>` : inner);
-  const parts = [
-    `<path class="edge edge-${c.kind}${c.need ? " need" : ""}" data-edge="${key}" data-kind="${c.kind}"${detail} d="${pathD(route.points)}" marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}/>`,
-    wrap(`<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(flowPts)}" style="${flowStyle(c.load)}"/>`, detail),
-  ];
-  // A connection crossing into a closed group is also drawn cut at the frame, for the summary level of detail.
-  if (fors.length && gf !== gt) {
+  const fromClosed = lod.closedBy(c.from), toClosed = lod.closedBy(c.to);
+  const closedGroups = [...new Set([fromClosed, toClosed].filter((g): g is string => g !== undefined))];
+  const level = (l: "detail" | "summary") => ` data-lod="${l}" data-for="${escAttr(closedGroups.join(" "))}"`;
+  const markers = ` marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}`;
+  const trimForArrows = (pts: Point[]) => (c.bidirectional ? trimStart(trimEnd(pts, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(pts, ARROW_LENGTH));
+  /** An edge and its flow along `pts`. A flow animates its own dashes, so its level-of-detail track lives on a wrapper: one animation per element. */
+  const drawn = (pts: Point[], lodAttrs: string): string[] => {
+    const flow = `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(trimForArrows(pts))}" style="${flowStyle(c.load)}"/>`;
+    return [
+      `<path class="edge edge-${c.kind}${c.need ? " need" : ""}" data-edge="${key}" data-kind="${c.kind}"${lodAttrs} d="${pathD(pts)}"${markers}/>`,
+      lodAttrs ? `<g class="lod"${lodAttrs}>${flow}</g>` : flow,
+    ];
+  };
+  const parts = drawn(route.points, closedGroups.length ? level("detail") : "");
+  // A connection crossing into a closed group is also drawn cut at the frame: its summary level of detail.
+  if (closedGroups.length && fromClosed !== toClosed) {
     let pts = route.points;
-    if (gt) pts = clipAtBox(pts, layout.groups[gt]!);
-    if (gf) pts = clipAtBox(pts.slice().reverse(), layout.groups[gf]!).reverse();
-    if (pts.length >= 2) {
-      const sFlow = c.bidirectional ? trimStart(trimEnd(pts, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(pts, ARROW_LENGTH);
-      const summary = ` data-lod="summary" data-for="${escAttr(fors.join(" "))}"`;
-      parts.push(
-        `<path class="edge-summary edge-${c.kind}${c.need ? " need" : ""}" data-edge-summary="${key}"${summary} d="${pathD(pts)}" marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}/>`,
-        wrap(`<path class="flow-summary" data-flow-summary="${key}" data-load="${num(c.load)}" d="${pathD(sFlow)}" style="${flowStyle(c.load)}"/>`, summary),
-      );
-    }
+    if (toClosed) pts = clipAtBox(pts, layout.groups[toClosed]!);
+    if (fromClosed) pts = clipAtBox(pts.slice().reverse(), layout.groups[fromClosed]!).reverse();
+    if (pts.length >= 2) parts.push(...drawn(pts, level("summary")));
   }
   if (c.label !== undefined) {
     const m = route.labelAt ?? (({ x, y }) => ({ x, y: y - 8 }))(midpoint(route.points));
@@ -257,24 +252,23 @@ function legendMarkup(model: Model, y: number): { markup: string; height: number
   return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * 20 + 10, width: 20 + 22 + textWidth(chars, 12) + 20 };
 }
 
-/** One view's drawing: groups, then connections, then components, then legend. Returns markup and the size it needs. */
-export function renderView(model: Model, layout: LayoutResult, options: { legend?: boolean } = {}): { markup: string; width: number; height: number; legend: string } {
+/** One view's drawing (groups, connections, components) and its legend, apart, with the size both need together. */
+export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number } {
   const legend = legendMarkup(model, layout.height + 8);
-  const withLegend = options.legend !== false;
   const closed = new Set(model.groups.filter((g) => g.collapsed !== undefined).map((g) => g.id));
   const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
   const groupOf = new Map(model.components.map((c) => [c.id, c.group] as const));
   const lod: Lod = { closedBy: (id) => { for (let cur = groupOf.get(id) ?? parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; } };
-  const markup = [
+  const picture = [
     `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout, lod)).join("\n")}\n</g>`,
     `<g class="edges">\n${model.connections.map((c) => connectionMarkup(c, layout, lod)).join("\n")}\n</g>`,
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout, lod)).join("\n")}\n</g>`,
-    ...(legend.markup && withLegend ? [legend.markup] : []),
   ].join("\n");
-  return { markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height, legend: legend.markup };
+  return { picture, legend: legend.markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
 }
+const withLegend = (v: { picture: string; legend: string }) => (v.legend ? `${v.picture}\n${v.legend}` : v.picture);
 
-interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string; layout?: LayoutResult }
+interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string }
 
 /**
  * A view that plays a scenario (R10): the base model and every step, each a complete render on the same layout,
@@ -298,7 +292,7 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
     : `@keyframes ${name(k)}{0%{visibility:hidden}${pct(k)}%{visibility:visible}${pct(k + 1)}%{visibility:hidden}100%{visibility:hidden}}`).join("\n");
   const markup = frames.map((f, k) => [
     `<g class="step" data-step="${k}" style="animation:${name(k)} ${num(total)}s step-end infinite">`,
-    f.view.markup,
+    withLegend(f.view),
     `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.caption)}</text>`,
     `</g>`,
   ].join("\n")).join("\n");
@@ -315,50 +309,46 @@ function cameraFor(box: { x: number; y: number; width: number; height: number },
 /**
  * A tour (R12). When every scene shares one view it is one drawing: state layers only where the scenario moment
  * differs, a camera track that closes on each scene's focus group with that group as the fixed point, and
- * level-of-detail tracks that reveal a closed group while it is in focus. Pure CSS, so it plays inside <img>.
- * Scenes across different views fall back to a crossfade between whole views.
+ * level-of-detail tracks that open a group while it is in focus. The legend and the caption are a fixed strip
+ * below the stage. Scenes across different views fall back to a crossfade between whole views.
  */
 async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Record<string, string[]> | undefined): Promise<ViewLayer> {
-  const scenes = tour.scenes.map((sc) => {
-    const view = selectView(model, sc.view);
-    const merged = { ...(set ?? {}), ...(sc.set ?? {}) };
-    const d = declare(model, { ...(sc.scenario !== undefined ? { scenario: sc.scenario } : {}), ...(sc.step !== undefined ? { step: sc.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}) });
+  const scenes = tour.scenes.map((scene) => {
+    const view = selectView(model, scene.view);
+    const merged = { ...(set ?? {}), ...(scene.set ?? {}) };
+    const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}) });
     const title = view.title ?? model.title ?? view.id;
-    const stateKey = JSON.stringify([sc.scenario ?? null, sc.step ?? null, merged]);
-    return { sc, view, declared: d.model, title, caption: sc.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title), stateKey };
+    const stateKey = JSON.stringify([scene.scenario ?? null, scene.step ?? null, merged]);
+    return { scene, view, declared: d.model, title, caption: scene.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title), stateKey };
   });
-  const n = scenes.length, total = scenes.reduce((a, s) => a + s.sc.seconds, 0);
-  // A transition has three phases that never overlap: the old caption fades, then the camera moves over a picture
-  // that does not change, then the level of detail resolves and the new caption appears once the camera has
-  // settled. Nothing fades while anything moves, and a closed group keeps its summary and its connections until
-  // the camera is on it, the way a map resolves as you approach.
-  const fadeS = Math.min(1.5, Math.min(...scenes.map((s) => s.sc.seconds)));
-  const offW = fadeS * 0.2, camW = fadeS * 0.6;
-  const starts = scenes.map((_, k) => scenes.slice(0, k).reduce((a, s) => a + s.sc.seconds, 0));
-  const pc = (sec: number) => `${Math.round((sec / total) * 10000) / 100}%`;
-  const ease = "animation-timing-function:ease-in-out;";
-  /**
-   * Keyframes for a value that holds per scene and changes at each boundary, placed in one phase of the window:
-   * `camera` eases through the middle phase; `cross` fades across the whole window (state layers, which never
-   * coincide with a camera move of the same thing); `arrive` changes in the last phase (level of detail, both the
-   * summary going and the detail coming, so the box is never empty); `staged` turns off in the first phase and on
-   * in the last (captions, so two never overlap).
-   */
-  type Phase = "camera" | "cross" | "arrive" | "staged";
-  const track = (valueAt: (k: number) => string, phase: Phase): string => {
-    const stops: [string, string][] = [["0%", valueAt(0)]];
+  const n = scenes.length, total = scenes.reduce((a, s) => a + s.scene.seconds, 0);
+  const starts = scenes.map((_, k) => scenes.slice(0, k).reduce((a, s) => a + s.scene.seconds, 0));
+  // A transition has three phases that never overlap: the old caption fades (leave), the camera moves over a picture
+  // that does not change (move), then the level of detail resolves and the new caption appears once the camera has
+  // settled (arrive). A closed group keeps its summary and its connections until the camera is on it, the way a map
+  // resolves as you approach. State layers crossfade over the whole window; they never coincide with a camera move.
+  const window = Math.min(1.5, Math.min(...scenes.map((s) => s.scene.seconds)));
+  const leaveEnd = window * 0.2, moveEnd = window * 0.8;
+  type Phase = (k: number, turningOn: boolean) => [number, number];
+  const leave: Phase = (k) => [starts[k]!, starts[k]! + leaveEnd];
+  const move: Phase = (k) => [starts[k]! + leaveEnd, starts[k]! + moveEnd];
+  const arrive: Phase = (k) => [starts[k]! + moveEnd, starts[k]! + window];
+  const whole: Phase = (k) => [starts[k]!, starts[k]! + window];
+  const staged: Phase = (k, turningOn) => (turningOn ? arrive(k, true) : leave(k, false));
+  const pct = (sec: number) => `${Math.round((sec / total) * 10000) / 100}%`;
+  /** Keyframes for a value that holds per scene and changes at each scene boundary within one phase of the window. */
+  const track = <T>(valueAt: (k: number) => T, css: (v: T) => string, phase: Phase, easing = ""): string => {
+    const stops: [string, string][] = [["0%", css(valueAt(0))]];
     for (let k = 1; k < n; k++) {
       const prev = valueAt(k - 1), next = valueAt(k);
       if (prev === next) continue;
-      const s0 = starts[k]!;
-      if (phase === "camera") stops.push([pc(s0 + offW), ease + prev], [pc(s0 + offW + camW), next]);
-      else if (phase === "cross") stops.push([pc(s0), prev], [pc(s0 + fadeS), next]);
-      else if (phase === "arrive" || next.endsWith(":1")) stops.push([pc(s0 + offW + camW), prev], [pc(s0 + fadeS), next]);
-      else stops.push([pc(s0), prev], [pc(s0 + offW), next]);
+      const [from, to] = phase(k, next === true);
+      stops.push([pct(from), easing + css(prev)], [pct(to), css(next)]);
     }
-    stops.push(["100%", valueAt(n - 1)]);
+    stops.push(["100%", css(valueAt(n - 1))]);
     return stops.filter(([p], i) => i === 0 || p !== stops[i - 1]![0]).map(([p, v]) => `${p}{${v}}`).join("");
   };
+  const opacity = (on: boolean) => (on ? "opacity:1" : "opacity:0");
   const anchor = scenes[0]!.view;
   const oneView = scenes.every((s) => s.view.id === anchor.id);
 
@@ -367,36 +357,36 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     const base = scopeModel(propagate(scenes[0]!.declared), anchor);
     const layout = await engine.layout(toLayoutGraph(base));
     const stateKeys = [...new Set(scenes.map((s) => s.stateKey))];
-    const layers = stateKeys.map((key) => { const s = scenes.find((x) => x.stateKey === key)!; return renderView(scopeModel(propagate(s.declared), anchor), layout, { legend: false }); });
+    const layers = stateKeys.map((key) => { const s = scenes.find((x) => x.stateKey === key)!; return renderView(scopeModel(propagate(s.declared), anchor), layout); });
     const width = Math.max(...layers.map((l) => l.width)), height = Math.max(...layers.map((l) => l.height)) + 24;
     // The camera frames the drawing alone; legend and caption are a fixed strip below it.
-    const size = { width, height: layout.height };
-    const focusOf = (k: number) => scenes[k]!.sc.focus;
-    const camera = (k: number) => { const g = focusOf(k); return g && layout.groups[g] ? `transform:${cameraFor(layout.groups[g]!, size)}` : "transform:none"; };
-    const focused = [...new Set(scenes.map((s) => s.sc.focus).filter((g): g is string => g !== undefined))];
+    const stage = { width, height: layout.height };
+    const focusOf = (k: number) => scenes[k]!.scene.focus;
+    const cameraAt = (k: number) => { const g = focusOf(k); return g && layout.groups[g] ? cameraFor(layout.groups[g]!, stage) : "none"; };
+    const focused = [...new Set(scenes.map((s) => s.scene.focus).filter((g): g is string => g !== undefined))];
+    const stateLayer = (i: number) => `animation:orrery-state-${i} ${num(total)}s linear infinite`;
     const css = [
-      `@keyframes orrery-camera{${track(camera, "camera")}}`,
-      ...stateKeys.map((key, i) => `@keyframes orrery-state-${i}{${track((k) => (scenes[k]!.stateKey === key ? "opacity:1" : "opacity:0"), "cross")}}`),
+      `@keyframes orrery-camera{${track(cameraAt, (v) => `transform:${v}`, move, "animation-timing-function:ease-in-out;")}}`,
+      ...stateKeys.map((key, i) => `@keyframes orrery-state-${i}{${track((k) => scenes[k]!.stateKey === key, opacity, whole)}}`),
       ...focused.flatMap((g) => [
         `[data-lod="detail"][data-for~="${g}"]{animation:orrery-lod-${g}-detail ${num(total)}s linear infinite}`,
         `[data-lod="summary"][data-for~="${g}"]{animation:orrery-lod-${g}-summary ${num(total)}s linear infinite}`,
-        `@keyframes orrery-lod-${g}-detail{${track((k) => (focusOf(k) === g ? "opacity:1" : "opacity:0"), "arrive")}}`,
-        `@keyframes orrery-lod-${g}-summary{${track((k) => (focusOf(k) === g ? "opacity:0" : "opacity:1"), "arrive")}}`,
+        `@keyframes orrery-lod-${g}-detail{${track((k) => focusOf(k) === g, opacity, arrive)}}`,
+        `@keyframes orrery-lod-${g}-summary{${track((k) => focusOf(k) !== g, opacity, arrive)}}`,
       ]),
+      ...scenes.map((_, k) => `@keyframes orrery-caption-${k}{${track((j) => j === k, opacity, staged)}}`),
     ].join("\n");
-    const captions = scenes.map((s, k) => `<text class="step-note" x="20" y="${num(height - 12)}" style="animation:orrery-caption-${k} ${num(total)}s linear infinite">${esc(s.caption)}</text>`).join("\n");
-    const captionCss = scenes.map((_, k) => `@keyframes orrery-caption-${k}{${track((j) => (j === k ? "opacity:1" : "opacity:0"), "staged")}}`).join("\n");
     const markup = [
-      `<clipPath id="orrery-stage-${escAttr(anchor.id)}"><rect width="${num(size.width)}" height="${num(size.height)}"/></clipPath>`,
+      `<clipPath id="orrery-stage-${escAttr(anchor.id)}"><rect width="${num(stage.width)}" height="${num(stage.height)}"/></clipPath>`,
       `<g class="stage" clip-path="url(#orrery-stage-${escAttr(anchor.id)})">`,
-      `<g class="camera" data-stage="${num(size.width)} ${num(size.height)}" style="animation:orrery-camera ${num(total)}s linear infinite">`,
-      ...layers.map((l, i) => `<g class="state" data-state="${i}" style="animation:orrery-state-${i} ${num(total)}s linear infinite">\n${l.markup}\n</g>`),
+      `<g class="camera" data-stage="${num(stage.width)} ${num(stage.height)}" style="animation:orrery-camera ${num(total)}s linear infinite">`,
+      ...layers.map((l, i) => `<g class="state" data-state="${i}" style="${stateLayer(i)}">\n${l.picture}\n</g>`),
       `</g>`,
       `</g>`,
-      ...layers.flatMap((l, i) => (l.legend ? [`<g class="state" data-state="${i}" data-role="legend" style="animation:orrery-state-${i} ${num(total)}s linear infinite">\n${l.legend}\n</g>`] : [])),
-      captions,
+      ...layers.flatMap((l, i) => (l.legend ? [`<g class="state" data-state="${i}" data-role="legend" style="${stateLayer(i)}">\n${l.legend}\n</g>`] : [])),
+      ...scenes.map((s, k) => `<text class="step-note" x="20" y="${num(height - 12)}" style="animation:orrery-caption-${k} ${num(total)}s linear infinite">${esc(s.caption)}</text>`),
     ].join("\n");
-    return { view: anchor, title: model.title ?? anchor.id, width, height, markup, css: css + "\n" + captionCss, layout };
+    return { view: anchor, title: model.title ?? anchor.id, width, height, markup, css };
   }
 
   // Different views: whole-view layers, centred on a shared canvas, crossfaded.
@@ -406,7 +396,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const frames: ViewLayer[] = [];
   for (const [i, s] of scenes.entries()) frames.push(await layerFor(s.declared, s.view, engine, undefined, s.title, { dx: Math.round((canvasW - measured[i]!.width) / 2), dy: Math.round((canvasH - measured[i]!.height) / 2) }));
   const height = canvasH + 24;
-  const css = frames.map((_, k) => `@keyframes orrery-tour-${k}{${track((j) => (j === k ? "opacity:1" : "opacity:0"), "cross")}}`).join("\n");
+  const css = frames.map((_, k) => `@keyframes orrery-tour-${k}{${track((j) => j === k, opacity, whole)}}`).join("\n");
   const markup = frames.map((f, k) => [
     `<g class="tour" data-frame="${k}" data-view="${escAttr(f.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
     f.markup,
@@ -432,8 +422,9 @@ async function layerFor(declared: Model, view: View, engine: LayoutEngine, play:
   const base = scopeModel(propagate(declared), view);
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
-  const v = play ? playingLayer(declared, view, play, layout) : renderView(base, layout);
-  return { view, title, ...v, layout };
+  if (play) return { view, title, ...playingLayer(declared, view, play, layout) };
+  const v = renderView(base, layout);
+  return { view, title, width: v.width, height: v.height, markup: withLegend(v) };
 }
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>
@@ -459,7 +450,7 @@ function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer
 export function renderSvg(model: Model, layout: LayoutResult): string {
   const view = model.views[0]!;
   const v = renderView(model, layout);
-  return wrapDocument(model, model.title, [{ view, title: model.title ?? view.id, width: v.width, height: v.height, markup: v.markup }], []);
+  return wrapDocument(model, model.title, [{ view, title: model.title ?? view.id, width: v.width, height: v.height, markup: withLegend(v) }], []);
 }
 
 export interface RenderOptions {
