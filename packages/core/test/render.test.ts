@@ -161,7 +161,9 @@ describe("renderSvg: collapsed groups as level of detail (R11)", () => {
     const svg = await render(m, new FakeLayoutEngine(), { view: "overview" });
     const payments = between(svg, 'data-group="payments"');
     expect(payments).toContain('data-collapsed="4"');
-    expect(payments).toMatch(/<g class="lod-summary" data-lod="summary" data-for="payments">[\s\S]*>Payments<\/text>[\s\S]*>4 inside<\/text>/);
+    // the summary is the name, centred, and an expand mark in the corner: no count, the count is a data attribute
+    expect(payments).toMatch(/<g class="lod-summary" data-lod="summary" data-for="payments">[\s\S]*<text class="summary-label"[^>]*>Payments<\/text>[\s\S]*<g class="summary-open"/);
+    expect(payments).not.toContain("inside</text>");
     expect(payments).toMatch(/<text class="group-label" data-lod="detail" data-for="payments"/);
     // members and the sub-group inside are detail
     expect(svg).toMatch(/<g class="node[^"]*" data-node="ledger"[^>]*data-lod="detail" data-for="payments"/);

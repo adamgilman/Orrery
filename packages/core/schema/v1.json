@@ -546,7 +546,7 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
-            "description": "Group ids drawn closed in this view: the group keeps its real footprint, its name and a count sit centred on it, and its members are hidden until the group is in focus (a tour scene's 'focus', or a click in the interactive file). Connections into it stop at its frame until then. Health still derives from what is inside."
+            "description": "Group ids drawn closed in this view: the group keeps its real footprint, its name sits centred on it with an expand mark, and its members are hidden until the group is in focus (a tour scene's 'focus', or a click in the interactive file). Connections into it stop at its frame until then."
           }
         }
       }

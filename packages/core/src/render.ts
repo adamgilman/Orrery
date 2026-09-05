@@ -117,7 +117,7 @@ const BASE_STYLE = `
 [data-lod="detail"]{opacity:0}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
-.summary-count{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.summary-open{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -164,8 +164,9 @@ function groupMarkup(g: Group, model: Model, layout: LayoutResult, lod: Lod): st
     `<text class="group-label"${closed ? ` data-lod="detail" data-for="${escAttr(g.id)}"` : ""} x="${num(b.x + 12)}" y="${num(b.y + 16)}">${esc(g.label)}</text>`,
     ...(closed ? [
       `<g class="lod-summary" data-lod="summary" data-for="${escAttr(g.id)}">`,
-      `<text class="summary-label" x="${num(b.x + b.width / 2)}" y="${num(b.y + b.height / 2 - 9)}">${esc(g.label)}</text>`,
-      `<text class="summary-count" x="${num(b.x + b.width / 2)}" y="${num(b.y + b.height / 2 + 13)}">${g.collapsed} inside</text>`,
+      `<text class="summary-label" x="${num(b.x + b.width / 2)}" y="${num(b.y + b.height / 2)}">${esc(g.label)}</text>`,
+      // The expand mark: a small boxed plus in the top-right corner, the conventional sign that there is more inside.
+      `<g class="summary-open" transform="translate(${num(b.x + b.width - 22)} ${num(b.y + 8)})"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`,
       `</g>`,
     ] : []),
     `</g>`,

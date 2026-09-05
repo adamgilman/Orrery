@@ -5,7 +5,7 @@
 [data-lod="detail"]{opacity:0}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
-.summary-count{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.summary-open{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -67,8 +67,8 @@
 <rect class="group-box" x="32" y="325.5" width="268" height="96" rx="10"/>
 <text class="group-label" data-lod="detail" data-for="sessions" x="44" y="341.5">Session cache</text>
 <g class="lod-summary" data-lod="summary" data-for="sessions">
-<text class="summary-label" x="166" y="364.5">Session cache</text>
-<text class="summary-count" x="166" y="386.5">2 inside</text>
+<text class="summary-label" x="166" y="373.5">Session cache</text>
+<g class="summary-open" transform="translate(278 333.5)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>
 </g>
 </g>
 </g>
@@ -128,8 +128,8 @@
 <rect class="group-box" x="32" y="325.5" width="268" height="96" rx="10"/>
 <text class="group-label" data-lod="detail" data-for="sessions" x="44" y="341.5">Session cache</text>
 <g class="lod-summary" data-lod="summary" data-for="sessions">
-<text class="summary-label" x="166" y="364.5">Session cache</text>
-<text class="summary-count" x="166" y="386.5">2 inside</text>
+<text class="summary-label" x="166" y="373.5">Session cache</text>
+<g class="summary-open" transform="translate(278 333.5)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>
 </g>
 </g>
 </g>
@@ -187,7 +187,7 @@
 <g transform="translate(0 20)"><rect width="14" height="14" rx="3" style="fill:#fef2f2;stroke:#dc2626;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">failed</tspan>: Broken</text></g>
 </g>
 </g>
-<text class="step-note" x="20" y="613.5" style="animation:orrery-caption-0 16s linear infinite">The session cache is closed: its footprint, its name, a count.</text>
+<text class="step-note" x="20" y="613.5" style="animation:orrery-caption-0 16s linear infinite">The session cache is closed: one box, with more inside.</text>
 <text class="step-note" x="20" y="613.5" style="animation:orrery-caption-1 16s linear infinite">Inside: two cache nodes.</text>
 <text class="step-note" x="20" y="613.5" style="animation:orrery-caption-2 16s linear infinite">Node A fails: the cluster and the API are marked degraded, with a reason each.</text>
 <text class="step-note" x="20" y="613.5" style="animation:orrery-caption-3 16s linear infinite">Back out: the closed box carries the state.</text>

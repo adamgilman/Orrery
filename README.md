@@ -54,7 +54,7 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 
 ![Data tier](examples/checkout/5-views-data.svg)
 
-**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box, a name and a count.
+**6. Drill down.** One diagram, every level of detail. Start high: the session cache is one box.
 Open it and you are inside, looking at the nodes it is made of. Close it and you are back at the whole system.
 Nothing is redrawn; the detail is in the model, folded away until the reader wants it. This image plays that as a
 four-scene `tour`: the whole system, inside the cache, one node fails, back out. In the interactive file, click any
