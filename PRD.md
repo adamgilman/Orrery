@@ -111,6 +111,7 @@ interface LayoutEngine {
 | M1 model and views | Groups, kinds, views with scope, label-aware layout, group frames and glyphs. Measured ELK option sweep found no win over the baseline. |
 | M2 failure semantics | Declared states, dependencies with alternatives, cumulative scenarios, pure propagation with reasons, state styling, frame tooling that freezes the pulse. |
 | M3 runtime | Runtime inside the raw SVG: outline, zoom, state changes with live propagation, scenario step-through, multi-view morph, keyboard. CLI emits the interactive document by default. Verified in jsdom; browser check pending. |
+| Timer playback | A view can `play` a scenario: pre-rendered step layers cycled by CSS in the file (plays in a README), and runtime autoplay until the reader interacts. |
 | Model redesign | The specification in docs/MODEL.md replaced fixed system states with the author's vocabulary, moved dependencies to `needs` on components, made connections fluid across entities, added `--set`, warnings, legend, ghosts. Four fresh-agent walks, zero validation failures on the last one. |
 
 ### Roadmap (aligned to the model, 2026-09-05)

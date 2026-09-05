@@ -145,6 +145,7 @@ connection and need pointing at it keeps working.
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group becomes the outer frame and only its descendants are shown. |
 | `only` | array of entity id | | Restrict to these entities; a group id means the group and everything in it. Groups containing a selected entity are shown. Combines with `scope` by intersection. |
+| `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view: the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
 
 Connections with exactly one end inside a view are drawn to a ghost of the outside entity at the view's edge
 (R4). Nothing is dropped silently.
@@ -345,6 +346,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R7 | A connection whose end is a group attaches to that group's frame; an empty group is drawn as a frame of minimum size. | layoutContract "(group endpoints)" |
 | R8 | An entity is drawn by its state's look and its kind's glyph or frame, never by the names; a custom look or kind renders exactly its style object. | render.test "looks and kinds (R8)" |
 | R9 | A legend lists every non-default state used in a view with its look and description. | render.test "legend (R9)" |
+| R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 
 ## 7. Non-goals (v1)
 

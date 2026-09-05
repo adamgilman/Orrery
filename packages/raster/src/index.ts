@@ -29,6 +29,9 @@ export function activeView(svg: string): string {
   // Hidden layers carry their style right after the class (the renderer guarantees the attribute order).
   const hidden = '<g class="view" style="display:none"';
   for (let i = out.indexOf(hidden); i >= 0; i = out.indexOf(hidden, i)) out = dropElement(out, i);
+  // A playing view stacks one layer per step; the still picture is the base step.
+  const steps = /<g class="step" data-step="(\d+)"/g;
+  for (let m = steps.exec(out); m; m = steps.exec(out)) if (m[1] !== "0") { out = dropElement(out, m.index); steps.lastIndex = m.index; }
   return out;
 }
 

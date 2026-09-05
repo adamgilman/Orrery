@@ -220,3 +220,14 @@ describe("orrery argument parsing", () => {
     expect(r.err).not.toContain("    at ");
   });
 });
+
+describe("orrery render --play", () => {
+  it("renders a static file that cycles through a scenario", () => {
+    const r = run("render", join(fixtures, "valid/alternatives.json"), "--static", "--play", "orders-failover", "--every", "4");
+    expect(r.code).toBe(0);
+    expect((r.out.match(/<g class="step"/g) ?? []).length).toBe(5);
+    expect(r.out).toContain("20s step-end infinite");
+    expect(run("render", join(fixtures, "valid/alternatives.json"), "--every", "4").code).toBe(2);
+    expect(run("render", join(fixtures, "valid/alternatives.json"), "--play", "nope").code).toBe(1);
+  });
+});

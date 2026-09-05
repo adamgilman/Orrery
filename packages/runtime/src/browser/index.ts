@@ -46,6 +46,14 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   let zoomed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
+  let autoplay: ReturnType<typeof setInterval> | undefined;
+
+  // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
+  for (const layer of layers.values()) {
+    for (const step of layer.querySelectorAll<SVGGElement>("g.step")) {
+      if (step.getAttribute("data-step") === "0") { step.removeAttribute("style"); step.querySelector(".step-note")?.remove(); } else step.remove();
+    }
+  }
 
   root.removeAttribute("viewBox");
   root.setAttribute("width", "100%"); root.setAttribute("height", "100%");
@@ -180,6 +188,23 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   for (const b of panel.stateBar.querySelectorAll<HTMLButtonElement>("button")) on(b, "click", () => { if (selected) setState(selected.id, b.getAttribute("data-state")!); });
 
   const setScenario = (id: string | null, step = 1) => { session.setScenario(id, step); panel.scenarios.value = session.scenario?.id ?? ""; apply(); };
+
+  /** Play the active view's scenario on its timer: base, each step, loop. Any interaction stops it. */
+  const stopAutoplay = () => { if (autoplay) { clearInterval(autoplay); autoplay = undefined; } };
+  const startAutoplay = () => {
+    stopAutoplay();
+    const play = model.views.find((v) => v.id === activeId)?.play;
+    if (!play) return;
+    const n = model.scenarios.find((s) => s.id === play.scenario)?.steps.length ?? 0;
+    if (!n) return;
+    let k = 0;
+    setScenario(null);
+    autoplay = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k); }, play.seconds * 1000);
+  };
+  for (const t of [scene, panel.host]) on(t, "click", stopAutoplay);
+  on(document, "keydown", stopAutoplay);
+  on(panel.scenarios, "change", stopAutoplay);
+  on(panel.views, "change", stopAutoplay);
   on(panel.scenarios, "change", () => setScenario(panel.scenarios.value || null, 1));
   on(panel.prev, "click", () => session.scenario && setScenario(session.scenario.id, session.scenario.step - 1));
   on(panel.next, "click", () => session.scenario && setScenario(session.scenario.id, session.scenario.step + 1));
@@ -210,6 +235,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       rebuildOutline(); apply();
       if (selected) select(selected.id, selected.type);
       fit(true);
+      startAutoplay();
     };
     morphing = finish;
     const step = () => {
@@ -242,10 +268,10 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   });
   on(window, "resize", () => { if (!zoomed) fit(false); });
 
-  rebuildOutline(); apply(); fit(false);
+  rebuildOutline(); apply(); fit(false); startAutoplay();
   return {
     showView, setScenario, setState, reset,
-    destroy: () => { ac.abort(); if (timer) clearTimeout(timer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
+    destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
   };
 }
 

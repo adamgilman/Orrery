@@ -42,8 +42,15 @@ degrades behind the API, and traffic moves off the dead paths. Healthy first, th
 
 ![Failover, primary failed](examples/readme/failover-db-fails.svg)
 
+Or let the file play the scenario itself. This one cycles through the base model and the step every three seconds
+with no script, because the steps are pre-rendered layers switched by CSS. The interactive file plays the same
+steps on a timer until you click.
+
+![Failover, playing](examples/readme/failover-play.svg)
+
 ```sh
-orrery render examples/readme/failover.orrery.json --scenario db-fails -o failed.svg
+orrery render examples/readme/failover.orrery.json --scenario db-fails -o failed.svg    # one step, still
+orrery render examples/readme/failover.orrery.json --play db-fails --every 3 -o play.svg   # every step, on a loop
 ```
 
 **Views.** One model, many drawings. A view can drill into a group and choose its own direction.

@@ -12,9 +12,11 @@ export const USAGE = `Usage:
                  [--scenario <id>]       (outline, zoom, click to change state, scenarios). Deterministic.
                  [--step <n>]            --view: which view is shown first. --static: one view, no runtime.
                  [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
-                                         --static; --step <n> (1-based) stops after step n (default: last).
-                                         --set failed=db,cache  declares states for a one-off what-if
+                 [--play <id>]           --static; --step <n> (1-based) stops after step n (default: last).
+                 [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
                                          (repeatable; applied after the scenario).
+                                         --play cycles a scenario's steps on a timer: pure CSS in the file, so
+                                         it plays inside <img>; --every sets the seconds per step (default 3).
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -26,7 +28,7 @@ export class CliError extends Error {
 }
 interface Io { stdout(s: string): void; stderr(s: string): void }
 
-const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set"]);
+const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every"]);
 const BOOL_FLAGS = new Set(["--static"]);
 
 interface Args { positionals: string[]; values: Map<string, string[]>; flags: Set<string> }
@@ -99,11 +101,16 @@ export async function main(argv: string[], io: Io): Promise<number> {
     if (step !== undefined && !Number.isInteger(step)) throw new CliError(`--step must be an integer, got "${stepRaw}"`, 2);
     const set = parseSets(args.values.get("--set"));
     const hasSet = Object.keys(set).length > 0;
+    const playId = one(args, "--play"), everyRaw = one(args, "--every");
+    if (everyRaw !== undefined && playId === undefined) throw new CliError("--every requires --play", 2);
+    const every = everyRaw !== undefined ? Number(everyRaw) : undefined;
+    if (every !== undefined && !(every > 0)) throw new CliError(`--every must be a positive number of seconds, got "${everyRaw}"`, 2);
+    const play = playId !== undefined ? { scenario: playId, ...(every !== undefined ? { seconds: every } : {}) } : undefined;
     const isStatic = args.flags.has("--static") || scenario !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
-      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}) };
+      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}) };
       svg = isStatic
         ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });

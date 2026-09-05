@@ -182,3 +182,29 @@ describe("runtime boot", () => {
     expect(state(root, "orders")).toBe("on");
   });
 });
+
+describe("runtime autoplay", () => {
+  let rt: Runtime;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("plays the view's scenario on its timer, loops, and stops on the first interaction", async () => {
+    const root = await doc("alternatives");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    rt.showView("failover-loop");
+    vi.advanceTimersByTime(400); // finish the morph
+    expect(root.querySelectorAll('.view:not([style*="display:none"]) .step')).toHaveLength(1); // extra step layers removed, CSS cycle gone
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("");
+    vi.advanceTimersByTime(2000);
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4");
+    expect(state(root, "orders")).toBe("failed");
+    vi.advanceTimersByTime(6000);
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("4 / 4");
+    vi.advanceTimersByTime(2000);
+    expect(root.querySelector(".orrery-step")!.textContent).toBe(""); // back to base, then loops
+    vi.advanceTimersByTime(2000);
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4");
+    click(vis(root, '[data-node="fraud"]'));
+    vi.advanceTimersByTime(10000);
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4"); // timer stopped
+  });
+});

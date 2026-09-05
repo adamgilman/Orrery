@@ -21,6 +21,7 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
 .kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}

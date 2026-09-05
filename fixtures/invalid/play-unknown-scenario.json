@@ -1,0 +1,15 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "play": {
+        "scenario": "nope"
+      }
+    }
+  ]
+}

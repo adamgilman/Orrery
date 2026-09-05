@@ -4,8 +4,8 @@ export * from "./flow.js";
 import { GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
 import { LOOK_PRESETS, lookOf } from "./looks.js";
 export { LOOK_PRESETS, lookOf } from "./looks.js";
-import { declare, propagate } from "./simulate.js";
-import type { Component, Connection, Group, GroupKindDef, Model, View } from "./types.js";
+import { declare, ModelError, propagate } from "./simulate.js";
+import type { Component, Connection, Group, GroupKindDef, Model, Play, View } from "./types.js";
 import { scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -121,6 +121,7 @@ const BASE_STYLE = `
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px ${FONT};fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px ${FONT};fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 12px ${FONT};fill:#475569;dominant-baseline:central}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:${PULSE_MIN_OPACITY}}100%{stroke-opacity:1}}`.trim();
 
@@ -214,7 +215,44 @@ export function renderView(model: Model, layout: LayoutResult): { markup: string
   return { markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
 }
 
-interface ViewLayer { view: View; title: string; width: number; height: number; markup: string }
+interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string }
+
+/**
+ * A view that plays a scenario (R10): the base model and every step, each a complete render on the same layout,
+ * stacked as `g.step` layers and cycled by a CSS visibility animation with the declared period. Pure CSS, so it
+ * plays inside <img>; the runtime strips the cycle and plays the steps itself.
+ */
+function playingLayer(declared: Model, view: View, play: Play, layout: LayoutResult): Pick<ViewLayer, "markup" | "width" | "height" | "css"> {
+  const scenario = declared.scenarios.find((s) => s.id === play.scenario)!;
+  const n = scenario.steps.length;
+  const frames = [
+    { model: propagate(declared), caption: scenario.label },
+    ...scenario.steps.map((st, i) => ({ model: propagate(declare(declared, { scenario: play.scenario, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
+  ].map((f) => ({ ...f, view: renderView(scopeModel(f.model, view), layout) }));
+  const height = Math.max(...frames.map((f) => f.view.height)) + 24;
+  const width = Math.max(...frames.map((f) => f.view.width));
+  const total = frames.length * play.seconds;
+  const name = (k: number) => `orrery-play-${view.id}-${k}`;
+  const pct = (k: number) => num((k / frames.length) * 100);
+  const css = frames.map((_, k) => k === 0
+    ? `@keyframes ${name(k)}{0%{visibility:visible}${pct(1)}%{visibility:hidden}100%{visibility:hidden}}`
+    : `@keyframes ${name(k)}{0%{visibility:hidden}${pct(k)}%{visibility:visible}${pct(k + 1)}%{visibility:hidden}100%{visibility:hidden}}`).join("\n");
+  const markup = frames.map((f, k) => [
+    `<g class="step" data-step="${k}" style="animation:${name(k)} ${num(total)}s step-end infinite">`,
+    f.view.markup,
+    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.caption)}</text>`,
+    `</g>`,
+  ].join("\n")).join("\n");
+  return { markup, width, height, css };
+}
+
+/** Lay out and render one view of a declared (un-propagated) model, playing a scenario when asked. */
+async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string): Promise<ViewLayer> {
+  const base = scopeModel(propagate(declared), view);
+  const layout = await engine.layout(toLayoutGraph(base));
+  const v = play ? playingLayer(declared, view, play, layout) : renderView(base, layout);
+  return { view, title, ...v };
+}
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>
   `<g class="view"${visible ? "" : ' style="display:none"'} data-view="${escAttr(l.view.id)}" data-title="${escAttr(l.title)}" data-size="${num(l.width)} ${num(l.height)}">\n${l.markup}\n</g>`;
@@ -226,7 +264,7 @@ function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer
   const m = (id: string, reverse: boolean) => `<marker id="${id}" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${reverse ? 1 : ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="${reverse ? `M${ARROW_LENGTH} 0L0 ${ARROW_LENGTH / 2}L${ARROW_LENGTH} ${ARROW_LENGTH}z` : `M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z`}" fill="#94a3b8"/></marker>`;
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(first.width)} ${num(first.height)}" width="${num(first.width)}" height="${num(first.height)}" data-orrery="1">`,
-    (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}</style>`,
+    (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths.
     `<defs>${m("arrow", false)}${m("arrow-start", true)}</defs>`,
     `<g class="scene">\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
@@ -249,25 +287,28 @@ export interface RenderOptions {
   step?: number;
   /** Ad-hoc declared-state overrides: state name → entity ids. Applied after the scenario. */
   set?: Record<string, string[]>;
+  /** Play a scenario on a timer in the rendered view, overriding the view's own `play`. Ignored with `scenario`. */
+  play?: { scenario: string; seconds?: number };
 }
-
-function prepare(model: Model, options: RenderOptions): Model {
-  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}) });
-  const propagated = propagate(d.model);
-  if (options.scenario === undefined) return propagated;
-  const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
-  return { ...propagated, title: `${model.title ?? "Model"} - ${label} (${d.step}/${d.steps})${d.note !== undefined ? `: ${d.note}` : ""}` };
-}
+const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
+  options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
 
 /** Select a view, apply scenario/overrides, propagate, scope, lay out and render one static view. */
 export async function render(model: Model, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
-  const prepared = prepare(model, options);
-  const scoped = scopeModel(prepared, selectView(prepared, options.view));
-  const layout = await engine.layout(toLayoutGraph(scoped));
-  return renderSvg(scoped, layout);
+  const view = selectView(model, options.view);
+  const play = playOf(view, options);
+  if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
+  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}) });
+  let title = view.title ?? model.title;
+  if (options.scenario !== undefined) {
+    const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
+    title = `${model.title ?? "Model"} - ${label} (${d.step}/${d.steps})${d.note !== undefined ? `: ${d.note}` : ""}`;
+  }
+  const layer = await layerFor(d.model, view, engine, play, title ?? view.id);
+  return wrapDocument(model, title, [layer], []);
 }
 
-export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]> }
+export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number } }
 
 /**
  * The shippable file: every view pre-laid-out and embedded (first visible), the normalised model as JSON, and the
@@ -276,14 +317,12 @@ export interface DocumentOptions { runtime: string; view?: string; set?: Record<
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
   // The declared (un-propagated) model with overrides applied is what the runtime starts from.
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
-  const prepared = propagate(declared);
-  const first = selectView(prepared, options.view);
+  const first = selectView(model, options.view);
   const layers: ViewLayer[] = [];
-  for (const view of [first, ...prepared.views.filter((v) => v.id !== first.id)]) {
-    const scoped = scopeModel(prepared, view);
-    const layout = await engine.layout(toLayoutGraph(scoped));
-    const v = renderView(scoped, layout);
-    layers.push({ view, title: view.title ?? model.title ?? view.id, width: v.width, height: v.height, markup: v.markup });
+  for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
+    const play = view === first ? playOf(view, options) : view.play;
+    if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
+    layers.push(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(declared).replace(/]]>/g, "]]\\u003e");

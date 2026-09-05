@@ -61,7 +61,7 @@ interface Raw {
   components: { id: string; label?: string; kind: string; group?: string; state?: string; needs: (string | RawNeed)[]; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: Connection["kind"]; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
-  views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[] }[];
+  views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number } }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
 }
 
@@ -216,7 +216,8 @@ export function validate(input: unknown): ValidationResult {
       if (!isEntity(id)) return err(`/views/${i}/only/${k}`, `unknown entity "${id}"`);
       if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/only/${k}`, `"${id}" is not inside scope "${v.scope}"`);
     });
-    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only) };
+    if (v.play && !raw.scenarios.some((sc) => sc.id === v.play!.scenario)) err(`/views/${i}/play/scenario`, `unknown scenario "${v.play.scenario}"`);
+    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play) };
   });
 
   /* scenarios */

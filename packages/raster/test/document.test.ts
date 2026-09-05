@@ -27,3 +27,15 @@ describe("multi-view documents in the frame tooling", () => {
     expect(report.connections.map((e) => e.key)).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
   });
 });
+
+describe("playing views in the frame tooling", () => {
+  it("activeView keeps only the base step so the checks see a still model", async () => {
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/alternatives.json"), "utf8")));
+    if (!r.ok) throw new Error();
+    const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "", view: "failover-loop" });
+    const one = activeView(svg);
+    expect((one.match(/<g class="step"/g) ?? []).length).toBe(1);
+    expect(one).toContain('data-step="0"');
+    expect(inspect(svg, { fps: 5, durationMs: 400 }).ok).toBe(true);
+  });
+});

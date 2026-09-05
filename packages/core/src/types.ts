@@ -84,6 +84,8 @@ export interface Connection {
   need?: true;
 }
 
+export interface Play { scenario: string; seconds: number }
+
 export interface View {
   id: string;
   type: ViewType;
@@ -91,6 +93,8 @@ export interface View {
   title?: string;
   scope?: string;
   only?: string[];
+  /** Cycle this scenario's steps on a timer: as CSS layers in the file, and in the runtime until the reader interacts. */
+  play?: Play;
 }
 
 export interface ScenarioStep {

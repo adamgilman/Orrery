@@ -108,3 +108,37 @@ describe("render options", () => {
     expect(o).toContain('data-node="api" data-kind="service" data-state="degraded"');
   });
 });
+
+describe("renderDocument / render: a view that plays a scenario (R10)", () => {
+  it("emits one complete layer per step, base first, cycled by CSS with the declared period", async () => {
+    const m = fixture("alternatives");
+    const svg = await render(m, new FakeLayoutEngine(), { view: "failover-loop" });
+    const steps = [...svg.matchAll(/<g class="step" data-step="(\d)" style="animation:orrery-play-failover-loop-(\d) (\d+)s step-end infinite">/g)];
+    expect(steps.map((s) => s[1])).toEqual(["0", "1", "2", "3", "4"]); // base + 4 steps
+    expect(steps.every((s) => s[3] === "10")).toBe(true); // 5 layers × 2 s
+    expect(svg).toMatch(/@keyframes orrery-play-failover-loop-0\{0%\{visibility:visible\}20%\{visibility:hidden\}100%\{visibility:hidden\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-play-failover-loop-2\{0%\{visibility:hidden\}40%\{visibility:visible\}60%\{visibility:hidden\}100%\{visibility:hidden\}\}/);
+    // each step layer is a complete render with its own states and legend
+    const layer = (k: number) => svg.slice(svg.indexOf(`data-step="${k}"`), svg.indexOf(`data-step="${k + 1}"`) > 0 ? svg.indexOf(`data-step="${k + 1}"`) : svg.length);
+    expect(layer(0)).toMatch(/data-node="orders"[^>]*data-state="on"/);
+    expect(layer(1)).toMatch(/data-node="orders"[^>]*data-state="failed"/);
+    expect(layer(3)).toMatch(/data-node="api"[^>]*data-state="failed"/);
+    expect(layer(1)).toContain('class="legend"');
+    expect(layer(1)).toContain(">Step 1 of 4: Primary goes down; reads move to the replica, API runs reduced</text>");
+    expect(layer(0)).toContain(">Orders DB failover</text>");
+  });
+  it("keeps one layout for every step, so nothing moves between steps", async () => {
+    const svg = await render(fixture("alternatives"), new FakeLayoutEngine(), { view: "failover-loop" });
+    const positions = [...svg.matchAll(/data-node="api"[^>]*data-bbox="([^"]+)"/g)].map((m) => m[1]);
+    expect(positions).toHaveLength(5);
+    expect(new Set(positions).size).toBe(1);
+  });
+  it("--play overrides the view and defaults to three seconds", async () => {
+    const svg = await render(fixture("alternatives"), new FakeLayoutEngine(), { play: { scenario: "orders-failover" } });
+    expect(svg).toMatch(/orrery-play-overview-0 15s step-end infinite/);
+  });
+  it("a non-playing view has no step layers", async () => {
+    const svg = await render(fixture("alternatives"), new FakeLayoutEngine());
+    expect(svg).not.toContain('class="step"');
+  });
+});

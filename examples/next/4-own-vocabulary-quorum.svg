@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1396.5 370" width="1396.5" height="370" data-orrery="1">
-<title>Trading platform</title>
+<title>Trading platform - Sequencer quorum loss (2/3): Second out: quorum lost, both matchers in outage, edge in outage</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
@@ -18,6 +18,7 @@
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
 .kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
@@ -42,7 +43,7 @@
 .st-drained{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
-<g class="view" data-view="overview" data-title="Trading platform" data-size="1396.5 370">
+<g class="view" data-view="overview" data-title="Trading platform - Sequencer quorum loss (2/3): Second out: quorum lost, both matchers in outage, edge in outage" data-size="1396.5 370">
 <g class="groups">
 <g class="group gk-region st-impaired" data-group="eu" data-bbox="313.5 20 798.5 280" data-state="impaired">
 <title>Cell A, Cell B unavailable</title>

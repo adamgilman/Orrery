@@ -546,6 +546,26 @@
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
             "description": "Show only these entities (a group id means the group and everything in it) plus the groups containing them. Combines with 'scope' by intersection."
+          },
+          "play": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario"
+            ],
+            "description": "Play a scenario on a timer in this view. The rendered file carries every step as a layer and cycles them with CSS, so it animates inside an image tag with no script; the interactive runtime plays the same steps until the reader interacts.",
+            "properties": {
+              "scenario": {
+                "type": "string",
+                "description": "Scenario id to play. The base model shows first, then each step in order, then it loops."
+              },
+              "seconds": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "default": 3,
+                "description": "Seconds each step stays on screen."
+              }
+            }
           }
         }
       }
