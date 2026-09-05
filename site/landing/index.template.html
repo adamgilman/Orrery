@@ -134,6 +134,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
       <a href="#model">Why a model</a>
       <a href="#crank">Failure</a>
       <a href="#vocabulary">Vocabulary</a>
+      <a href="#drill">Drill down</a>
       <a href="https://github.com/adamgilman/Orrery/blob/main/docs/MODEL.md">Specification</a>
       <a href="https://github.com/adamgilman/Orrery">GitHub</a>
     </nav>
@@ -224,6 +225,27 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
         <li><span class="o-term">Flows</span><p>Whether traffic still moves through it.</p></li>
         <li><span class="o-term">Cascade</span><p>Whether switching a region off switches off everything inside it.</p></li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<section class="o-section" id="drill">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Drill down</p><h2>Close what the reader does not need yet.</h2></div>
+      <p class="o-lede o-muted">A view can draw a group closed: one box, a count of what is inside, every connection into it gathered onto the box. A second view opens it. In the interactive file a click on the box morphs it into the open frame and Escape returns. Health still comes from what is inside, so a ledger failing deep in Payments turns the closed box amber, and the checkout that needs it with it.</p>
+    </div>
+    <div class="o-pair">
+      <figure class="o-figure"><!--svg:drill-down--><figcaption><b>The platform, with Payments and Identity closed.</b> Four components inside one, two in the other. Checkout needs both, and the darker line says so.</figcaption></figure>
+      <figure class="o-figure"><!--svg:drill-down-payments--><figcaption><b>Inside Payments.</b> The API needs the ledger or its replica, the card vault, and one of two providers. The checkout that calls in from outside is drawn as a ghost at the edge, never dropped.</figcaption></figure>
+    </div>
+    <div class="o-split">
+      <pre><code><span class="k">"views"</span>: [
+  { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"payments"</span>, <span class="s">"identity"</span>] },
+  { <span class="k">"id"</span>: <span class="s">"payments"</span>, <span class="k">"scope"</span>: <span class="s">"payments"</span>, <span class="k">"direction"</span>: <span class="s">"down"</span> },
+  { <span class="k">"id"</span>: <span class="s">"identity"</span>, <span class="k">"scope"</span>: <span class="s">"identity"</span>, <span class="k">"direction"</span>: <span class="s">"down"</span> }
+]</code></pre>
+      <p class="o-body o-muted">Three views, one model. The overview closes two groups; each of the others opens one. Nothing is duplicated and nothing can drift: the same components, connections and needs draw every view, so a change to the model is a change to all of them.</p>
     </div>
   </div>
 </section>

@@ -12,6 +12,8 @@ jobs.push(["examples/solar-system.orrery.json", ["--static"], "site/landing/sola
 jobs.push(["examples/readme/failover.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"]);
 jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--static", "--play", "quorum", "--every", "4"], "site/landing/quorum.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--static", "--view", "data"], "site/landing/checkout-data.svg"]);
+jobs.push(["examples/readme/drill-down.orrery.json", ["--static"], "site/landing/drill-down.svg"]);
+jobs.push(["examples/readme/drill-down.orrery.json", ["--static", "--view", "payments"], "site/landing/drill-down-payments.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--scenario", "db-failover", "--step", "2"], "examples/checkout-db-failover.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--view", "data"], "examples/checkout-data.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--view", "region"], "examples/checkout-region.svg"]);
