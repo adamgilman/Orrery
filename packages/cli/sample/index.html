@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<style>
+  /* A sample page for an Orrery embed. The controls are plain HTML built from what the engine reports; replace them with your own. */
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; grid-template-columns: 280px minmax(0, 1fr); font: 14px/1.4 system-ui, sans-serif; color: #0f172a; }
+  aside { padding: 16px; border-right: 1px solid #e2e8f0; background: #f8fafc; overflow: auto; }
+  aside h1 { font-size: 16px; margin: 0 0 12px; }
+  aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin: 16px 0 6px; }
+  aside select, aside button { font: inherit; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; }
+  aside select { width: 100%; }
+  aside button { cursor: pointer; margin: 2px 4px 2px 0; }
+  aside button:disabled { opacity: .4; cursor: default; }
+  aside button.is-on { border-color: #2563eb; color: #2563eb; }
+  aside p { margin: 6px 0 0; color: #334155; min-height: 1.4em; }
+  #diagram { min-width: 0; height: 100%; }
+  #diagram svg { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<aside id="controls">
+  <h1>{{title}}</h1>
+  <h2>View</h2>
+  <select id="view"></select>
+  <h2>Scenario</h2>
+  <select id="scenario"><option value="">None</option></select>
+  <div><button id="prev">◀</button> <span id="step"></span> <button id="next">▶</button></div>
+  <p id="note"></p>
+  <h2>Selected</h2>
+  <p id="selected">Click a component in the diagram.</p>
+  <div id="states"></div>
+  <h2>Drill down</h2>
+  <div id="groups"></div>
+  <button id="back">Back out</button>
+  <h2>Play</h2>
+  <button id="play">Play</button> <button id="stop">Stop</button> <button id="reset">Reset</button>
+</aside>
+<main id="diagram"></main>
+<script src="orrery.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

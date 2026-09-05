@@ -56,7 +56,7 @@ Three tests every release must pass:
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
   from the frame tooling (M4).
 - **Agent surface**: MODEL.md, JSON Schema with a description on every property, `validate` with pointer errors
-  and warnings, `render`, later `explain` and `check`.
+  and warnings, `render`, `export`, `embed`, later `explain`.
 - **Vocabulary packs**: shippable `states`/`kinds` presets (e.g. an SRE pack, cloud provider kind packs) that a
   file can import, so organisations share a vocabulary without copying blocks (roadmap: packs).
 
@@ -95,7 +95,7 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 | `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
 | `@orrery/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
 | `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
-| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
+| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--focus`), `export`, `embed` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
 Layout boundary, so we can swap engines or write our own:
 
@@ -120,6 +120,7 @@ interface LayoutEngine {
 | Model redesign | The specification in docs/MODEL.md replaced fixed system states with the author's vocabulary, moved dependencies to `needs` on components, made connections fluid across entities, added `--set`, warnings, legend, ghosts. Four fresh-agent walks, zero validation failures on the last one. |
 | Drill-down and tours | Closed groups drawn as node-sized boxes; opening one lays the view out again and the picture moves between layouts, to any depth, in the file's tour and in the runtime; frame tooling in resvg and real Chromium to debug transitions frame by frame. |
 | Declared model | Propagation removed: no needs, rank, availability, cascade or load shifting. Every state, reason and load in a picture is one the author wrote in a scenario step or what-if. Connection kinds became author-defined line styles. |
+| Two paths out | `exports` in the model and `orrery export` write every picture as an enclosed file in one run; `orrery embed` writes the diagram, the engine (`window.Orrery.mount`, an interface with change events and snapshots) and a sample page that builds controls from it. The panel is gone: the standalone file is purely the diagram. Spec: docs/superpowers/specs/2026-09-05-two-paths-design.md. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 

@@ -10,7 +10,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "sample"
   ],
   "scripts": {
     "build": "tsc -b"
@@ -19,5 +20,9 @@
     "@orrery/core": "workspace:*",
     "@orrery/layout-elk": "workspace:*",
     "@orrery/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21",
+    "jsdom": "^26"
   }
 }

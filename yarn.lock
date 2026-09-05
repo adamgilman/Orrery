@@ -1346,6 +1346,8 @@ __metadata:
     "@orrery/core": "workspace:*"
     "@orrery/layout-elk": "workspace:*"
     "@orrery/runtime": "workspace:*"
+    "@types/jsdom": "npm:^21"
+    jsdom: "npm:^26"
   bin:
     orrery: ./dist/main.js
   languageName: unknown

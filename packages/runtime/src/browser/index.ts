@@ -86,7 +86,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     for (let cur: string | undefined = focus ?? undefined; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
     return open;
   };
-  const screen = (): Size => opts.size ?? { width: window.innerWidth, height: window.innerHeight };
+  // The space the diagram has: the option, else the element's own box (an embed on a page), else the window.
+  const screen = (): Size => { if (opts.size) return opts.size; const r = root.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { width: r.width, height: r.height } : { width: window.innerWidth, height: window.innerHeight }; };
   const frame = { left: 0, margin: MARGIN };
   const ac = new AbortController();
   const on = <T extends EventTarget>(t: T, type: string, fn: (ev: Event) => void) => t.addEventListener(type, fn, { signal: ac.signal });

@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { ModelError, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 import { RUNTIME_SOURCE } from "@orrery/runtime";
@@ -23,6 +23,10 @@ export const USAGE = `Usage:
   orrery export <file> [--out <dir>]     Write every entry of the model's "exports" to <dir>/<id>.svg: enclosed
                                          files, CSS animation only, no script. Default <dir> is the current
                                          directory. Prints one line per file.
+  orrery embed <file> [--out <dir>]      Write an embeddable diagram for a web page: <name>.svg (every view and
+                                         drill-down, the model, the engine), orrery.js (the engine, defining
+                                         window.Orrery), and a sample index.html and app.js that build controls
+                                         from the engine's interface. Replace the sample with your own page.
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -96,7 +100,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.includes("--help") || rest.includes("-h") || command === "--help" || command === "-h" || command === "help") { io.stdout(USAGE + "\n"); return 0; }
   try {
-    if (command !== "validate" && command !== "render" && command !== "export") throw new CliError(USAGE, 2);
+    if (command !== "validate" && command !== "render" && command !== "export" && command !== "embed") throw new CliError(USAGE, 2);
     const args = parseArgs(rest);
     const [file, ...extra] = args.positionals;
     if (!file) throw new CliError(USAGE, 2);
@@ -105,6 +109,25 @@ export async function main(argv: string[], io: Io): Promise<number> {
       if (args.values.size || args.flags.size) throw new CliError("validate takes no options", 2);
       const m = loadModel(file, io);
       io.stdout(`OK: ${m.components.length} components, ${m.connections.length} connections, ${m.groups.length} groups, ${m.views.length} views${m.scenarios.length ? `, ${m.scenarios.length} scenarios` : ""}${m.exports.length ? `, ${m.exports.length} exports` : ""}\n`);
+      return 0;
+    }
+    if (command === "embed") {
+      const dir = one(args, "--out") ?? ".";
+      for (const flag of args.values.keys()) if (flag !== "--out") throw new CliError(`embed takes only --out, not ${flag}`, 2);
+      if (args.flags.size) throw new CliError(`embed takes only --out`, 2);
+      const m = loadModel(file, io);
+      const name = basename(file).replace(/\.orrery\.json$|\.json$/, "");
+      const title = m.title ?? name;
+      let svg: string;
+      try { svg = await renderDocument(m, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE }); } catch (e) { if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`); throw e; }
+      const sample = (f: string) => readFileSync(join(import.meta.dirname, "../sample", f), "utf8").replaceAll("{{name}}", name).replaceAll("{{title}}", title.replace(/[<>&]/g, ""));
+      const files: [string, string][] = [[`${name}.svg`, svg], ["orrery.js", RUNTIME_SOURCE], ["index.html", sample("index.html")], ["app.js", sample("app.js")]];
+      try { mkdirSync(dir, { recursive: true }); } catch (e) { throw new CliError(`${dir}: ${(e as Error).message}`); }
+      for (const [f, text] of files) {
+        const target = join(dir, f);
+        try { writeFileSync(target, text); } catch (e) { throw new CliError(`${target}: ${(e as Error).message}`); }
+        io.stdout(`${target}\n`);
+      }
       return 0;
     }
     if (command === "export") {

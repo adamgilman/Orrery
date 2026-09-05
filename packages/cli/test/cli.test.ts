@@ -280,3 +280,26 @@ describe("orrery export", () => {
     expect(bad.err).toContain("is not a closed group");
   });
 });
+
+describe("orrery embed", () => {
+  it("writes the diagram, the engine, and a sample page that builds controls from the engine", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const r = run("embed", join(fixtures, "valid/drill-down.json"), "--out", dir);
+    expect(r.err).toBe("");
+    expect(r.code).toBe(0);
+    expect(r.out.trim().split("\n")).toEqual(["drill-down.svg", "orrery.js", "index.html", "app.js"].map((f) => join(dir, f)));
+    const svg = readFileSync(join(dir, "drill-down.svg"), "utf8");
+    expect(svg).toMatch(/<g class="view"[^>]*data-open="payments"/); // every drill-down layer
+    expect(svg).toContain('id="orrery-model"');
+    expect(svg).not.toContain("foreignObject");
+    const engine = readFileSync(join(dir, "orrery.js"), "utf8");
+    expect(engine).toMatch(/Orrery/);
+    const html = readFileSync(join(dir, "index.html"), "utf8");
+    expect(html).toContain("<title>Commerce platform</title>");
+    expect(html).toContain('<script src="orrery.js">');
+    const app = readFileSync(join(dir, "app.js"), "utf8");
+    expect(app).toContain('fetch("drill-down.svg")');
+    expect(app).toContain("Orrery.mount(");
+    expect(run("embed", join(fixtures, "valid/drill-down.json"), "--view", "overview").code).toBe(2);
+  });
+});

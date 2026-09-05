@@ -69,8 +69,8 @@ say means: MODEL.md invariant first, then the test named there, then the code.
 | `packages/core` | schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` + fake engine, SVG renderer, document assembly |
 | `packages/layout-elk` | the only ELK importer |
 | `packages/raster` | freeze, rasterise, frames, contact sheet, `inspect` |
-| `packages/runtime` | the browser runtime bundled into every rendered SVG |
-| `packages/cli` | `orrery validate` / `orrery render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) |
+| `packages/runtime` | the engine bundled into every rendered SVG: `window.Orrery.mount(svg)` returns the interface a page builds controls from; no panel |
+| `packages/cli` | `orrery validate` / `render` / `export` (the model's `exports`, enclosed files) / `embed` (diagram + engine + sample page in `packages/cli/sample/`) |
 | `tools/inspect.mjs` | the loop script above |
 | `tools/frames.mjs` | frames of any animated file over a time window, every track frozen exactly (resvg, no browser) |
 | `tools/layout-score.mjs`, `tools/layout-tune.mjs` | score a layout (bends, length, frame crossings) and sweep ELK options over the compound examples, so layout tuning is measured |

@@ -81,15 +81,40 @@ width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
-**Interactive.** The same SVG file, opened directly instead of through an image tag, runs a small embedded runtime:
-click a component to step it through your states, click a closed group to drill in and Escape to step back out,
-arrow keys to select, digits to switch views with a morph, brackets to step a scenario. No panel: the file is purely
-the diagram. For a page with controls, the same engine exposes them to your own JavaScript (see the spec in
-`docs/superpowers/specs/2026-09-05-two-paths-design.md`). No page, no build, no server. Try the checkout:
-[open it interactive](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
-(served with the right content type by jsDelivr; GitHub's raw links serve SVG as text).
+## Two ways out
 
-## Status
+**Scenes, for documents.** A model lists the pictures it produces, and one command writes them all as enclosed
+SVG files: CSS animation only, no script, so each plays inside an image tag in a README, a wiki or a design doc.
+Every picture in this README is one of them.
+
+```sh
+orrery export examples/checkout.orrery.json --out docs/diagrams
+```
+
+**One diagram, for a page.** For a web page, `embed` writes the whole model as one SVG with every view and every
+drill-down, the engine as a script, and a sample page. The engine has no user interface of its own: your page
+mounts it and builds its controls from what it reports.
+
+```sh
+orrery embed examples/checkout.orrery.json --out site/checkout
+```
+
+```js
+const orrery = Orrery.mount(document.querySelector("svg"));
+orrery.views; orrery.scenarios; orrery.states; orrery.groups();   // what the model offers
+orrery.showView(id); orrery.focus(group); orrery.back();
+orrery.setScenario(id, step); orrery.next(); orrery.prev();
+orrery.setState(id, state); orrery.cycle(id); orrery.reset();
+orrery.play(); orrery.stop();
+orrery.on("change", (snapshot) => { /* view, open groups, scenario step and note, every state and reason, selection */ });
+```
+
+The sample `index.html` and `app.js` build a view chooser, a scenario stepper, state buttons for the selected
+component, drill-down buttons and play controls from that interface, in plain HTML. Throw them away and wire your
+own. Opened directly with no page around it, the SVG is purely the diagram: click a component to step it through
+your states, click a closed group to drill in, Escape to step back out, digits to switch views, brackets to step a
+scenario. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
+(served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server. ## Status
 
 The model is specified in [docs/MODEL.md](docs/MODEL.md) and the file is interactive. Next: sequence and walkthrough
 views, GIF export, and an MCP server. See the [PRD](PRD.md).
