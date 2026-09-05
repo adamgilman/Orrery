@@ -31,20 +31,13 @@
       "id": "web",
       "label": "Web",
       "kind": "gateway",
-      "group": "storefront",
-      "needs": [
-        "checkout"
-      ]
+      "group": "storefront"
     },
     {
       "id": "checkout",
       "label": "Checkout",
       "kind": "service",
-      "group": "storefront",
-      "needs": [
-        "payments",
-        "identity"
-      ]
+      "group": "storefront"
     },
     {
       "id": "catalog",
@@ -56,22 +49,7 @@
       "id": "pay-api",
       "label": "Payments API",
       "kind": "service",
-      "group": "pay-core",
-      "needs": [
-        {
-          "any": [
-            "ledger",
-            "ledger-replica"
-          ]
-        },
-        "tokens",
-        {
-          "any": [
-            "stripe",
-            "adyen"
-          ]
-        }
-      ]
+      "group": "pay-core"
     },
     {
       "id": "ledger",
@@ -105,10 +83,7 @@
       "id": "login",
       "label": "Login",
       "kind": "service",
-      "group": "identity",
-      "needs": [
-        "sessions"
-      ]
+      "group": "identity"
     },
     {
       "id": "sessions",
@@ -206,8 +181,20 @@
         {
           "note": "Primary ledger goes down",
           "set": {
-            "failed": "ledger"
-          }
+            "failed": "ledger",
+            "degraded": {
+              "pay-api": "running on the replica",
+              "payments": "reduced redundancy",
+              "checkout": "payments are slower"
+            }
+          },
+          "load": [
+            {
+              "from": "pay-api",
+              "to": "ledger-replica",
+              "load": 0.5
+            }
+          ]
         }
       ]
     }

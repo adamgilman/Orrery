@@ -42,49 +42,57 @@ describe("runtime boot", () => {
     expect(root.getAttribute("width")).toBe("100%");
   });
 
-  it("click sets the document's unmet state and propagates; click again restores", async () => {
+  it("click steps an entity through the author's states, shift+click steps back; nothing else changes", async () => {
     const root = await doc("alternatives");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     const orders = vis(root, '[data-node="orders"]');
     click(orders);
+    expect(state(root, "orders")).toBe("degraded");
+    click(orders);
     expect(state(root, "orders")).toBe("failed");
-    expect(state(root, "api")).toBe("degraded");
-    expect(state(root, "web")).toBe("degraded");
-    expect(flowLoad(root, "api->orders")).toBe("0");
-    expect(flowLoad(root, "api->replica")).toBe("0.6");
-    expect(vis(root, '[data-node="api"] title').textContent).toBe("Orders DB unavailable, using Orders replica");
+    expect(state(root, "api")).toBe("on"); // the reader set one thing; the diagram infers nothing
+    expect(state(root, "web")).toBe("on");
+    expect(flowLoad(root, "api->orders")).toBe("0"); // failed stops flow: a drawing rule
+    expect(flowLoad(root, "api->replica")).toBe("0"); // loads never move on their own
+    expect(vis(root, '[data-node="api"] title')).toBeNull();
     expect(orders.classList.contains("st-failed")).toBe(true);
     expect(orders.getAttribute("data-pulse")).toBe("1");
     click(orders);
+    expect(state(root, "orders")).toBe("off");
+    click(orders);
     expect(state(root, "orders")).toBe("on");
-    expect(state(root, "api")).toBe("on");
-    expect(flowLoad(root, "api->replica")).toBe("0");
+    click(orders, { shiftKey: true });
+    expect(state(root, "orders")).toBe("off");
   });
 
-  it("shift+click cycles through the author's states; the state bar sets any state", async () => {
+  it("the state bar sets any of the author's states; a scenario step's reason shows as a tooltip", async () => {
     const root = await doc("own-vocabulary");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     const seq = vis(root, '[data-node="seq-1"]');
-    click(seq, { shiftKey: true });
+    click(seq);
     expect(state(root, "seq-1")).toBe("impaired");
-    click(seq, { shiftKey: true });
+    click(seq);
     expect(state(root, "seq-1")).toBe("brownout");
     click(root.querySelector('.orrery-states button[data-state="outage"]')!);
     expect(state(root, "seq-1")).toBe("outage");
-    expect(state(root, "match-a")).toBe("impaired");
+    expect(state(root, "match-a")).toBe("healthy");
     click(root.querySelector('.orrery-states button[data-state="healthy"]')!);
     expect(state(root, "seq-1")).toBe("healthy");
+    change(root.querySelector<HTMLSelectElement>(".orrery-scenarios")!, "cell-drain");
+    expect(state(root, "edge")).toBe("impaired");
+    expect(vis(root, '[data-node="edge"] title').textContent).toBe("running on cell B alone");
   });
 
-  it("a group can be clicked; a cascading state reaches its members", async () => {
+  it("a group can be clicked; its state is its own and says nothing about its members", async () => {
     const root = await doc("own-vocabulary");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     click(vis(root, '[data-group="cell-a"]'));
-    expect(state(root, "cell-a")).toBe("outage");
-    expect(state(root, "match-a")).toBe("healthy"); // outage does not cascade
+    expect(state(root, "cell-a")).toBe("impaired");
+    expect(state(root, "match-a")).toBe("healthy");
     click(root.querySelector('.orrery-states button[data-state="drained"]')!);
-    expect(state(root, "match-a")).toBe("drained");
-    expect(state(root, "edge")).toBe("impaired");
+    expect(state(root, "cell-a")).toBe("drained");
+    expect(state(root, "match-a")).toBe("healthy");
+    expect(flowLoad(root, "edge->cell-a")).toBe("0"); // drained stops flow into the group
   });
 
   it("plays a scenario step by step with its note, on top of the base model", async () => {
@@ -118,8 +126,8 @@ describe("runtime boot", () => {
     click(vis(root, '[data-node="db"]'));
     rt.showView("overview");
     vi.runAllTimers();
-    expect(state(root, "db")).toBe("failed");
-    expect(state(root, "api")).toBe("degraded");
+    expect(state(root, "db")).toBe("degraded");
+    expect(state(root, "api")).toBe("on");
   });
 
   it("outline click selects and zooms; keyboard navigates, sets and resets", async () => {
@@ -133,10 +141,10 @@ describe("runtime boot", () => {
     key("ArrowDown"); // ungrouped components come before groups in the outline
     expect(root.querySelector(".is-selected")!.getAttribute("data-node")).toBe("fraud");
     key("f");
-    expect(state(root, "fraud")).toBe("failed");
-    expect(state(root, "api")).toBe("degraded");
+    expect(state(root, "fraud")).toBe("degraded");
+    expect(state(root, "api")).toBe("on");
     key("f");
-    expect(state(root, "fraud")).toBe("on");
+    expect(state(root, "fraud")).toBe("failed");
     key("Escape");
     vi.runAllTimers();
     expect(root.querySelector(".is-selected")).toBeNull();
@@ -148,10 +156,10 @@ describe("runtime boot", () => {
     rt = boot(root, { size: { width: 1600, height: 900 } });
     change(root.querySelector<HTMLSelectElement>(".orrery-scenarios")!, "orders-failover");
     expect(state(root, "orders")).toBe("failed");
-    click(vis(root, '[data-node="orders"]')); // toggles against the scenario's declared state
-    expect(state(root, "orders")).toBe("on");
+    click(vis(root, '[data-node="orders"]')); // steps on from the state the scenario set
+    expect(state(root, "orders")).toBe("off");
     click(vis(root, '[data-node="orders"]'));
-    expect(state(root, "orders")).toBe("failed");
+    expect(state(root, "orders")).toBe("on");
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "]", metaKey: true, bubbles: true }));
     expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4");
   });

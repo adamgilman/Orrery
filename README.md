@@ -35,17 +35,18 @@ cluster's frame; the failover line to the read replica carries no load yet.
 
 ![Connected](examples/checkout/3-connections.svg)
 
-**4. Needs.** Say what needs what, with alternatives. The API needs the primary or its replica, and the session cache;
-the storefront needs the API. Needs are drawn darker. Now one line in a scenario, `"set": { "failed": "db" }`, and the
-tool works out the rest: the API degrades onto its replica, the storefront degrades behind it, and the load moves off
-the dead path. This image plays the scenario itself, healthy then failed, every three seconds with no script: the steps
-are pre-rendered layers switched by CSS. The interactive file plays the same steps on a timer until you click.
+**4. Scenarios.** Say what happens, in your words. A scenario is a list of steps; each step puts entities in
+states, with a reason if you like, and sets the loads that move. Here the primary fails, the API is degraded because
+it reads from the replica, the storefront is degraded because checkout is slower, and the failover line carries the
+reads. Nothing is worked out for you: every state in the picture is one you wrote, and a failed box stops its flows.
+This image plays the scenario itself, healthy then failed, every three seconds with no script: the steps are
+pre-rendered layers switched by CSS. The interactive file plays the same steps on a timer until you click.
 
-![Primary fails, playing](examples/checkout/4-needs-play.svg)
+![Primary fails, playing](examples/checkout/4-scenarios-play.svg)
 
 ```sh
-orrery render examples/checkout/4-needs.orrery.json --scenario db-fails -o failed.svg    # one step, still
-orrery render examples/checkout/4-needs.orrery.json --play db-fails --every 3 -o play.svg   # every step, on a loop
+orrery render examples/checkout/4-scenarios.orrery.json --scenario db-fails -o failed.svg    # one step, still
+orrery render examples/checkout/4-scenarios.orrery.json --play db-fails --every 3 -o play.svg   # every step, on a loop
 ```
 
 **5. Views.** One model, many drawings. A view scopes to a group and chooses its own direction; what lies outside is
@@ -57,22 +58,22 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 the group is in focus. Everything is one drawing, so opening a group is a camera move, not a new picture: the closed
 box keeps its name and its connections while the camera closes on it, and its members resolve once the camera has
 settled, the way a map resolves as you approach. This image plays a four-scene `tour` with no script: the camera closes
-on the session cache and its two nodes appear, one node fails and the cluster degrades with the API that needs it, and
-the camera pulls back to the overview with the closed box carrying the state. The interactive file plays the same
+on the session cache and its two nodes appear, one node fails and the step marks the cluster and the API degraded,
+and the camera pulls back to the overview with the closed box carrying the state. The interactive file plays the same
 scenes with its camera until you click, and a click on any closed group focuses it.
 
 ![Closed, inside, a node fails, back out](examples/checkout/6-drill-down-tour.svg)
 
-**7. Your vocabulary.** States and kinds are yours to name: bind them to looks and mechanics, and the legend teaches
-the reader your words. The same checkout in one company's words, healthy, impaired, brownout, outage and drained. The
-session cache is a nice-to-have for this team, so its need names a gentler outcome: drain the cluster for maintenance
-and checkout runs on for guests, a brownout, while the storefront behind it is impaired. `drained` cascades to the
-nodes inside.
+**7. Your vocabulary.** States and kinds are yours to name: bind them to looks, and the legend teaches the reader
+your words. The same checkout in one company's words, healthy, impaired, brownout, outage and drained. Drain the
+cache cluster for maintenance, and this team's story is that checkout runs on for guests, a brownout, while the
+storefront behind it is impaired. Line styles are yours too: a `kinds.connections` entry binds a name to a stroke,
+width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
 **Interactive.** The same SVG file, opened directly instead of through an image tag, runs a small embedded runtime:
-an outline to navigate, click a component to fail it and watch the cascade, step through scenarios, switch views with
+an outline to navigate, click a component to step it through your states, step through scenarios, switch views with
 a morph, click a closed group to drill in, keyboard shortcuts. No page, no build, no server. Try the checkout:
 [open it interactive](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text).
@@ -104,8 +105,8 @@ yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one vie
     {"id": "sessions", "label": "Session cache", "kind": "cluster", "parent": "data"}
   ],
   "components": [
-    {"id": "web", "label": "Storefront", "kind": "client", "needs": ["api"]},
-    {"id": "api", "label": "Checkout API", "kind": "service", "needs": [{"any": ["db", "replica"]}, "sessions"]},
+    {"id": "web", "label": "Storefront", "kind": "client"},
+    {"id": "api", "label": "Checkout API", "kind": "service"},
     {"id": "db", "label": "Orders DB", "kind": "database", "group": "data"},
     {"id": "replica", "label": "Read replica", "kind": "database", "group": "data"},
     {"id": "cache-a", "label": "Node A", "kind": "cache", "group": "sessions"},
@@ -119,28 +120,29 @@ yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one vie
     {"from": "api", "to": "sessions", "load": 0.5}
   ],
   "scenarios": [
-    {"id": "db-fails", "label": "Primary fails", "steps": [{"note": "Orders DB goes down", "set": {"failed": "db"}}]}
+    {"id": "db-fails", "label": "Primary fails", "steps": [{"note": "Orders DB goes down", "set": {"failed": "db", "degraded": {"api": "reads from the replica; writes are queued", "web": "checkout is slower"}}, "load": [{"id": "failover", "load": 0.6}]}]}
   ]
 }
 ```
 
 That is stage 4 of the checkout above, verbatim. The file grows progressively: components alone render; groups
-arrange them; connections add flow; `needs` make connections matter; alternatives, quorum and outcome states enrich
-them; scenarios record what-ifs; views scope and drill in. Try any what-if without a scenario:
+arrange them; connections add flow; scenarios say what happens, step by step, with reasons and loads; views scope
+and drill in. Try any what-if without a scenario:
 
 ```sh
 orrery render app.json --set failed=db
 ```
 
 The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A `states` block binds your own
-names to looks (preset or custom style) and mechanics (rank, availability, flow, cascade); a `kinds` block does the
-same for component and group kinds. The engine never reads a name.
+names to looks (preset or custom style) and to whether flow stops; a `kinds` block does the same for component
+glyphs, group frames and connection lines. Nothing in the tool reads a name.
 
 Rules an agent needs to know:
 
 - Never write coordinates. Layout is automatic and deterministic; `direction` is the only hint.
-- Order in the file is order on the canvas within a rank, so list the important things first.
-- Connections carry no health semantics. A component's `needs` do, and every need must have a connection.
+- Order in the file is order on the canvas within a layer, so list the important things first.
+- Nothing is inferred. A state is in the picture because you wrote it there, in the base model, a scenario step or a
+  what-if. When something fails, say what that does to the rest, with a reason, and move the loads yourself.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
 The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).

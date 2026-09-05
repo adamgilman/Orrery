@@ -1,0 +1,14 @@
+{
+  "kinds": {
+    "connections": {
+      "x": {
+        "line": "wavy"
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

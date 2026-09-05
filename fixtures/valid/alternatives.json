@@ -16,35 +16,12 @@
   "components": [
     {
       "id": "web",
-      "kind": "gateway",
-      "needs": [
-        "api"
-      ]
+      "kind": "gateway"
     },
     {
       "id": "api",
       "label": "Checkout API",
-      "replicas": 3,
-      "needs": [
-        {
-          "any": [
-            "orders",
-            "replica"
-          ]
-        },
-        {
-          "any": [
-            "stripe",
-            "adyen"
-          ]
-        },
-        {
-          "any": [
-            "fraud"
-          ],
-          "unmet": "degraded"
-        }
-      ]
+      "replicas": 3
     },
     {
       "id": "orders",
@@ -121,8 +98,19 @@
         {
           "note": "Primary goes down; reads move to the replica, API runs reduced",
           "set": {
-            "failed": "orders"
-          }
+            "failed": "orders",
+            "degraded": {
+              "api": "reads from the replica",
+              "web": "checkout is slower"
+            }
+          },
+          "load": [
+            {
+              "from": "api",
+              "to": "replica",
+              "load": 0.6
+            }
+          ]
         },
         {
           "note": "Fraud scoring also down; still serving",
@@ -133,7 +121,11 @@
         {
           "note": "Replica dies too; API fails, web fails behind it",
           "set": {
-            "failed": "replica"
+            "failed": {
+              "replica": "disk full",
+              "api": "no database left",
+              "web": "cannot check out"
+            }
           }
         },
         {
@@ -141,7 +133,16 @@
           "restore": [
             "orders",
             "fraud",
-            "replica"
+            "replica",
+            "api",
+            "web"
+          ],
+          "load": [
+            {
+              "from": "api",
+              "to": "replica",
+              "load": 0
+            }
           ]
         }
       ]
@@ -154,7 +155,14 @@
           "note": "Stripe returns 5xx; traffic shifts to Adyen",
           "set": {
             "failed": "stripe"
-          }
+          },
+          "load": [
+            {
+              "from": "api",
+              "to": "adyen",
+              "load": 0.3
+            }
+          ]
         }
       ]
     }

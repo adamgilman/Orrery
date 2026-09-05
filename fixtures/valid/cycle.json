@@ -1,16 +1,10 @@
 {
   "components": [
     {
-      "id": "a",
-      "needs": [
-        "b"
-      ]
+      "id": "a"
     },
     {
-      "id": "b",
-      "needs": [
-        "a"
-      ]
+      "id": "b"
     }
   ],
   "connections": [

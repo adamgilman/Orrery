@@ -198,7 +198,8 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
     if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
     select(id, g.hasAttribute("data-node") ? "node" : "group");
-    if ((ev as MouseEvent).shiftKey) session.cycle(id); else session.toggle(id, model.states.needs.unmet);
+    // A click walks the author's states in order; shift+click walks back.
+    session.cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);
     apply();
   });
   on(scene, "mouseover", (ev) => {
@@ -323,7 +324,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       const n = order[Math.min(order.length - 1, Math.max(0, i + (k === "ArrowDown" ? 1 : -1)))];
       if (n) select(n.id, n.type);
     } else if (k === "Enter" && selected) zoomTo(selected.id, selected.type);
-    else if (k === "f" && selected) { session.toggle(selected.id, model.states.needs.unmet); apply(); }
+    else if (k === "f" && selected) { session.cycle(selected.id); apply(); }
     else if (k === "Escape") { if (history.length) { const back = history.pop()!; focus(back || null); } else { select(null); if (focusId) focus(null); else fit(true); } }
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);

@@ -2,9 +2,9 @@ import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
 import { GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
-import { lookOf } from "./looks.js";
-export { LOOK_PRESETS, lookOf } from "./looks.js";
-import { declare, ModelError, propagate } from "./simulate.js";
+import { lineOf, lookOf } from "./looks.js";
+export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
+import { declare, ModelError, stopFlows } from "./declare.js";
 import type { Component, Connection, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
 import { scopeModel, selectView } from "./view.js";
 
@@ -65,8 +65,9 @@ const FRAME_PRESETS: Record<string, { stroke?: string; fill?: string; fillOpacit
 const frameOf = (k: GroupKindDef) => (typeof k.frame === "string" ? FRAME_PRESETS[k.frame] ?? {} : k.frame);
 
 /**
- * CSS for the author's vocabulary: one rule set per kind, then one per state. States come last so a state's look
- * wins over a kind's box or frame at equal specificity (R8). Names appear only as class names.
+ * CSS for the author's vocabulary: one rule set per kind (components, groups, connections), then one per state.
+ * States come last so a state's look wins over a kind's box or frame at equal specificity (R8). Names appear only
+ * as class names.
  */
 function vocabularyCss(model: Model): string {
   const rules: string[] = [];
@@ -87,6 +88,14 @@ function vocabularyCss(model: Model): string {
     if (f.dash) props.push("stroke-dasharray:8 6");
     if (f.dotted) props.push("stroke-dasharray:3 5");
     if (props.length) rules.push(`.gk-${name} .group-box{${props.join(";")}}`);
+  }
+  for (const [name, k] of Object.entries(model.kinds.connections)) {
+    const l = lineOf(k);
+    const props: string[] = [];
+    if (l.stroke) props.push(`stroke:${css(l.stroke)}`);
+    if (l.width !== undefined) props.push(`stroke-width:${num(l.width)}`);
+    if (l.dash) props.push(`stroke-dasharray:${css(l.dash)}`);
+    if (props.length) rules.push(`.edge-${name}{${props.join(";")}}`);
   }
   for (const def of Object.values(model.states.define)) {
     const look = lookOf(def);
@@ -118,10 +127,6 @@ const BASE_STYLE = `
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px ${FONT};fill:#475569;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
-.edge.need{stroke:#475569;stroke-width:2}
-.edge-async{stroke-dasharray:6 5}
-.edge-replication{stroke-dasharray:2 4}
-.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px ${FONT};fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px ${FONT};fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
@@ -205,7 +210,7 @@ function clipAtBox(pts: Point[], box: { x: number; y: number; width: number; hei
   return out;
 }
 
-function connectionMarkup(c: Connection, layout: LayoutResult, lod: Lod): string {
+function connectionMarkup(c: Connection, model: Model, layout: LayoutResult, lod: Lod): string {
   const route = layout.edges[c.key];
   if (!route) throw new Error(`layout returned no route for connection ${c.key}`);
   const key = escAttr(c.key);
@@ -214,11 +219,13 @@ function connectionMarkup(c: Connection, layout: LayoutResult, lod: Lod): string
   const level = (l: "detail" | "summary") => ` data-lod="${l}" data-for="${escAttr(closedGroups.join(" "))}"`;
   const markers = ` marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}`;
   const trimForArrows = (pts: Point[]) => (c.bidirectional ? trimStart(trimEnd(pts, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(pts, ARROW_LENGTH));
+  const flowColour = lineOf(model.kinds.connections[c.kind]!).flow;
+  const flowCss = flowStyle(c.load) + (flowColour ? `;stroke:${css(flowColour)}` : "");
   /** An edge and its flow along `pts`. A flow animates its own dashes, so its level-of-detail track lives on a wrapper: one animation per element. */
   const drawn = (pts: Point[], lodAttrs: string): string[] => {
-    const flow = `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(trimForArrows(pts))}" style="${flowStyle(c.load)}"/>`;
+    const flow = `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(trimForArrows(pts))}" style="${flowCss}"/>`;
     return [
-      `<path class="edge edge-${c.kind}${c.need ? " need" : ""}" data-edge="${key}" data-kind="${c.kind}"${lodAttrs} d="${pathD(pts)}"${markers}/>`,
+      `<path class="edge edge-${escAttr(c.kind)}" data-edge="${key}" data-kind="${escAttr(c.kind)}"${lodAttrs} d="${pathD(pts)}"${markers}/>`,
       lodAttrs ? `<g class="lod"${lodAttrs}>${flow}</g>` : flow,
     ];
   };
@@ -237,7 +244,7 @@ function connectionMarkup(c: Connection, layout: LayoutResult, lod: Lod): string
   return parts.join("\n");
 }
 
-/** Legend rows for every non-default state used in this (scoped, propagated) model (R9). Empty when none. */
+/** Legend rows for every non-default state used in this (scoped, declared) model (R9). Empty when none. */
 function legendMarkup(model: Model, y: number): { markup: string; height: number; width: number } {
   const used = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
   used.delete(model.states.default);
@@ -261,7 +268,7 @@ export function renderView(model: Model, layout: LayoutResult): { picture: strin
   const lod: Lod = { closedBy: (id) => { for (let cur = groupOf.get(id) ?? parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; } };
   const picture = [
     `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout, lod)).join("\n")}\n</g>`,
-    `<g class="edges">\n${model.connections.map((c) => connectionMarkup(c, layout, lod)).join("\n")}\n</g>`,
+    `<g class="edges">\n${model.connections.map((c) => connectionMarkup(c, model, layout, lod)).join("\n")}\n</g>`,
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout, lod)).join("\n")}\n</g>`,
   ].join("\n");
   return { picture, legend: legend.markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
@@ -279,8 +286,8 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
   const scenario = declared.scenarios.find((s) => s.id === play.scenario)!;
   const n = scenario.steps.length;
   const frames = [
-    { model: propagate(declared), caption: scenario.label },
-    ...scenario.steps.map((st, i) => ({ model: propagate(declare(declared, { scenario: play.scenario, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
+    { model: stopFlows(declared), caption: scenario.label },
+    ...scenario.steps.map((st, i) => ({ model: stopFlows(declare(declared, { scenario: play.scenario, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
   ].map((f) => ({ ...f, view: renderView(scopeModel(f.model, view), layout) }));
   const height = Math.max(...frames.map((f) => f.view.height)) + 24;
   const width = Math.max(...frames.map((f) => f.view.width));
@@ -316,7 +323,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const scenes = tour.scenes.map((scene) => {
     const view = selectView(model, scene.view);
     const merged = { ...(set ?? {}), ...(scene.set ?? {}) };
-    const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}) });
+    const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}), ...(scene.reasons ? { reasons: scene.reasons } : {}) });
     const title = view.title ?? model.title ?? view.id;
     const stateKey = JSON.stringify([scene.scenario ?? null, scene.step ?? null, merged]);
     return { scene, view, declared: d.model, title, caption: scene.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title), stateKey };
@@ -354,10 +361,10 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
 
   if (oneView) {
     // Distinct scenario moments become state layers on the one layout; the first scene's declared model lays out.
-    const base = scopeModel(propagate(scenes[0]!.declared), anchor);
+    const base = scopeModel(stopFlows(scenes[0]!.declared), anchor);
     const layout = await engine.layout(toLayoutGraph(base));
     const stateKeys = [...new Set(scenes.map((s) => s.stateKey))];
-    const layers = stateKeys.map((key) => { const s = scenes.find((x) => x.stateKey === key)!; return renderView(scopeModel(propagate(s.declared), anchor), layout); });
+    const layers = stateKeys.map((key) => { const s = scenes.find((x) => x.stateKey === key)!; return renderView(scopeModel(stopFlows(s.declared), anchor), layout); });
     const width = Math.max(...layers.map((l) => l.width)), height = Math.max(...layers.map((l) => l.height)) + 24;
     // The camera frames the drawing alone; legend and caption are a fixed strip below it.
     const stage = { width, height: layout.height };
@@ -417,9 +424,9 @@ function shiftLayout(l: LayoutResult, dx: number, dy: number): LayoutResult {
   };
 }
 
-/** Lay out and render one view of a declared (un-propagated) model, playing a scenario when asked. */
+/** Lay out and render one view of a declared model, playing a scenario when asked. */
 async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string, shift?: { dx: number; dy: number }): Promise<ViewLayer> {
-  const base = scopeModel(propagate(declared), view);
+  const base = scopeModel(stopFlows(declared), view);
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   if (play) return { view, title, ...playingLayer(declared, view, play, layout) };
@@ -446,7 +453,7 @@ function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer
   ].join("\n") + "\n";
 }
 
-/** Render a laid-out (scoped, propagated) model as one view in a standalone SVG. Pure and deterministic. */
+/** Render a laid-out (scoped, declared) model as one view in a standalone SVG. Pure and deterministic. */
 export function renderSvg(model: Model, layout: LayoutResult): string {
   const view = model.views[0]!;
   const v = renderView(model, layout);
@@ -468,7 +475,7 @@ export interface RenderOptions {
 const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
   options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
 
-/** Select a view, apply scenario/overrides, propagate, scope, lay out and render one static view. */
+/** Select a view, apply the scenario position and what-if, scope, lay out and render one static view. */
 export async function render(model: Model, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
   if (options.tour) {
     let tour: Tour;
@@ -501,7 +508,7 @@ export interface DocumentOptions { runtime: string; view?: string; set?: Record<
  * runtime script. Inside <img> it is the animated first view; opened directly, the runtime makes it interactive.
  */
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
-  // The declared (un-propagated) model with overrides applied is what the runtime starts from.
+  // The declared model with the what-if applied is what the runtime starts from.
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
   const first = selectView(model, options.view);
   const layers: ViewLayer[] = [];

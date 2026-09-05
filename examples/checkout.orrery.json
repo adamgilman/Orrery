@@ -19,24 +19,12 @@
     {
       "id": "web",
       "label": "Storefront",
-      "kind": "client",
-      "needs": [
-        "api"
-      ]
+      "kind": "client"
     },
     {
       "id": "api",
       "label": "Checkout API",
-      "kind": "service",
-      "needs": [
-        {
-          "any": [
-            "db",
-            "replica"
-          ]
-        },
-        "sessions"
-      ]
+      "kind": "service"
     },
     {
       "id": "db",
@@ -116,8 +104,18 @@
         {
           "note": "Orders DB goes down",
           "set": {
-            "failed": "db"
-          }
+            "failed": "db",
+            "degraded": {
+              "api": "reads from the replica; writes are queued",
+              "web": "checkout is slower"
+            }
+          },
+          "load": [
+            {
+              "id": "failover",
+              "load": 0.6
+            }
+          ]
         }
       ]
     },
@@ -128,7 +126,11 @@
         {
           "note": "Node A goes down",
           "set": {
-            "failed": "cache-a"
+            "failed": "cache-a",
+            "degraded": {
+              "sessions": "one node left",
+              "api": "sessions load slowly"
+            }
           }
         }
       ]
@@ -151,7 +153,7 @@
         "focus": "sessions",
         "scenario": "node-fails",
         "step": 1,
-        "note": "Node A fails; the cluster is degraded, and so is the API that needs it."
+        "note": "Node A fails: the cluster and the API are marked degraded, with a reason each."
       },
       {
         "view": "overview",

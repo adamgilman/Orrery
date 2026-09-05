@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, applySet, propagate, render, scopeModel, selectView, validate, type Model } from "../src/index.js";
+import { FakeLayoutEngine, applySet, render, scopeModel, selectView, validate, type Model } from "../src/index.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const ids = (xs: { id: string }[]) => xs.map((x) => x.id);
@@ -71,10 +71,11 @@ describe("scopeModel: collapsed groups (R11)", () => {
     expect(s.groups.find((g) => g.id === "identity")!.collapsed).toBe(2);
     expect(s.groups.find((g) => g.id === "pay-core")!.collapsed).toBeUndefined();
   });
-  it("health of a closed group still derives from what is inside", () => {
-    const failed = propagate(applySet(m(), { failed: ["ledger", "ledger-replica"] }));
-    const s = scopeModel(failed, failed.views[0]!);
+  it("a closed group keeps the state the author gave it, and hides nothing about it", () => {
+    const set = applySet(m(), { failed: ["ledger"], degraded: ["payments"] });
+    const s = scopeModel(set, set.views[0]!);
     expect(s.groups.find((g) => g.id === "payments")!.state).toBe("degraded");
-    expect(s.components.find((c) => c.id === "checkout")!.state).toBe("degraded");
+    expect(s.components.find((c) => c.id === "ledger")!.state).toBe("failed");
+    expect(s.components.find((c) => c.id === "checkout")!.state).toBe("on");
   });
 });

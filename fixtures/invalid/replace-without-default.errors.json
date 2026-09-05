@@ -2,13 +2,5 @@
   {
     "pointer": "/states/default",
     "message": "states.replace is true, so states.default must name one of: ok"
-  },
-  {
-    "pointer": "/states/needs/unmet",
-    "message": "states.needs.unmet must name one of: ok"
-  },
-  {
-    "pointer": "/states/needs/reduced",
-    "message": "states.needs.reduced must name one of: ok"
   }
 ]

@@ -21,7 +21,8 @@ describe("renderDocument", () => {
     const json = svg.match(/<script type="application\/json" id="orrery-model"><!\[CDATA\[([\s\S]*?)\]\]><\/script>/)![1]!;
     const model = JSON.parse(json);
     expect(Object.keys(model.states.define)).toEqual(["healthy", "impaired", "brownout", "outage", "drained"]);
-    expect(model.components[0].needs[0]).toEqual({ any: ["cell-a", "cell-b"], min: 1, unmet: "outage", reduced: "impaired" });
+    expect(model.kinds.connections.gossip).toEqual({ line: { dash: "2 3", stroke: "#0891b2", flow: "#0891b2" }, description: "Consensus gossip between sequencers" });
+    expect(model.scenarios[0].steps[0].reasons).toEqual({ edge: "running on cell B alone" });
     expect(svg).toMatch(/<script><!\[CDATA\[console\.log\(1\)\]\]><\/script>\s*<\/svg>/);
   });
   it("is deterministic and gives nodes and groups a data-bbox", async () => {

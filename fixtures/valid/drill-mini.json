@@ -18,19 +18,13 @@
     {
       "id": "app",
       "label": "App",
-      "kind": "client",
-      "needs": [
-        "orders"
-      ]
+      "kind": "client"
     },
     {
       "id": "api",
       "label": "Orders API",
       "kind": "service",
-      "group": "orders",
-      "needs": [
-        "db"
-      ]
+      "group": "orders"
     },
     {
       "id": "db",
@@ -42,10 +36,7 @@
       "id": "ship",
       "label": "Shipping API",
       "kind": "service",
-      "group": "shipping",
-      "needs": [
-        "carriers"
-      ]
+      "group": "shipping"
     },
     {
       "id": "carriers",
@@ -105,7 +96,12 @@
         {
           "note": "The database goes down",
           "set": {
-            "failed": "db"
+            "failed": {
+              "db": "disk full",
+              "api": "no database",
+              "orders": "nothing inside works",
+              "app": "cannot place orders"
+            }
           }
         }
       ]

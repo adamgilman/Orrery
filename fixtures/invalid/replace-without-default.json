@@ -3,7 +3,7 @@
     "replace": true,
     "define": {
       "ok": {
-        "rank": 0
+        "look": "normal"
       }
     }
   },

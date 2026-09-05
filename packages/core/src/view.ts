@@ -1,4 +1,4 @@
-import { ModelError } from "./simulate.js";
+import { ModelError } from "./declare.js";
 import type { Component, Model, View } from "./types.js";
 
 /**
@@ -46,7 +46,7 @@ export function scopeModel(model: Model, view: View): Model {
     for (const end of [c.from, c.to]) if (!shown.has(end) && !ghosts.has(end)) {
       // A ghost is drawn from its flag alone; its kind is carried through for the data attribute but never styled.
       const src = model.components.find((x) => x.id === end) ?? model.groups.find((x) => x.id === end)!;
-      ghosts.set(end, { id: end, label: src.label, kind: src.kind, state: src.state, needs: [], replicas: 1, ghost: true, ...(src.reason !== undefined ? { reason: src.reason } : {}), ...(src.description !== undefined ? { description: src.description } : {}) });
+      ghosts.set(end, { id: end, label: src.label, kind: src.kind, state: src.state, replicas: 1, ghost: true, ...(src.reason !== undefined ? { reason: src.reason } : {}), ...(src.description !== undefined ? { description: src.description } : {}) });
     }
     return true;
   });

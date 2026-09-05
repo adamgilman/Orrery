@@ -1,16 +1,15 @@
-import type { ComponentKindDef, GroupKindDef, StateDef } from "./types.js";
+import type { ComponentKindDef, ConnectionKindDef, GroupKindDef, StateDef } from "./types.js";
 
-/** The default vocabulary. Authors may override, extend or replace all of it; nothing in the engine names these. */
+/** The default vocabulary. Authors may override, extend or replace all of it; nothing in the renderer names these. */
 export const DEFAULT_STATES: Record<string, Omit<StateDef, "name">> = {
-  on: { look: "normal", rank: 0, available: true, flows: "keep", cascade: "none", description: "Working normally" },
-  degraded: { look: "warn", rank: 1, available: true, flows: "keep", cascade: "none", description: "Working with reduced redundancy or capacity" },
-  failed: { look: "alert", rank: 2, available: false, flows: "stop", cascade: "none", description: "Broken" },
-  off: { look: "muted", rank: 2, available: false, flows: "stop", cascade: "children", description: "Deliberately switched off" },
+  on: { look: "normal", flows: "keep", description: "Working normally" },
+  degraded: { look: "warn", flows: "keep", description: "Working with reduced redundancy or capacity" },
+  failed: { look: "alert", flows: "stop", description: "Broken" },
+  off: { look: "muted", flows: "stop", description: "Deliberately switched off" },
 };
 export const DEFAULT_STATE = "on";
-/** Mechanics of a state the author defines without saying otherwise. */
-export const NEW_STATE_DEFAULTS: Omit<StateDef, "name"> = { look: "normal", rank: 1, available: true, flows: "keep", cascade: "none" };
-export const DEFAULT_NEED_OUTCOMES = { unmet: "failed", reduced: "degraded" };
+/** A state the author defines without saying otherwise. */
+export const NEW_STATE_DEFAULTS: Omit<StateDef, "name"> = { look: "normal", flows: "keep" };
 
 /** Preset glyph names a kind may reuse. `service` and `external` have no glyph and are not in this list. */
 export const GLYPH_PRESETS = ["database", "queue", "cache", "gateway", "client", "storage", "function"] as const;
@@ -26,6 +25,13 @@ export const DEFAULT_COMPONENT_KINDS: Record<string, ComponentKindDef> = {
   external: { box: { dash: true, fill: "#f8fafc" }, description: "A system outside your control" },
 };
 export const FRAME_PRESETS = ["tier", "region", "zone", "cluster", "boundary"] as const;
+export const LINE_PRESETS = ["solid", "dashed", "dotted", "heavy"] as const;
+export const DEFAULT_CONNECTION_KINDS: Record<string, ConnectionKindDef> = {
+  sync: { line: "solid", description: "A synchronous call" },
+  async: { line: "dashed", description: "A message or event" },
+  replication: { line: "dotted", description: "Data copied between stores" },
+  dataflow: { line: "heavy", description: "A bulk stream of data" },
+};
 export const DEFAULT_GROUP_KINDS: Record<string, GroupKindDef> = {
   tier: { frame: "tier", description: "A tier or layer" },
   region: { frame: "region", description: "A region" },

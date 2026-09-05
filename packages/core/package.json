@@ -7,10 +7,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./simulate": {
-      "types": "./dist/simulate.d.ts",
-      "default": "./dist/simulate.js"
-    },
     "./flow": {
       "types": "./dist/flow.d.ts",
       "default": "./dist/flow.js"
@@ -22,6 +18,10 @@
     "./looks": {
       "types": "./dist/looks.d.ts",
       "default": "./dist/looks.js"
+    },
+    "./declare": {
+      "types": "./dist/declare.d.ts",
+      "default": "./dist/declare.js"
     }
   },
   "files": [

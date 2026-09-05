@@ -14,11 +14,7 @@
   "components": [
     {
       "id": "edge",
-      "kind": "gateway",
-      "needs": [
-        "platform",
-        "empty"
-      ]
+      "kind": "gateway"
     },
     {
       "id": "svc",

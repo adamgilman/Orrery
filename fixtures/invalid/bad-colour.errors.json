@@ -6,5 +6,9 @@
   {
     "pointer": "/kinds/groups/g/frame/fill",
     "message": "is not a CSS colour"
+  },
+  {
+    "pointer": "/kinds/connections/c/line/flow",
+    "message": "is not a CSS colour"
   }
 ]

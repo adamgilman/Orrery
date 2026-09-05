@@ -1,0 +1,6 @@
+[
+  {
+    "pointer": "/kinds/connections/x/line",
+    "message": "must be one of: solid, dashed, dotted, heavy"
+  }
+]

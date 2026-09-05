@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Orrery model v1",
-  "description": "An architecture model: components, the connections between them, the groups they sit in, what each component needs to stay healthy, plus views (drawings) and scenarios (what-ifs) over that model. Specification: docs/MODEL.md.",
+  "description": "An architecture model: components, the connections between them, the groups they sit in, plus views (drawings) and scenarios (what-ifs, in the author's words) over that model. Specification: docs/MODEL.md.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -30,7 +30,7 @@
     "states": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Your state vocabulary bound to how each state looks and behaves. Omit for the defaults: on (normal, rank 0), degraded (warn, 1), failed (alert, 2, unavailable, stops flow), off (muted, 2, unavailable, stops flow, cascades to children). Define an existing name to override it, a new name to extend, or set replace to start from nothing. The engine never reads a name; only look, rank, available, flows and cascade matter.",
+      "description": "Your state vocabulary bound to how each state is drawn. Omit for the defaults: on (normal), degraded (warn), failed (alert, stops flow), off (muted, stops flow). Define an existing name to override it, a new name to extend, or set replace to start from nothing. Nothing reads a name; only look and flows matter.",
       "properties": {
         "default": {
           "type": "string",
@@ -38,29 +38,10 @@
           "default": "on",
           "description": "State of any entity that declares none, and what 'restore' returns to."
         },
-        "needs": {
-          "type": "object",
-          "additionalProperties": false,
-          "description": "Outcome states needs use unless they say otherwise.",
-          "properties": {
-            "unmet": {
-              "type": "string",
-              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-              "default": "failed",
-              "description": "State a component enters when fewer than 'min' alternatives of a need are available."
-            },
-            "reduced": {
-              "type": "string",
-              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-              "default": "degraded",
-              "description": "State a component enters when a need is met with reduced redundancy: not every alternative is available, or the preferred one is above the default rank."
-            }
-          }
-        },
         "replace": {
           "type": "boolean",
           "default": false,
-          "description": "true: only the states in 'define' exist; 'default' and 'needs' must then name them."
+          "description": "true: only the states in 'define' exist; 'default' must then name one of them."
         },
         "define": {
           "type": "object",
@@ -125,37 +106,21 @@
                 ],
                 "description": "Visual treatment: a preset name or a style object. Only what you set changes; the rest stays normal."
               },
-              "rank": {
-                "type": "integer",
-                "minimum": 0,
-                "description": "Severity order. Propagation only ever raises rank; the highest applies."
-              },
-              "available": {
-                "type": "boolean",
-                "description": "Whether an entity in this state counts toward a need's 'min'."
-              },
               "flows": {
                 "type": "string",
                 "enum": [
                   "keep",
                   "stop"
                 ],
-                "description": "'stop': connections touching an entity in this state carry no flow."
-              },
-              "cascade": {
-                "type": "string",
-                "enum": [
-                  "none",
-                  "children"
-                ],
-                "description": "'children': every descendant of a group in this state is set to it as well."
+                "description": "'stop': connections touching an entity in this state are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic."
               },
               "description": {
                 "type": "string",
                 "minLength": 1,
-                "description": "What this state means to you. Shown in the legend; never read by the engine."
+                "description": "What this state means to you. Shown in the legend."
               }
-            }
+            },
+            "description": "How one state is drawn."
           }
         }
       }
@@ -163,7 +128,7 @@
     "kinds": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Your kind vocabulary for components and groups, bound to a glyph or a frame. Omit for the defaults. Kinds have no mechanics; they are words with a picture.",
+      "description": "Your kind vocabulary for components, groups and connections, bound to a glyph, a frame or a line style. Omit for the defaults. Define an existing name to override it, a new name to extend, or set replace to start from nothing.",
       "properties": {
         "replace": {
           "type": "boolean",
@@ -278,6 +243,65 @@
               }
             }
           }
+        },
+        "connections": {
+          "type": "object",
+          "description": "Connection kinds by name. Defaults: sync (solid), async (dashed), replication (dotted), dataflow (heavy).",
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "How connections of this kind are drawn.",
+            "properties": {
+              "line": {
+                "description": "A preset line name (solid, dashed, dotted, heavy) or a style object. A new kind without one is solid.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "solid",
+                      "dashed",
+                      "dotted",
+                      "heavy"
+                    ],
+                    "description": "Preset line."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Line style. Only what you set changes; the rest stays the default.",
+                    "properties": {
+                      "stroke": {
+                        "type": "string",
+                        "description": "Line colour."
+                      },
+                      "width": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 12,
+                        "description": "Line width in pixels. Default 1.5."
+                      },
+                      "dash": {
+                        "type": "string",
+                        "pattern": "^[0-9.]+( [0-9.]+)*$",
+                        "description": "Dash pattern as an SVG stroke-dasharray, e.g. \"6 5\". Omit for a solid line."
+                      },
+                      "flow": {
+                        "type": "string",
+                        "description": "Colour of the animated traffic along the line. Default blue."
+                      }
+                    }
+                  }
+                ]
+              },
+              "description": {
+                "type": "string",
+                "description": "What this kind means to you."
+              }
+            }
+          }
         }
       }
     },
@@ -315,61 +339,13 @@
           "state": {
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "description": "Declared state in the base model, one of the names in 'states'. Defaults to states.default. Propagation only ever moves an entity to a higher-ranked state."
-          },
-          "needs": {
-            "type": "array",
-            "default": [],
-            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives with the states to enter when the need is unmet or only partly met. Every alternative must be joined to this component by a connection: to it, to a group containing it, or into it when it is a group. It must not be a group that contains this component. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-                  "description": "An entity id: hard need, single alternative."
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "any"
-                  ],
-                  "properties": {
-                    "any": {
-                      "type": "array",
-                      "minItems": 1,
-                      "uniqueItems": true,
-                      "items": {
-                        "type": "string",
-                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                      },
-                      "description": "Alternative entities (components or groups) that satisfy this need, in order of preference. The first available one carries shifted load."
-                    },
-                    "min": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "description": "How many alternatives must be available for the need to be met (quorum). Must not exceed the number of alternatives."
-                    },
-                    "unmet": {
-                      "type": "string",
-                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-                      "description": "State this component enters when fewer than 'min' alternatives are available. Defaults to states.needs.unmet (failed). A nice-to-have call is \"unmet\": \"degraded\"."
-                    },
-                    "reduced": {
-                      "type": "string",
-                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-                      "description": "State this component enters when the need is met with reduced redundancy. Defaults to states.needs.reduced (degraded)."
-                    }
-                  }
-                }
-              ]
-            }
+            "description": "State in the base model, one of the names in 'states'. Defaults to states.default. Scenario steps and what-ifs change it."
           },
           "replicas": {
             "type": "integer",
             "minimum": 1,
             "default": 1,
-            "description": "How many instances run. Drawn as a stacked box with the count. No health semantics in v1."
+            "description": "How many instances run. Drawn as a stacked box with the count."
           },
           "tech": {
             "type": "string",
@@ -383,7 +359,7 @@
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+            "description": "Free-form data ignored by rendering: owner, url, tags, cost centre. The only place for anything Orrery does not model."
           }
         }
       }
@@ -415,14 +391,9 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "sync",
-              "async",
-              "replication",
-              "dataflow"
-            ],
             "default": "sync",
-            "description": "How it is drawn: sync solid, async dashed, replication dotted, dataflow thick. No health semantics."
+            "description": "How it is drawn: a name from 'kinds.connections' (defaults: sync solid, async dashed, replication dotted, dataflow heavy).",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
           },
           "label": {
             "type": "string",
@@ -434,7 +405,7 @@
             "minimum": 0,
             "maximum": 1,
             "default": 0.5,
-            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow; 0 hides it. Not real units. Shifts automatically when a need's alternative becomes unavailable."
+            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow; 0 hides it. Not real units. Scenario steps change it."
           },
           "bidirectional": {
             "type": "boolean",
@@ -443,7 +414,7 @@
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre."
+            "description": "Free-form data ignored by rendering: owner, url, tags, cost centre."
           }
         }
       }
@@ -481,12 +452,12 @@
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre."
+            "description": "Free-form data ignored by rendering: owner, url, tags, cost centre."
           },
           "state": {
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "description": "Declared state of the group as an entity: what connections and needs pointing at the group see. Defaults to states.default. Reaches members only if the state cascades. A non-empty group is also derived from its members through the ordinary need mechanic."
+            "description": "State of the group as an entity: how its frame is drawn. Says nothing about the members; set theirs too if they change. Defaults to states.default."
           },
           "description": {
             "type": "string",
@@ -583,7 +554,7 @@
     "scenarios": {
       "type": "array",
       "default": [],
-      "description": "Named what-if stories. Each step sets declared states ('set'), restores them, or overrides a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --set <state>=<id>`.",
+      "description": "Named what-if stories in your words. Each step puts entities in states (with a reason if you like), restores them, or sets connection loads. Steps are cumulative.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -617,29 +588,40 @@
                 },
                 "set": {
                   "type": "object",
-                  "minProperties": 1,
-                  "description": "State name to entity id(s): \"set\": { \"failed\": \"db\", \"off\": [\"eu-west\"] }. Any name from 'states'. On a group, the state applies to the group as an entity and reaches its members only if the state cascades.",
+                  "description": "State name to entities: an id, a list of ids, or an object of id to reason. \"set\": { \"failed\": \"db\", \"degraded\": { \"api\": \"reads from the replica\" } }. A reason is your one-line explanation, shown as a tooltip. Any name from 'states'.",
                   "propertyNames": {
-                    "type": "string",
                     "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
                   },
                   "additionalProperties": {
                     "oneOf": [
                       {
                         "type": "string",
-                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                        "description": "One entity id."
                       },
                       {
                         "type": "array",
-                        "minItems": 1,
-                        "uniqueItems": true,
                         "items": {
-                          "type": "string",
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "description": "Entity ids."
+                      },
+                      {
+                        "type": "object",
+                        "description": "Entity id to reason.",
+                        "propertyNames": {
                           "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                        }
+                        },
+                        "additionalProperties": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Why this entity is in this state here."
+                        },
+                        "minProperties": 1
                       }
                     ]
-                  }
+                  },
+                  "minProperties": 1
                 },
                 "restore": {
                   "oneOf": [
@@ -662,7 +644,7 @@
                 "load": {
                   "type": "array",
                   "minItems": 1,
-                  "description": "Connection load overrides. Refer to a connection by its ends, or by 'id' when the pair has several connections. Rarely needed: load shifts automatically when an alternative becomes unavailable.",
+                  "description": "Connection loads at this step. Refer to a connection by its ends, or by 'id' when the pair has several. This is how traffic moves in a story.",
                   "items": {
                     "type": "object",
                     "additionalProperties": false,
@@ -744,29 +726,40 @@
               },
               "set": {
                 "type": "object",
-                "minProperties": 1,
-                "description": "Declared-state overrides for this scene, state name to entity id(s).",
+                "description": "States for this scene, as in a scenario step: state name to an id, a list of ids, or an object of id to reason.",
                 "propertyNames": {
-                  "type": "string",
                   "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
                 },
                 "additionalProperties": {
                   "oneOf": [
                     {
                       "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      "description": "One entity id."
                     },
                     {
                       "type": "array",
-                      "minItems": 1,
-                      "uniqueItems": true,
                       "items": {
-                        "type": "string",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "description": "Entity ids."
+                    },
+                    {
+                      "type": "object",
+                      "description": "Entity id to reason.",
+                      "propertyNames": {
                         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                      }
+                      },
+                      "additionalProperties": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Why this entity is in this state here."
+                      },
+                      "minProperties": 1
                     }
                   ]
-                }
+                },
+                "minProperties": 1
               },
               "note": {
                 "type": "string",

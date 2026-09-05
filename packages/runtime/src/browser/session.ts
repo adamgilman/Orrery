@@ -1,9 +1,9 @@
-import { declare, propagate } from "@orrery/core/simulate";
+import { declare, stopFlows } from "@orrery/core/declare";
 import type { Model } from "@orrery/core/types";
 
 /**
- * What the viewer has done to the model: a scenario position plus per-entity state overrides. Pure state; the
- * effective model comes from core's `declare` + `propagate`, the same path the CLI uses.
+ * What the viewer has done to the model: a scenario position plus per-entity states they set. Pure state; the
+ * model to draw comes from core's `declare` + `stopFlows`, the same path the CLI uses.
  */
 export class Session {
   private readonly overrides = new Map<string, string>();
@@ -34,15 +34,11 @@ export class Session {
     return (this.model.components.find((c) => c.id === id) ?? this.model.groups.find((g) => g.id === id))!.state;
   }
 
-  /** Set `state`, or back to the base-model state when it is already set (undoing a scenario's setting too). */
-  toggle(id: string, state: string): void {
-    this.set(id, this.current(id) === state ? this.base(id) : state);
-  }
-
-  /** Next state in definition order. */
-  cycle(id: string): void {
+  /** Next (or previous) state in the author's definition order. */
+  cycle(id: string, by = 1): void {
+    const n = this.stateNames.length;
     const i = this.stateNames.indexOf(this.current(id));
-    this.set(id, this.stateNames[(i + 1) % this.stateNames.length]!);
+    this.set(id, this.stateNames[(i + by + n) % n]!);
   }
 
   setScenario(id: string | null, step = 1): void {
@@ -72,11 +68,11 @@ export class Session {
     for (const [state, ids] of Object.entries(set ?? {})) for (const id of ids) this.overrides.set(id, state);
   }
 
-  /** The propagated model for the current situation. */
+  /** The model to draw for the current situation. */
   effective(): Model {
     const set: Record<string, string[]> = Object.create(null);
     for (const [id, s] of this.overrides) set[s] = [...(set[s] ?? []), id];
     const d = declare(this.model, { ...(this.scenario ? { scenario: this.scenario.id, step: this.scenario.step } : {}), set });
-    return propagate(d.model);
+    return stopFlows(d.model);
   }
 }

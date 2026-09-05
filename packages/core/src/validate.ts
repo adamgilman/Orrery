@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
-import { DEFAULT_COMPONENT_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_NEED_OUTCOMES, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
+import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
-import type { Component, ComponentKindDef, Connection, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Need, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
+import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -50,20 +50,23 @@ function pickOneOfBranch(all: ErrorObject[], data: unknown): ErrorObject[] {
 const dedupe = (errors: ValidationError[]) => { const seen = new Set<string>(); return errors.filter((e) => { const k = e.toString(); if (seen.has(k)) return false; seen.add(k); return true; }); };
 const opt = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => (value !== undefined ? ({ [key]: value } as { [P in K]: V }) : {});
 const list = (v: string | string[] | undefined): string[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
+/** A `set` entry: one id, a list of ids, or ids with reasons. */
+type SetEntry = string | string[] | Record<string, string>;
+const idsOf = (v: SetEntry): string[] => (typeof v === "string" ? [v] : Array.isArray(v) ? v : Object.keys(v));
+const reasonsOf = (v: SetEntry): Record<string, string> => (typeof v === "object" && !Array.isArray(v) ? v : {});
 
 /* ---------- raw shapes (after schema defaults) ---------- */
-interface RawStateDef { look?: LookPreset | LookStyle; rank?: number; available?: boolean; flows?: "keep" | "stop"; cascade?: "none" | "children"; description?: string }
-interface RawNeed { any: string[]; min?: number; unmet?: string; reduced?: string }
+interface RawStateDef { look?: LookPreset | LookStyle; flows?: "keep" | "stop"; description?: string }
 interface Raw {
   title?: string; direction: Direction;
-  states?: { default?: string; needs?: { unmet?: string; reduced?: string }; replace?: boolean; define?: Record<string, RawStateDef> };
-  kinds?: { replace?: boolean; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef> };
-  components: { id: string; label?: string; kind: string; group?: string; state?: string; needs: (string | RawNeed)[]; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
-  connections: { from: string; to: string; id?: string; kind: Connection["kind"]; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
+  states?: { default?: string; replace?: boolean; define?: Record<string, RawStateDef> };
+  kinds?: { replace?: boolean; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
+  components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
+  connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
-  scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
-  tour?: { seconds: number; views?: string[]; scenes?: { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number }[] };
+  scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
+  tour?: { seconds: number; views?: string[]; scenes?: { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
 }
 
 /* ---------- vocabulary ---------- */
@@ -77,19 +80,14 @@ function buildStates(raw: Raw["states"], given: Raw["states"], err: (p: string, 
     if (look && typeof look === "object") for (const k of ["stroke", "fill", "text"] as const) if (look[k] !== undefined && !CSS_COLOR.test(look[k]!)) err(`/states/define/${name}/look/${k}`, `"${look[k]}" is not a CSS colour`);
   }
   const def = raw?.default ?? DEFAULT_STATE;
-  const unmet = raw?.needs?.unmet ?? DEFAULT_NEED_OUTCOMES.unmet;
-  const reduced = raw?.needs?.reduced ?? DEFAULT_NEED_OUTCOMES.reduced;
-  const missing = (field: string, name: string, given: boolean) =>
-    err(field, raw?.replace && !given ? `states.replace is true, so ${field.slice(1).replace(/\//g, ".")} must name one of: ${Object.keys(define).join(", ")}` : `unknown state "${name}"; known: ${Object.keys(define).join(", ")}`);
-  if (!Object.hasOwn(define, def)) missing("/states/default", def, given?.default !== undefined);
-  if (!Object.hasOwn(define, unmet)) missing("/states/needs/unmet", unmet, given?.needs?.unmet !== undefined);
-  if (!Object.hasOwn(define, reduced)) missing("/states/needs/reduced", reduced, given?.needs?.reduced !== undefined);
-  return { default: def, needs: { unmet, reduced }, define };
+  if (!Object.hasOwn(define, def)) err("/states/default", raw?.replace && given?.default === undefined ? `states.replace is true, so states.default must name one of: ${Object.keys(define).join(", ")}` : `unknown state "${def}"; known: ${Object.keys(define).join(", ")}`);
+  return { default: def, define };
 }
 
 function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kinds {
   const components: Record<string, ComponentKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_COMPONENT_KINDS);
   const groups: Record<string, GroupKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_GROUP_KINDS);
+  const connections: Record<string, ConnectionKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_CONNECTION_KINDS);
   const colour = (p: string, v: string | undefined) => { if (v !== undefined && !CSS_COLOR.test(v)) err(p, `"${v}" is not a CSS colour`); };
   for (const [name, k] of Object.entries(raw?.components ?? {})) {
     components[name] = { ...(components[name] ?? {}), ...k };
@@ -102,7 +100,12 @@ function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kin
     if (typeof k.frame === "string" && !(FRAME_PRESETS as readonly string[]).includes(k.frame)) err(`/kinds/groups/${name}/frame`, `must be one of: ${FRAME_PRESETS.join(", ")}`);
     if (typeof k.frame === "object") { colour(`/kinds/groups/${name}/frame/stroke`, k.frame.stroke); colour(`/kinds/groups/${name}/frame/fill`, k.frame.fill); }
   }
-  return { components, groups };
+  for (const [name, k] of Object.entries(raw?.connections ?? {})) {
+    connections[name] = { ...(connections[name] ?? { line: "solid" }), ...k };
+    if (typeof k.line === "string" && !(LINE_PRESETS as readonly string[]).includes(k.line)) err(`/kinds/connections/${name}/line`, `must be one of: ${LINE_PRESETS.join(", ")}`);
+    if (typeof k.line === "object") { colour(`/kinds/connections/${name}/line/stroke`, k.line.stroke); colour(`/kinds/connections/${name}/line/flow`, k.line.flow); }
+  }
+  return { components, groups, connections };
 }
 
 /* ---------- main ---------- */
@@ -120,6 +123,7 @@ export function validate(input: unknown): ValidationResult {
   const stateOk = (name: string) => Object.hasOwn(states.define, name);
   const componentKindOk = (name: string) => Object.hasOwn(kinds.components, name);
   const groupKindOk = (name: string) => Object.hasOwn(kinds.groups, name);
+  const connectionKindOk = (name: string) => Object.hasOwn(kinds.connections, name);
 
   /* ids and references */
   const groupIds = new Set<string>();
@@ -163,6 +167,7 @@ export function validate(input: unknown): ValidationResult {
   const connectionKeys = new Set<string>();
   const connections: Connection[] = [];
   raw.connections.forEach((c, i) => {
+    if (!connectionKindOk(c.kind)) err(`/connections/${i}/kind`, `unknown connection kind "${c.kind}"; known: ${Object.keys(kinds.connections).join(", ")}`);
     if (!isEntity(c.from)) err(`/connections/${i}/from`, `unknown entity "${c.from}"`);
     if (!isEntity(c.to)) err(`/connections/${i}/to`, `unknown entity "${c.to}"`);
     if (isEntity(c.from) && isEntity(c.to)) {
@@ -176,38 +181,13 @@ export function validate(input: unknown): ValidationResult {
     connectionKeys.add(key);
     connections.push({ key, from: c.from, to: c.to, kind: c.kind, load: c.load, bidirectional: c.bidirectional, ...opt("id", c.id), ...opt("label", c.label), ...opt("meta", c.meta) });
   });
-  const connected = (a: string, b: string) => connections.some((c) => (c.from === a && c.to === b) || (c.from === b && c.to === a));
-  // A need is joined by a connection to the alternative itself, to a group containing it, or to something inside it.
-  const inside = (id: string, groupId: string) => ancestors(id).includes(groupId);
-  const connectedOrViaGroup = (component: string, alt: string) =>
-    connected(component, alt) || ancestors(alt).some((g) => connected(component, g)) || connections.some((c) => (c.from === component && inside(c.to, alt)) || (c.to === component && inside(c.from, alt)));
   // W1: an entity connected both to a group and to something inside it, in either direction.
   connections.forEach((c, i) => {
     for (const anc of ancestors(c.to)) if (connections.some((o) => o.from === c.from && o.to === anc)) warnings.push(new ValidationWarning(`/connections/${i}`, `"${c.from}" connects to "${c.to}" and also to its group "${anc}"; both lines will be drawn`));
     for (const anc of ancestors(c.from)) if (connections.some((o) => o.to === c.to && o.from === anc)) warnings.push(new ValidationWarning(`/connections/${i}`, `"${c.from}" connects to "${c.to}" and so does its group "${anc}"; both lines will be drawn`));
   });
 
-  /* components with needs */
-  const components: Component[] = raw.components.map((c, i) => {
-    const needs: Need[] = c.needs.map((n, j) => {
-      const base = `/components/${i}/needs/${j}`;
-      const need: Need = typeof n === "string"
-        ? { any: [n], min: 1, unmet: states.needs.unmet, reduced: states.needs.reduced }
-        : { any: n.any, min: n.min ?? 1, unmet: n.unmet ?? states.needs.unmet, reduced: n.reduced ?? states.needs.reduced };
-      if (typeof n !== "string" && need.min > need.any.length) err(`${base}/min`, `min ${need.min} exceeds the ${need.any.length} alternatives`);
-      if (!stateOk(need.unmet)) err(`${base}/unmet`, `unknown state "${need.unmet}"`);
-      if (!stateOk(need.reduced)) err(`${base}/reduced`, `unknown state "${need.reduced}"`);
-      need.any.forEach((alt, k) => {
-        const p = typeof n === "string" ? base : `${base}/any/${k}`;
-        if (!isEntity(alt)) return err(p, `unknown entity "${alt}"`);
-        if (alt === c.id) return err(p, `"${c.id}" cannot need itself`);
-        if (ancestors(c.id).includes(alt)) return err(p, `"${alt}" contains "${c.id}"; a component cannot need its own group`);
-        if (!connectedOrViaGroup(c.id, alt)) err(p, `"${c.id}" needs "${alt}" but no connection joins them; add one`);
-      });
-      return need;
-    });
-    return { id: c.id, label: c.label ?? c.id, kind: c.kind, state: c.state ?? states.default, needs, replicas: c.replicas, ...opt("group", c.group), ...opt("tech", c.tech), ...opt("description", c.description), ...opt("meta", c.meta) };
-  });
+  const components: Component[] = raw.components.map((c) => ({ id: c.id, label: c.label ?? c.id, kind: c.kind, state: c.state ?? states.default, replicas: c.replicas, ...opt("group", c.group), ...opt("tech", c.tech), ...opt("description", c.description), ...opt("meta", c.meta) }));
   const groups: Group[] = raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, state: g.state ?? states.default, ...opt("parent", g.parent), ...opt("description", g.description), ...opt("meta", g.meta) }));
 
   /* views */
@@ -238,11 +218,13 @@ export function validate(input: unknown): ValidationResult {
       const base = `/scenarios/${i}/steps/${j}`;
       const seen = new Map<string, string>();
       const set: Record<string, string[]> = Object.create(null);
-      for (const [state, ids] of Object.entries(st.set ?? {})) {
+      const reasons: Record<string, string> = Object.create(null);
+      for (const [state, entry] of Object.entries(st.set ?? {})) {
         if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
-        set[state] = list(ids);
+        set[state] = idsOf(entry);
+        Object.assign(reasons, reasonsOf(entry));
         set[state]!.forEach((id, k) => {
-          const p = Array.isArray(ids) ? `${base}/set/${state}/${k}` : `${base}/set/${state}`;
+          const p = Array.isArray(entry) ? `${base}/set/${state}/${k}` : typeof entry === "string" ? `${base}/set/${state}` : `${base}/set/${state}/${id}`;
           if (!isEntity(id)) err(p, `unknown entity "${id}"`);
           if (seen.has(id)) err(p, `"${id}" is already set to "${seen.get(id)}" in this step`);
           seen.set(id, state);
@@ -269,7 +251,7 @@ export function validate(input: unknown): ValidationResult {
         if (key !== undefined) load[key] = l.load;
       });
       if (Object.keys(set).length + restore.length + (st.load ?? []).length === 0) err(base, "step changes nothing");
-      return { ...opt("note", st.note), set, restore, load };
+      return { ...opt("note", st.note), set, reasons, restore, load };
     });
     return { id: sc.id, label: sc.label ?? sc.id, steps };
   });
@@ -280,7 +262,7 @@ export function validate(input: unknown): ValidationResult {
     const t = raw.tour;
     if (!t.views && !t.scenes) err("/tour", "give views or scenes");
     t.views?.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
-    type RawScene = { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number };
+    type RawScene = { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number };
     const rawScenes: RawScene[] = t.scenes ?? (t.views ?? []).map((view) => ({ view }));
     const scenes: Scene[] = rawScenes.map((sc, k) => {
       const base = t.scenes ? `/tour/scenes/${k}` : `/tour/views/${k}`;
@@ -294,12 +276,14 @@ export function validate(input: unknown): ValidationResult {
       if (sc.step !== undefined && scenario && (sc.step < 1 || sc.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
       if (sc.step !== undefined && sc.scenario === undefined) err(`${base}/step`, "step needs a scenario");
       const set: Record<string, string[]> = Object.create(null);
-      for (const [state, ids] of Object.entries(sc.set ?? {})) {
+      const reasons: Record<string, string> = Object.create(null);
+      for (const [state, entry] of Object.entries(sc.set ?? {})) {
         if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
-        set[state] = list(ids);
+        set[state] = idsOf(entry);
+        Object.assign(reasons, reasonsOf(entry));
         for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
       }
-      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("focus", sc.focus), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...opt("note", sc.note) };
+      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("focus", sc.focus), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...opt("note", sc.note) };
     });
     tour = { seconds: t.seconds, scenes };
   }

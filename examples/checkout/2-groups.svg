@@ -15,10 +15,6 @@
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
-.edge.need{stroke:#475569;stroke-width:2}
-.edge-async{stroke-dasharray:6 5}
-.edge-replication{stroke-dasharray:2 4}
-.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
@@ -30,6 +26,9 @@
 .gk-zone .group-box{stroke-dasharray:3 5}
 .gk-cluster .group-box{stroke:#94a3b8}
 .gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .st-degraded .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .node-label{fill:#92400e}

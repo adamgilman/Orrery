@@ -4,22 +4,14 @@
   "direction": "right",
   "states": {
     "default": "healthy",
-    "needs": {
-      "unmet": "outage",
-      "reduced": "impaired"
-    },
     "replace": true,
     "define": {
       "healthy": {
         "look": "normal",
-        "rank": 0,
-        "available": true,
         "description": "Within SLO"
       },
       "impaired": {
         "look": "warn",
-        "rank": 1,
-        "available": true,
         "description": "Serving, redundancy or latency SLO breached"
       },
       "brownout": {
@@ -28,23 +20,16 @@
           "fill": "#f5f3ff",
           "pulse": true
         },
-        "rank": 1,
-        "available": true,
         "description": "Serving with non-essential features disabled"
       },
       "outage": {
         "look": "alert",
-        "rank": 3,
-        "available": false,
         "flows": "stop",
         "description": "Customer-visible failure"
       },
       "drained": {
         "look": "muted",
-        "rank": 3,
-        "available": false,
         "flows": "stop",
-        "cascade": "children",
         "description": "Deliberately taken out of rotation"
       }
     }
@@ -73,6 +58,16 @@
           "fillOpacity": 0.4
         },
         "description": "Independent deployment cell"
+      }
+    },
+    "connections": {
+      "gossip": {
+        "line": {
+          "dash": "2 3",
+          "stroke": "#0891b2",
+          "flow": "#0891b2"
+        },
+        "description": "Consensus gossip between sequencers"
       }
     }
   },
@@ -111,49 +106,19 @@
     {
       "id": "edge",
       "label": "Edge gateway",
-      "kind": "gateway",
-      "needs": [
-        {
-          "any": [
-            "cell-a",
-            "cell-b"
-          ]
-        }
-      ]
+      "kind": "gateway"
     },
     {
       "id": "match-a",
       "label": "Matcher",
       "kind": "matcher",
-      "group": "cell-a",
-      "needs": [
-        {
-          "any": [
-            "seq-1",
-            "seq-2",
-            "seq-3"
-          ],
-          "min": 2
-        },
-        "settlement"
-      ]
+      "group": "cell-a"
     },
     {
       "id": "match-b",
       "label": "Matcher",
       "kind": "matcher",
-      "group": "cell-b",
-      "needs": [
-        {
-          "any": [
-            "seq-1",
-            "seq-2",
-            "seq-3"
-          ],
-          "min": 2
-        },
-        "settlement"
-      ]
+      "group": "cell-b"
     },
     {
       "id": "seq-1",
@@ -210,21 +175,21 @@
     {
       "from": "seq-1",
       "to": "seq-2",
-      "kind": "replication",
+      "kind": "gossip",
       "bidirectional": true,
       "load": 0.3
     },
     {
       "from": "seq-2",
       "to": "seq-3",
-      "kind": "replication",
+      "kind": "gossip",
       "bidirectional": true,
       "load": 0.3
     },
     {
       "from": "seq-3",
       "to": "seq-1",
-      "kind": "replication",
+      "kind": "gossip",
       "bidirectional": true,
       "load": 0.3
     },
@@ -271,14 +236,38 @@
       "label": "Drain cell A for deploy",
       "steps": [
         {
-          "note": "Cell A drained: its matcher goes with it; edge runs impaired on cell B",
+          "note": "Cell A drained, its matcher with it; the edge runs impaired on cell B",
           "set": {
-            "drained": "cell-a"
-          }
+            "drained": [
+              "cell-a",
+              "match-a"
+            ],
+            "impaired": {
+              "edge": "running on cell B alone"
+            }
+          },
+          "load": [
+            {
+              "from": "edge",
+              "to": "cell-b",
+              "load": 1
+            }
+          ]
         },
         {
           "note": "Back in rotation",
-          "restore": "cell-a"
+          "restore": [
+            "cell-a",
+            "match-a",
+            "edge"
+          ],
+          "load": [
+            {
+              "from": "edge",
+              "to": "cell-b",
+              "load": 0.5
+            }
+          ]
         }
       ]
     },
@@ -289,20 +278,40 @@
         {
           "note": "One sequencer out: quorum holds, matchers impaired",
           "set": {
-            "outage": "seq-1"
+            "outage": "seq-1",
+            "impaired": {
+              "match-a": "two of three sequencers",
+              "match-b": "two of three sequencers",
+              "consensus": "one sequencer out"
+            }
           }
         },
         {
           "note": "Second out: quorum lost, both matchers in outage, edge in outage",
           "set": {
-            "outage": "seq-2"
+            "outage": {
+              "seq-2": "disk failure",
+              "match-a": "quorum lost",
+              "match-b": "quorum lost",
+              "consensus": "quorum lost",
+              "edge": "no matcher available"
+            }
           }
         },
         {
           "note": "Second sequencer back; edge in brownout while it catches up",
-          "restore": "seq-2",
+          "restore": [
+            "seq-2"
+          ],
           "set": {
-            "brownout": "edge"
+            "brownout": {
+              "edge": "read-only while the sequencer catches up"
+            },
+            "impaired": {
+              "match-a": "two of three sequencers",
+              "match-b": "two of three sequencers",
+              "consensus": "catching up"
+            }
           }
         }
       ]
@@ -312,9 +321,13 @@
       "label": "Settlement black box fails",
       "steps": [
         {
-          "note": "The whole settlement boundary is in outage; ledger inside is untouched, matchers lose their need",
+          "note": "The whole settlement boundary is in outage; the ledger inside is untouched, matchers run impaired",
           "set": {
-            "outage": "settlement"
+            "outage": "settlement",
+            "impaired": {
+              "match-a": "settlement unavailable",
+              "match-b": "settlement unavailable"
+            }
           }
         }
       ]

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.2 601.5" width="533.2" height="601.5" data-orrery="1">
-<title>Checkout: what needs what - Primary fails (1/1): Orders DB goes down</title>
+<title>Checkout: what happens - Primary fails (1/1): Orders DB goes down</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
 [data-lod="detail"]{opacity:0}
@@ -15,10 +15,6 @@
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
-.edge.need{stroke:#475569;stroke-width:2}
-.edge-async{stroke-dasharray:6 5}
-.edge-replication{stroke-dasharray:2 4}
-.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
@@ -30,6 +26,9 @@
 .gk-zone .group-box{stroke-dasharray:3 5}
 .gk-cluster .group-box{stroke:#94a3b8}
 .gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .st-degraded .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .node-label{fill:#92400e}
@@ -43,10 +42,9 @@
 .st-off{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
-<g class="view" data-view="default" data-title="Checkout: what needs what - Primary fails (1/1): Orders DB goes down" data-size="533.2 601.5">
+<g class="view" data-view="default" data-title="Checkout: what happens - Primary fails (1/1): Orders DB goes down" data-size="533.2 601.5">
 <g class="groups">
-<g class="group gk-tier st-degraded" data-group="data" data-bbox="20 289.5 493.2 242" data-state="degraded">
-<title>Orders DB unavailable</title>
+<g class="group gk-tier st-on" data-group="data" data-bbox="20 289.5 493.2 242" data-state="on">
 <rect class="group-box" x="20" y="289.5" width="493.2" height="242" rx="10"/>
 <text class="group-label" x="32" y="305.5">Data</text>
 </g>
@@ -56,27 +54,27 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync need" data-edge="web->api" data-kind="sync" d="M357.5 68 L357.5 108" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M357.5 68 L357.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M357.5 68 L357.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync need" data-edge="api->db" data-kind="sync" d="M357.5 156 L357.5 191 L402.5 191 L402.5 349.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M357.5 156 L357.5 191 L402.5 191 L402.5 349.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->db" data-load="0" d="M357.5 156 L357.5 191 L402.5 191 L402.5 337.5" style="stroke-width:1.5;animation:none;opacity:0"/>
 <text class="edge-label" x="376.5" y="224">writes</text>
-<path class="edge edge-sync need" data-edge="failover" data-kind="sync" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 471.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 471.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0.6" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 459.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M402.5 397.5 L402.5 471.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="db->replica" data-load="0" d="M402.5 397.5 L402.5 459.5" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge edge-sync need" data-edge="api->sessions" data-kind="sync" d="M326.5 156 L326.5 257 L166 257 L166 325.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M326.5 156 L326.5 257 L166 257 L166 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M326.5 156 L326.5 257 L166 257 L166 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 </g>
 <g class="nodes">
 <g class="node kind-client st-degraded" data-node="web" data-kind="client" data-state="degraded" data-bbox="291.5 20 132 48" transform="translate(291.5 20)">
-<title>Checkout API is degraded</title>
+<title>checkout is slower</title>
 <rect class="node-box" width="132" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
 <text class="node-label" x="84" y="24">Storefront</text>
 </g>
 <g class="node kind-service st-degraded" data-node="api" data-kind="service" data-state="degraded" data-bbox="295.5 108 124 48" transform="translate(295.5 108)">
-<title>Orders DB unavailable, using Read replica</title>
+<title>reads from the replica; writes are queued</title>
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text>
 </g>

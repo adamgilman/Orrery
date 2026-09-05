@@ -26,15 +26,7 @@
     {
       "id": "api",
       "label": "Checkout API",
-      "group": "app",
-      "needs": [
-        {
-          "any": [
-            "db",
-            "replica"
-          ]
-        }
-      ]
+      "group": "app"
     },
     {
       "id": "db",

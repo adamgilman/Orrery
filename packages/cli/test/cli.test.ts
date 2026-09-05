@@ -154,7 +154,9 @@ describe("orrery render --scenario", () => {
   it("--set declares states for a one-off what-if", () => {
     const r = run("render", join(fixtures, "valid/alternatives.json"), "--static", "--set", "failed=orders,fraud");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/data-node="api"[^>]*data-state="degraded"/);
+    expect(r.out).toMatch(/data-node="orders"[^>]*data-state="failed"/);
+    expect(r.out).toMatch(/data-node="fraud"[^>]*data-state="failed"/);
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="on"/); // the what-if says nothing about the API, so nothing changes
     const bad = run("render", join(fixtures, "valid/alternatives.json"), "--set", "broken=orders");
     expect(bad.code).toBe(1);
     expect(bad.err).toContain('unknown state "broken"');
@@ -211,7 +213,7 @@ describe("orrery argument parsing", () => {
     const r = run("render", f, "--scenario", "orders-failover", "--step", "1", "--set", "on=orders");
     expect(r.code).toBe(0);
     expect(r.out).toMatch(/data-node="orders"[^>]*data-state="on"/);
-    expect(r.out).toMatch(/data-node="api"[^>]*data-state="on"/);
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="degraded"/); // the step's word about the API stands
   });
   it("reports an unwritable output path without a stack trace", () => {
     const r = run("render", f, "-o", "/proc/nope/out.svg");

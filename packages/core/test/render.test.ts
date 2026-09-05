@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, PULSE_PERIOD, applySet, propagate, render, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
+import { FakeLayoutEngine, PULSE_PERIOD, applySet, render, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
@@ -44,7 +44,7 @@ describe("renderSvg: structure", () => {
 
 describe("renderSvg: looks and kinds (R8)", () => {
   it("styles by state look, never by name: a custom state renders its style object", async () => {
-    const m = propagate(applySet(fixture("own-vocabulary"), { brownout: ["edge"], outage: ["seq-1"] }));
+    const m = applySet(fixture("own-vocabulary"), { brownout: ["edge"], outage: ["seq-1"] });
     const svg = await draw(m);
     expect(svg).toContain('data-node="edge" data-kind="gateway" data-state="brownout"');
     expect(svg).toMatch(/\.st-brownout \.node-box\{[^}]*stroke:#7c3aed/);
@@ -63,11 +63,21 @@ describe("renderSvg: looks and kinds (R8)", () => {
     expect(svg).toMatch(/\.gk-cell \.group-box\{[^}]*stroke-dasharray/);
     expect(svg).toContain('class="group gk-boundary st-healthy" data-group="settlement"');
   });
-  it("marks connections that satisfy a need, draws replicas, tech and bidirectional arrows", async () => {
-    const m = propagate(fixture("alternatives"));
-    const svg = await draw(m);
-    expect(svg).toMatch(/<path class="edge edge-sync need" data-edge="api->orders"/);
+  it("draws connections by their kind's line (R3), preset or the author's, never by name; replicas, tech and bidirectional arrows", async () => {
+    const svg = await draw(fixture("alternatives"));
+    expect(svg).toMatch(/<path class="edge edge-sync" data-edge="api->orders"/);
     expect(svg).toMatch(/<path class="edge edge-replication" data-edge="orders->replica"/);
+    // the default kinds are ordinary kinds bound to preset lines
+    expect(svg).toContain(".edge-async{stroke-dasharray:6 5}");
+    expect(svg).toContain(".edge-replication{stroke-dasharray:2 4}");
+    expect(svg).toContain(".edge-dataflow{stroke-width:3}");
+    expect(svg).not.toMatch(/\.edge-sync\{/); // solid: nothing to add
+    // a custom kind renders exactly its line style, and colours its flow
+    const gossip = await draw(applySet(fixture("own-vocabulary"), {}));
+    expect(gossip).toContain(".edge-gossip{stroke:#0891b2;stroke-dasharray:2 3}");
+    expect(gossip).toMatch(/<path class="edge edge-gossip" data-edge="seq-1->seq-2" data-kind="gossip"/);
+    expect(gossip).toMatch(/<path class="flow" data-flow="seq-1->seq-2" data-load="[\d.]+" d="[^"]+" style="[^"]*;stroke:#0891b2"/);
+    const m = fixture("alternatives");
     const api = between(svg, 'data-node="api"');
     expect(api).toContain('class="replicas"');
     expect(api).toContain(">×3<");
@@ -76,19 +86,20 @@ describe("renderSvg: looks and kinds (R8)", () => {
     const tech = await draw(fixture("connected"));
     expect(between(tech, 'data-node="orders"')).toContain(">PostgreSQL 16</text>");
   });
-  it("draws ghosts dimmed and dashed, and explains propagated states as tooltips", async () => {
+  it("draws ghosts dimmed and dashed, and shows the author's reason as a tooltip", async () => {
     const m = fixture("grouped");
-    const svg = await render(propagate(applySet(m, { failed: ["db"] })), new FakeLayoutEngine(), { view: "data-tier" });
+    const svg = await render(applySet(m, { failed: ["db"], degraded: ["api"] }, {}, { api: "reads from the replica" }), new FakeLayoutEngine(), { view: "data-tier" });
     expect(svg).toMatch(/\.node\[data-ghost\]\{[^}]*opacity/);
-    expect(between(svg, 'data-node="api"')).toContain("<title>Orders DB unavailable, using Orders DB (replica)</title>");
+    expect(between(svg, 'data-node="api"')).toContain("<title>reads from the replica</title>");
+    expect(between(svg, 'data-node="db"')).not.toContain("<title>"); // no reason given, none invented
   });
 });
 
 describe("renderSvg: legend (R9)", () => {
   it("lists every state used in the view with its description, and nothing when only the default is used", async () => {
-    const plain = await draw(propagate(fixture("alternatives")));
+    const plain = await draw(fixture("alternatives"));
     expect(plain).not.toContain('class="legend"');
-    const m = propagate(applySet(fixture("alternatives"), { failed: ["orders"] }));
+    const m = applySet(fixture("alternatives"), { failed: ["orders"], degraded: ["api"] });
     const svg = await draw(m);
     const legend = between(svg, '<g class="legend"');
     expect(legend).toContain("failed");
@@ -105,7 +116,8 @@ describe("render options", () => {
     expect(s).toContain('data-node="orders" data-kind="database" data-state="failed"');
     expect(s).toContain("<title>Checkout with alternatives - Orders DB failover (1/4): Primary goes down; reads move to the replica, API runs reduced</title>");
     const o = await render(m, new FakeLayoutEngine(), { set: { failed: ["fraud"] } });
-    expect(o).toContain('data-node="api" data-kind="service" data-state="degraded"');
+    expect(o).toContain('data-node="fraud" data-kind="function" data-state="failed"');
+    expect(o).toContain('data-node="api" data-kind="service" data-state="on"'); // nothing is inferred
   });
 });
 
@@ -158,7 +170,7 @@ describe("renderSvg: collapsed groups as level of detail (R11)", () => {
     expect(svg).toMatch(/<path class="edge[^"]*" data-edge="pay-api->ledger"[^>]*data-lod="detail" data-for="payments"/);
     expect(svg).toMatch(/<path class="edge[^"]*" data-edge="checkout->pay-api"[^>]*data-lod="detail" data-for="payments"/);
     // the summary path is an ordinary edge, same key, cut at the payments frame boundary
-    const summary = svg.match(/<path class="edge edge-sync need" data-edge="checkout->pay-api" data-kind="sync" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
+    const summary = svg.match(/<path class="edge edge-sync" data-edge="checkout->pay-api" data-kind="sync" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
     expect(summary).toBeTruthy();
     const [bx, by, bw, bh] = between(svg, 'data-group="payments"').match(/data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     const end = summary![1]!.split(" L").at(-1)!.split(" ").map(Number);

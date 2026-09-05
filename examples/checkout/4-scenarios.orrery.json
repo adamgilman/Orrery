@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
-  "title": "Checkout: what needs what",
+  "title": "Checkout: what happens",
   "direction": "down",
   "groups": [
     {
@@ -19,24 +19,12 @@
     {
       "id": "web",
       "label": "Storefront",
-      "kind": "client",
-      "needs": [
-        "api"
-      ]
+      "kind": "client"
     },
     {
       "id": "api",
       "label": "Checkout API",
-      "kind": "service",
-      "needs": [
-        {
-          "any": [
-            "db",
-            "replica"
-          ]
-        },
-        "sessions"
-      ]
+      "kind": "service"
     },
     {
       "id": "db",
@@ -101,8 +89,18 @@
         {
           "note": "Orders DB goes down",
           "set": {
-            "failed": "db"
-          }
+            "failed": "db",
+            "degraded": {
+              "api": "reads from the replica; writes are queued",
+              "web": "checkout is slower"
+            }
+          },
+          "load": [
+            {
+              "id": "failover",
+              "load": 0.6
+            }
+          ]
         }
       ]
     }

@@ -6,26 +6,29 @@
 
 ## 1. North Star
 
-**A diagram that is a model, in the author's own language.** Every visual behaviour (flow, cascade, dimming,
-controls) derives from a small model, never from hand placement. Three layers, as in the specification:
+**A diagram that is a model, in the author's own language.** Everything in a picture (boxes, lines, flow, states,
+dimming, controls) derives from a small model the author wrote, never from hand placement and never from
+inference. Two layers, as in the specification:
 
-- **Vocabulary**, owned by the author: the names of states and kinds and what they mean.
-- **Representation**, owned by the renderer: looks, glyphs, frames, animation, legend. Presets, all replaceable.
-- **Mechanics**, owned by the engine: rank, availability, flow, cascade, counting. Never a name.
+- **Vocabulary**, owned by the author: the names of states and kinds, what they mean, and every state in every
+  scenario step.
+- **Representation**, owned by the renderer: looks, glyphs, frames, lines, animation, legend. Presets, all
+  replaceable.
 
-Navigation (views, outline, zoom, step-through, morph) is what the runtime builds on top of those.
+Navigation (views, outline, zoom, step-through, drill-down, morph) is what the runtime builds on top of those.
 
-If something cannot be expressed in the model it is not a feature. If the engine has to know what "degraded"
-means, the design is wrong. Specification: [docs/MODEL.md](docs/MODEL.md), with numbered invariants.
+If something cannot be expressed in the model it is not a feature. If the tool has to know what "degraded" means,
+or work out what a failure does to the rest of the system, the design is wrong: it is the author's diagram.
+Specification: [docs/MODEL.md](docs/MODEL.md), with numbered invariants.
 
 Three tests every release must pass:
 
 1. **The README test.** The rendered SVG dropped into a GitHub README shows animated flow, with no plugin.
 2. **The click-through test.** The *same file* opened directly in a browser is fully interactive: outline, state
-   changes with propagation, scenarios, views.
+   changes, scenarios, views, drill-down.
 3. **The agent test.** An AI agent given only MODEL.md, the JSON Schema and the CLI can grow a model through the
-   progressive walk (components, connections, needs, own vocabulary, scenarios), validating first time at each step,
-   and gets the propagated states it expected.
+   progressive walk (components, groups, connections, scenarios, views, own vocabulary), validating first time at
+   each step, and gets the pictures it expected.
 
 ## 2. Users
 
@@ -39,14 +42,15 @@ Three tests every release must pass:
 
 ### v1 (in scope)
 - **Model** (implemented): components, connections (any entity to any entity), nested groups including empty
-  ones, needs with alternatives, quorum and outcome states, author-defined states and kinds with defaults, views
-  with scope and subset, scenarios with set/restore/load, `meta` as the extensibility escape hatch.
+  ones, author-defined states and kinds (component glyphs, group frames, connection lines) with defaults, views
+  with scope, subset and collapsed groups, scenarios with set (states with reasons), restore and load, tours,
+  `meta` as the extensibility escape hatch.
 - **Layout**: automatic, deterministic, hierarchical, orthogonal routing, connections to group frames. The author
   gives direction and order, never coordinates. Engines are replaceable behind `LayoutEngine`.
 - **Render**: one standalone SVG; CSS animation of flow and pulse; looks and kinds rendered exactly as bound;
   legend in the author's words; ghosts for one-ended connections in scoped views.
-- **Runtime** (inside the SVG): outline, zoom, click and state bar to set any state with live propagation,
-  scenarios with step-through, view morph, keyboard, hover focus.
+- **Runtime** (inside the SVG): outline, zoom, click and state bar to set any state, scenarios with step-through,
+  view morph, drill-down with a camera, keyboard, hover focus.
 - **What-ifs without a scenario**: `render --set <state>=<ids>`.
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
   from the frame tooling (M4).
@@ -60,7 +64,7 @@ Three tests every release must pass:
 - Live data binding (real metrics driving load or state). The model is designed so a feed could set declared
   states later; do not build it.
 - Performance, latency or capacity modelling. Load is relative and cosmetic.
-- Health expressions as a syntax. Needs are data.
+- Computing states. What a failure does to the rest of the system is the author's to say; the tool draws it.
 - Flowcharts, ER, class diagrams, state machines, Gantt. Sequence and walkthrough *views of an interaction over
   this model* are in scope (M3b); free-standing sequence diagrams are not.
 - Confluence native rendering. Documented fallback: GIF, or iframe macro to hosted HTML.
@@ -86,7 +90,7 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 
 | Package | Responsibility | Replaceability note |
 |---|---|---|
-| `@orrery/core` | JSON Schema, validator, propagation, view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
+| `@orrery/core` | JSON Schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
 | `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
 | `@orrery/runtime` | Vanilla JS inlined into the SVG: panel, outline, camera, state changes, scenarios, view morph. Budget 25 KB gzipped (currently ~6) | never React |
 | `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
@@ -113,6 +117,8 @@ interface LayoutEngine {
 | M3 runtime | Runtime inside the raw SVG: outline, zoom, state changes with live propagation, scenario step-through, multi-view morph, keyboard. CLI emits the interactive document by default. Verified in jsdom; browser check pending. |
 | Timer playback | A view can `play` a scenario: pre-rendered step layers cycled by CSS in the file (plays in a README), and runtime autoplay until the reader interacts. |
 | Model redesign | The specification in docs/MODEL.md replaced fixed system states with the author's vocabulary, moved dependencies to `needs` on components, made connections fluid across entities, added `--set`, warnings, legend, ghosts. Four fresh-agent walks, zero validation failures on the last one. |
+| Drill-down and tours | Collapsed groups as a level of detail on one layout; tours as one drawing with a camera; frame tooling in resvg and real Chromium to debug transitions frame by frame. |
+| Declared model | Propagation removed: no needs, rank, availability, cascade or load shifting. Every state, reason and load in a picture is one the author wrote in a scenario step or what-if. Connection kinds became author-defined line styles. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
@@ -121,15 +127,14 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 | # | Deliverable | Done when |
 |---|---|---|
 | N1 | **Browser click-through by a human**; fix what only eyes can find (panel width, morph feel, legend placement). | The user reports the interactive file works on desktop Safari/Chrome |
-| N2 | **`orrery explain`**: the model in prose, in the author's vocabulary ("Checkout API needs Orders DB or Orders replica; today Orders DB is in outage, so it is impaired, running on the replica"). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
-| N3 | **`orrery check`: scenario notes as assertions.** A step may carry `expect: { "<state>": [ids] }` (and later expected loads); `check` runs every scenario and diffs expectations against propagation. The agent tests showed notes are claims about engine output; make them checkable. | CI fails when a model's story and its mechanics disagree |
-| N4 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
+| N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
+| N3 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
 | M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |
 | M4 | **GIF/PNG export** from the frame tooling; `render --png/--gif`. | Confluence fallback documented with a real GIF; agents can look at their own output |
 | M5 | **Launch**: docs site built from MODEL.md, examples gallery, MCP server exposing validate/render/explain/check, agent eval harness with retry counts, tags and neighbourhood views if the backlog still wants them. | Public |
 
 Principles for adding anything: it must be expressible in the author's vocabulary, it must add or change a
-numbered invariant in MODEL.md with a test, and the engine must still pass B10 (names do not matter).
+numbered invariant in MODEL.md with a test, and it must never compute a state (B3).
 
 ## 8. Engineering rules
 
@@ -139,9 +144,9 @@ numbered invariant in MODEL.md with a test, and the engine must still pass B10 (
 - **Layout hints**: `direction` and declaration order are the only ones. More only if a real diagram cannot be fixed otherwise. No coordinates in the schema, ever.
 - **ELK quarantine**: `elkjs` is imported by `@orrery/layout-elk` only. A test enforces it.
 - **Specification first**: a change to what the file can say starts in `docs/MODEL.md` as an invariant with a test
-  name, then the test, then the code. The engine reads mechanics only (B10); the renderer reads looks only (R8).
+  name, then the test, then the code. Nothing computes a state (B3); the renderer reads looks only (R8).
 - **Vocabulary boundary**: user-facing text (schema descriptions, errors, CLI, README, legend) says components,
-  connections, groups, needs, states, kinds. Graph words stay below `toLayoutGraph`.
+  connections, groups, states, kinds. Graph words stay below `toLayoutGraph`.
 
 ## 9. Success metrics (first 90 days after launch)
 - An agent with no prior exposure produces a valid, good-looking diagram from the schema alone (measured with a fixed eval prompt set).
@@ -154,27 +159,24 @@ Two fresh agents (M0 and M1 schemas) each validated on the first attempt. What t
 kept here so the model grows from evidence rather than guesswork:
 
 - ~~Cross-boundary edges in a scoped view drawn as stubs~~ done: ghosts (R4).
-- ~~Edges whose endpoint is a group~~ done: connections and needs to any entity.
+- ~~Edges whose endpoint is a group~~ done: connections to any entity.
 - ~~Node attributes beyond label: technology, description, replica count~~ done: `tech`, `description`, `replicas`, `meta`. Multi-line labels: open.
 - ~~Bidirectional edges~~ done.
 - Group-level layout direction (region left-to-right, a tier inside it top-to-bottom): open.
-- From the fourth walk (new model): an alternative with partial capability (a read-only replica satisfies reads but
-  not writes); per-need flow behaviour (drop traffic instead of shifting it); a quorum on a group itself rather than
-  on a consumer; a `description` on a scenario; per-direction load on a bidirectional connection; semantic checks
-  after schema errors in one round trip.
-- ~~Inactive/failover edges as state~~ done: needs with alternatives, load shifts automatically.
+- From the fourth walk: ~~partial capability, per-need flow behaviour, quorum on a group~~ moot since the declared
+  model (the author writes the outcome). Still open: a `description` on a scenario; per-direction load on a
+  bidirectional connection; semantic checks after schema errors in one round trip.
+- ~~Inactive/failover edges as state~~ done: a step sets the load on the failover line.
 - View-level emphasis: highlight a subset on the full topology: lands with interactions (M3b).
 - ~~Subcommand `--help`, scope semantics~~ done.
-- From the M2 agent test: ~~fallbacks must name what they cover; soft dependencies~~ superseded by `needs` with
-  `any`/`min`/`unmet`/`reduced`. Still open: scenario steps that change topology or labels ("replica promoted to
-  primary"); a queue absorbing degradation is now expressible (do not declare the need, or give it `reduced` = the
-  default state).
+- From the M2 agent test: ~~fallbacks must name what they cover; soft dependencies~~ moot: the author states each
+  outcome. Still open: scenario steps that change topology or labels ("replica promoted to primary"). A queue
+  absorbing degradation is expressible: leave the worker in its state and say why.
 
 ## 11. Open questions
 1. **Resolved: CSS keyframes, not SMIL** (2026-09-04). Both play inside `<img>`; nothing outside browsers plays either. CSS wins on control: the Web Animations API gives the runtime one timeline (pause, scrub, playback rate) over every animation. Rule that follows: animation stays a pure function of (model, t); when load changes at runtime, continue from the current phase, never restart.
-2. Whether groups need their own quorum (`min` on the group) or whether declaring it on the consumer, as today, is enough.
-3. Icon licensing per provider. Verify AWS/GCP/Azure architecture icon terms before bundling.
-4. Schema hosting domain (`orrery.dev`?) and package scope (`@orrery/*` availability on npm).
+2. Icon licensing per provider. Verify AWS/GCP/Azure architecture icon terms before bundling.
+3. Schema hosting domain (`orrery.dev`?) and package scope (`@orrery/*` availability on npm).
 
 ## 12. Language decision
 

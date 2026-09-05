@@ -11,7 +11,7 @@ import { RUNTIME_SOURCE } from "../src/index.js";
  * SVG document, execute the bundle in that window (jsdom does not run SVG <script> elements on its own), and drive it.
  */
 describe("minified runtime inside a rendered SVG document", () => {
-  it("auto-boots, propagates a click, plays a scenario and switches views", async () => {
+  it("auto-boots, steps a clicked entity through the author's states, plays a scenario and switches views", async () => {
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/own-vocabulary.json"), "utf8")));
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
     const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: RUNTIME_SOURCE });
@@ -27,7 +27,7 @@ describe("minified runtime inside a rendered SVG document", () => {
     const entities = r.model.components.length + r.model.groups.length;
     expect(doc.querySelectorAll(".orrery-outline li")).toHaveLength(entities);
     vis("seq-1").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
-    expect([vis("seq-1"), vis("match-a"), vis("edge")].map((e) => e.getAttribute("data-state"))).toEqual(["outage", "impaired", "impaired"]);
+    expect([vis("seq-1"), vis("match-a"), vis("edge")].map((e) => e.getAttribute("data-state"))).toEqual(["impaired", "healthy", "healthy"]); // one click, one change
     const sel = q(".orrery-scenarios") as HTMLSelectElement;
     sel.value = "cell-drain"; sel.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
     expect(vis("match-a").getAttribute("data-state")).toBe("drained");

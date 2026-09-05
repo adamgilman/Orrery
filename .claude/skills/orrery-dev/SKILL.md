@@ -6,18 +6,19 @@ description: Develop Orrery itself (the animated architecture diagram tool in th
 # Developing Orrery
 
 Orrery turns a JSON model into a standalone animated SVG. You are changing the tool, not drawing a diagram.
-North Star: a diagram is a model, not a picture. Every visual behaviour derives from the model.
+North Star: a diagram is a model, not a picture. Everything in a picture derives from what the author wrote in the
+model; nothing is inferred.
 
 ## Vocabulary
 
-The file speaks the user's language: **components, connections, groups, needs, states, kinds, views, scenarios**
+The file speaks the user's language: **components, connections, groups, states, kinds, views, scenarios**
 (`docs/MODEL.md` is the specification, with numbered invariants). Internals below `toLayoutGraph` speak graph:
 nodes and edges, and the SVG uses `data-node` / `data-edge` / `data-flow` (keyed by connection key). Keep that
 boundary in `packages/core/src/measure.ts`; never let "node" or "edge" reach a user-facing message.
 
-States and kinds are author-defined. The engine (`simulate.ts`) reads only mechanics (`rank`, `available`,
-`flows`, `cascade`, need outcomes); the renderer reads only looks, glyphs and frames. If you find yourself writing
-`=== "failed"` anywhere, stop: that is invariant B10.
+States and kinds are author-defined and nothing computes a state. `declare.ts` folds scenario steps and a what-if
+into the model; the renderer reads only looks, glyphs, frames and lines. If you find yourself writing `=== "failed"`
+anywhere, or deriving one entity's state from another's, stop: that is invariant B3.
 
 ## Rules that are enforced by tests (do not fight them)
 
@@ -53,18 +54,19 @@ red over a faded frame; it is the fastest way to see what an animation change ac
 
 ## Model semantics
 
-`propagate()` in `packages/core/src/simulate.ts` is the single source of truth (MODEL.md §5): cascade first, then
-needs to a fixed point, then loads. `declare()` folds a scenario position and overrides into the declared model (`applySet()` underneath); everything renders or plays `propagate(declare(...))`.
-Rendering never computes state; it reads effective `state`, `reason`, connection `load` and `need` from the
-propagated model. Any state whose look pulses gets `data-pulse="1"`, and `freezeFrame` freezes every pulse rule;
-`inspect` treats pulsing boxes as allowed motion. Adding a mechanic means: MODEL.md invariant first, then the test
-named there, then the code.
+`declare()` in `packages/core/src/declare.ts` is the single source of truth (MODEL.md §5): the base model, then
+scenario steps 1..k (set with reasons, restore, load) in order, then the what-if (`applySet()` underneath).
+`stopFlows()` applies the one drawing rule: a connection touching an entity whose state has `flows: stop` is drawn
+with load 0. Everything renders or plays `stopFlows(declare(...).model)`. Rendering never computes state; it reads
+`state`, `reason` and connection `load` as declared. Any state whose look pulses gets `data-pulse="1"`, and
+`freezeFrame` freezes every pulse rule; `inspect` treats pulsing boxes as allowed motion. Changing what a step can
+say means: MODEL.md invariant first, then the test named there, then the code.
 
 ## Layout of the repo
 
 | Path | What |
 |---|---|
-| `packages/core` | schema, validator, propagation, view scoping, `LayoutEngine` + fake engine, SVG renderer, document assembly |
+| `packages/core` | schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` + fake engine, SVG renderer, document assembly |
 | `packages/layout-elk` | the only ELK importer |
 | `packages/raster` | freeze, rasterise, frames, contact sheet, `inspect` |
 | `packages/runtime` | the browser runtime bundled into every rendered SVG |
@@ -79,6 +81,6 @@ named there, then the code.
 ## Adding a model feature (e.g. `tags` on entities)
 
 `docs/MODEL.md` invariant with its test name → schema (`packages/core/schema/v1.json`, with descriptions) →
-invalid/valid fixtures → validator test → `types.ts` → engine test and code if it has mechanics → `toLayoutGraph`
+invalid/valid fixtures → validator test → `types.ts` → `declare` test and code if it changes what a step says → `toLayoutGraph`
 and the layout contract if it changes geometry → fake engine → ELK adapter → renderer test → renderer →
 `yarn inspect` on an example → commit. Never skip the fake engine; renderer tests must not depend on ELK.

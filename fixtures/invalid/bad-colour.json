@@ -15,6 +15,13 @@
           "fill": "url(x)"
         }
       }
+    },
+    "connections": {
+      "c": {
+        "line": {
+          "flow": "url(x)"
+        }
+      }
     }
   },
   "components": [

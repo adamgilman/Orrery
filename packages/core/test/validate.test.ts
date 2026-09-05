@@ -36,33 +36,40 @@ describe("validate: invalid fixtures", () => {
 describe("validate: normalisation (S12, defaults)", () => {
   it("a file of components alone is valid and fully defaulted", () => {
     const m = model("minimal");
-    expect(m.components[0]).toMatchObject({ id: "a", label: "a", kind: "service", state: "on", needs: [], replicas: 1 });
+    expect(m.components[0]).toMatchObject({ id: "a", label: "a", kind: "service", state: "on", replicas: 1 });
     expect(m.connections).toEqual([]);
     expect(m.groups).toEqual([]);
     expect(m.views).toEqual([{ id: "default", type: "topology", direction: "right" }]);
     expect(m.scenarios).toEqual([]);
     expect(Object.keys(m.states.define)).toEqual(["on", "degraded", "failed", "off"]);
-    expect(m.states).toMatchObject({ default: "on", needs: { unmet: "failed", reduced: "degraded" } });
+    expect(m.states).toMatchObject({ default: "on" });
+    expect(m.states.define.failed).toEqual({ name: "failed", look: "alert", flows: "stop", description: "Broken" });
     expect(Object.keys(m.kinds.components)).toContain("database");
     expect(Object.keys(m.kinds.groups)).toContain("boundary");
+    expect(Object.keys(m.kinds.connections)).toEqual(["sync", "async", "replication", "dataflow"]);
   });
-  it("normalises needs to objects with document outcomes, and connections to keys", () => {
+  it("normalises connections to keys and kinds", () => {
     const m = model("alternatives");
-    const api = m.components.find((c) => c.id === "api")!;
-    expect(api.needs[0]).toEqual({ any: ["orders", "replica"], min: 1, unmet: "failed", reduced: "degraded" });
-    expect(api.needs[2]).toEqual({ any: ["fraud"], min: 1, unmet: "degraded", reduced: "degraded" });
-    const web = m.components.find((c) => c.id === "web")!;
-    expect(web.needs[0]).toEqual({ any: ["api"], min: 1, unmet: "failed", reduced: "degraded" });
     expect(m.connections[0]!.key).toBe("web->api");
+    expect(m.connections[0]!.kind).toBe("sync");
     expect(m.connections[0]!.id).toBeUndefined();
     expect(model("parallel").connections.map((c) => c.key)).toEqual(["reads", "writes"]);
     expect(model("parallel").scenarios[0]!.steps[0]!.load).toEqual({ writes: 0.9 });
   });
-  it("resolves scenario set/restore/load into normalised steps", () => {
+  it("resolves scenario set/restore/load into normalised steps: ids, lists, and ids with reasons (S9)", () => {
     const m = model("alternatives");
     const s = m.scenarios[0]!;
-    expect(s.steps[0]).toEqual({ note: "Primary goes down; reads move to the replica, API runs reduced", set: { failed: ["orders"] }, restore: [], load: {} });
-    expect(s.steps[3]!.restore).toEqual(["orders", "fraud", "replica"]);
+    expect(s.steps[0]).toEqual({
+      note: "Primary goes down; reads move to the replica, API runs reduced",
+      set: { failed: ["orders"], degraded: ["api", "web"] },
+      reasons: { api: "reads from the replica", web: "checkout is slower" },
+      restore: [], load: { "api->replica": 0.6 },
+    });
+    expect(s.steps[3]!.restore).toEqual(["orders", "fraud", "replica", "api", "web"]);
+    expect(s.steps[3]!.reasons).toEqual({});
+    const bad = validate({ components: [{ id: "a" }], scenarios: [{ id: "s", steps: [{ set: { failed: { a: "x" }, off: "a" } }] }] });
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.errors.map((e) => e.toString())).toEqual(['/scenarios/0/steps/0/set/off: "a" is already set to "failed" in this step']);
   });
   it("does not mutate its input and formats errors as pointer: message", () => {
     const input = { components: [{ id: "a" }], connections: [{ from: "a", to: "nope" }] };
@@ -75,26 +82,31 @@ describe("validate: normalisation (S12, defaults)", () => {
 });
 
 describe("validate: vocabulary (S14)", () => {
-  it("replace: true keeps only the author's states and requires default and outcomes to be named", () => {
+  it("replace: true keeps only the author's states and requires the default to be named", () => {
     const m = model("own-vocabulary");
     expect(Object.keys(m.states.define)).toEqual(["healthy", "impaired", "brownout", "outage", "drained"]);
     expect(m.states.default).toBe("healthy");
     expect(m.components.find((c) => c.id === "edge")!.state).toBe("healthy");
     expect(m.states.define.brownout!.look).toEqual({ stroke: "#7c3aed", fill: "#f5f3ff", pulse: true });
-    expect(m.states.define.drained!.cascade).toBe("children");
+    expect(m.states.define.drained!.flows).toBe("stop");
     expect(m.kinds.components.matcher!.glyph).toMatch(/^M/);
     expect(m.kinds.groups.cell!.frame).toMatchObject({ dash: true });
     expect(m.kinds.components.database).toBeDefined(); // kinds not replaced, only extended
+    expect(m.kinds.connections.gossip).toEqual({ line: { dash: "2 3", stroke: "#0891b2", flow: "#0891b2" }, description: "Consensus gossip between sequencers" });
+    expect(m.kinds.connections.sync).toBeDefined();
+    expect(m.connections.find((c) => c.key === "seq-1->seq-2")!.kind).toBe("gossip");
   });
-  it("overriding a default state merges onto its definition rather than resetting it", () => {
-    const r = validate({ states: { define: { degraded: { cascade: "children" } } }, components: [{ id: "a" }] });
+  it("overriding a default state or connection kind merges onto its definition rather than resetting it", () => {
+    const r = validate({ states: { define: { degraded: { flows: "stop" } } }, kinds: { connections: { async: { description: "fire and forget" } } }, components: [{ id: "a" }] });
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
-    expect(r.model.states.define.degraded).toMatchObject({ look: "warn", rank: 1, available: true, cascade: "children" });
+    expect(r.model.states.define.degraded).toMatchObject({ look: "warn", flows: "stop", description: "Working with reduced redundancy or capacity" });
+    expect(r.model.kinds.connections.async).toEqual({ line: "dashed", description: "fire and forget" });
   });
-  it("extending adds a state with schema defaults", () => {
-    const r = validate({ states: { define: { maintenance: { look: "muted", available: false } } }, components: [{ id: "a", state: "maintenance" }] });
+  it("extending adds a state with defaults, and a connection kind with a preset or custom line", () => {
+    const r = validate({ states: { define: { maintenance: { look: "muted" } } }, kinds: { connections: { depends: { line: "heavy" } } }, components: [{ id: "a", state: "maintenance" }, { id: "b" }], connections: [{ from: "a", to: "b", kind: "depends" }] });
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
-    expect(r.model.states.define.maintenance).toMatchObject({ look: "muted", rank: 1, available: false, flows: "keep", cascade: "none" });
+    expect(r.model.states.define.maintenance).toEqual({ name: "maintenance", look: "muted", flows: "keep" });
+    expect(r.model.connections[0]!.kind).toBe("depends");
   });
 });
 

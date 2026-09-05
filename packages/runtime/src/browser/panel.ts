@@ -75,8 +75,7 @@ export function buildPanel(model: Model, views: { id: string; title: string }[])
   const outline = h("ul", "orrery-outline"); panel.appendChild(outline);
 
   const help = h("div", "orrery-help");
-  const unmet = model.states.needs.unmet;
-  help.innerHTML = `Click a component or group to set it to <b>${unmet}</b> (click again to undo), <kbd>shift</kbd>+click to cycle states, or pick a state above. <kbd>↑</kbd><kbd>↓</kbd> select, <kbd>⏎</kbd> zoom, <kbd>f</kbd> set to ${unmet}, <kbd>[</kbd> <kbd>]</kbd> scenario steps, <kbd>1</kbd>–<kbd>9</kbd> views, <kbd>esc</kbd> reset view.`;
+  help.innerHTML = `Click a component or group to step it through your states (<kbd>shift</kbd>+click steps back), or pick a state above. <kbd>↑</kbd><kbd>↓</kbd> select, <kbd>⏎</kbd> zoom, <kbd>f</kbd> next state, <kbd>[</kbd> <kbd>]</kbd> scenario steps, <kbd>1</kbd>–<kbd>9</kbd> views, <kbd>esc</kbd> reset view.`;
   panel.appendChild(help);
   const reset = h("button", "orrery-reset", "Reset"); panel.appendChild(reset);
   host.appendChild(panel);

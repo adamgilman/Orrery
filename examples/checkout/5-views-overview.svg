@@ -15,10 +15,6 @@
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
-.edge.need{stroke:#475569;stroke-width:2}
-.edge-async{stroke-dasharray:6 5}
-.edge-replication{stroke-dasharray:2 4}
-.edge-dataflow{stroke-width:3}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
 .edge-label{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
 .legend text{font:12px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
@@ -30,6 +26,9 @@
 .gk-zone .group-box{stroke-dasharray:3 5}
 .gk-cluster .group-box{stroke:#94a3b8}
 .gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
 .st-degraded .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
 .st-degraded .node-label{fill:#92400e}
@@ -55,16 +54,16 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync need" data-edge="web->api" data-kind="sync" d="M357.5 68 L357.5 108" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M357.5 68 L357.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M357.5 68 L357.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync need" data-edge="api->db" data-kind="sync" d="M357.5 156 L357.5 191 L402.5 191 L402.5 349.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M357.5 156 L357.5 191 L402.5 191 L402.5 349.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->db" data-load="0.6" d="M357.5 156 L357.5 191 L402.5 191 L402.5 337.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="376.5" y="224">writes</text>
-<path class="edge edge-sync need" data-edge="failover" data-kind="sync" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 471.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 471.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M388.5 156 L388.5 181 L428.5 181 L428.5 257 L490 257 L490 446.5 L451.8 446.5 L451.8 459.5" style="stroke-width:1.5;animation:none;opacity:0"/>
 <path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M402.5 397.5 L402.5 471.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="db->replica" data-load="0.2" d="M402.5 397.5 L402.5 459.5" style="stroke-width:2.1;animation-duration:2.5s"/>
-<path class="edge edge-sync need" data-edge="api->sessions" data-kind="sync" d="M326.5 156 L326.5 257 L166 257 L166 325.5" marker-end="url(#arrow)"/>
+<path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M326.5 156 L326.5 257 L166 257 L166 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M326.5 156 L326.5 257 L166 257 L166 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 </g>
 <g class="nodes">

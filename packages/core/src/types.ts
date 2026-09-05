@@ -1,54 +1,45 @@
 /**
  * The normalised model. All defaults applied, every reference checked, every state and kind resolved.
- * Vocabulary follows docs/MODEL.md: components, connections, groups, needs, states, kinds, views, scenarios.
+ * Vocabulary follows docs/MODEL.md: components, connections, groups, states, kinds, views, scenarios.
  * Layout and rendering internals still speak of nodes and edges; that boundary is `toLayoutGraph`.
  */
 export type Direction = "right" | "down";
 export type ViewType = "topology";
-export type ConnectionKind = "sync" | "async" | "replication" | "dataflow";
 
 export type LookPreset = "normal" | "warn" | "alert" | "muted" | "highlight";
 export interface LookStyle { stroke?: string; fill?: string; text?: string; dash?: boolean; pulse?: boolean; opacity?: number }
 
+/** How a state is drawn. `flows: stop` is a drawing rule: connections touching an entity in this state show no flow. */
 export interface StateDef {
   name: string;
   look: LookPreset | LookStyle;
-  rank: number;
-  available: boolean;
   flows: "keep" | "stop";
-  cascade: "none" | "children";
   description?: string;
 }
 
 export interface States {
   /** State of anything that declares none; what `restore` returns to. */
   default: string;
-  needs: { unmet: string; reduced: string };
   define: Record<string, StateDef>;
 }
 
 export interface ComponentKindDef { glyph?: string; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
 export interface GroupKindDef { frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
-export interface Kinds { components: Record<string, ComponentKindDef>; groups: Record<string, GroupKindDef> }
-
-export interface Need {
-  /** Alternatives in order of preference; entity ids (components or groups). */
-  any: string[];
-  min: number;
-  unmet: string;
-  reduced: string;
-}
+export type LinePreset = "solid" | "dashed" | "dotted" | "heavy";
+/** How a connection kind is drawn: line colour and width, an SVG dash pattern, and the colour of the animated traffic. */
+export interface LineStyle { stroke?: string; width?: number; dash?: string; flow?: string }
+export interface ConnectionKindDef { line: LinePreset | LineStyle; description?: string }
+export interface Kinds { components: Record<string, ComponentKindDef>; groups: Record<string, GroupKindDef>; connections: Record<string, ConnectionKindDef> }
 
 export interface Component {
   id: string;
   label: string;
   kind: string;
   group?: string;
-  /** Declared state, or after propagation the effective state. */
+  /** The state the author gave it: base model, then scenario steps, then a what-if. */
   state: string;
-  /** Set by propagation when the state was derived rather than declared. */
+  /** The author's explanation of the state, from a scenario step's `set`. */
   reason?: string;
-  needs: Need[];
   replicas: number;
   tech?: string;
   description?: string;
@@ -76,14 +67,13 @@ export interface Connection {
   id?: string;
   from: string;
   to: string;
-  kind: ConnectionKind;
+  /** A name from `kinds.connections`; picks the line style. */
+  kind: string;
   label?: string;
-  /** Declared load, or after propagation the effective load. */
+  /** The load the author gave it: base model, then scenario steps. */
   load: number;
   bidirectional: boolean;
   meta?: Record<string, unknown>;
-  /** Set by propagation: this connection satisfies a need of `from` (or `to`). Drawn darker. */
-  need?: true;
 }
 
 export interface Play { scenario: string; seconds: number }
@@ -105,6 +95,8 @@ export interface ScenarioStep {
   note?: string;
   /** state name → entity ids */
   set: Record<string, string[]>;
+  /** entity id → the author's reason for its state at this step */
+  reasons: Record<string, string>;
   restore: string[];
   /** connection key → load */
   load: Record<string, number>;
@@ -127,8 +119,8 @@ export interface Model {
   tour?: Tour;
 }
 
-/** One moment of a tour: a view, optionally at a point in a scenario, with overrides, a caption and its own duration. */
-export interface Scene { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; note?: string; seconds: number }
+/** One moment of a tour: a view, optionally at a point in a scenario, with states set for the scene, a caption and its own duration. */
+export interface Scene { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }
 export interface Tour { seconds: number; scenes: Scene[] }
 
 /** Anything with an id and a state: a component or a group. */

@@ -18,21 +18,13 @@
   "states": {
     "replace": true,
     "default": "healthy",
-    "needs": {
-      "unmet": "outage",
-      "reduced": "impaired"
-    },
     "define": {
       "healthy": {
         "look": "normal",
-        "rank": 0,
-        "available": true,
         "description": "Within SLO"
       },
       "impaired": {
         "look": "warn",
-        "rank": 1,
-        "available": true,
         "description": "Serving; redundancy or latency SLO breached"
       },
       "brownout": {
@@ -42,23 +34,16 @@
           "text": "#5b21b6",
           "pulse": true
         },
-        "rank": 1,
-        "available": true,
         "description": "Serving with a feature switched off"
       },
       "outage": {
         "look": "alert",
-        "rank": 3,
-        "available": false,
         "flows": "stop",
         "description": "Customer-visible failure"
       },
       "drained": {
         "look": "muted",
-        "rank": 3,
-        "available": false,
         "flows": "stop",
-        "cascade": "children",
         "description": "Deliberately out of rotation"
       }
     }
@@ -67,29 +52,12 @@
     {
       "id": "web",
       "label": "Storefront",
-      "kind": "client",
-      "needs": [
-        "api"
-      ]
+      "kind": "client"
     },
     {
       "id": "api",
       "label": "Checkout API",
-      "kind": "service",
-      "needs": [
-        {
-          "any": [
-            "db",
-            "replica"
-          ]
-        },
-        {
-          "any": [
-            "sessions"
-          ],
-          "unmet": "brownout"
-        }
-      ]
+      "kind": "service"
     },
     {
       "id": "db",
@@ -154,7 +122,17 @@
         {
           "note": "The cache cluster is drained: checkout continues for guests",
           "set": {
-            "drained": "sessions"
+            "drained": [
+              "sessions",
+              "cache-a",
+              "cache-b"
+            ],
+            "brownout": {
+              "api": "guest checkout only: no saved carts"
+            },
+            "impaired": {
+              "web": "signed-in customers check out as guests"
+            }
           }
         }
       ]

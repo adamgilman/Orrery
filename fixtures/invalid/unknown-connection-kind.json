@@ -1,12 +1,7 @@
 {
   "components": [
     {
-      "id": "a",
-      "needs": [
-        {
-          "any": []
-        }
-      ]
+      "id": "a"
     },
     {
       "id": "b"
@@ -15,7 +10,8 @@
   "connections": [
     {
       "from": "a",
-      "to": "b"
+      "to": "b",
+      "kind": "telepathy"
     }
   ]
 }
