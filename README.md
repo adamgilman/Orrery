@@ -36,15 +36,9 @@ the speed and weight of the flow.
 
 **Failure scenarios.** Components declare what they need, with alternatives. A scenario marks one component failed
 and the tool works out the rest: the worker fails with the primary, the API degrades onto its replica, the web tier
-degrades behind the API, and traffic moves off the dead paths. Healthy first, then one step into the scenario.
-
-![Failover, healthy](examples/readme/failover.svg)
-
-![Failover, primary failed](examples/readme/failover-db-fails.svg)
-
-Or let the file play the scenario itself. This one cycles through the base model and the step every three seconds
-with no script, because the steps are pre-rendered layers switched by CSS. The interactive file plays the same
-steps on a timer until you click.
+degrades behind the API, and traffic moves off the dead paths. This image plays the scenario itself, healthy then
+failed, every three seconds with no script: the steps are pre-rendered layers switched by CSS. The interactive file
+plays the same steps on a timer until you click.
 
 ![Failover, playing](examples/readme/failover-play.svg)
 

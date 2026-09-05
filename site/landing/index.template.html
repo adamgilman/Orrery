@@ -175,22 +175,20 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Turn the crank</p><h2>Fail the primary. Watch the system answer.</h2></div>
-      <p class="o-lede o-muted">Nothing on the right was drawn by hand. One line in a scenario declares the primary database failed. The engine works out that the worker fails with it, the API runs degraded on its replica, the web tier degrades behind the API, and which connections stop carrying traffic.</p>
+      <p class="o-lede o-muted">Nothing here was drawn by hand. One line in a scenario declares the primary database failed. The engine works out that the worker fails with it, the API runs degraded on its replica, the web tier degrades behind the API, and which connections stop carrying traffic. The figure plays the scenario on a timer, with no script.</p>
     </div>
     <div class="o-pair">
-      <figure class="o-figure"><!--svg:failover--><figcaption><b>Healthy.</b> The API needs either the primary or the replica; the web tier needs the API; the worker needs the primary alone. Darker lines are needs.</figcaption></figure>
-      <figure class="o-figure"><!--svg:failover-failed--><figcaption><b>Primary failed.</b> Red pulses, amber is reduced redundancy, the failover path lights up with the load the primary carried. Every derived state carries a reason.</figcaption></figure>
-    </div>
-    <div class="o-split">
-      <pre><code>{ <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"needs"</span>: [ { <span class="k">"any"</span>: [<span class="s">"db"</span>, <span class="s">"replica"</span>] } ] },
+      <figure class="o-figure"><!--svg:failover-play--><figcaption><b>Healthy, then the primary fails, every three seconds.</b> The API needs either the primary or the replica; the web tier needs the API; the worker needs the primary alone. Darker lines are needs. When the primary goes: red pulses, amber is reduced redundancy, the failover path lights up with the load the primary carried, and every derived state carries a reason.</figcaption></figure>
+      <div>
+        <pre><code>{ <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"needs"</span>: [ { <span class="k">"any"</span>: [<span class="s">"db"</span>, <span class="s">"replica"</span>] } ] },
 { <span class="k">"id"</span>: <span class="s">"web"</span>, <span class="k">"needs"</span>: [<span class="s">"api"</span>] },
 
 <span class="k">"scenarios"</span>: [ { <span class="k">"id"</span>: <span class="s">"db-fails"</span>, <span class="k">"steps"</span>: [
   { <span class="k">"note"</span>: <span class="s">"Primary goes down"</span>, <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span> } }
-] } ]</code></pre>
-      <div>
-        <p class="o-body">That is the whole of it. A need lists alternatives in order of preference, a quorum is a <code>min</code>, a nice-to-have call names a gentler outcome. Scenarios are cumulative steps that set and restore states; propagation fills in everything else.</p>
-        <p class="o-body o-muted">Try a what-if without writing a scenario: <code>orrery render app.json --set failed=db</code>. In the interactive file, click the component.</p>
+] } ],
+<span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"loop"</span>, <span class="k">"play"</span>: { <span class="k">"scenario"</span>: <span class="s">"db-fails"</span>, <span class="k">"seconds"</span>: <span class="n">3</span> } } ]</code></pre>
+        <p class="o-body" style="margin-top:20px">That is the whole of it. A need lists alternatives in order of preference, a quorum is a <code>min</code>, a nice-to-have call names a gentler outcome. Scenarios are cumulative steps that set and restore states; a view that <code>play</code>s one carries every step as a layer and cycles them with CSS, so it moves wherever an image can be shown.</p>
+        <p class="o-body o-muted" style="margin-top:12px">Try a what-if without writing a scenario: <code>orrery render app.json --set failed=db</code>. In the interactive file, click the component.</p>
       </div>
     </div>
   </div>

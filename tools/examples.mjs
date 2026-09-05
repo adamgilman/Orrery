@@ -9,8 +9,7 @@ for (const f of readdirSync("examples/next").filter((f) => f.endsWith(".orrery.j
 jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--scenario", "quorum", "--step", "2"], "examples/next/4-own-vocabulary-quorum.svg"]);
 // static renders the landing page inlines
 jobs.push(["examples/solar-system.orrery.json", ["--static"], "site/landing/solar.svg"]);
-jobs.push(["examples/readme/failover.orrery.json", ["--static"], "site/landing/failover.svg"]);
-jobs.push(["examples/readme/failover.orrery.json", ["--scenario", "db-fails"], "site/landing/failover-failed.svg"]);
+jobs.push(["examples/readme/failover.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"]);
 jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--static", "--play", "quorum", "--every", "4"], "site/landing/quorum.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--static", "--view", "data"], "site/landing/checkout-data.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--scenario", "db-failover", "--step", "2"], "examples/checkout-db-failover.svg"]);
