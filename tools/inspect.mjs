@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { render, validate } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
-import { contactSheet, decodePng, diffFrames, encodePng, inspect, rasterize, renderFrames } from "@orrery/raster";
+import { activeView, contactSheet, decodePng, diffFrames, encodePng, inspect, rasterize, renderFrames } from "@orrery/raster";
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith("--"));
@@ -32,8 +32,10 @@ else {
 writeFileSync(join(out, "rendered.svg"), svg);
 
 const report = inspect(svg, { scale, fps, durationMs: (frames * 1000) / fps });
-writeFileSync(join(out, "static.png"), rasterize(svg, { scale }));
-const seq = renderFrames(svg, { fps, durationMs: (frames * 1000) / fps, scale });
+// Stills and frames show what an <img> shows at rest: the visible view, base step, first scene.
+const still = activeView(svg);
+writeFileSync(join(out, "static.png"), rasterize(still, { scale }));
+const seq = renderFrames(still, { fps, durationMs: (frames * 1000) / fps, scale });
 seq.forEach((f, i) => writeFileSync(join(out, `frame-${String(i).padStart(2, "0")}.png`), f.png));
 writeFileSync(join(out, "sheet.png"), contactSheet(seq.map((f) => f.png), { columns: Math.min(4, seq.length) }));
 const bitmaps = seq.map((f) => decodePng(f.png));
