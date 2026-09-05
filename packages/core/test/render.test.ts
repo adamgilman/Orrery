@@ -185,8 +185,9 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(boxes[0]).toBe(boxes[1]);
     // camera: identity in scenes 0 and 3, closed on payments in 1 and 2, eased moves in between
     const cam = svg.match(/@keyframes orrery-camera\{.*?\}\}(?=\n|<)/)![0];
-    expect(cam).toMatch(/^@keyframes orrery-camera\{0%\{transform:none\}25%\{animation-timing-function:ease-in-out;transform:none\}32\.5%\{transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\) translate\([\d.-]+px, [\d.-]+px\)\}/);
-    expect(cam).toMatch(/75%\{animation-timing-function:ease-in-out;transform:translate[^}]*\}82\.5%\{transform:none\}100%\{transform:none\}\}/);
+    // the camera moves only in the middle phase of each transition: 4.3 s → 5.2 s (26.88 % → 32.5 %) and 12.3 s → 13.2 s
+    expect(cam).toMatch(/^@keyframes orrery-camera\{0%\{transform:none\}26\.88%\{animation-timing-function:ease-in-out;transform:none\}32\.5%\{transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\) translate\([\d.-]+px, [\d.-]+px\)\}/);
+    expect(cam).toMatch(/76\.88%\{animation-timing-function:ease-in-out;transform:translate[^}]*\}82\.5%\{transform:none\}100%\{transform:none\}\}/);
     // the camera's fixed point is the payments frame: it maps the frame centre to the canvas centre
     const [bx, by, bw, bh] = svg.match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     const [, W, H] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!.map(Number) as [unknown, number, number];
@@ -196,13 +197,13 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(t[2]).toBeGreaterThan(1);
     // level of detail: payments' detail is visible exactly while focused, its summary the reverse; identity never opens
     expect(svg).toMatch(/\[data-lod="detail"\]\[data-for~="payments"\]\{animation:orrery-lod-payments-detail 16s linear infinite\}/);
-    // staged: detail appears only in the last 40% of the move in (29.5→32.5) and is gone within the first 40% of the move out (75→78)
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}29\.5%\{opacity:0\}32\.5%\{opacity:1\}75%\{opacity:1\}78%\{opacity:0\}100%\{opacity:0\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}28%\{opacity:0\}79\.5%\{opacity:0\}82\.5%\{opacity:1\}100%\{opacity:1\}\}/);
+    // phases never overlap: detail appears after the camera has arrived (32.5 → 34.38) and is gone before it leaves (75 → 76.88)
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}75%\{opacity:1\}76\.88%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}26\.88%\{opacity:0\}82\.5%\{opacity:0\}84\.38%\{opacity:1\}100%\{opacity:1\}\}/);
     expect(svg).not.toContain("orrery-lod-identity");
     // state layers crossfade at the scenario moment (scene 2) and back at the loop
-    expect(svg).toMatch(/@keyframes orrery-state-1\{0%\{opacity:0\}50%\{opacity:0\}57\.5%\{opacity:1\}100%\{opacity:1\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-state-0\{0%\{opacity:1\}50%\{opacity:1\}57\.5%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-state-1\{0%\{opacity:0\}50%\{opacity:0\}59\.38%\{opacity:1\}100%\{opacity:1\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-state-0\{0%\{opacity:1\}50%\{opacity:1\}59\.38%\{opacity:0\}100%\{opacity:0\}\}/);
     // captions per scene
     expect(svg).toContain(">The ledger fails. The API runs reduced on the replica.</text>");
   });

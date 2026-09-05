@@ -43,17 +43,17 @@
 .st-off .node-box{stroke-dasharray:4 4}
 .st-off .group-box{stroke-dasharray:4 4}
 .st-off{opacity:0.45}
-@keyframes orrery-camera{0%{transform:none}25%{animation-timing-function:ease-in-out;transform:none}32.5%{transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}75%{animation-timing-function:ease-in-out;transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}82.5%{transform:none}100%{transform:none}}
-@keyframes orrery-state-0{0%{opacity:1}50%{opacity:1}57.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-state-1{0%{opacity:0}50%{opacity:0}57.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-camera{0%{transform:none}26.88%{animation-timing-function:ease-in-out;transform:none}32.5%{transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}76.88%{animation-timing-function:ease-in-out;transform:translate(781px, 189.5px) scale(1.4248) translate(-1022.5px, -129px)}82.5%{transform:none}100%{transform:none}}
+@keyframes orrery-state-0{0%{opacity:1}50%{opacity:1}59.38%{opacity:0}100%{opacity:0}}
+@keyframes orrery-state-1{0%{opacity:0}50%{opacity:0}59.38%{opacity:1}100%{opacity:1}}
 [data-lod="detail"][data-for~="payments"]{animation:orrery-lod-payments-detail 16s linear infinite}
 [data-lod="summary"][data-for~="payments"]{animation:orrery-lod-payments-summary 16s linear infinite}
-@keyframes orrery-lod-payments-detail{0%{opacity:0}29.5%{opacity:0}32.5%{opacity:1}75%{opacity:1}78%{opacity:0}100%{opacity:0}}
-@keyframes orrery-lod-payments-summary{0%{opacity:1}25%{opacity:1}28%{opacity:0}79.5%{opacity:0}82.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-caption-0{0%{opacity:1}25%{opacity:1}32.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-1{0%{opacity:0}25%{opacity:0}32.5%{opacity:1}50%{opacity:1}57.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-2{0%{opacity:0}50%{opacity:0}57.5%{opacity:1}75%{opacity:1}82.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-3{0%{opacity:0}75%{opacity:0}82.5%{opacity:1}100%{opacity:1}}</style>
+@keyframes orrery-lod-payments-detail{0%{opacity:0}32.5%{opacity:0}34.38%{opacity:1}75%{opacity:1}76.88%{opacity:0}100%{opacity:0}}
+@keyframes orrery-lod-payments-summary{0%{opacity:1}25%{opacity:1}26.88%{opacity:0}82.5%{opacity:0}84.38%{opacity:1}100%{opacity:1}}
+@keyframes orrery-caption-0{0%{opacity:1}25%{opacity:1}34.38%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-1{0%{opacity:0}25%{opacity:0}34.38%{opacity:1}50%{opacity:1}59.38%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-2{0%{opacity:0}50%{opacity:0}59.38%{opacity:1}75%{opacity:1}84.38%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-3{0%{opacity:0}75%{opacity:0}84.38%{opacity:1}100%{opacity:1}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
 <g class="view" data-view="overview" data-title="Commerce platform" data-size="1562 403">

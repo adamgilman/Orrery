@@ -3,6 +3,8 @@ import { Resvg } from "@resvg/resvg-js";
 import { XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
 import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery/core";
+import { freezeTracks } from "./keyframes.js";
+export { freezeTracks, parseKeyframes, valuesAt } from "./keyframes.js";
 
 const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => join(import.meta.dirname, "../fonts", f));
 
@@ -42,7 +44,9 @@ export function activeView(svg: string): string {
     .replace(/ data-lod="summary" data-for="[^"]*"/g, "");
   // Scene captions are shown one at a time by CSS; the still keeps the first.
   out = out.replace(/<text class="step-note"[^>]*style="animation:orrery-caption-(?!0 )[^"]*"[^>]*>[^<]*<\/text>\n?/g, "");
-  // camera tracks are CSS animations; the still is the identity camera
+  // The still is the resting picture: no cycle, no camera, no level-of-detail track left on what survives.
+  out = out.replace(/ style="animation:orrery-(?:play|tour|state|caption|camera)[^"]*"/g, "");
+  out = out.replace(/\n[^\n{}]*\{animation:orrery-lod-[^}]*\}/g, "");
   return out;
 }
 
@@ -55,6 +59,7 @@ const fmt = (n: number) => { const r = Math.round(n * 1000) / 1000; return Strin
  * Everything else is left byte for byte, so frames test the artifact that ships.
  */
 export function freezeFrame(svg: string, tMs: number): string {
+  svg = freezeTracks(svg, tMs);
   // Pulse: linear triangle wave on stroke-opacity, shared by every pulsing state, so one static value suffices.
   const phase = (tMs / (PULSE_PERIOD * 1000)) % 1;
   const tri = 1 - Math.abs(2 * phase - 1);

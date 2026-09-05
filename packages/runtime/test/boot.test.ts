@@ -221,22 +221,27 @@ describe("runtime drill-down", () => {
     expect(opacity(root, '[data-node="ledger"]')).toBe("0");
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
     click(vis(root, '[data-group="payments"]'));
-    vi.advanceTimersByTime(400);
+    vi.advanceTimersByTime(100);
+    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("0"); // the summary is gone before the camera moves
+    expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
+    vi.advanceTimersByTime(700);
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
     expect(opacity(root, '[data-node="ledger"]')).toBe("1");
     expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("0");
     expect(opacity(root, '[data-node="login"]')).toBe("0"); // identity stays closed
     expect(state(root, "payments")).toBe("on"); // focusing is navigation, not a state change
     key("Escape");
-    vi.advanceTimersByTime(400);
+    vi.advanceTimersByTime(50);
+    expect(opacity(root, '[data-node="ledger"]')).toBe("0"); // detail is gone before the camera pulls back
+    vi.advanceTimersByTime(800);
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
-    expect(opacity(root, '[data-node="ledger"]')).toBe("0");
+    expect(opacity(root, '.lod-summary[data-for="payments"]')).toBe("1");
   });
   it("a click on a hidden member counts as a click on its closed group", async () => {
     const root = await doc("drill-down");
     rt = boot(root, { size: { width: 1600, height: 900 } });
     click(vis(root, '[data-node="ledger"]'));
-    vi.advanceTimersByTime(400);
+    vi.advanceTimersByTime(800);
     expect(opacity(root, '[data-node="ledger"]')).toBe("1");
     expect(state(root, "ledger")).toBe("on");
   });
@@ -253,17 +258,17 @@ describe("runtime tour", () => {
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
     expect(root.querySelector(".orrery-note")!.textContent).toBe("The platform. Payments and Identity are closed.");
     expect(opacity('[data-node="ledger"]')).toBe("0");
-    vi.advanceTimersByTime(4000 + 400);
+    vi.advanceTimersByTime(4000 + 800);
     expect(opacity('[data-node="ledger"]')).toBe("1");
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
-    vi.advanceTimersByTime(4000 + 400);
+    vi.advanceTimersByTime(4000);
     expect(state(root, "ledger")).toBe("failed");
     expect(root.querySelector(".orrery-note")!.textContent).toMatch(/The ledger fails/);
-    vi.advanceTimersByTime(4000 + 400);
+    vi.advanceTimersByTime(4000);
     expect(opacity('[data-node="ledger"]')).toBe("0");
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
     expect(state(root, "payments")).toBe("degraded");
-    vi.advanceTimersByTime(4000 + 400);
+    vi.advanceTimersByTime(4000);
     expect(state(root, "payments")).toBe("on"); // looped to scene one: the scenario is gone
     key("ArrowDown");
     vi.advanceTimersByTime(30000);

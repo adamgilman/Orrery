@@ -168,22 +168,25 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const setState = (id: string, state: string) => { session.set(id, state); apply(); };
   /** Level of detail: a closed group in focus shows its members and hides its summary; the camera closes on it. */
   let focusId: string | null = null;
-  const reveal = (groupId: string | null) => {
-    for (const layer of layers.values()) {
-      for (const el of layer.querySelectorAll<SVGElement>("[data-lod]")) {
-        const fors = (el.getAttribute("data-for") ?? "").split(" ");
-        const open = groupId !== null && fors.includes(groupId);
-        el.style.opacity = el.getAttribute("data-lod") === "detail" ? (open ? "1" : "0") : (open ? "0" : "1");
-      }
-    }
+  /** Set the two levels of a group: `detail` and `summary` each shown or hidden. */
+  const setLevels = (groupId: string, detail: boolean, summary: boolean) => {
+    for (const layer of layers.values()) for (const el of layer.querySelectorAll<SVGElement>(`[data-lod][data-for~="${groupId}"]`))
+      el.style.opacity = (el.getAttribute("data-lod") === "detail" ? detail : summary) ? "1" : "0";
   };
+  const reveal = (groupId: string | null) => { for (const g of model.groups) setLevels(g.id, g.id === groupId, g.id !== groupId); };
   let revealTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Hide early, show late: detail appears once the camera has arrived, and is gone before it leaves. */
+  /**
+   * Three phases, never overlapping: what leaves fades in place, the camera moves with the box empty, what arrives
+   * appears once the camera has settled.
+   */
   const focus = (groupId: string | null, animate = true) => {
+    const leaving = focusId;
     focusId = groupId;
     if (revealTimer) clearTimeout(revealTimer);
-    if (groupId) { reveal(null); zoomTo(groupId, "group"); revealTimer = setTimeout(() => reveal(groupId), 300); }
-    else { reveal(null); fit(animate); }
+    if (leaving) setLevels(leaving, false, false);
+    if (groupId) setLevels(groupId, false, false);
+    const move = () => { if (groupId) zoomTo(groupId, "group"); else fit(animate); revealTimer = setTimeout(() => reveal(groupId), 300); };
+    revealTimer = setTimeout(move, leaving || groupId ? 150 : 0);
   };
   /** Clicking a closed group focuses it. */
   const drillInto = (groupId: string): boolean => {

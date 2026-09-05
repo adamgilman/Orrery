@@ -324,7 +324,10 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     return { sc, view, declared: d.model, title, caption: sc.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title), stateKey };
   });
   const n = scenes.length, total = scenes.reduce((a, s) => a + s.sc.seconds, 0);
-  const fadeS = Math.min(1.2, Math.min(...scenes.map((s) => s.sc.seconds)));
+  // A transition has three phases that never overlap: what leaves fades in place, then the camera moves with the
+  // box empty, then what arrives fades in once the camera has settled. Nothing fades while anything moves.
+  const fadeS = Math.min(1.5, Math.min(...scenes.map((s) => s.sc.seconds)));
+  const offW = fadeS * 0.2, camW = fadeS * 0.6;
   const starts = scenes.map((_, k) => scenes.slice(0, k).reduce((a, s) => a + s.sc.seconds, 0));
   const pc = (sec: number) => `${Math.round((sec / total) * 10000) / 100}%`;
   const ease = "animation-timing-function:ease-in-out;";
@@ -339,9 +342,10 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       const prev = valueAt(k - 1), next = valueAt(k);
       if (prev === next) continue;
       const s0 = starts[k]!;
-      if (!staged) stops.push([pc(s0), (easeMoves ? ease : "") + prev], [pc(s0 + fadeS), next]);
-      else if (next.endsWith(":1")) stops.push([pc(s0 + fadeS * 0.6), prev], [pc(s0 + fadeS), next]);
-      else stops.push([pc(s0), prev], [pc(s0 + fadeS * 0.4), next]);
+      if (easeMoves) stops.push([pc(s0 + offW), ease + prev], [pc(s0 + offW + camW), next]);           // the camera: middle phase
+      else if (!staged) stops.push([pc(s0), prev], [pc(s0 + fadeS), next]);                            // states, captions: across the whole window
+      else if (next.endsWith(":1")) stops.push([pc(s0 + offW + camW), prev], [pc(s0 + fadeS), next]);  // arriving detail or summary: last phase
+      else stops.push([pc(s0), prev], [pc(s0 + offW), next]);                                          // leaving detail or summary: first phase
     }
     stops.push(["100%", valueAt(n - 1)]);
     return stops.filter(([p], i) => i === 0 || p !== stops[i - 1]![0]).map(([p, v]) => `${p}{${v}}`).join("");
