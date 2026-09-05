@@ -258,7 +258,8 @@ Effective state is never lower-ranked than declared. An entity is **available** 
 A group's declared state describes the group as an entity: it is what connections and needs pointing at the
 group see. It does not force member states; failure reaches members only through their own needs. The one
 mechanic that crosses containment is `cascade: children`, which sets every descendant's declared state to the
-group's (a higher-ranked declared state on a descendant is kept).
+group's when that rank is strictly higher than the descendant's own declared state; ties keep the declared state,
+and among several cascading ancestors the highest rank wins, the nearest on a tie.
 
 A non-empty group is also judged by its members. It behaves as if it had one need over its direct members,
 `{ "any": [members], "min": 1 }` with the document's default outcomes, evaluated without preference order: the
@@ -270,7 +271,8 @@ is its declared state.
 
 Given declared states (base model, then scenario steps, then runtime changes), the engine first applies every
 `cascade: children` state downward (declared states only, so it cannot loop), then iterates to a fixed point.
-For each entity, for each need:
+An entity whose state is already unavailable is not evaluated: it is down, and a need cannot make it more so.
+For every other entity, for each need:
 
 1. `available` = number of alternatives whose effective state is available.
 2. If `available < min`: the need is **unmet**; the entity enters the need's `unmet` state.
@@ -318,20 +320,20 @@ kept and the outside end becomes a ghost at the top level (R4).
 | S7 | A connection reference by `{from,to}` must be unambiguous; otherwise the reference must use `id`. | invalid fixture `ambiguous-connection-ref`; valid fixture `parallel` |
 | S8 | A scenario step changes at least one thing and names each entity at most once across `set` and `restore`. | invalid fixtures `scenario-empty-step`, `scenario-conflicting-verbs` |
 | S9 | Every need alternative is an entity connected to the needing component (directly or via a containing group) and not an ancestor of it. | invalid fixtures `need-without-connection`, `need-on-ancestor`; valid fixture `own-vocabulary` |
-| S10 | `min ≤ |any|`, `min ≥ 1`, no duplicate alternatives, a component does not need itself. | invalid fixture `need-shape` |
+| S10 | `min ≤ |any|`, `min ≥ 1`, `any` not empty, no duplicate alternatives, a component does not need itself. | invalid fixtures `need-shape`, `need-min-zero`, `need-empty-any`, `need-duplicate-alternatives` |
 | S11 | Every schema property has a description; unknown properties are errors. | schema.test; invalid fixture `unknown-property` |
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
 | S13 | A group may be empty; it still renders and may be connected, needed and given a state. | valid fixture `group-endpoints`; layoutContract "(group endpoints)" |
 | S14 | Every state and kind name used anywhere is defined after defaults and overrides; with `replace: true`, `default` and need outcomes are given explicitly. | validate.test "vocabulary (S14)"; invalid fixtures `unknown-state`, `unknown-kind`, `unknown-group-kind`, `replace-without-default`, `scenario-unknown-state` |
-| S15 | A glyph is a preset name or SVG path data; a look is a preset name or a style object; a frame is a preset name or a style object. | invalid fixtures `bad-glyph`, `bad-look` |
+| S15 | Colours are CSS colours; a glyph is a preset name or SVG path data; looks and frames are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-look` |
 | B1 | Propagation is pure, deterministic and never mutates its input. | simulate.test "(B1, B5)" |
 | B2 | Declared state is a floor: propagation only raises rank. | simulate.test "(B2, B3, B6)" |
 | B3 | Need evaluation follows 5.2 exactly, using each state's `available` and each need's `unmet`/`reduced`. | simulate.test "(B2, B3, B6)", "quorum on the component" |
-| B4 | Flow follows 5.3. | simulate.test "an alternative down: reduced redundancy, load shifts" |
+| B4 | Flow follows 5.3: load leaves unavailable alternatives, lands on the first available one, parallel connections are summed. | simulate.test "loads (B4)" |
 | B5 | Propagation terminates on any graph including cycles. | simulate.test "(B1, B5)"; valid fixture `cycle` |
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | simulate.test "(B2, B3, B6)" |
 | B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | simulate.test "applyScenario (B7)" |
-| B8 | A state reaches descendants by containment only when its `cascade` is `children`; otherwise members are affected only through their own needs. | simulate.test "groups and cascade (B8, B9)" |
+| B8 | A state reaches descendants by containment only when its `cascade` is `children`, only when its rank is strictly higher, nearest ancestor first on ties; otherwise members are affected only through their own needs. | simulate.test "groups and cascade (B8, B9)", "cascade ties and nesting (B8)" |
 | B9 | A non-empty group's effective state derives from its direct members per 5.1, independent of member order, floored by its declared state; an empty group's is its declared state. | simulate.test "(B8, B9)", "independent of member order (B9)" |
 | B10 | The engine references no state or kind by name: `replace: true` with different names and the same mechanics yields identical propagation. | simulate.test "names do not matter (B10)" |
 | R1 | The file never contains coordinates; layout is deterministic. | schema (no coordinate fields); layoutContract "is deterministic" |
