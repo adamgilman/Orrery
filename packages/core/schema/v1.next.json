@@ -82,13 +82,13 @@
           "needs": {
             "type": "array",
             "default": [],
-            "description": "What this component cannot work without. Each entry is either a component id (a hard need with one way to satisfy it) or an object listing alternatives. Every alternative must be connected to this component (either direction). Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
+            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives. Every alternative must be connected to this component (either direction) and must not be a group that contains it. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
             "items": {
               "oneOf": [
                 {
                   "type": "string",
                   "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-                  "description": "A component id: hard need, single alternative."
+                  "description": "An entity id: hard need, single alternative."
                 },
                 {
                   "type": "object",
@@ -105,7 +105,7 @@
                         "type": "string",
                         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
                       },
-                      "description": "Alternatives that satisfy this need, in order of preference. The first healthy one carries shifted load."
+                      "description": "Alternative entities (components or groups) that satisfy this need, in order of preference. The first healthy one carries shifted load."
                     },
                     "min": {
                       "type": "integer",
@@ -149,7 +149,7 @@
     "connections": {
       "type": "array",
       "default": [],
-      "description": "What one component does to another: calls it, publishes to it, replicates to it, streams data to it. Directed from the initiator ('from') to the target ('to'). Connections carry no health semantics; see 'needs' for that. Two connections between the same pair must both have ids.",
+      "description": "What one entity does to another: calls it, publishes to it, replicates to it, streams data to it. Either end may be a component or a group (even an empty one). Directed from the initiator ('from') to the target ('to'). Connections carry no health semantics; see 'needs' for that. Two connections between the same pair must both have ids.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -160,11 +160,11 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "Initiating component id."
+            "description": "Initiating entity id: a component or a group."
           },
           "to": {
             "type": "string",
-            "description": "Target component id. The arrowhead is drawn here."
+            "description": "Target entity id: a component or a group. The arrowhead is drawn here; on a group it attaches to the frame."
           },
           "id": {
             "type": "string",
@@ -209,7 +209,7 @@
     "groups": {
       "type": "array",
       "default": [],
-      "description": "Containers drawn as labelled frames: tiers, regions, zones, clusters, trust boundaries. Nest with 'parent'. The hierarchy is also the outline for navigation. Groups are meaning, not layout hints.",
+      "description": "Containers drawn as labelled frames: tiers, regions, zones, clusters, trust boundaries, or whole systems not opened yet. May be empty (a black box). Nest with 'parent'. Groups can be connected, needed and failed like components. The hierarchy is also the outline for navigation.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -246,6 +246,22 @@
           "meta": {
             "type": "object",
             "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off",
+              "degraded",
+              "failed"
+            ],
+            "default": "on",
+            "description": "Declared health of the group as a whole. A failed or off group takes every member down with it. For an empty group this is its only health; a non-empty group is also derived from its members (all down: failed; any not on: degraded)."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One or two sentences. Shown as a tooltip and in the outline."
           }
         }
       }
@@ -299,7 +315,7 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
-            "description": "Show only these components (and the groups containing them). Combines with 'scope' by intersection."
+            "description": "Show only these entities (a group id means the group and everything in it) plus the groups containing them. Combines with 'scope' by intersection."
           }
         }
       }
@@ -340,7 +356,7 @@
                   "description": "What happens in this step, shown during step-through."
                 },
                 "fail": {
-                  "description": "Component id(s) whose state becomes 'failed'.",
+                  "description": "Entity id(s) whose state becomes 'failed'. Failing a group fails everything inside it: a region outage is one verb.",
                   "oneOf": [
                     {
                       "type": "string",
@@ -358,7 +374,7 @@
                   ]
                 },
                 "degrade": {
-                  "description": "Component id(s) whose state becomes 'degraded'.",
+                  "description": "Entity id(s) whose state becomes 'degraded'.",
                   "oneOf": [
                     {
                       "type": "string",
@@ -376,7 +392,7 @@
                   ]
                 },
                 "off": {
-                  "description": "Component id(s) switched off (intentional, drawn dimmed).",
+                  "description": "Entity id(s) switched off (intentional, drawn dimmed). Switching a group off takes its members with it.",
                   "oneOf": [
                     {
                       "type": "string",
@@ -394,7 +410,7 @@
                   ]
                 },
                 "restore": {
-                  "description": "Component id(s) returned to their base-model state.",
+                  "description": "Entity id(s) returned to their base-model state.",
                   "oneOf": [
                     {
                       "type": "string",

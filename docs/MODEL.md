@@ -16,6 +16,8 @@ disagree, the code has a bug.
 - **Explicit over inferred.** Health semantics are declared by the author (`needs`). The engine never guesses
   that a connection implies a dependency, that a database is a fallback for another database, or what "primary"
   means from a label.
+- **Connections are fluid.** Any entity can connect to any other entity: component to component, component to
+  group, group to group, including empty groups. An empty group is a black box you have not opened yet.
 - **Small vocabulary.** Every enumerated value has a glyph or style and a meaning that holds across views.
 - **Written by agents, read by humans.** Every property has a description in the schema. Unknown properties are
   errors. Errors carry a JSON pointer and a sentence.
@@ -49,10 +51,11 @@ disagree, the code has a bug.
 
 | Word | Meaning | Not |
 |---|---|---|
+| **entity** | A component or a group. Anything that can be connected, needed, failed, or shown. | |
 | **component** | A running thing in one place: a service, database, queue, client, external system. Two deployments of the same code in two regions are two components. | A codebase, a team, a class |
-| **connection** | Something one component does to another: calls it, publishes to it, replicates to it, streams data to it. Directed from the initiator to the target. | A dependency (that is a need) |
-| **group** | A container that means something: a tier, a region, a zone, a cluster, a trust boundary. Groups nest. | A layout hint |
-| **need** | What a component cannot work without, declared on that component, satisfied by one or more alternative components. | A connection |
+| **connection** | Something one entity does to another: calls it, publishes to it, replicates to it, streams data to it. Directed from the initiator to the target. Either end may be a component or a group. | A dependency (that is a need) |
+| **group** | A container that means something: a tier, a region, a zone, a cluster, a trust boundary, or a whole system you have not opened yet. Groups nest and may be empty. A group can be connected, needed and failed like a component. | A layout hint |
+| **need** | What a component cannot work without, declared on that component, satisfied by one or more alternative entities. | A connection |
 | **view** | One drawing of the model: a scope, a subset, a direction. | A second model |
 | **scenario** | An ordered, cumulative sequence of what-ifs: fail, degrade, switch off, restore, shift load. | A test |
 | **state** | Health of a component: `on`, `degraded`, `failed`, `off`. Declared in the model or a scenario, then propagated. | A metric |
@@ -95,7 +98,7 @@ references; labels are for people and default to the id.
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `from`, `to` | id | required | Component ids. Direction is who initiates. |
+| `from`, `to` | id | required | Entity ids (component or group). Direction is who initiates. A connection to a group attaches to its frame (R7). |
 | `id` | id | | Only needed when the same pair has more than one connection and something refers to them. |
 | `kind` | `sync` `async` `replication` `dataflow` | `sync` | How it is drawn. Carries no health semantics. |
 | `label` | string | | Short text on the line: protocol, purpose. |
@@ -113,7 +116,12 @@ A connection is referenced (in scenarios) by `{ "from", "to" }` or, when that pa
 | `label` | string | id | Frame title. |
 | `kind` | `tier` `region` `zone` `cluster` `boundary` | `tier` | Frame style: tier solid tinted, region dashed, zone dotted, cluster solid darker, boundary red dashed with no fill. |
 | `parent` | id | | Enclosing group. |
+| `state` | `on` `degraded` `failed` `off` | `on` | Declared health of the group as a whole. A down group takes every member down with it (5.1). For an empty group this is its only health. |
+| `description` | string | | Tooltip and outline text. |
 | `meta` | object | | Free-form. |
+
+An empty group is valid and is drawn as a frame of minimum size: a black box. Add members later and every
+connection and need pointing at it keeps working.
 
 ### 4.5 View
 
@@ -124,7 +132,7 @@ A connection is referenced (in scenarios) by `{ "from", "to" }` or, when that pa
 | `type` | `topology` | `topology` | `sequence` and `walkthrough` are reserved. |
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group is the outer frame; its descendants and the connections among them are shown. |
-| `only` | array of component id | | Restrict to these components (and the groups that contain them). Combines with `scope` by intersection. |
+| `only` | array of entity id | | Restrict to these entities; a group id means the group and all its descendants. Groups containing a selected entity are shown. Combines with `scope` by intersection. |
 
 Connections with exactly one end inside a view are drawn to a ghost of the outside component at the view's edge
 (rendering rule R4). Nothing is silently dropped.
@@ -142,23 +150,24 @@ Step:
 | Field | Type | Meaning |
 |---|---|---|
 | `note` | string | What happens, shown during step-through. |
-| `fail`, `degrade`, `off`, `restore` | id or array of id | Set those components' declared state to `failed`, `degraded`, `off`, `on`. |
+| `fail`, `degrade`, `off`, `restore` | entity id or array | Set those entities' declared state to `failed`, `degraded`, `off`, `on`. Failing a group fails everything in it: `"fail": "us-east"` is a region outage. |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Override a connection's load. Rarely needed: load shifts automatically when a need's alternative is unhealthy. |
 
-A step must change at least one thing. The same component may not appear under two verbs in one step.
+A step must change at least one thing. The same entity may not appear under two verbs in one step.
 
 ### 4.7 Need
 
 A need is an entry in a component's `needs` array. Two forms:
 
-- A component id: a hard need with one way to satisfy it. `"needs": ["db"]`.
+- An entity id: a hard need with one way to satisfy it. `"needs": ["db"]` or `"needs": ["payments-platform"]`.
 - An object: `{ "any": [ids...], "min": 1, "soft": false }`. `any` lists alternatives in order of preference.
   `min` is how many must be healthy for the need to be met (quorum). `soft` means an unmet need degrades the
   component instead of failing it.
 
-Every id in a need must be a component that has a connection with the needing component, in either direction
+Every id in a need must be an entity that has a connection with the needing component, in either direction
 (invariant S9). Needs are about availability; they add no lines to the drawing, they change what the existing
-lines mean, and they are drawn as a cue on those lines (R3).
+lines mean, and they are drawn as a cue on those lines (R3). A need on a group is the progressive form: need the
+black box now, refine to the component inside it once the box is opened.
 
 ## 5. Semantics
 
@@ -168,12 +177,21 @@ States rank `on` < `degraded` < `failed`; `off` ranks with `failed` for propagat
 A component is **down** when `failed` or `off`; **healthy** when `on`; `degraded` counts as healthy for quorum
 but propagates degradation.
 
+Groups have health too, in two directions:
+
+- **Down.** A group whose declared state is `failed` or `off` takes every descendant down with it: each member's
+  effective state is at least as bad as the worst declared state of its ancestors. This uses declared states only,
+  so it cannot loop.
+- **Up.** A non-empty group's effective state is derived from its direct members (components and subgroups): `failed`
+  if all are down, `degraded` if any is not `on`, else `on`; never better than its own declared state. An empty
+  group's effective state is its declared state. This is what a need or connection on the group sees.
+
 ### 5.2 Propagation
 
 Given declared states (base model plus scenario steps plus runtime toggles), the engine computes effective states
 by iterating to a fixed point. For each component that is not down, for each need:
 
-1. `healthy` = number of alternatives whose effective state is `on` or `degraded`.
+1. `healthy` = number of alternatives (components or groups, by their effective state) that are `on` or `degraded`.
 2. If `healthy < min`: the need is **unmet**. Hard need → component `failed`; soft need → `degraded`.
 3. Else if `healthy < total alternatives`, or the first healthy alternative is `degraded`: the need is **met with
    reduced redundancy** → component `degraded`.
@@ -197,9 +215,9 @@ Verbs set declared states; `load` sets declared loads. Propagation then runs. `r
 
 ### 5.5 Views
 
-A view selects components: all, or those inside `scope`, intersected with `only`. Groups shown are those
-containing a selected component, plus their ancestors up to the scope. Connections shown are those with both ends
-selected; those with one end selected are drawn to a ghost (R4).
+A view selects entities: all, or those inside `scope`, intersected with `only` (a group in `only` selects its
+descendants too). Groups shown are those selected or containing a selected entity, up to the scope. Connections
+shown are those with both ends selected; those with one end selected are drawn to a ghost (R4).
 
 ## 6. Invariants
 
@@ -210,16 +228,17 @@ Each is enforced where stated and proven by the named test. `S` structural (vali
 |---|---|---|---|
 | S1 | Component and group ids are unique and share one id space. | validator | validate: duplicate-id, id-clash-component-group |
 | S2 | Connection ids (when given), view ids and scenario ids are unique within their kind. | validator | validate: duplicate-connection-id, duplicate-view-id, scenario-duplicate-id |
-| S3 | Every reference resolves: component→group, group→parent, connection ends→components, view scope→group, view `only`→components, scenario verbs→components, scenario load→connections, need alternatives→components. | validator | validate: unknown-* fixtures |
+| S3 | Every reference resolves: component→group, group→parent, connection ends→entities, view scope→group, view `only`→entities, scenario verbs→entities, scenario load→connections, need alternatives→entities. | validator | validate: unknown-* fixtures |
 | S4 | Groups form a forest: no cycles, no self-parent. | validator | validate: group-cycle |
-| S5 | No connection from a component to itself. | validator | validate: self-connection |
+| S5 | No connection from an entity to itself, nor between an entity and one of its own ancestors or descendants (a component to the group that contains it says nothing). | validator | validate: self-connection, connection-to-ancestor |
 | S6 | Two connections between the same ordered pair must both carry ids. | validator | validate: parallel-without-ids |
 | S7 | A connection reference by `{from,to}` must be unambiguous; otherwise the reference must use `id`. | validator | validate: ambiguous-connection-ref |
 | S8 | A scenario step changes at least one thing, and names each component under at most one verb. | validator | validate: scenario-empty-step, scenario-conflicting-verbs |
-| S9 | Every need alternative is a component connected (either direction) to the needing component. | validator | validate: need-without-connection |
+| S9 | Every need alternative is an entity connected (either direction) to the needing component, and not an ancestor of it. | validator | validate: need-without-connection, need-on-ancestor |
 | S10 | `any` has at least `min` alternatives, `min ≥ 1`, no duplicate alternatives, a component does not need itself. | validator | validate: need-shape fixtures |
 | S11 | Every schema property has a description; unknown properties are errors. | schema test | schema: descriptions, unknown-property |
 | S12 | Only `components` is required; a file of components alone is valid. | schema | validate: components-only |
+| S13 | A group may be empty; it still renders and may be connected, needed and failed. | schema, engines | validate: empty-group, layoutContract: empty group box |
 | B1 | Propagation is pure, deterministic and never mutates its input. | propagate | simulate: pure |
 | B2 | Declared state is a floor: propagation only worsens. | propagate | simulate: floor |
 | B3 | Need evaluation follows 5.2 exactly: unmet, reduced redundancy, met. | propagate | simulate: needs-* |
@@ -227,17 +246,19 @@ Each is enforced where stated and proven by the named test. `S` structural (vali
 | B5 | Propagation terminates on any graph including cycles (states move only upward in severity). | propagate | simulate: cycle |
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | propagate | simulate: reasons |
 | B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | applyScenario | simulate: cumulative |
+| B8 | A group declared down takes every descendant down (declared states only, so no loops). | propagate | simulate: group-down |
+| B9 | A non-empty group's effective state derives from its direct members (all down → failed, any not on → degraded), floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group |
 | R1 | The file never contains coordinates; layout is deterministic. | schema, engines | layoutContract: deterministic |
 | R2 | Rendering is byte-deterministic for the same model. | renderer | render: deterministic, cli: deterministic |
 | R3 | A connection that satisfies a need is visibly marked (darker line). | renderer | render: need-cue |
 | R4 | A scoped view draws one-ended connections to a ghost; nothing is dropped silently. | renderer | view: ghosts |
 | R5 | Animation is a pure function of the model and time (flow period, pulse period). | renderer, raster | raster: freeze, periodic |
 | R6 | Order in the file is a layout signal: siblings keep declaration order. | ELK adapter | elk: model order |
+| R7 | A connection whose end is a group attaches to that group's frame; an empty group is drawn as a frame of minimum size. | engines, renderer | layoutContract: group endpoints |
 
 ## 7. Non-goals (v1)
 
 - Performance, latency or capacity modelling. Load is relative and cosmetic.
-- Connections to or from a group. Model the entry point as a component (gateway, load balancer).
 - Health expressions (`db && (a || b)`). Needs are data: AND across needs, OR within `any`, `min` for quorum.
 - Flowcharts, ER, class, state machines, Gantt. Ever.
 
@@ -262,8 +283,14 @@ Decisions from the principal-engineer review of 2026-09-05, so the reasoning is 
   `meta` as the extensibility escape hatch that keeps `additionalProperties: false` everywhere else.
 - **Committed** to ghosts for one-ended connections in scoped views (R4); the previous "dropped" behaviour was
   the most-requested fix from agent tests.
-- **Rejected** connections to groups (ambiguous semantics, awkward layout; use a gateway component), health
-  expressions (second syntax inside JSON), inferring needs from `sync` connections (explicit over inferred).
+- **Accepted, after first rejecting it,** connections and needs to groups, including empty groups. The first
+  draft rejected them for layout reasons and because "needs the data tier" seemed ambiguous. The ambiguity is
+  resolved by giving groups health of their own (5.1): declared state propagates down, member health derives up,
+  an empty group is a black box with declared health. This makes region-outage scenarios one verb and lets a system
+  be modelled as closed boxes first and opened later. Layout risk (compound-node endpoints in ELK) is an
+  implementation task, not a modelling argument.
+- **Rejected** health expressions (second syntax inside JSON) and inferring needs from `sync` connections
+  (explicit over inferred).
 - **Deferred** interactions and sequence views (need the runtime to play them), tags, neighbourhood views.
 - **Stance recorded**: a component is a deployed thing in one place. Multi-region deployments are several
   components, grouped by region. This keeps groups meaningful in deployment views and keeps health per instance.
