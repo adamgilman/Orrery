@@ -1,0 +1,4 @@
+<script>
+// Fade the pinned orrery as the reader scrolls: full in the hero, a faint dome behind everything after.
+(() => { const r = document.documentElement; const f = () => { const t = Math.min(1, window.scrollY / Math.max(400, window.innerHeight * 0.8)); r.style.setProperty("--dome-fade", String(1 - t * 0.88)); }; addEventListener("scroll", f, { passive: true }); f(); })();
+</script>
