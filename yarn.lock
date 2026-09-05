@@ -293,7 +293,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orrery/raster@workspace:*, @orrery/raster@workspace:packages/raster":
+"@orrery/raster@workspace:packages/raster":
   version: 0.0.0-use.local
   resolution: "@orrery/raster@workspace:packages/raster"
   dependencies:
@@ -1313,9 +1313,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "orrery-monorepo@workspace:."
   dependencies:
-    "@orrery/layout-elk": "workspace:*"
-    "@orrery/raster": "workspace:*"
-    "@orrery/runtime": "workspace:*"
     "@types/node": "npm:^22"
     typescript: "npm:^5.6"
     vitest: "npm:^3"

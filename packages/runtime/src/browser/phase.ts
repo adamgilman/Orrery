@@ -1,9 +1,5 @@
-/**
- * When an animation's duration changes, restart it at the same phase so dashes never jump.
- * Returns the (negative) animation-delay to apply with the new duration.
- */
-export function continuedDelay(currentTimeMs: number | null, oldDurationMs: number, newDurationMs: number): number {
-  if (currentTimeMs === null || !(oldDurationMs > 0) || !(newDurationMs > 0)) return 0;
-  const phase = ((currentTimeMs % oldDurationMs) + oldDurationMs) % oldDurationMs / oldDurationMs;
-  return -phase * newDurationMs;
+/** Fraction of the way through a cycle, 0..1, from an animation's current time. 0 when unknown. */
+export function phaseOf(currentTimeMs: number | null, durationMs: number): number {
+  if (currentTimeMs === null || !(durationMs > 0)) return 0;
+  return (((currentTimeMs % durationMs) + durationMs) % durationMs) / durationMs;
 }

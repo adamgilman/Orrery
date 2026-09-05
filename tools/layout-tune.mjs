@@ -4,7 +4,7 @@ import { validate, toLayoutGraph, scopeModel, selectView } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 import { score } from "./layout-score.mjs";
 const files = ["examples/checkout.orrery.json", "examples/agent-test-2.orrery.json", "examples/three-tier.orrery.json"];
-const graphs = files.map((f) => { const d = validate(JSON.parse(readFileSync(f, "utf8"))).model; return toLayoutGraph(scopeModel(d, selectView(d))); });
+const graphs = files.map((f) => { const r = validate(JSON.parse(readFileSync(f, "utf8"))); if (!r.ok) throw new Error(`${f}: ${r.errors.join("; ")}`); return toLayoutGraph(scopeModel(r.model, selectView(r.model))); });
 const variants = {
   "baseline": {},
   "favorStraightEdges": { "elk.layered.nodePlacement.favorStraightEdges": "true" },

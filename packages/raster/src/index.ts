@@ -23,9 +23,12 @@ function dropElement(svg: string, start: number): string {
  * Idempotent; every pixel-level check runs on this.
  */
 export function activeView(svg: string): string {
-  let out = svg.replace(/<script(?: [^>]*)?>(?:<!\[CDATA\[[\s\S]*?\]\]>|[\s\S]*?)<\/script>\s*/g, "");
-  const hidden = /<g class="view" [^>]*style="display:none"[^>]*>/g;
-  for (let m = hidden.exec(out); m; m = hidden.exec(out)) { out = dropElement(out, m.index); hidden.lastIndex = m.index; }
+  // Scripts are always the last children of the root, so everything from the first <script to </svg> goes.
+  const scriptAt = svg.indexOf("<script");
+  let out = scriptAt >= 0 ? svg.slice(0, scriptAt).trimEnd() + "\n</svg>\n" : svg;
+  // Hidden layers carry their style right after the class (the renderer guarantees the attribute order).
+  const hidden = '<g class="view" style="display:none"';
+  for (let i = out.indexOf(hidden); i >= 0; i = out.indexOf(hidden, i)) out = dropElement(out, i);
   return out;
 }
 
@@ -38,7 +41,7 @@ const fmt = (n: number) => { const r = Math.round(n * 1000) / 1000; return Strin
  * Everything else is left byte for byte, so frames test the artifact that ships.
  */
 export function freezeFrame(svg: string, tMs: number): string {
-  // Failure pulse: linear triangle wave on stroke-opacity, shared by every failed node, so one static value suffices.
+  // Pulse: linear triangle wave on stroke-opacity, shared by every pulsing state, so one static value suffices.
   const phase = (tMs / (PULSE_PERIOD * 1000)) % 1;
   const tri = 1 - Math.abs(2 * phase - 1);
   const opacity = 1 - (1 - PULSE_MIN_OPACITY) * tri;
@@ -55,7 +58,7 @@ export function freezeFrame(svg: string, tMs: number): string {
   });
 }
 
-/** Hold the failure pulse at full opacity so a check of something else is not disturbed by it. */
+/** Hold every pulse at full opacity so a check of something else is not disturbed by it. */
 const stillPulse = (svg: string) => svg.replaceAll(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, "stroke-opacity:1");
 
 /** Drop every flow overlay except `key`, so one edge's animation can be judged without neighbours interfering. */
@@ -78,9 +81,9 @@ export function rasterize(svg: string, { scale = 1, background = "#ffffff" }: Ra
 export interface Bitmap { width: number; height: number; data: Buffer }
 export const decodePng = (png: Buffer): Bitmap => { const p = PNG.sync.read(png); return { width: p.width, height: p.height, data: p.data }; };
 
-export interface Region { x: number; y: number; width: number; height: number; load: number; durationMs: number }
+export interface Region extends Rect { load: number; durationMs: number }
 
-/** Padded, scaled bounding box of every flow path, keyed by "from->to". */
+/** Padded, scaled bounding box of every flow path, keyed by connection key. */
 export function flowRegions(svg: string, scale = 1): Record<string, Region> {
   svg = activeView(svg);
   const out: Record<string, Region> = {};
@@ -111,13 +114,14 @@ export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
   svg = activeView(svg);
   const out: Record<string, Rect> = {};
   const pad = 6;
-  for (const m of svg.matchAll(/<g class="(?:node|group)[^>]*>/g)) {
+  for (const m of svg.matchAll(/<g class="(?:node|group) [^>]*>/g)) {
     const tag = m[0];
     if (!tag.includes('data-pulse="1"')) continue;
     const id = tag.match(/data-(?:node|group)="([^"]+)"/)?.[1];
     const bb = tag.match(/data-bbox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/);
     if (!id || !bb) continue;
-    out[id] = { x: Math.floor((Number(bb[1]) - pad) * scale), y: Math.floor((Number(bb[2]) - pad) * scale), width: Math.ceil((Number(bb[3]) + 2 * pad) * scale), height: Math.ceil((Number(bb[4]) + 2 * pad) * scale) };
+    const x0 = Math.max(0, Number(bb[1]) - pad), y0 = Math.max(0, Number(bb[2]) - pad);
+    out[id] = { x: Math.floor(x0 * scale), y: Math.floor(y0 * scale), width: Math.ceil((Number(bb[3]) + 2 * pad) * scale), height: Math.ceil((Number(bb[4]) + 2 * pad) * scale) };
   }
   return out;
 }
@@ -194,13 +198,13 @@ export function contactSheet(frames: Buffer[], { columns = 4, gutter = 4 }: { co
   return PNG.sync.write(sheet);
 }
 
-export interface EdgeReport { key: string; load: number; durationMs: number; periodic: boolean; moving: boolean }
+export interface ConnectionReport { key: string; load: number; durationMs: number; periodic: boolean; moving: boolean }
 export interface StepReport { fromMs: number; toMs: number; changed: number; outside: number }
 export interface InspectReport {
   ok: boolean;
   xml: { ok: boolean; error?: string };
   size: { width: number; height: number };
-  edges: EdgeReport[];
+  connections: ConnectionReport[];
   /** Consecutive-frame subtraction over the whole diagram at `fps` for `durationMs`. */
   steps: StepReport[];
   problems: string[];
@@ -219,7 +223,7 @@ export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }:
   const size = { width: vb ? Number(vb[1]) : 0, height: vb ? Number(vb[2]) : 0 };
   const problems: string[] = [];
   if (!xml.ok) problems.push(`malformed XML: ${xml.error}`);
-  const edges: EdgeReport[] = [];
+  const connections: ConnectionReport[] = [];
   const steps: StepReport[] = [];
   if (xml.ok) {
     const regions = flowRegions(svg, scale);
@@ -230,9 +234,9 @@ export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }:
     for (let i = 1; i < bitmaps.length; i++) {
       const d = diffFrames(bitmaps[i - 1]!, bitmaps[i]!, { allowed });
       steps.push({ fromMs: seq[i - 1]!.tMs, toMs: seq[i]!.tMs, changed: d.changed, outside: d.outside });
-      if (d.outside > 0) problems.push(`${d.outside} pixels changed outside any flow or failed node between t=${seq[i - 1]!.tMs}ms and t=${seq[i]!.tMs}ms: something static is moving`);
+      if (d.outside > 0) problems.push(`${d.outside} pixels changed outside any flow or pulsing entity between t=${seq[i - 1]!.tMs}ms and t=${seq[i]!.tMs}ms: something static is moving`);
     }
-    if (Object.values(regions).some((r) => r.load > 0) && steps.length && steps.every((s) => s.changed === 0)) problems.push("no pixel changes between any frames although edges carry load");
+    if (Object.values(regions).some((r) => r.load > 0) && steps.length && steps.every((s) => s.changed === 0)) problems.push("no pixel changes between any frames although connections carry load");
     for (const [key, r] of Object.entries(regions)) {
       const alone = stillPulse(isolateFlow(svg, key));
       const frame = (t: number) => decodePng(rasterize(freezeFrame(alone, t), { scale }));
@@ -243,8 +247,8 @@ export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }:
       if (!periodic) problems.push(`${key}: frame at t=${d}ms differs from t=0, timing does not match the declared duration`);
       if (r.load > 0 && !moving) problems.push(`${key}: load ${r.load} but nothing moves between t=0 and t=${d / 2}ms`);
       if (r.load === 0 && moving) problems.push(`${key}: load 0 but pixels change`);
-      edges.push({ key, load: r.load, durationMs: d, periodic, moving });
+      connections.push({ key, load: r.load, durationMs: d, periodic, moving });
     }
   }
-  return { ok: problems.length === 0, xml, size, edges, steps, problems };
+  return { ok: problems.length === 0, xml, size, connections, steps, problems };
 }

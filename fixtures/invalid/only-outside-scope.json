@@ -1,0 +1,25 @@
+{
+  "groups": [
+    {
+      "id": "g"
+    }
+  ],
+  "components": [
+    {
+      "id": "a",
+      "group": "g"
+    },
+    {
+      "id": "b"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "scope": "g",
+      "only": [
+        "b"
+      ]
+    }
+  ]
+}

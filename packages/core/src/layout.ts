@@ -32,7 +32,14 @@ const GAP = 80;
 /** Inset between a group frame and its contents, on every side except the top, which adds the label band. */
 export const GROUP_PADDING = 12;
 
-const EMPTY_W = 120, EMPTY_H = 48;
+/** Box for a group with nothing inside: a black box. Shared by every engine. */
+export const EMPTY_GROUP = { width: 120, height: 48 };
+
+/** Groups with no member components and no child groups. */
+export function emptyGroups(graph: LayoutGraph): Set<string> {
+  const hasMembers = new Set<string>([...graph.nodes.map((n) => n.group), ...(graph.groups ?? []).map((g) => g.parent)].filter((x): x is string => x !== undefined));
+  return new Set((graph.groups ?? []).filter((g) => !hasMembers.has(g.id)).map((g) => g.id));
+}
 
 /**
  * Places nodes (and empty groups, as boxes) in a single row (direction "right") or column ("down") with straight
@@ -45,13 +52,13 @@ export class FakeLayoutEngine implements LayoutEngine {
     const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
     const depthOf = (id: string | undefined): number => (id === undefined ? 0 : 1 + depthOf(parentOf.get(id)));
     const path = (id: string | undefined): string => (id === undefined ? "" : `${path(parentOf.get(id))}/${id}`);
-    const hasMembers = new Set<string>([...graph.nodes.map((n) => n.group), ...groups.map((g) => g.parent)].filter((x): x is string => x !== undefined));
-    const empties = groups.filter((g) => !hasMembers.has(g.id));
+    const empty = emptyGroups(graph);
+    const empties = groups.filter((g) => empty.has(g.id));
     // Items placed in the row: real nodes plus empty groups as pseudo-nodes.
     const items = [
       ...graph.nodes.map((n, i) => ({ id: n.id, width: n.width, height: n.height, group: n.group, i, empty: false })),
-      ...empties.map((g, i) => ({ id: g.id, width: EMPTY_W, height: EMPTY_H + g.labelHeight, group: g.parent, i: graph.nodes.length + i, empty: true })),
-    ].sort((a, b) => path(a.group).localeCompare(path(b.group)) || a.i - b.i);
+      ...empties.map((g, i) => ({ id: g.id, width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight, group: g.parent, i: graph.nodes.length + i, empty: true })),
+    ].sort((a, b) => { const pa = path(a.group), pb = path(b.group); return pa < pb ? -1 : pa > pb ? 1 : a.i - b.i; });
     const horizontal = graph.direction === "right";
     const maxDepth = groups.reduce((m, g) => Math.max(m, depthOf(g.id)), 0);
     const outer = MARGIN + maxDepth * (GROUP_PADDING + 20);
@@ -70,7 +77,7 @@ export class FakeLayoutEngine implements LayoutEngine {
     // Group frames: union of member nodes and child groups, padded; deepest first so parents see children.
     const groupBoxes: Record<string, Box> = {};
     for (const g of [...groups].sort((a, b) => depthOf(b.id) - depthOf(a.id))) {
-      if (!hasMembers.has(g.id)) { groupBoxes[g.id] = boxes[g.id]!; continue; }
+      if (empty.has(g.id)) { groupBoxes[g.id] = boxes[g.id]!; continue; }
       const members = [
         ...graph.nodes.filter((n) => n.group === g.id).map((n) => nodes[n.id]!),
         ...groups.filter((c) => c.parent === g.id).map((c) => groupBoxes[c.id]!),

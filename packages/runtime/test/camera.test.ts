@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fitView, zoomToBox, type Camera } from "../src/browser/camera.js";
+import { fitView, transformOf, zoomToBox, type Camera } from "../src/browser/camera.js";
 
 describe("camera", () => {
   it("fits a view inside the screen minus the panel, centred, never above max zoom", () => {
@@ -20,6 +20,6 @@ describe("camera", () => {
   });
   it("formats a transform attribute", () => {
     const c: Camera = { k: 2, tx: 10.123, ty: -5 };
-    expect(`translate(${c.tx} ${c.ty}) scale(${c.k})`).toBe("translate(10.123 -5) scale(2)");
+    expect(transformOf(c)).toBe("translate(10.123 -5) scale(2)");
   });
 });

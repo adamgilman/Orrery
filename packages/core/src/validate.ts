@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
-import { DEFAULT_COMPONENT_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_NEED_OUTCOMES, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS } from "./defaults.js";
+import { DEFAULT_COMPONENT_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_NEED_OUTCOMES, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
+import { CSS_COLOR } from "./looks.js";
 import type { Component, ComponentKindDef, Connection, Direction, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Need, Scenario, ScenarioStep, StateDef, States, View } from "./types.js";
 
-export class ValidationError {
-  constructor(public readonly pointer: string, public readonly message: string) {}
-  toString(): string { return `${this.pointer}: ${this.message}`; }
+export class ValidationError extends Error {
+  constructor(public readonly pointer: string, message: string) { super(message); }
+  override toString(): string { return `${this.pointer}: ${this.message}`; }
 }
 export class ValidationWarning extends ValidationError {}
 
@@ -30,6 +31,22 @@ function describe(e: ErrorObject): ValidationError {
     default: return new ValidationError(e.instancePath, e.message ?? e.keyword);
   }
 }
+/**
+ * A failed oneOf reports every branch's complaints. Keep the complaints of the branch whose shape matches the
+ * instance (string vs object/array), so "min must be >= 1" survives instead of "does not match any allowed form".
+ */
+function pickOneOfBranch(all: ErrorObject[], data: unknown): ErrorObject[] {
+  const at = (pointer: string): unknown => pointer.split("/").slice(1).reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k.replace(/~1/g, "/").replace(/~0/g, "~")], data);
+  const oneOfs = all.filter((e) => e.keyword === "oneOf");
+  let kept = all;
+  for (const o of oneOfs) {
+    const branch = typeof at(o.instancePath) === "string" ? 0 : 1;
+    const inside = (e: ErrorObject) => e !== o && (e.instancePath === o.instancePath || e.instancePath.startsWith(o.instancePath + "/"));
+    const matching = kept.filter((e) => inside(e) && e.schemaPath.includes(`/oneOf/${branch}/`));
+    kept = matching.length ? kept.filter((e) => !inside(e) && e !== o).concat(matching) : kept.filter((e) => !inside(e));
+  }
+  return kept;
+}
 const dedupe = (errors: ValidationError[]) => { const seen = new Set<string>(); return errors.filter((e) => { const k = e.toString(); if (seen.has(k)) return false; seen.add(k); return true; }); };
 const opt = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => (value !== undefined ? ({ [key]: value } as { [P in K]: V }) : {});
 const list = (v: string | string[] | undefined): string[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -49,34 +66,40 @@ interface Raw {
 }
 
 /* ---------- vocabulary ---------- */
-function buildStates(raw: Raw["states"], original: Raw["states"], err: (p: string, m: string) => void): States {
-  const define: Record<string, StateDef> = {};
+function buildStates(raw: Raw["states"], given: Raw["states"], err: (p: string, m: string) => void): States {
+  const define: Record<string, StateDef> = Object.create(null);
   if (!raw?.replace) for (const [name, d] of Object.entries(DEFAULT_STATES)) define[name] = { name, ...d };
-  for (const [name, user] of Object.entries(original?.define ?? {})) {
-    const base = define[name] ?? { name, look: "normal" as const, rank: 1, available: true, flows: "keep" as const, cascade: "none" as const };
-    define[name] = { ...base, ...(user as Partial<StateDef>), name };
+  for (const [name, user] of Object.entries(raw?.define ?? {})) {
+    const base = define[name] ?? { name, ...NEW_STATE_DEFAULTS };
+    define[name] = { ...base, ...user, name };
+    const look = user.look;
+    if (look && typeof look === "object") for (const k of ["stroke", "fill", "text"] as const) if (look[k] !== undefined && !CSS_COLOR.test(look[k]!)) err(`/states/define/${name}/look/${k}`, `"${look[k]}" is not a CSS colour`);
   }
   const def = raw?.default ?? DEFAULT_STATE;
   const unmet = raw?.needs?.unmet ?? DEFAULT_NEED_OUTCOMES.unmet;
   const reduced = raw?.needs?.reduced ?? DEFAULT_NEED_OUTCOMES.reduced;
-  const hint = raw?.replace ? ' (states.replace is true, so it must be defined in states.define)' : "";
-  if (!define[def]) err("/states/default", `unknown state "${def}"${hint}`);
-  if (!define[unmet]) err("/states/needs/unmet", `unknown state "${unmet}"${hint}`);
-  if (!define[reduced]) err("/states/needs/reduced", `unknown state "${reduced}"${hint}`);
+  const missing = (field: string, name: string, given: boolean) =>
+    err(field, raw?.replace && !given ? `states.replace is true, so ${field.slice(1).replace(/\//g, ".")} must name one of: ${Object.keys(define).join(", ")}` : `unknown state "${name}"; known: ${Object.keys(define).join(", ")}`);
+  if (!Object.hasOwn(define, def)) missing("/states/default", def, given?.default !== undefined);
+  if (!Object.hasOwn(define, unmet)) missing("/states/needs/unmet", unmet, given?.needs?.unmet !== undefined);
+  if (!Object.hasOwn(define, reduced)) missing("/states/needs/reduced", reduced, given?.needs?.reduced !== undefined);
   return { default: def, needs: { unmet, reduced }, define };
 }
 
 function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kinds {
-  const components: Record<string, ComponentKindDef> = raw?.replace ? {} : { ...DEFAULT_COMPONENT_KINDS };
-  const groups: Record<string, GroupKindDef> = raw?.replace ? {} : { ...DEFAULT_GROUP_KINDS };
+  const components: Record<string, ComponentKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_COMPONENT_KINDS);
+  const groups: Record<string, GroupKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_GROUP_KINDS);
+  const colour = (p: string, v: string | undefined) => { if (v !== undefined && !CSS_COLOR.test(v)) err(p, `"${v}" is not a CSS colour`); };
   for (const [name, k] of Object.entries(raw?.components ?? {})) {
     components[name] = { ...(components[name] ?? {}), ...k };
-    if (k.glyph !== undefined && !(GLYPH_PRESETS as readonly string[]).includes(k.glyph) && !/^[Mm][\d\s.,a-zA-Z-]+$/.test(k.glyph))
+    colour(`/kinds/components/${name}/box/fill`, k.box?.fill); colour(`/kinds/components/${name}/box/stroke`, k.box?.stroke);
+    if (k.glyph !== undefined && !(GLYPH_PRESETS as readonly string[]).includes(k.glyph) && !/^[Mm][\d\s.,+a-zA-Z-]+$/.test(k.glyph))
       err(`/kinds/components/${name}/glyph`, `must be a preset glyph (${GLYPH_PRESETS.join(", ")}) or SVG path data starting with M`);
   }
   for (const [name, k] of Object.entries(raw?.groups ?? {})) {
     groups[name] = { ...(groups[name] ?? { frame: "tier" }), ...k };
     if (typeof k.frame === "string" && !(FRAME_PRESETS as readonly string[]).includes(k.frame)) err(`/kinds/groups/${name}/frame`, `must be one of: ${FRAME_PRESETS.join(", ")}`);
+    if (typeof k.frame === "object") { colour(`/kinds/groups/${name}/frame/stroke`, k.frame.stroke); colour(`/kinds/groups/${name}/frame/fill`, k.frame.fill); }
   }
   return { components, groups };
 }
@@ -84,22 +107,18 @@ function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kin
 /* ---------- main ---------- */
 export function validate(input: unknown): ValidationResult {
   const data: unknown = structuredClone(input);
-  if (!checkSchema(data)) {
-    // A failed oneOf reports every branch's complaints too; keep only the oneOf summary for that subtree.
-    const all = checkSchema.errors ?? [];
-    const oneOfPaths = all.filter((e) => e.keyword === "oneOf").map((e) => e.instancePath);
-    const kept = all.filter((e) => e.keyword === "oneOf" || !oneOfPaths.some((p) => e.instancePath === p || e.instancePath.startsWith(p + "/")));
-    return { ok: false, errors: dedupe(kept.map(describe)) };
-  }
+  if (!checkSchema(data)) return { ok: false, errors: dedupe(pickOneOfBranch(checkSchema.errors ?? [], data).map(describe)) };
   const raw = data as Raw;
-  const original = (input as Raw) ?? {};
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
   const err = (p: string, m: string) => errors.push(new ValidationError(p, m));
 
-  const states = buildStates(raw.states, original.states, err);
+  // Schema defaults have filled `raw`; the untouched input says what the author actually wrote.
+  const states = buildStates(raw.states, (input as Raw | undefined)?.states, err);
   const kinds = buildKinds(raw.kinds, err);
-  const stateOk = (name: string) => name in states.define;
+  const stateOk = (name: string) => Object.hasOwn(states.define, name);
+  const componentKindOk = (name: string) => Object.hasOwn(kinds.components, name);
+  const groupKindOk = (name: string) => Object.hasOwn(kinds.groups, name);
 
   /* ids and references */
   const groupIds = new Set<string>();
@@ -120,7 +139,7 @@ export function validate(input: unknown): ValidationResult {
   };
 
   raw.groups.forEach((g, i) => {
-    if (!(g.kind in kinds.groups)) err(`/groups/${i}/kind`, `unknown group kind "${g.kind}"; known: ${Object.keys(kinds.groups).join(", ")}`);
+    if (!groupKindOk(g.kind)) err(`/groups/${i}/kind`, `unknown group kind "${g.kind}"; known: ${Object.keys(kinds.groups).join(", ")}`);
     if (g.state !== undefined && !stateOk(g.state)) err(`/groups/${i}/state`, `unknown state "${g.state}"; known: ${Object.keys(states.define).join(", ")}`);
     if (g.parent === undefined) return;
     if (!groupIds.has(g.parent)) return err(`/groups/${i}/parent`, `unknown group "${g.parent}"`);
@@ -132,7 +151,7 @@ export function validate(input: unknown): ValidationResult {
     }
   });
   raw.components.forEach((c, i) => {
-    if (!(c.kind in kinds.components)) err(`/components/${i}/kind`, `unknown component kind "${c.kind}"; known: ${Object.keys(kinds.components).join(", ")}`);
+    if (!componentKindOk(c.kind)) err(`/components/${i}/kind`, `unknown component kind "${c.kind}"; known: ${Object.keys(kinds.components).join(", ")}`);
     if (c.state !== undefined && !stateOk(c.state)) err(`/components/${i}/state`, `unknown state "${c.state}"; known: ${Object.keys(states.define).join(", ")}`);
     if (c.group !== undefined && !groupIds.has(c.group)) err(`/components/${i}/group`, `unknown group "${c.group}"`);
   });
@@ -158,9 +177,10 @@ export function validate(input: unknown): ValidationResult {
   });
   const connected = (a: string, b: string) => connections.some((c) => (c.from === a && c.to === b) || (c.from === b && c.to === a));
   const connectedOrViaGroup = (component: string, alt: string) => connected(component, alt) || ancestors(alt).some((g) => connected(component, g));
-  // W1: a source connected both to a group and to something inside it
+  // W1: an entity connected both to a group and to something inside it, in either direction.
   connections.forEach((c, i) => {
     for (const anc of ancestors(c.to)) if (connections.some((o) => o.from === c.from && o.to === anc)) warnings.push(new ValidationWarning(`/connections/${i}`, `"${c.from}" connects to "${c.to}" and also to its group "${anc}"; both lines will be drawn`));
+    for (const anc of ancestors(c.from)) if (connections.some((o) => o.to === c.to && o.from === anc)) warnings.push(new ValidationWarning(`/connections/${i}`, `"${c.from}" connects to "${c.to}" and so does its group "${anc}"; both lines will be drawn`));
   });
 
   /* components with needs */
@@ -192,8 +212,11 @@ export function validate(input: unknown): ValidationResult {
     if (viewIds.has(v.id)) err(`/views/${i}/id`, `duplicate view id "${v.id}"`);
     viewIds.add(v.id);
     if (v.scope !== undefined && !groupIds.has(v.scope)) err(`/views/${i}/scope`, `unknown group "${v.scope}"`);
-    v.only?.forEach((id, k) => { if (!isEntity(id)) err(`/views/${i}/only/${k}`, `unknown entity "${id}"`); });
-    return { id: v.id, type: v.type ?? "topology", direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only) };
+    v.only?.forEach((id, k) => {
+      if (!isEntity(id)) return err(`/views/${i}/only/${k}`, `unknown entity "${id}"`);
+      if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/only/${k}`, `"${id}" is not inside scope "${v.scope}"`);
+    });
+    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only) };
   });
 
   /* scenarios */
@@ -204,15 +227,16 @@ export function validate(input: unknown): ValidationResult {
     const steps: ScenarioStep[] = sc.steps.map((st, j) => {
       const base = `/scenarios/${i}/steps/${j}`;
       const seen = new Map<string, string>();
-      const set: Record<string, string[]> = {};
+      const set: Record<string, string[]> = Object.create(null);
       for (const [state, ids] of Object.entries(st.set ?? {})) {
         if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
         set[state] = list(ids);
-        for (const id of set[state]!) {
-          if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
-          if (seen.has(id)) err(`${base}/set/${state}`, `"${id}" is already set to "${seen.get(id)}" in this step`);
+        set[state]!.forEach((id, k) => {
+          const p = Array.isArray(ids) ? `${base}/set/${state}/${k}` : `${base}/set/${state}`;
+          if (!isEntity(id)) err(p, `unknown entity "${id}"`);
+          if (seen.has(id)) err(p, `"${id}" is already set to "${seen.get(id)}" in this step`);
           seen.set(id, state);
-        }
+        });
       }
       const restore = list(st.restore);
       for (const id of restore) {
@@ -224,7 +248,8 @@ export function validate(input: unknown): ValidationResult {
       (st.load ?? []).forEach((l, k) => {
         const p = `${base}/load/${k}`;
         let key: string | undefined;
-        if (l.id !== undefined) { if (!connectionKeys.has(l.id)) err(p, `unknown connection id "${l.id}"`); else key = l.id; }
+        if (l.id !== undefined && (l.from !== undefined || l.to !== undefined)) err(p, "give from and to, or id, not both");
+        else if (l.id !== undefined) { if (!connectionKeys.has(l.id)) err(p, `unknown connection id "${l.id}"`); else key = l.id; }
         else if (l.from !== undefined && l.to !== undefined) {
           const matches = connections.filter((c) => c.from === l.from && c.to === l.to);
           if (matches.length === 0) err(p, `no connection from "${l.from}" to "${l.to}"`);

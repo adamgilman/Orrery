@@ -1,15 +1,22 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
-import { GLYPH_WIDTH, hasGlyph, toLayoutGraph } from "./measure.js";
-import { applyScenario, applySet, propagate } from "./simulate.js";
-import type { Component, Connection, Group, GroupKindDef, LookPreset, LookStyle, Model, StateDef, View } from "./types.js";
+import { GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
+import { LOOK_PRESETS, lookOf } from "./looks.js";
+export { LOOK_PRESETS, lookOf } from "./looks.js";
+import { declare, propagate } from "./simulate.js";
+import type { Component, Connection, Group, GroupKindDef, Model, View } from "./types.js";
 import { scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-/** Attribute-value escaping; ">" is legal inside a quoted attribute and kept readable for keys like "a->b". */
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+/**
+ * Attribute-value escaping. ">" is legal inside a quoted attribute and is kept so keys like "a->b" stay readable;
+ * the raster package's regexes rely on that (they match attributes by quotes, never by ">").
+ */
 const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+/** Colours have been validated (S15); this is the renderer's own guard so nothing can close a style rule or tag. */
+const css = (s: string) => s.replace(/[;{}<>"'\\]/g, "");
 const num = (n: number) => String(Math.round(n * 10) / 10);
 const pathD = (pts: Point[]) => pts.map((p, i) => `${i === 0 ? "M" : "L"}${num(p.x)} ${num(p.y)}`).join(" ");
 const FONT = `system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
@@ -35,16 +42,6 @@ const trimStart = (pts: Point[], by: number) => trimEnd(pts.slice().reverse(), b
 
 /* ---------------- representation: looks, glyphs, frames ---------------- */
 
-/** The preset looks. A custom look is a LookStyle written by the author; the renderer emits exactly it. */
-export const LOOK_PRESETS: Record<LookPreset, LookStyle> = {
-  normal: {},
-  warn: { stroke: "#d97706", fill: "#fffbeb", text: "#92400e" },
-  alert: { stroke: "#dc2626", fill: "#fef2f2", text: "#991b1b", pulse: true },
-  muted: { opacity: 0.45, dash: true },
-  highlight: { stroke: "#2563eb", fill: "#eff6ff", text: "#1e3a8a" },
-};
-export const lookOf = (def: StateDef): LookStyle => (typeof def.look === "string" ? LOOK_PRESETS[def.look] : def.look);
-
 /** 16×16 glyphs, stroke-based so they inherit the theme. Custom glyphs are SVG path data in the same box. */
 const GLYPHS: Record<string, string> = {
   database: `<ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/>`,
@@ -56,6 +53,7 @@ const GLYPHS: Record<string, string> = {
   function: `<text class="glyph-text" x="8" y="8.5">λ</text>`,
 };
 const glyphMarkup = (glyph: string) => GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`;
+const DASH = "4 4";
 
 const FRAME_PRESETS: Record<string, { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }> = {
   tier: {},
@@ -66,37 +64,40 @@ const FRAME_PRESETS: Record<string, { stroke?: string; fill?: string; fillOpacit
 };
 const frameOf = (k: GroupKindDef) => (typeof k.frame === "string" ? FRAME_PRESETS[k.frame] ?? {} : k.frame);
 
-/** CSS for the author's vocabulary: one rule set per state and per kind. Names appear only as class names. */
+/**
+ * CSS for the author's vocabulary: one rule set per kind, then one per state. States come last so a state's look
+ * wins over a kind's box or frame at equal specificity (R8). Names appear only as class names.
+ */
 function vocabularyCss(model: Model): string {
   const rules: string[] = [];
-  for (const def of Object.values(model.states.define)) {
-    const look = lookOf(def);
-    const box: string[] = [];
-    if (look.stroke) box.push(`stroke:${look.stroke}`, "stroke-width:2");
-    if (look.fill) box.push(`fill:${look.fill}`);
-    if (look.dash) box.push("stroke-dasharray:4 4");
-    if (look.pulse) box.push(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`);
-    if (box.length) rules.push(`.st-${def.name} .node-box{${box.join(";")}}`, `.st-${def.name} .group-box{${box.join(";")}}`);
-    if (look.text) rules.push(`.st-${def.name} .node-label{fill:${look.text}}`, `.st-${def.name} .group-label{fill:${look.text}}`);
-    if (look.opacity !== undefined) rules.push(`.st-${def.name}{opacity:${look.opacity}}`);
-  }
   for (const [name, k] of Object.entries(model.kinds.components)) {
     const b = k.box; if (!b) continue;
-    const css: string[] = [];
-    if (b.dash) css.push("stroke-dasharray:5 4");
-    if (b.fill) css.push(`fill:${b.fill}`);
-    if (b.stroke) css.push(`stroke:${b.stroke}`);
-    if (css.length) rules.push(`.kind-${name} .node-box{${css.join(";")}}`);
+    const props: string[] = [];
+    if (b.dash) props.push("stroke-dasharray:5 4");
+    if (b.fill) props.push(`fill:${css(b.fill)}`);
+    if (b.stroke) props.push(`stroke:${css(b.stroke)}`);
+    if (props.length) rules.push(`.kind-${name} .node-box{${props.join(";")}}`);
   }
   for (const [name, k] of Object.entries(model.kinds.groups)) {
     const f = frameOf(k);
-    const css: string[] = [];
-    if (f.stroke) css.push(`stroke:${f.stroke}`);
-    if (f.fill) css.push(`fill:${f.fill}`);
-    if (f.fillOpacity !== undefined) css.push(`fill-opacity:${f.fillOpacity}`);
-    if (f.dash) css.push("stroke-dasharray:8 6");
-    if (f.dotted) css.push("stroke-dasharray:3 5");
-    if (css.length) rules.push(`.gk-${name} .group-box{${css.join(";")}}`);
+    const props: string[] = [];
+    if (f.stroke) props.push(`stroke:${css(f.stroke)}`);
+    if (f.fill) props.push(`fill:${css(f.fill)}`);
+    if (f.fillOpacity !== undefined) props.push(`fill-opacity:${f.fillOpacity}`);
+    if (f.dash) props.push("stroke-dasharray:8 6");
+    if (f.dotted) props.push("stroke-dasharray:3 5");
+    if (props.length) rules.push(`.gk-${name} .group-box{${props.join(";")}}`);
+  }
+  for (const def of Object.values(model.states.define)) {
+    const look = lookOf(def);
+    const box: string[] = [];
+    if (look.stroke) box.push(`stroke:${css(look.stroke)}`, "stroke-width:2");
+    if (look.fill) box.push(`fill:${css(look.fill)}`);
+    if (look.dash) box.push(`stroke-dasharray:${DASH}`);
+    if (look.pulse) box.push(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`);
+    if (box.length) rules.push(`.st-${def.name} .node-box{${box.join(";")}}`, `.st-${def.name} .group-box{${box.join(";")}}`);
+    if (look.text) rules.push(`.st-${def.name} .node-label{fill:${css(look.text)}}`, `.st-${def.name} .group-label{fill:${css(look.text)}}`);
+    if (look.opacity !== undefined) rules.push(`.st-${def.name}{opacity:${look.opacity}}`);
   }
   return rules.join("\n");
 }
@@ -136,7 +137,7 @@ function midpoint(pts: Point[]): Point {
   return pts[0]!;
 }
 
-const pulses = (model: Model, state: string) => !!lookOf(model.states.define[state] ?? { name: state, look: "normal", rank: 0, available: true, flows: "keep", cascade: "none" }).pulse;
+const pulses = (model: Model, state: string) => !!lookOf(model.states.define[state]!).pulse;
 
 function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
   const b = layout.groups[g.id];
@@ -153,12 +154,12 @@ function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
 function componentMarkup(c: Component, model: Model, layout: LayoutResult): string {
   const b = layout.nodes[c.id];
   if (!b) throw new Error(`layout returned no box for component ${c.id}`);
-  const glyph = hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!) : undefined;
+  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!) : undefined;
   const inset = glyph ? 12 + GLYPH_WIDTH : 0;
   const badge = c.replicas > 1;
   const labelY = c.tech !== undefined ? b.height / 2 - 8 : b.height / 2;
   return [
-    `<g class="node kind-${c.kind} st-${c.state}" data-node="${escAttr(c.id)}" data-kind="${escAttr(c.kind)}" data-state="${escAttr(c.state)}"${c.ghost ? ' data-ghost="1"' : ""}${pulses(model, c.state) ? ' data-pulse="1"' : ""} data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}" transform="translate(${num(b.x)} ${num(b.y)})">`,
+    `<g class="node${c.ghost ? "" : ` kind-${c.kind}`} st-${c.state}" data-node="${escAttr(c.id)}" data-kind="${escAttr(c.kind)}" data-state="${escAttr(c.state)}"${c.ghost ? ' data-ghost="1"' : ""}${pulses(model, c.state) ? ' data-pulse="1"' : ""} data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}" transform="translate(${num(b.x)} ${num(b.y)})">`,
     ...(c.reason !== undefined ? [`<title>${esc(c.reason)}</title>`] : []),
     ...(badge ? [`<g class="replicas"><rect x="6" y="-6" width="${num(b.width)}" height="${num(b.height)}" rx="8"/><rect x="3" y="-3" width="${num(b.width)}" height="${num(b.height)}" rx="8"/></g>`] : []),
     `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
@@ -174,10 +175,9 @@ function connectionMarkup(c: Connection, layout: LayoutResult): string {
   const route = layout.edges[c.key];
   if (!route) throw new Error(`layout returned no route for connection ${c.key}`);
   const key = escAttr(c.key);
-  const base = c.bidirectional ? trimStart(route.points, 0) : route.points;
   const flowPts = c.bidirectional ? trimStart(trimEnd(route.points, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(route.points, ARROW_LENGTH);
   const parts = [
-    `<path class="edge edge-${c.kind}${c.need ? " need" : ""}" data-edge="${key}" data-kind="${c.kind}" d="${pathD(base)}" marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}/>`,
+    `<path class="edge edge-${c.kind}${c.need ? " need" : ""}" data-edge="${key}" data-kind="${c.kind}" d="${pathD(route.points)}" marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}/>`,
     `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(flowPts)}" style="${flowStyle(c.load)}"/>`,
   ];
   if (c.label !== undefined) {
@@ -187,21 +187,22 @@ function connectionMarkup(c: Connection, layout: LayoutResult): string {
   return parts.join("\n");
 }
 
-/** Legend rows for every non-default state used in this (scoped, propagated) model. Empty when none. */
-function legendMarkup(model: Model, y: number): { markup: string; height: number } {
+/** Legend rows for every non-default state used in this (scoped, propagated) model (R9). Empty when none. */
+function legendMarkup(model: Model, y: number): { markup: string; height: number; width: number } {
   const used = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
   used.delete(model.states.default);
   const rows = Object.values(model.states.define).filter((d) => used.has(d.name));
-  if (rows.length === 0) return { markup: "", height: 0 };
+  if (rows.length === 0) return { markup: "", height: 0, width: 0 };
   const lines = rows.map((d, i) => {
     const look = lookOf(d);
-    const style = [`fill:${look.fill ?? "#ffffff"}`, `stroke:${look.stroke ?? "#64748b"}`, "stroke-width:1.5", ...(look.dash ? ["stroke-dasharray:3 3"] : []), ...(look.opacity !== undefined ? [`opacity:${look.opacity}`] : [])].join(";");
-    return `<g transform="translate(0 ${i * 20})"><rect width="14" height="14" rx="3" style="${style}"/><text x="22" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? ` — ${esc(d.description)}` : ""}</text></g>`;
+    const style = [`fill:${css(look.fill ?? "#ffffff")}`, `stroke:${css(look.stroke ?? "#64748b")}`, "stroke-width:1.5", ...(look.dash ? [`stroke-dasharray:${DASH}`] : []), ...(look.opacity !== undefined ? [`opacity:${look.opacity}`] : [])].join(";");
+    return `<g transform="translate(0 ${i * 20})"><rect width="14" height="14" rx="3" style="${style}"/><text x="22" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? `: ${esc(d.description)}` : ""}</text></g>`;
   });
-  return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * 20 + 10 };
+  const chars = Math.max(...rows.map((d) => d.name.length + (d.description ? d.description.length + 2 : 0)));
+  return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * 20 + 10, width: 20 + 22 + textWidth(chars, 12) + 20 };
 }
 
-/** One view's drawing: groups, then edges, then nodes, then legend. Returns markup and the height it needs. */
+/** One view's drawing: groups, then connections, then components, then legend. Returns markup and the size it needs. */
 export function renderView(model: Model, layout: LayoutResult): { markup: string; width: number; height: number } {
   const legend = legendMarkup(model, layout.height + 8);
   const markup = [
@@ -210,12 +211,13 @@ export function renderView(model: Model, layout: LayoutResult): { markup: string
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout)).join("\n")}\n</g>`,
     ...(legend.markup ? [legend.markup] : []),
   ].join("\n");
-  return { markup, width: layout.width, height: layout.height + legend.height };
+  return { markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
 }
 
 interface ViewLayer { view: View; title: string; width: number; height: number; markup: string }
+/** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>
-  `<g class="view" data-view="${escAttr(l.view.id)}" data-title="${escAttr(l.title)}" data-size="${num(l.width)} ${num(l.height)}"${visible ? "" : ' style="display:none"'}>\n${l.markup}\n</g>`;
+  `<g class="view"${visible ? "" : ' style="display:none"'} data-view="${escAttr(l.view.id)}" data-title="${escAttr(l.title)}" data-size="${num(l.width)} ${num(l.height)}">\n${l.markup}\n</g>`;
 /** Only the CDATA terminator can break out of a CDATA section; split it across two sections. Browsers merge them. */
 const cdata = (s: string) => `<![CDATA[${s.replace(/]]>/g, "]]]]><![CDATA[>")}]]>`;
 
@@ -235,7 +237,7 @@ function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer
 
 /** Render a laid-out (scoped, propagated) model as one view in a standalone SVG. Pure and deterministic. */
 export function renderSvg(model: Model, layout: LayoutResult): string {
-  const view = model.views[0] ?? { id: "default", type: "topology", direction: model.direction };
+  const view = model.views[0]!;
   const v = renderView(model, layout);
   return wrapDocument(model, model.title, [{ view, title: model.title ?? view.id, width: v.width, height: v.height, markup: v.markup }], []);
 }
@@ -250,15 +252,11 @@ export interface RenderOptions {
 }
 
 function prepare(model: Model, options: RenderOptions): Model {
-  let m = model;
-  if (options.scenario !== undefined) {
-    const s = applyScenario(model, options.scenario, options.step);
-    const label = model.scenarios.find((x) => x.id === s.scenarioId)!.label;
-    m = { ...s.model, title: `${model.title ?? "Diagram"} — ${label} (${s.step}/${s.steps})${s.note !== undefined ? `: ${s.note}` : ""}` };
-    if (options.set) m = applySet(m, options.set);
-    return options.set ? propagate(m) : m;
-  }
-  return propagate(options.set ? applySet(model, options.set) : model);
+  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}) });
+  const propagated = propagate(d.model);
+  if (options.scenario === undefined) return propagated;
+  const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
+  return { ...propagated, title: `${model.title ?? "Model"} - ${label} (${d.step}/${d.steps})${d.note !== undefined ? `: ${d.note}` : ""}` };
 }
 
 /** Select a view, apply scenario/overrides, propagate, scope, lay out and render one static view. */
@@ -276,7 +274,9 @@ export interface DocumentOptions { runtime: string; view?: string; set?: Record<
  * runtime script. Inside <img> it is the animated first view; opened directly, the runtime makes it interactive.
  */
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
-  const prepared = propagate(options.set ? applySet(model, options.set) : model);
+  // The declared (un-propagated) model with overrides applied is what the runtime starts from.
+  const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
+  const prepared = propagate(declared);
   const first = selectView(prepared, options.view);
   const layers: ViewLayer[] = [];
   for (const view of [first, ...prepared.views.filter((v) => v.id !== first.id)]) {
@@ -285,8 +285,8 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
     const v = renderView(scoped, layout);
     layers.push({ view, title: view.title ?? model.title ?? view.id, width: v.width, height: v.height, markup: v.markup });
   }
-  // The declared (un-propagated) model, so runtime toggles compose with authored states rather than derived ones.
-  const json = JSON.stringify(model).replace(/]]>/g, "]]\\u003e");
+  // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
+  const json = JSON.stringify(declared).replace(/]]>/g, "]]\\u003e");
   const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
   return wrapDocument(model, model.title, layers, extra);

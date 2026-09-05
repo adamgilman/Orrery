@@ -1,0 +1,34 @@
+{
+  "components": [
+    {
+      "id": "a"
+    },
+    {
+      "id": "b"
+    }
+  ],
+  "connections": [
+    {
+      "id": "x",
+      "from": "a",
+      "to": "b"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "load": [
+            {
+              "id": "x",
+              "from": "a",
+              "to": "b",
+              "load": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "groups": [
+    {
+      "id": "quorum"
+    }
+  ],
+  "components": [
+    {
+      "id": "svc",
+      "needs": [
+        {
+          "any": [
+            "q1",
+            "q2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q1",
+      "group": "quorum"
+    },
+    {
+      "id": "q2",
+      "group": "quorum"
+    }
+  ],
+  "connections": [
+    {
+      "from": "svc",
+      "to": "quorum",
+      "load": 0.6
+    }
+  ],
+  "views": [
+    {
+      "id": "all"
+    },
+    {
+      "id": "svc-only",
+      "only": [
+        "svc"
+      ]
+    }
+  ]
+}

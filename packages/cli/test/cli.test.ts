@@ -154,7 +154,7 @@ describe("orrery render --scenario", () => {
   it("--set declares states for a one-off what-if", () => {
     const r = run("render", join(fixtures, "valid/alternatives.json"), "--static", "--set", "failed=orders,fraud");
     expect(r.code).toBe(0);
-    expect(r.out).toContain('data-node="api" data-kind="service" data-state="degraded"');
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="degraded"/);
     const bad = run("render", join(fixtures, "valid/alternatives.json"), "--set", "broken=orders");
     expect(bad.code).toBe(1);
     expect(bad.err).toContain('unknown state "broken"');
@@ -180,7 +180,7 @@ describe("orrery render: interactive document by default", () => {
   it("--view with an interactive document makes that view the visible first layer", () => {
     const r = run("render", join(fixtures, "valid/grouped.json"), "--view", "data-tier");
     expect(r.code).toBe(0);
-    const layers = [...r.out.matchAll(/<g class="view" data-view="([^"]+)"[^>]*?( style="display:none")?>/g)].map((m) => [m[1], !!m[2]]);
+    const layers = [...r.out.matchAll(/<g class="view"( style="display:none")? data-view="([^"]+)"/g)].map((m) => [m[2], !!m[1]]);
     expect(layers).toEqual([["data-tier", false], ["overview", true]]);
   });
   it("--scenario renders a static snapshot of that step", () => {
@@ -188,5 +188,35 @@ describe("orrery render: interactive document by default", () => {
     expect(r.code).toBe(0);
     expect(r.out).not.toMatch(/<script/);
     expect(r.out).toContain('data-state="failed"');
+  });
+});
+
+describe("orrery argument parsing", () => {
+  const f = join(fixtures, "valid/alternatives.json");
+  it("rejects unknown options, stray arguments, missing values and repeated flags with exit 2", () => {
+    expect(run("render", f, "--frobnicate").code).toBe(2);
+    expect(run("validate", f, "extra").code).toBe(2);
+    const missing = run("render", f, "-o");
+    expect(missing.code).toBe(2);
+    expect(missing.err).toContain("-o needs a value");
+    expect(run("render", f, "-o", "--static").code).toBe(2);
+    expect(run("render", f, "--view", "overview", "--view", "overview").code).toBe(2);
+  });
+  it("rejects one entity under two states across repeated --set", () => {
+    const r = run("render", f, "--set", "failed=orders", "--set", "off=orders");
+    expect(r.code).toBe(2);
+    expect(r.err).toContain('"orders" under both');
+  });
+  it("--set after --scenario composes on the scenario's declared states", () => {
+    const r = run("render", f, "--scenario", "orders-failover", "--step", "1", "--set", "on=orders");
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/data-node="orders"[^>]*data-state="on"/);
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="on"/);
+  });
+  it("reports an unwritable output path without a stack trace", () => {
+    const r = run("render", f, "-o", "/proc/nope/out.svg");
+    expect(r.code).toBe(1);
+    expect(r.err).toContain("/proc/nope/out.svg");
+    expect(r.err).not.toContain("    at ");
   });
 });

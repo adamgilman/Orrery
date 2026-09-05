@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GROUP_LABEL_HEIGHT, measureComponent, measureEdgeLabel, toLayoutGraph, validate } from "../src/index.js";
+import { GROUP_LABEL_HEIGHT, measureComponent, measureConnectionLabel, toLayoutGraph, validate } from "../src/index.js";
 
 const model = (input: unknown) => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 
@@ -24,6 +24,6 @@ describe("toLayoutGraph", () => {
     expect(g.groups).toEqual([{ id: "r", labelHeight: GROUP_LABEL_HEIGHT }, { id: "t", parent: "r", labelHeight: GROUP_LABEL_HEIGHT }]);
     expect(g.nodes.map((n) => [n.id, n.group])).toEqual([["a", "t"], ["b", undefined]]);
     expect(g.edges.map((e) => e.id)).toEqual(["a->b", "b->r"]);
-    expect(g.edges[0]!.label!.width).toBeGreaterThan(measureEdgeLabel("").width);
+    expect(g.edges[0]!.label!.width).toBeGreaterThan(measureConnectionLabel("").width);
   });
 });

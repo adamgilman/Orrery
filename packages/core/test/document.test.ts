@@ -9,9 +9,10 @@ const engine = () => new FakeLayoutEngine();
 describe("renderDocument", () => {
   it("embeds every view as a layer, first visible, with sizes; --view reorders", async () => {
     const svg = await renderDocument(fixture("grouped"), engine(), { runtime: "/*rt*/" });
-    const layers = [...svg.matchAll(/<g class="view" data-view="([^"]+)" data-title="([^"]*)" data-size="([\d.]+) ([\d.]+)"([^>]*)>/g)];
-    expect(layers.map((m) => m[1])).toEqual(["overview", "data-tier"]);
-    expect(layers[1]![5]).toContain('style="display:none"');
+    const layers = [...svg.matchAll(/<g class="view"( style="display:none")? data-view="([^"]+)" data-title="([^"]*)" data-size="([\d.]+) ([\d.]+)">/g)];
+    expect(layers.map((m) => m[2])).toEqual(["overview", "data-tier"]);
+    expect(layers[0]![1]).toBeUndefined();
+    expect(layers[1]![1]).toBe(' style="display:none"');
     const re = await renderDocument(fixture("grouped"), engine(), { runtime: "", view: "data-tier" });
     expect([...re.matchAll(/data-view="([^"]+)"/g)].map((m) => m[1])).toEqual(["data-tier", "overview"]);
   });

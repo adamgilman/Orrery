@@ -103,7 +103,7 @@ describe("render options", () => {
     const m = fixture("alternatives");
     const s = await render(m, new FakeLayoutEngine(), { scenario: "orders-failover", step: 1 });
     expect(s).toContain('data-node="orders" data-kind="database" data-state="failed"');
-    expect(s).toContain("<title>Checkout with alternatives — Orders DB failover (1/4): Primary goes down; reads move to the replica, API runs reduced</title>");
+    expect(s).toContain("<title>Checkout with alternatives - Orders DB failover (1/4): Primary goes down; reads move to the replica, API runs reduced</title>");
     const o = await render(m, new FakeLayoutEngine(), { set: { failed: ["fraud"] } });
     expect(o).toContain('data-node="api" data-kind="service" data-state="degraded"');
   });

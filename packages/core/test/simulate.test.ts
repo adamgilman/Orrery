@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { applyScenario, applySet, propagate, validate, type Model } from "../src/index.js";
+import { applyScenario, applySet, propagate, scopeModel, validate, type Model } from "../src/index.js";
 
 const fixture = (name: string): Model => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
@@ -155,5 +155,46 @@ describe("propagate: group state is independent of member order (B9)", () => {
       const m = propagate(applySet(build(order), { degraded: ["a"] }));
       expect(st(m, "edge"), order.join(",")).toBe("degraded");
     }
+  });
+});
+
+describe("propagate: cascade ties and nesting (B8)", () => {
+  const build = (outer: string, inner: string, member: string) => {
+    const r = validate({
+      states: { define: { drained: { look: "muted", rank: 2, available: false, flows: "stop", cascade: "children" } } },
+      groups: [{ id: "outer", state: outer }, { id: "inner", parent: "outer", state: inner }],
+      components: [{ id: "x", group: "inner", state: member }],
+    });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    return propagate(r.model);
+  };
+  it("a same-rank declared state is kept", () => {
+    expect(st(build("off", "on", "failed"), "x")).toBe("failed");
+  });
+  it("the nearest cascading ancestor wins a tie between cascading ancestors, whatever the group order", () => {
+    expect(st(build("off", "drained", "on"), "x")).toBe("drained");
+    expect(st(build("drained", "off", "on"), "x")).toBe("off");
+  });
+});
+
+describe("propagate: loads (B4)", () => {
+  it("shifts load off an unavailable alternative that still keeps flow, and sums parallel connections", () => {
+    const base = fixture("parallel-needs");
+    const r = validate({ ...JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/parallel-needs.json"), "utf8")),
+      states: { define: { readonly: { available: false, flows: "keep", rank: 1 } } } });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const m = propagate(applySet(r.model, { readonly: ["db"] }));
+    expect(load(m, "writes")).toBe(0);
+    expect(load(m, "reads")).toBe(0);
+    expect(load(m, "api->replica")).toBe(0.8);
+    expect(m.connections.filter((c) => c.need).map((c) => c.key)).toEqual(["writes", "reads", "api->replica"]);
+    expect(base.connections).toHaveLength(3);
+  });
+  it("marks a connection to a group containing an alternative as satisfying the need, and survives scoping", () => {
+    const m = propagate(applySet(fixture("via-group"), { failed: ["q1"] }));
+    expect(m.connections[0]!.need).toBe(true);
+    expect(st(m, "svc")).toBe("degraded");
+    const scoped = propagate(scopeModel(fixture("via-group"), fixture("via-group").views[1]!));
+    expect(st(scoped, "svc")).toBe("on");
   });
 });

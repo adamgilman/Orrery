@@ -1,0 +1,25 @@
+{
+  "states": {
+    "define": {
+      "hot": {
+        "look": {
+          "stroke": "red}</style><script>alert(1)</script>"
+        }
+      }
+    }
+  },
+  "kinds": {
+    "groups": {
+      "g": {
+        "frame": {
+          "fill": "url(x)"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

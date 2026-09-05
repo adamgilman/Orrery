@@ -1,6 +1,6 @@
 [
   {
     "pointer": "/states/define/x/look",
-    "message": "does not match any allowed form"
+    "message": "must be one of: normal, warn, alert, muted, highlight"
   }
 ]

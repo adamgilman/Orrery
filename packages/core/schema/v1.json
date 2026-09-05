@@ -123,18 +123,15 @@
                     }
                   }
                 ],
-                "default": "normal",
                 "description": "Visual treatment: a preset name or a style object. Only what you set changes; the rest stays normal."
               },
               "rank": {
                 "type": "integer",
                 "minimum": 0,
-                "default": 1,
                 "description": "Severity order. Propagation only ever raises rank; the highest applies."
               },
               "available": {
                 "type": "boolean",
-                "default": true,
                 "description": "Whether an entity in this state counts toward a need's 'min'."
               },
               "flows": {
@@ -143,7 +140,6 @@
                   "keep",
                   "stop"
                 ],
-                "default": "keep",
                 "description": "'stop': connections touching an entity in this state carry no flow."
               },
               "cascade": {
@@ -152,7 +148,6 @@
                   "none",
                   "children"
                 ],
-                "default": "none",
                 "description": "'children': every descendant of a group in this state is set to it as well."
               },
               "description": {

@@ -23,6 +23,6 @@ export function flowStyle(load: number): string {
   return `stroke-width:${num(width)};animation-duration:${num(flowDuration(load))}s`;
 }
 
-/** Seconds per pulse of a failed node's outline. Linear triangle wave 1 → 0.4 → 1, so frames can freeze it exactly. */
+/** Seconds per pulse of the outline of an entity whose look pulses. Linear triangle wave 1 → 0.4 → 1, so frames can freeze it exactly. */
 export const PULSE_PERIOD = 1.2;
 export const PULSE_MIN_OPACITY = 0.4;

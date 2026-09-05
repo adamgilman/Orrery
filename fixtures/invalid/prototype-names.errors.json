@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/components/0/state",
+    "message": "unknown state \"toString\""
+  },
+  {
+    "pointer": "/components/0/kind",
+    "message": "unknown component kind \"valueOf\""
+  }
+]

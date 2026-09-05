@@ -11,7 +11,7 @@ jobs.push(["examples/checkout.orrery.json", ["--scenario", "db-failover", "--ste
 jobs.push(["examples/checkout.orrery.json", ["--view", "data"], "examples/checkout-data.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--view", "region"], "examples/checkout-region.svg"]);
 const readme = {
-  "kinds": [[]], "groups": [[]], "edge-kinds": [[]],
+  "kinds": [[]], "groups": [[]], "connection-kinds": [[]],
   "failover": [[], ["--scenario", "db-fails"]],
   "views": [["--view", "overview"], ["--view", "billing"]],
 };

@@ -24,6 +24,6 @@ describe("multi-view documents in the frame tooling", () => {
     expect(Object.keys(flowRegions(svg))).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
     const report = inspect(svg, { fps: 5, durationMs: 400 });
     expect(report.ok, report.problems.join("; ")).toBe(true);
-    expect(report.edges.map((e) => e.key)).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
+    expect(report.connections.map((e) => e.key)).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
   });
 });

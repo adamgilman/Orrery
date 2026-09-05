@@ -1,3 +1,4 @@
+import { ModelError } from "./simulate.js";
 import type { Component, Model, View } from "./types.js";
 
 /**
@@ -28,16 +29,16 @@ export function scopeModel(model: Model, view: View): Model {
   for (const id of selected) for (const g of chain(id)) { if (view.scope !== undefined && !within(g, view.scope)) break; shownGroups.add(g); }
   const shown = new Set([...selected].filter((id) => !isGroup(id)).concat([...shownGroups]));
 
-  const groups = model.groups.filter((g) => shownGroups.has(g.id)).map((g) => (g.id === view.scope || (g.parent !== undefined && !shownGroups.has(g.parent)) ? { ...g, parent: undefined } : g))
-    .map((g) => { const { parent, ...rest } = g; return parent === undefined ? rest : g; });
+  const groups = model.groups.filter((g) => shownGroups.has(g.id)).map((g) => { if (g.id !== view.scope) return g; const { parent, ...root } = g; return root; });
   const components: Component[] = model.components.filter((c) => shown.has(c.id));
   const ghosts = new Map<string, Component>();
   const connections = model.connections.filter((c) => {
     const a = shown.has(c.from), b = shown.has(c.to);
     if (!a && !b) return false;
     for (const end of [c.from, c.to]) if (!shown.has(end) && !ghosts.has(end)) {
+      // A ghost is drawn from its flag alone; its kind is carried through for the data attribute but never styled.
       const src = model.components.find((x) => x.id === end) ?? model.groups.find((x) => x.id === end)!;
-      ghosts.set(end, { id: end, label: src.label, kind: "kind" in src && "needs" in src ? src.kind : "service", state: src.state, needs: [], replicas: 1, ghost: true, ...(src.reason !== undefined ? { reason: src.reason } : {}) });
+      ghosts.set(end, { id: end, label: src.label, kind: src.kind, state: src.state, needs: [], replicas: 1, ghost: true, ...(src.reason !== undefined ? { reason: src.reason } : {}), ...(src.description !== undefined ? { description: src.description } : {}) });
     }
     return true;
   });
@@ -48,6 +49,6 @@ export function scopeModel(model: Model, view: View): Model {
 export function selectView(model: Model, id?: string): View {
   if (id === undefined) return model.views[0]!;
   const v = model.views.find((x) => x.id === id);
-  if (!v) throw new Error(`unknown view "${id}"; available: ${model.views.map((x) => x.id).join(", ")}`);
+  if (!v) throw new ModelError(`unknown view "${id}"; available: ${model.views.map((x) => x.id).join(", ")}`);
   return v;
 }

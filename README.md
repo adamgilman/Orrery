@@ -32,7 +32,7 @@ own. The hierarchy is also the outline for navigation, and a group can be connec
 **Connection kinds and load.** Sync, async, replication and dataflow connections are drawn differently. Load drives
 the speed and weight of the flow.
 
-![Connection kinds](examples/readme/edge-kinds.svg)
+![Connection kinds](examples/readme/connection-kinds.svg)
 
 **Failure scenarios.** Components declare what they need, with alternatives. A scenario marks one component failed
 and the tool works out the rest: the worker fails with the primary, the API degrades onto its replica, the web tier
@@ -135,6 +135,7 @@ Test-driven, no exceptions. Every behaviour lands as a failing test first.
 ```sh
 yarn test                                   # builds, then runs unit, contract, snapshot, pixel and CLI e2e tests
 yarn inspect examples/checkout.orrery.json  # renders, freezes animation frames to PNG, checks them, writes a contact sheet
+ORRERY_SKIP_BUILD=1 yarn vitest run packages/core   # source-only suites without the build step
 ```
 
 Layout runs through the `LayoutEngine` interface. The Eclipse Layout Kernel adapter in `packages/layout-elk`

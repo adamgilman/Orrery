@@ -102,7 +102,10 @@ describe("validate: warnings", () => {
   it("warns, without failing, when a source connects to a group and to something inside it", () => {
     const r = validate(load(join(fixtures, "valid", "warning-double.json")));
     if (!r.ok) throw new Error();
-    expect(r.warnings.map((w) => w.toString())).toEqual(['/connections/1: "x" connects to "m" and also to its group "g"; both lines will be drawn']);
+    expect(r.warnings.map((w) => w.toString())).toEqual([
+      '/connections/1: "x" connects to "m" and also to its group "g"; both lines will be drawn',
+      '/connections/2: "m" connects to "x" and so does its group "g"; both lines will be drawn',
+    ]);
     expect(model("alternatives") && validate(load(join(fixtures, "valid", "alternatives.json")))).toMatchObject({ warnings: [] });
   });
 });

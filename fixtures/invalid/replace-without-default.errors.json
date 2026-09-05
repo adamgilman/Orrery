@@ -1,14 +1,14 @@
 [
   {
     "pointer": "/states/default",
-    "message": "unknown state \"on\""
+    "message": "states.replace is true, so states.default must name one of: ok"
   },
   {
     "pointer": "/states/needs/unmet",
-    "message": "unknown state \"failed\""
+    "message": "states.needs.unmet must name one of: ok"
   },
   {
     "pointer": "/states/needs/reduced",
-    "message": "unknown state \"degraded\""
+    "message": "states.needs.reduced must name one of: ok"
   }
 ]

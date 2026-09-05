@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "a",
+      "needs": [
+        "ghost"
+      ]
+    }
+  ]
+}

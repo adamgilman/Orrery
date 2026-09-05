@@ -4,7 +4,7 @@ import ElkModule, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bun
 // while bundlers/vitest unwrap it to the constructor. Accept both shapes.
 type ElkCtor = typeof ElkModule.default;
 const ELK: ElkCtor = (ElkModule as { default?: ElkCtor }).default ?? (ElkModule as unknown as ElkCtor);
-import { GROUP_PADDING, type LayoutEngine, type LayoutGraph, type LayoutResult } from "@orrery/core";
+import { EMPTY_GROUP, GROUP_PADDING, emptyGroups, type LayoutEngine, type LayoutGraph, type LayoutResult } from "@orrery/core";
 
 const PADDING = 20;
 
@@ -47,14 +47,14 @@ export class ElkLayoutEngine implements LayoutEngine {
     };
     // Build the compound-node tree: groups become ELK nodes with padding that reserves the label band.
     const elkNodes = new Map<string, ElkNode>();
-    const hasMembers = new Set<string>([...graph.nodes.map((n) => n.group), ...groups.map((g) => g.parent)].filter((x): x is string => x !== undefined));
+    const empty = emptyGroups(graph);
     for (const g of groups) {
       elkNodes.set(g.id, {
         id: g.id,
         layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight},left=${GROUP_PADDING},bottom=${GROUP_PADDING},right=${GROUP_PADDING}]` },
         children: [],
         // An empty group is a black box: give it a size, since ELK sizes compound nodes from their children.
-        ...(hasMembers.has(g.id) ? {} : { width: 120, height: 48 + g.labelHeight }),
+        ...(empty.has(g.id) ? { width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight } : {}),
       });
     }
     const root: ElkNode = {
@@ -81,8 +81,7 @@ export class ElkLayoutEngine implements LayoutEngine {
     const walk = (n: ElkNode, ox: number, oy: number) => {
       for (const c of n.children ?? []) {
         const box = { x: ox + (c.x ?? 0), y: oy + (c.y ?? 0), width: c.width ?? 0, height: c.height ?? 0 };
-        origin.set(c.id, { x: box.x, y: box.y });
-        if (groupIds.has(c.id)) { groupBoxes[c.id] = box; walk(c, box.x, box.y); } else nodes[c.id] = box;
+        if (groupIds.has(c.id)) { origin.set(c.id, { x: box.x, y: box.y }); groupBoxes[c.id] = box; walk(c, box.x, box.y); } else nodes[c.id] = box;
       }
     };
     walk(out, 0, 0);

@@ -31,7 +31,7 @@ else {
 }
 writeFileSync(join(out, "rendered.svg"), svg);
 
-const report = inspect(svg, { scale: 1, fps, durationMs: (frames * 1000) / fps });
+const report = inspect(svg, { scale, fps, durationMs: (frames * 1000) / fps });
 writeFileSync(join(out, "static.png"), rasterize(svg, { scale }));
 const seq = renderFrames(svg, { fps, durationMs: (frames * 1000) / fps, scale });
 seq.forEach((f, i) => writeFileSync(join(out, `frame-${String(i).padStart(2, "0")}.png`), f.png));
@@ -42,9 +42,9 @@ diffs.forEach((png, i) => writeFileSync(join(out, `diff-${String(i + 1).padStart
 if (diffs.length) writeFileSync(join(out, "diffs.png"), contactSheet(diffs, { columns: Math.min(4, diffs.length) }));
 writeFileSync(join(out, "report.json"), JSON.stringify(report, null, 2) + "\n");
 
-console.log(`${name}: ${report.size.width}x${report.size.height}, xml ${report.xml.ok ? "ok" : "BAD"}, ${report.edges.length} edges`);
-for (const e of report.edges) console.log(`  ${e.periodic && (e.load === 0 || e.moving) ? "ok " : "BAD"} ${e.key.padEnd(24)} load ${String(e.load).padEnd(4)} ${e.durationMs}ms/cycle${e.load > 0 ? (e.moving ? " moving" : " STATIC") : ""}`);
-console.log(`  frame subtraction @${fps}fps: changed px per step [${report.steps.map((s) => s.changed).join(", ")}], outside flows [${report.steps.map((s) => s.outside).join(", ")}]`);
+console.log(`${name}: ${report.size.width}x${report.size.height}, xml ${report.xml.ok ? "ok" : "BAD"}, ${report.connections.length} connections`);
+for (const c of report.connections) console.log(`  ${c.periodic && (c.load === 0 || c.moving) ? "ok " : "BAD"} ${c.key.padEnd(24)} load ${String(c.load).padEnd(4)} ${c.durationMs}ms/cycle${c.load > 0 ? (c.moving ? " moving" : " STATIC") : ""}`);
+console.log(`  frame subtraction @${fps}fps, scale ${scale}: changed px per step [${report.steps.map((s) => s.changed).join(", ")}], outside flows [${report.steps.map((s) => s.outside).join(", ")}]`);
 for (const p of report.problems) console.log(`  problem: ${p}`);
 console.log(`look at: ${join(out, "sheet.png")} (frames), ${join(out, "diffs.png")} (what moved, in red), ${join(out, "static.png")}`);
 process.exit(report.ok ? 0 : 1);

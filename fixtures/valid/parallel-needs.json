@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "id": "api",
+      "needs": [
+        {
+          "any": [
+            "db",
+            "replica"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "db"
+    },
+    {
+      "id": "replica"
+    }
+  ],
+  "connections": [
+    {
+      "id": "writes",
+      "from": "api",
+      "to": "db",
+      "load": 0.5
+    },
+    {
+      "id": "reads",
+      "from": "api",
+      "to": "db",
+      "load": 0.3
+    },
+    {
+      "from": "api",
+      "to": "replica",
+      "load": 0
+    }
+  ]
+}

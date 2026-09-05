@@ -53,7 +53,7 @@ export interface Component {
   tech?: string;
   description?: string;
   meta?: Record<string, unknown>;
-  /** Set by view scoping: an outside entity drawn at the edge of a scoped view. */
+  /** Set by view scoping: an outside entity drawn at the edge of a scoped view. Drawn from this flag, never from `kind`. */
   ghost?: true;
 }
 
@@ -66,7 +66,6 @@ export interface Group {
   reason?: string;
   description?: string;
   meta?: Record<string, unknown>;
-  ghost?: true;
 }
 
 export interface Connection {
@@ -120,4 +119,3 @@ export interface Model {
 
 /** Anything with an id and a state: a component or a group. */
 export type Entity = Component | Group;
-export const isGroup = (e: Entity): e is Group => "parent" in e || !("needs" in e);

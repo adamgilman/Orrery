@@ -18,7 +18,7 @@ describe("failure pulse in frames", () => {
     expect(a).toMatch(/\.st-failed \.node-box\{[^}]*stroke-opacity:1[;}]/);
     expect(b).toMatch(/\.st-failed \.node-box\{[^}]*stroke-opacity:0\.4[;}]/);
   });
-  it("pulseRegions finds the failed node boxes", async () => {
+  it("pulseRegions finds the pulsing boxes", async () => {
     const svg = await failing();
     const regions = pulseRegions(svg, 1);
     expect(Object.keys(regions)).toEqual(["orders"]);

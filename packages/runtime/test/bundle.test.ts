@@ -17,14 +17,15 @@ describe("minified runtime inside a rendered SVG document", () => {
     const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: RUNTIME_SOURCE });
     const dom = new JSDOM(svg, { contentType: "image/svg+xml", pretendToBeVisual: true, runScripts: "outside-only" });
     const doc = dom.window.document;
-    const script = doc.querySelectorAll("script")[1]!.textContent!;
+    const script = doc.querySelector("script:not([type])")!.textContent!;
     expect(script.length).toBe(RUNTIME_SOURCE.length); // CDATA splitting round-trips
     vm.runInContext(script, dom.getInternalVMContext());
     const q = (s: string) => doc.querySelector(s)!;
     const vis = (id: string) => q(`.view:not([style*="display:none"]) [data-node="${id}"]`);
     expect(q(".orrery-panel")).toBeTruthy();
     expect(doc.querySelectorAll(".orrery-views option")).toHaveLength(3);
-    expect(doc.querySelectorAll(".orrery-outline li")).toHaveLength(12);
+    const entities = r.model.components.length + r.model.groups.length;
+    expect(doc.querySelectorAll(".orrery-outline li")).toHaveLength(entities);
     vis("seq-1").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
     expect([vis("seq-1"), vis("match-a"), vis("edge")].map((e) => e.getAttribute("data-state"))).toEqual(["outage", "impaired", "impaired"]);
     const sel = q(".orrery-scenarios") as HTMLSelectElement;
@@ -33,7 +34,7 @@ describe("minified runtime inside a rendered SVG document", () => {
     expect(q(".orrery-note").textContent).toMatch(/Cell A drained/);
     const views = q(".orrery-views") as HTMLSelectElement;
     views.value = "eu-only"; views.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
-    await new Promise((res) => setTimeout(res, 500));
+    for (let i = 0; i < 50 && doc.querySelector<SVGGElement>('.view[data-view="eu-only"]')!.style.display === "none"; i++) await new Promise((res) => setTimeout(res, 20));
     expect([...doc.querySelectorAll<SVGGElement>(".view")].map((v) => `${v.getAttribute("data-view")}:${v.style.display || "shown"}`)).toEqual(["overview:none", "eu-only:shown", "matching:none"]);
   });
 });

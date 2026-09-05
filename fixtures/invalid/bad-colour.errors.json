@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/states/define/hot/look/stroke",
+    "message": "is not a CSS colour"
+  },
+  {
+    "pointer": "/kinds/groups/g/frame/fill",
+    "message": "is not a CSS colour"
+  }
+]

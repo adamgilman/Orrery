@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { FakeLayoutEngine, renderDocument, validate } from "@orrery/core";
@@ -29,6 +29,7 @@ const change = (el: HTMLSelectElement, v: string) => { el.value = v; el.dispatch
 describe("runtime boot", () => {
   let rt: Runtime;
   beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
 
   it("builds a panel with title, views, scenarios, state buttons and an outline of the active view", async () => {
     const root = await doc("grouped");
@@ -140,6 +141,37 @@ describe("runtime boot", () => {
     vi.runAllTimers();
     expect(root.querySelector(".is-selected")).toBeNull();
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fit);
+  });
+
+  it("a click undoes a state the scenario set, and modifier keys are ignored", async () => {
+    const root = await doc("alternatives");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    change(root.querySelector<HTMLSelectElement>(".orrery-scenarios")!, "orders-failover");
+    expect(state(root, "orders")).toBe("failed");
+    click(vis(root, '[data-node="orders"]')); // toggles against the scenario's declared state
+    expect(state(root, "orders")).toBe("on");
+    click(vis(root, '[data-node="orders"]'));
+    expect(state(root, "orders")).toBe("failed");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "]", metaKey: true, bubbles: true }));
+    expect(root.querySelector(".orrery-step")!.textContent).toBe("1 / 4");
+  });
+
+  it("a second view switch during a morph leaves exactly one view visible", async () => {
+    const root = await doc("own-vocabulary");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    rt.showView("eu-only");
+    rt.showView("matching");
+    vi.runAllTimers();
+    expect([...root.querySelectorAll(".view")].map((l) => `${l.getAttribute("data-view")}:${(l as HTMLElement).style.display || "shown"}`)).toEqual(["overview:none", "eu-only:none", "matching:shown"]);
+  });
+
+  it("destroy removes the panel and stops listening", async () => {
+    const root = await doc("alternatives");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    rt.destroy();
+    expect(root.querySelector(".orrery-panel")).toBeNull();
+    click(vis(root, '[data-node="orders"]'));
+    expect(state(root, "orders")).toBe("on");
   });
 
   it("reset clears every override and scenario", async () => {

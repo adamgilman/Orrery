@@ -1,0 +1,9 @@
+{
+  "components": [
+    {
+      "id": "a",
+      "state": "toString",
+      "kind": "valueOf"
+    }
+  ]
+}
