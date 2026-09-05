@@ -1,13 +1,31 @@
 {
   "title": "Three tier",
   "direction": "right",
-  "nodes": [
-    { "id": "web", "label": "Web" },
-    { "id": "api", "label": "API" },
-    { "id": "db", "label": "DB" }
+  "components": [
+    {
+      "id": "web",
+      "label": "Web"
+    },
+    {
+      "id": "api",
+      "label": "API"
+    },
+    {
+      "id": "db",
+      "label": "DB"
+    }
   ],
-  "edges": [
-    { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" },
-    { "from": "api", "to": "db", "load": 0.4 }
+  "connections": [
+    {
+      "from": "web",
+      "to": "api",
+      "load": 0.8,
+      "label": "HTTPS"
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "load": 0.4
+    }
   ]
 }

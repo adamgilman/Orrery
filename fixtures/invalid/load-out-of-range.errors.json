@@ -1,1 +1,6 @@
-[ { "pointer": "/edges/0/load", "message": "must be <= 1" } ]
+[
+  {
+    "pointer": "/connections/0/load",
+    "message": "must be <= 1"
+  }
+]

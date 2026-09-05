@@ -1,0 +1,10 @@
+[
+  {
+    "pointer": "/scenarios/0/steps/0/set/off",
+    "message": "already set"
+  },
+  {
+    "pointer": "/scenarios/0/steps/1/restore",
+    "message": "both set and restored"
+  }
+]

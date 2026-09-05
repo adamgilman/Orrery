@@ -1,1 +1,6 @@
-[ { "pointer": "/scenarios/0/steps/0", "message": "step changes nothing" } ]
+[
+  {
+    "pointer": "/scenarios/0/steps/0",
+    "message": "step changes nothing"
+  }
+]

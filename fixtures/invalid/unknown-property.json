@@ -1,1 +1,9 @@
-{ "nodes": [ { "id": "a", "x": 10 } ], "edges": [], "layers": [] }
+{
+  "components": [
+    {
+      "id": "a",
+      "x": 10
+    }
+  ],
+  "layers": []
+}

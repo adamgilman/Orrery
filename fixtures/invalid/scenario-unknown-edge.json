@@ -1,1 +1,0 @@
-{ "nodes": [ { "id": "a" }, { "id": "b" } ], "edges": [ { "from": "a", "to": "b" } ], "scenarios": [ { "id": "s", "steps": [ { "edges": { "b->a": { "load": 1 } } } ] } ] }

@@ -1,0 +1,15 @@
+{
+  "states": {
+    "replace": true,
+    "define": {
+      "ok": {
+        "rank": 0
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

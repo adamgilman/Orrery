@@ -1,0 +1,19 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "broken": "a"
+          }
+        }
+      ]
+    }
+  ]
+}

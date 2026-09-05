@@ -1,6 +1,5 @@
 {
   "title": "Grouped three tier",
-  "direction": "right",
   "groups": [
     {
       "id": "region",
@@ -10,17 +9,15 @@
     {
       "id": "app",
       "label": "Application",
-      "kind": "tier",
       "parent": "region"
     },
     {
       "id": "data",
       "label": "Data",
-      "kind": "tier",
       "parent": "region"
     }
   ],
-  "nodes": [
+  "components": [
     {
       "id": "web",
       "label": "Web tier",
@@ -29,8 +26,15 @@
     {
       "id": "api",
       "label": "Checkout API",
-      "kind": "service",
-      "group": "app"
+      "group": "app",
+      "needs": [
+        {
+          "any": [
+            "db",
+            "replica"
+          ]
+        }
+      ]
     },
     {
       "id": "db",
@@ -45,7 +49,7 @@
       "group": "data"
     }
   ],
-  "edges": [
+  "connections": [
     {
       "from": "web",
       "to": "api",
@@ -56,17 +60,14 @@
       "from": "api",
       "to": "db",
       "load": 0.5,
-      "label": "writes",
-      "dependsOn": true
+      "label": "writes"
     },
     {
       "id": "api-reads",
       "from": "api",
       "to": "replica",
-      "kind": "sync",
-      "load": 0.3,
-      "label": "reads",
-      "fallback": true
+      "load": 0,
+      "label": "reads"
     },
     {
       "from": "db",

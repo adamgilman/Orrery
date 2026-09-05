@@ -1,0 +1,13 @@
+{
+  "groups": [
+    {
+      "id": "g",
+      "kind": "cell"
+    }
+  ],
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

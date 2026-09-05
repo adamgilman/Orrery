@@ -1,0 +1,41 @@
+{
+  "title": "Connections to groups",
+  "groups": [
+    {
+      "id": "platform",
+      "label": "Platform"
+    },
+    {
+      "id": "empty",
+      "label": "Not opened yet",
+      "kind": "boundary"
+    }
+  ],
+  "components": [
+    {
+      "id": "edge",
+      "kind": "gateway",
+      "needs": [
+        "platform",
+        "empty"
+      ]
+    },
+    {
+      "id": "svc",
+      "group": "platform"
+    }
+  ],
+  "connections": [
+    {
+      "from": "edge",
+      "to": "platform",
+      "load": 0.6
+    },
+    {
+      "from": "edge",
+      "to": "empty",
+      "load": 0.2,
+      "kind": "async"
+    }
+  ]
+}

@@ -1,1 +1,6 @@
-[ { "pointer": "", "message": "must be an object" } ]
+[
+  {
+    "pointer": "",
+    "message": "must be an object"
+  }
+]

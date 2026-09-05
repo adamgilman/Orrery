@@ -1,1 +1,7 @@
-{ "nodes": [ { "id": "has space" } ], "edges": [] }
+{
+  "components": [
+    {
+      "id": "has space"
+    }
+  ]
+}

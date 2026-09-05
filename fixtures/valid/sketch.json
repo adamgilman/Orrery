@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout, first sketch",
+  "components": [
+    { "id": "web", "kind": "gateway" },
+    { "id": "api" },
+    { "id": "orders", "kind": "database" },
+    { "id": "payments", "kind": "external" }
+  ]
+}

@@ -17,8 +17,10 @@ describe("schema v1", () => {
     walk(schema, "", missing);
     expect(missing).toEqual([]);
   });
-  it("requires non-empty edge labels, like node labels", () => {
-    const edge = (schema as any).properties.edges.items.properties;
-    expect(edge.label.minLength).toBe(1);
+  it("requires non-empty labels on components, connections and groups", () => {
+    for (const k of ["components", "connections", "groups"]) expect((schema as any).properties[k].items.properties.label.minLength, k).toBe(1);
+  });
+  it("only requires components at the top level", () => {
+    expect((schema as any).required).toEqual(["components"]);
   });
 });

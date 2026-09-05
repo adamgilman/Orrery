@@ -1,20 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://orrery.dev/schema/v1.json",
-  "title": "Orrery diagram v1",
+  "$id": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Orrery model v1",
+  "description": "An architecture model: components, the connections between them, the groups they sit in, what each component needs to stay healthy, plus views (drawings) and scenarios (what-ifs) over that model. Specification: docs/MODEL.md.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "nodes",
-    "edges"
+    "components"
   ],
   "properties": {
     "$schema": {
-      "type": "string"
+      "type": "string",
+      "description": "Schema URL, for editor validation and completion."
     },
     "title": {
       "type": "string",
-      "description": "Diagram title. Rendered as the SVG <title> for accessibility."
+      "minLength": 1,
+      "description": "Title of the system. Shown on views that do not set their own."
     },
     "direction": {
       "type": "string",
@@ -23,51 +25,264 @@
         "down"
       ],
       "default": "right",
-      "description": "Default layout direction for views that do not set their own: edges run left-to-right (\"right\") or top-to-bottom (\"down\"). The only layout hint; positions are computed automatically and are deterministic."
+      "description": "Default flow direction for views: connections run left-to-right (\"right\") or top-to-bottom (\"down\"). The only layout hint at this level; positions are computed automatically and are deterministic. Narrow, top-down diagrams read best on phones."
     },
-    "groups": {
-      "type": "array",
-      "default": [],
-      "description": "Containers drawn as labelled frames around their nodes: tiers, regions, clusters, trust boundaries. Nest via 'parent'. The group hierarchy is also the outline for navigation.",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id"
-        ],
-        "properties": {
-          "id": {
+    "states": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Your state vocabulary bound to how each state looks and behaves. Omit for the defaults: on (normal, rank 0), degraded (warn, 1), failed (alert, 2, unavailable, stops flow), off (muted, 2, unavailable, stops flow, cascades to children). Define an existing name to override it, a new name to extend, or set replace to start from nothing. The engine never reads a name; only look, rank, available, flows and cascade matter.",
+      "properties": {
+        "default": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+          "default": "on",
+          "description": "State of any entity that declares none, and what 'restore' returns to."
+        },
+        "needs": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Outcome states needs use unless they say otherwise.",
+          "properties": {
+            "unmet": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "default": "failed",
+              "description": "State a component enters when fewer than 'min' alternatives of a need are available."
+            },
+            "reduced": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "default": "degraded",
+              "description": "State a component enters when a need is met but not every alternative is available, or the preferred one is above the default rank."
+            }
+          }
+        },
+        "replace": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: only the states in 'define' exist; 'default' and 'needs' must then name them."
+        },
+        "define": {
+          "type": "object",
+          "description": "State definitions by name.",
+          "propertyNames": {
             "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-            "description": "Unique identifier, referenced by nodes ('group'), groups ('parent') and views ('scope'). Shares the id space with nodes."
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
           },
-          "label": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Title drawn on the frame. Defaults to the id."
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "tier",
-              "region",
-              "zone",
-              "cluster",
-              "boundary"
-            ],
-            "default": "tier",
-            "description": "What the container represents; each has a distinct frame: tier (solid, tinted), region (dashed), zone (dotted), cluster (solid, darker), boundary (red dashed, no fill, for trust boundaries)."
-          },
-          "parent": {
-            "type": "string",
-            "description": "Id of the enclosing group. Omit for top-level groups. Cycles are rejected."
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "look": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "normal",
+                      "warn",
+                      "alert",
+                      "muted",
+                      "highlight"
+                    ],
+                    "description": "Preset: normal; warn (amber); alert (red, pulsing outline); muted (dimmed, dashed); highlight (blue glow)."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Custom style. Only what you set changes; the rest stays normal.",
+                    "properties": {
+                      "stroke": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Outline colour."
+                      },
+                      "fill": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Box fill."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Label colour."
+                      },
+                      "dash": {
+                        "type": "boolean",
+                        "description": "Dashed outline."
+                      },
+                      "pulse": {
+                        "type": "boolean",
+                        "description": "Pulsing outline (animated; frame tooling freezes it)."
+                      },
+                      "opacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Whole-entity opacity."
+                      }
+                    }
+                  }
+                ],
+                "default": "normal"
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 1,
+                "description": "Severity order. Propagation only ever raises rank; the highest applies."
+              },
+              "available": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether an entity in this state counts toward a need's 'min'."
+              },
+              "flows": {
+                "type": "string",
+                "enum": [
+                  "keep",
+                  "stop"
+                ],
+                "default": "keep",
+                "description": "'stop': connections touching an entity in this state carry no flow."
+              },
+              "cascade": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "children"
+                ],
+                "default": "none",
+                "description": "'children': every descendant of a group in this state is set to it as well."
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What this state means to you. Shown in the legend; never read by the engine."
+              }
+            }
           }
         }
       }
     },
-    "nodes": {
+    "kinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Your kind vocabulary for components and groups, bound to a glyph or a frame. Omit for the defaults. Kinds have no mechanics; they are words with a picture.",
+      "properties": {
+        "replace": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: only the kinds defined here exist."
+        },
+        "components": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "description": "Component kinds by name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "glyph": {
+                "type": "string",
+                "description": "A preset glyph name (service, database, queue, cache, gateway, client, storage, function, external) or SVG path data drawn in a 16\u00d716 box."
+              },
+              "box": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Box style overrides.",
+                "properties": {
+                  "dash": {
+                    "type": "boolean"
+                  },
+                  "fill": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "CSS colour."
+                  },
+                  "stroke": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "CSS colour."
+                  }
+                }
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What this kind means to you. Shown in the legend."
+              }
+            }
+          }
+        },
+        "groups": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "description": "Group kinds by name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "frame": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "tier",
+                      "region",
+                      "zone",
+                      "cluster",
+                      "boundary"
+                    ],
+                    "description": "A preset frame."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "stroke": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "CSS colour."
+                      },
+                      "fill": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "CSS colour."
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dash": {
+                        "type": "boolean"
+                      },
+                      "dotted": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                ]
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
       "type": "array",
       "minItems": 1,
+      "description": "The running things: services, databases, queues, clients, external systems. A component is one deployment in one place; the same code in two regions is two components. Order matters: components that end up side by side keep this order, so list the important ones first.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -78,50 +293,103 @@
           "id": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-            "description": "Unique identifier referenced by edges. Letters, digits, '_', '.', '-'; must start with a letter or digit."
+            "description": "Unique handle, shared id space with groups. Letters, digits, '_', '.', '-'; starts with a letter or digit."
           },
           "label": {
             "type": "string",
             "minLength": 1,
-            "description": "Text shown in the node box. Defaults to the id."
+            "description": "Display name. Defaults to the id."
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "service",
-              "database",
-              "queue",
-              "cache",
-              "gateway",
-              "client",
-              "storage",
-              "function",
-              "external"
-            ],
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
             "default": "service",
-            "description": "What the component is. Chooses the glyph and carries meaning across views (e.g. a database is drawn as a cylinder everywhere)."
+            "description": "What the component is, from 'kinds' (defaults: service, database, queue, cache, gateway, client, storage, function, external). Picks the glyph and box style; no mechanics. 'client' covers people and devices; 'external' is a system outside your control."
           },
           "group": {
             "type": "string",
-            "description": "Id of the group this node sits inside. Omit for top-level nodes."
+            "description": "Id of the group this component sits in. Omit for top level."
           },
           "state": {
             "type": "string",
-            "enum": [
-              "on",
-              "off",
-              "degraded",
-              "failed"
-            ],
-            "default": "on",
-            "description": "Health in the base model. 'off' is deliberately switched off (dimmed); 'failed' is broken (red, pulsing); 'degraded' is partially working (amber). Propagation only ever worsens a node: dependents of an off or failed node fail (or degrade if covered by a healthy fallback), dependents of a degraded node degrade. Scenarios override this per step."
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "description": "Declared state in the base model, one of the names in 'states'. Defaults to states.default. Propagation only ever moves an entity to a higher-ranked state."
+          },
+          "needs": {
+            "type": "array",
+            "default": [],
+            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives with the states to enter when the need is unmet or only partly met. Every alternative must be connected to this component (either direction) and must not be a group that contains it. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+                  "description": "An entity id: hard need, single alternative."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "any"
+                  ],
+                  "properties": {
+                    "any": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      "description": "Alternative entities (components or groups) that satisfy this need, in order of preference. The first healthy one carries shifted load."
+                    },
+                    "min": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "How many alternatives must be healthy for the need to be met (quorum). Must not exceed the number of alternatives."
+                    },
+                    "unmet": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                      "description": "State this component enters when fewer than 'min' alternatives are available. Defaults to states.needs.unmet (failed). A nice-to-have call is \"unmet\": \"degraded\"."
+                    },
+                    "reduced": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                      "description": "State this component enters when the need is met with reduced redundancy. Defaults to states.needs.reduced (degraded)."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many instances run. Drawn as a stacked box with the count. No health semantics in v1."
+          },
+          "tech": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Technology, drawn as a sublabel: 'PostgreSQL 16', 'Node 22'."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One or two sentences. Shown as a tooltip and in the outline."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
           }
         }
-      },
-      "description": "Components of the system. Order matters: nodes that end up side by side are placed in this order, so list the important ones first."
+      }
     },
-    "edges": {
+    "connections": {
       "type": "array",
+      "default": [],
+      "description": "What one entity does to another: calls it, publishes to it, replicates to it, streams data to it. Either end may be a component or a group (even an empty one). Directed from the initiator ('from') to the target ('to'). Connections carry no health semantics; see 'needs' for that. Two connections between the same pair must both have ids.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -132,27 +400,16 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "Source node id."
+            "description": "Initiating entity id: a component or a group."
           },
           "to": {
             "type": "string",
-            "description": "Target node id. The arrowhead is drawn here."
-          },
-          "label": {
-            "type": "string",
-            "description": "Short text drawn at the edge midpoint, e.g. a protocol or purpose.",
-            "minLength": 1
-          },
-          "load": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Relative traffic on this edge, 0 to 1. Drives the flow animation: 0 hides the flow, 1 is the fastest and thickest dashes. Use it for relative intensity, not real units. Defaults to 0.5, or 0 for fallback edges."
+            "description": "Target entity id: a component or a group. The arrowhead is drawn here; on a group it attaches to the frame."
           },
           "id": {
             "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.>-]*$",
-            "description": "Unique edge id. Defaults to \"<from>-><to>\"; give explicit ids when one pair of nodes has several edges. Reserved for future scenarios and interactions to reference."
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Optional handle. Required when the same pair of components has more than one connection, so scenarios can tell them apart."
           },
           "kind": {
             "type": "string",
@@ -163,34 +420,36 @@
               "dataflow"
             ],
             "default": "sync",
-            "description": "Nature of the connection: a synchronous call, an asynchronous message, data replication, or a bulk data flow. Chooses the line style and, later, whether it implies a dependency."
+            "description": "How it is drawn: sync solid, async dashed, replication dotted, dataflow thick. No health semantics."
           },
-          "dependsOn": {
-            "enum": [
-              true,
-              false,
-              "soft"
-            ],
-            "default": false,
-            "description": "true: the source cannot work without the target. If the target is off or failed, the source fails, unless a fallback edge covering this edge is healthy, in which case the source is degraded. If the target is degraded, the source is degraded. \"soft\": the source only degrades when the target is down (a nice-to-have call). Degradation propagates up chains of dependsOn edges. Non-dependsOn edges never affect health."
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short text on the line: protocol or purpose."
           },
-          "fallback": {
+          "load": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.5,
+            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow. 0 hides the flow. Relative intensity, not real units. Shifts automatically when a need's alternative goes down."
+          },
+          "bidirectional": {
             "type": "boolean",
             "default": false,
-            "description": "Standby path for one dependsOn edge of the same source (named by fallbackFor). Usually load 0 in the base model; when the covered target is down it automatically carries that edge's load, no scenario step needed. A non-zero base load means active-active. Cannot be combined with dependsOn."
+            "description": "Draw arrowheads at both ends. The flow still animates from 'from' to 'to'."
           },
-          "fallbackFor": {
-            "type": "string",
-            "description": "Id of the dependsOn edge this fallback covers; must start at the same source. Optional when the source has exactly one dependsOn edge, required otherwise."
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
           }
         }
-      },
-      "description": "Directed connections. Each 'from'/'to' must be an existing node id (checked by the validator); self-references, duplicate node ids and duplicate edge ids are rejected."
+      }
     },
-    "views": {
+    "groups": {
       "type": "array",
-      "minItems": 1,
-      "description": "How to draw the model. Optional: without it, one topology view of everything is rendered. Each view may set its own direction and a 'scope' group to drill into.",
+      "default": [],
+      "description": "Containers drawn as labelled frames: tiers, regions, zones, clusters, trust boundaries, or whole systems not opened yet. May be empty (a black box). Nest with 'parent'. Groups can be connected, needed and failed like components. The hierarchy is also the outline for navigation.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -201,12 +460,60 @@
           "id": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-            "description": "Unique view id, used by `orrery render --view <id>`."
+            "description": "Unique handle, shared id space with components."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Frame title. Defaults to the id."
+          },
+          "kind": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "default": "tier",
+            "description": "What the container represents, from 'kinds' (defaults: tier, region, zone, cluster, boundary). Picks the frame style; no mechanics."
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the enclosing group. Omit for top level. Cycles are rejected."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "description": "Declared state of the group as an entity: what connections and needs pointing at the group see. Defaults to states.default. Reaches members only if the state cascades. A non-empty group is also derived from its members through the ordinary need mechanic."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One or two sentences. Shown as a tooltip and in the outline."
+          }
+        }
+      }
+    },
+    "views": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Drawings of the model. Optional: without it, one topology view of everything is rendered. Pick one with `orrery render --view <id>`. Connections with one end outside a view are drawn to a ghost of the outside component, never dropped.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "description": "Unique view id."
           },
           "title": {
             "type": "string",
             "minLength": 1,
-            "description": "Title for this view. Defaults to the diagram title."
+            "description": "Title for this view. Defaults to the document title."
           },
           "type": {
             "type": "string",
@@ -214,7 +521,7 @@
               "topology"
             ],
             "default": "topology",
-            "description": "Kind of drawing. Only 'topology' exists today; 'sequence' and 'walkthrough' are planned."
+            "description": "Kind of drawing. Only 'topology' exists today; 'sequence' and 'walkthrough' are reserved."
           },
           "direction": {
             "type": "string",
@@ -222,11 +529,21 @@
               "right",
               "down"
             ],
-            "description": "Layout direction for this view. Defaults to the top-level direction."
+            "description": "Flow direction for this view. Defaults to the document direction."
           },
           "scope": {
             "type": "string",
-            "description": "Group id to drill into: the view shows that group as its outer frame, every group and node inside it, and only the edges whose both ends are inside. Edges that cross the scope boundary are not drawn. Omit to show everything."
+            "description": "Group id to drill into: that group becomes the outer frame and only its descendants are shown."
+          },
+          "only": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "description": "Show only these entities (a group id means the group and everything in it) plus the groups containing them. Combines with 'scope' by intersection."
           }
         }
       }
@@ -234,7 +551,7 @@
     "scenarios": {
       "type": "array",
       "default": [],
-      "description": "Named what-if timelines. Each step overrides node states and edge loads; steps are cumulative (step k applies steps 1..k). Render one with `orrery render --scenario <id> --step <n>`.",
+      "description": "Named what-if stories. Each step sets declared states ('set'), restores them, or overrides a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --set <state>=<id>`.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -256,51 +573,88 @@
           "steps": {
             "type": "array",
             "minItems": 1,
-            "description": "Ordered changes. A step must change at least one node or edge.",
+            "description": "Ordered changes. A step must change at least one thing and may name an entity only once across 'set' and 'restore'.",
             "items": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "note": {
                   "type": "string",
+                  "minLength": 1,
                   "description": "What happens in this step, shown during step-through."
                 },
-                "nodes": {
+                "set": {
                   "type": "object",
-                  "description": "Node id to state override.",
+                  "minProperties": 1,
+                  "description": "State name to entity id(s): \"set\": { \"failed\": \"db\", \"off\": [\"eu-west\"] }. Any name from 'states'. On a group, the state applies to the group as an entity and reaches its members only if the state cascades.",
+                  "propertyNames": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                  },
                   "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "state"
-                    ],
-                    "properties": {
-                      "state": {
+                    "oneOf": [
+                      {
                         "type": "string",
-                        "enum": [
-                          "on",
-                          "off",
-                          "degraded",
-                          "failed"
-                        ]
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      },
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                        }
                       }
-                    }
+                    ]
                   }
                 },
-                "edges": {
-                  "type": "object",
-                  "description": "Edge id (default \"<from>-><to>\", or the explicit id) to load override (0..1). Fallback loads switch automatically; use this for other changes such as traffic shifting.",
-                  "additionalProperties": {
+                "restore": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                      }
+                    }
+                  ],
+                  "description": "Entity id(s) returned to their base-model state."
+                },
+                "load": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "Connection load overrides. Refer to a connection by its ends, or by 'id' when the pair has several connections. Rarely needed: load shifts automatically when an alternative goes down.",
+                  "items": {
                     "type": "object",
                     "additionalProperties": false,
                     "required": [
                       "load"
                     ],
                     "properties": {
+                      "from": {
+                        "type": "string",
+                        "description": "Initiating component id (with 'to')."
+                      },
+                      "to": {
+                        "type": "string",
+                        "description": "Target component id (with 'from')."
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Connection id, instead of from/to."
+                      },
                       "load": {
                         "type": "number",
                         "minimum": 0,
-                        "maximum": 1
+                        "maximum": 1,
+                        "description": "New relative load, 0 to 1."
                       }
                     }
                   }

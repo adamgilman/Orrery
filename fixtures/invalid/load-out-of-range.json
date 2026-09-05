@@ -1,1 +1,17 @@
-{ "nodes": [ { "id": "a" }, { "id": "b" } ], "edges": [ { "from": "a", "to": "b", "load": 1.5 } ] }
+{
+  "components": [
+    {
+      "id": "a"
+    },
+    {
+      "id": "b"
+    }
+  ],
+  "connections": [
+    {
+      "from": "a",
+      "to": "b",
+      "load": 1.5
+    }
+  ]
+}

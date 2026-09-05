@@ -1,1 +1,0 @@
-{ "nodes": [ { "id": "s" }, { "id": "c" } ], "edges": [ { "from": "s", "to": "c", "fallback": true } ] }

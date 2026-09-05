@@ -1,0 +1,322 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Trading platform",
+  "direction": "right",
+  "states": {
+    "default": "healthy",
+    "needs": {
+      "unmet": "outage",
+      "reduced": "impaired"
+    },
+    "replace": true,
+    "define": {
+      "healthy": {
+        "look": "normal",
+        "rank": 0,
+        "available": true,
+        "description": "Within SLO"
+      },
+      "impaired": {
+        "look": "warn",
+        "rank": 1,
+        "available": true,
+        "description": "Serving, redundancy or latency SLO breached"
+      },
+      "brownout": {
+        "look": {
+          "stroke": "#7c3aed",
+          "fill": "#f5f3ff",
+          "pulse": true
+        },
+        "rank": 1,
+        "available": true,
+        "description": "Serving with non-essential features disabled"
+      },
+      "outage": {
+        "look": "alert",
+        "rank": 3,
+        "available": false,
+        "flows": "stop",
+        "description": "Customer-visible failure"
+      },
+      "drained": {
+        "look": "muted",
+        "rank": 3,
+        "available": false,
+        "flows": "stop",
+        "cascade": "children",
+        "description": "Deliberately taken out of rotation"
+      }
+    }
+  },
+  "kinds": {
+    "components": {
+      "matcher": {
+        "glyph": "M2 8h4l2-5 2 10 2-5h4",
+        "description": "Order matching engine"
+      },
+      "mainframe": {
+        "glyph": "storage",
+        "box": {
+          "dash": false,
+          "fill": "#fefce8"
+        },
+        "description": "Settlement on z/OS"
+      }
+    },
+    "groups": {
+      "cell": {
+        "frame": {
+          "stroke": "#0891b2",
+          "dash": true,
+          "fill": "#ecfeff",
+          "fillOpacity": 0.4
+        },
+        "description": "Independent deployment cell"
+      }
+    }
+  },
+  "groups": [
+    {
+      "id": "eu",
+      "label": "EU",
+      "kind": "region"
+    },
+    {
+      "id": "cell-a",
+      "label": "Cell A",
+      "kind": "cell",
+      "parent": "eu"
+    },
+    {
+      "id": "cell-b",
+      "label": "Cell B",
+      "kind": "cell",
+      "parent": "eu"
+    },
+    {
+      "id": "consensus",
+      "label": "Sequencer quorum",
+      "kind": "cluster",
+      "parent": "eu"
+    },
+    {
+      "id": "settlement",
+      "label": "Settlement",
+      "kind": "boundary",
+      "description": "Not opened yet: a black box the platform needs"
+    }
+  ],
+  "components": [
+    {
+      "id": "edge",
+      "label": "Edge gateway",
+      "kind": "gateway",
+      "needs": [
+        {
+          "any": [
+            "cell-a",
+            "cell-b"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "match-a",
+      "label": "Matcher",
+      "kind": "matcher",
+      "group": "cell-a",
+      "needs": [
+        {
+          "any": [
+            "seq-1",
+            "seq-2",
+            "seq-3"
+          ],
+          "min": 2
+        },
+        "settlement"
+      ]
+    },
+    {
+      "id": "match-b",
+      "label": "Matcher",
+      "kind": "matcher",
+      "group": "cell-b",
+      "needs": [
+        {
+          "any": [
+            "seq-1",
+            "seq-2",
+            "seq-3"
+          ],
+          "min": 2
+        },
+        "settlement"
+      ]
+    },
+    {
+      "id": "seq-1",
+      "label": "Sequencer 1",
+      "group": "consensus"
+    },
+    {
+      "id": "seq-2",
+      "label": "Sequencer 2",
+      "group": "consensus"
+    },
+    {
+      "id": "seq-3",
+      "label": "Sequencer 3",
+      "group": "consensus"
+    },
+    {
+      "id": "ledger",
+      "label": "Ledger",
+      "kind": "mainframe",
+      "group": "settlement",
+      "state": "healthy",
+      "meta": {
+        "owner": "core-banking",
+        "runbook": "https://runbooks/ledger"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "edge",
+      "to": "cell-a",
+      "load": 0.5,
+      "label": "orders"
+    },
+    {
+      "from": "edge",
+      "to": "cell-b",
+      "load": 0.5,
+      "label": "orders"
+    },
+    {
+      "from": "match-a",
+      "to": "consensus",
+      "load": 0.7,
+      "label": "sequence"
+    },
+    {
+      "from": "match-b",
+      "to": "consensus",
+      "load": 0.7,
+      "label": "sequence"
+    },
+    {
+      "from": "seq-1",
+      "to": "seq-2",
+      "kind": "replication",
+      "bidirectional": true,
+      "load": 0.3
+    },
+    {
+      "from": "seq-2",
+      "to": "seq-3",
+      "kind": "replication",
+      "bidirectional": true,
+      "load": 0.3
+    },
+    {
+      "from": "seq-3",
+      "to": "seq-1",
+      "kind": "replication",
+      "bidirectional": true,
+      "load": 0.3
+    },
+    {
+      "from": "match-a",
+      "to": "settlement",
+      "kind": "async",
+      "load": 0.2,
+      "label": "fills"
+    },
+    {
+      "from": "match-b",
+      "to": "settlement",
+      "kind": "async",
+      "load": 0.2,
+      "label": "fills"
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Trading platform"
+    },
+    {
+      "id": "eu-only",
+      "title": "EU region",
+      "scope": "eu"
+    },
+    {
+      "id": "matching",
+      "title": "Matching path",
+      "only": [
+        "edge",
+        "cell-a",
+        "cell-b",
+        "consensus"
+      ],
+      "direction": "down"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cell-drain",
+      "label": "Drain cell A for deploy",
+      "steps": [
+        {
+          "note": "Cell A drained: its matcher goes with it; edge runs impaired on cell B",
+          "set": {
+            "drained": "cell-a"
+          }
+        },
+        {
+          "note": "Back in rotation",
+          "restore": "cell-a"
+        }
+      ]
+    },
+    {
+      "id": "quorum",
+      "label": "Sequencer quorum loss",
+      "steps": [
+        {
+          "note": "One sequencer out: quorum holds, matchers impaired",
+          "set": {
+            "outage": "seq-1"
+          }
+        },
+        {
+          "note": "Second out: quorum lost, both matchers in outage, edge in outage",
+          "set": {
+            "outage": "seq-2"
+          }
+        },
+        {
+          "note": "Brownout instead: disable non-essential features on the edge",
+          "set": {
+            "brownout": "edge"
+          }
+        }
+      ]
+    },
+    {
+      "id": "settlement-box",
+      "label": "Settlement black box fails",
+      "steps": [
+        {
+          "note": "The whole settlement boundary is in outage; ledger inside is untouched, matchers lose their need",
+          "set": {
+            "outage": "settlement"
+          }
+        }
+      ]
+    }
+  ]
+}

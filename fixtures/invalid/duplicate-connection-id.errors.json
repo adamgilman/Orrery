@@ -1,0 +1,6 @@
+[
+  {
+    "pointer": "/connections/1/id",
+    "message": "duplicate connection id \"x\""
+  }
+]

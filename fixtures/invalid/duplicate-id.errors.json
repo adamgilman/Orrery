@@ -1,1 +1,6 @@
-[ { "pointer": "/nodes/2/id", "message": "duplicate node id \"a\"" } ]
+[
+  {
+    "pointer": "/components/2/id",
+    "message": "duplicate component id \"a\""
+  }
+]

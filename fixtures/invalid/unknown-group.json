@@ -1,1 +1,8 @@
-{ "nodes": [ { "id": "a", "group": "nope" } ], "edges": [] }
+{
+  "components": [
+    {
+      "id": "a",
+      "group": "nope"
+    }
+  ]
+}

@@ -1,1 +1,8 @@
-{ "direction": "left", "nodes": [ { "id": "a" } ], "edges": [] }
+{
+  "direction": "left",
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

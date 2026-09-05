@@ -1,1 +1,6 @@
-[ { "pointer": "/nodes/0/group", "message": "unknown group \"nope\"" } ]
+[
+  {
+    "pointer": "/components/0/group",
+    "message": "unknown group \"nope\""
+  }
+]

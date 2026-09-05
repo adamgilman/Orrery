@@ -1,1 +1,6 @@
-[ { "pointer": "/views/0/scope", "message": "unknown group \"nope\"" } ]
+[
+  {
+    "pointer": "/views/0/scope",
+    "message": "unknown group \"nope\""
+  }
+]

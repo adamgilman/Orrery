@@ -1,1 +1,6 @@
-[ { "pointer": "/views/1/id", "message": "duplicate view id \"v\"" } ]
+[
+  {
+    "pointer": "/views/1/id",
+    "message": "duplicate view id \"v\""
+  }
+]

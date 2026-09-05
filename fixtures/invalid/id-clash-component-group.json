@@ -1,0 +1,12 @@
+{
+  "groups": [
+    {
+      "id": "shared"
+    }
+  ],
+  "components": [
+    {
+      "id": "shared"
+    }
+  ]
+}

@@ -1,1 +1,6 @@
-[ { "pointer": "/views/0/type", "message": "must be one of: topology" } ]
+[
+  {
+    "pointer": "/views/0/type",
+    "message": "must be one of: topology"
+  }
+]

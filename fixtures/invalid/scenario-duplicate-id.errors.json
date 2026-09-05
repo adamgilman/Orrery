@@ -1,1 +1,6 @@
-[ { "pointer": "/scenarios/1/id", "message": "duplicate scenario id \"s\"" } ]
+[
+  {
+    "pointer": "/scenarios/1/id",
+    "message": "duplicate scenario id \"s\""
+  }
+]

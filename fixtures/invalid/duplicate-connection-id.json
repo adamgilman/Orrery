@@ -1,0 +1,25 @@
+{
+  "components": [
+    {
+      "id": "a"
+    },
+    {
+      "id": "b"
+    },
+    {
+      "id": "c"
+    }
+  ],
+  "connections": [
+    {
+      "id": "x",
+      "from": "a",
+      "to": "b"
+    },
+    {
+      "id": "x",
+      "from": "a",
+      "to": "c"
+    }
+  ]
+}

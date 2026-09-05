@@ -1,1 +1,6 @@
-[ { "pointer": "/nodes/0/id", "message": "must match pattern" } ]
+[
+  {
+    "pointer": "/components/0/id",
+    "message": "must match pattern"
+  }
+]

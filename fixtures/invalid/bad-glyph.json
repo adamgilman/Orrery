@@ -1,0 +1,14 @@
+{
+  "kinds": {
+    "components": {
+      "k": {
+        "glyph": "circle"
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "id": "a",
+      "needs": [
+        "b"
+      ]
+    },
+    {
+      "id": "b",
+      "needs": [
+        "a"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "a",
+      "to": "b"
+    },
+    {
+      "from": "b",
+      "to": "a"
+    }
+  ]
+}

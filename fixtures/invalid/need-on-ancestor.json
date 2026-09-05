@@ -1,0 +1,25 @@
+{
+  "groups": [
+    {
+      "id": "g"
+    }
+  ],
+  "components": [
+    {
+      "id": "a",
+      "group": "g",
+      "needs": [
+        "g"
+      ]
+    },
+    {
+      "id": "b"
+    }
+  ],
+  "connections": [
+    {
+      "from": "b",
+      "to": "g"
+    }
+  ]
+}

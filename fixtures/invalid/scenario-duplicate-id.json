@@ -1,1 +1,29 @@
-{ "nodes": [ { "id": "a" } ], "edges": [], "scenarios": [ { "id": "s", "steps": [ { "nodes": { "a": { "state": "off" } } } ] }, { "id": "s", "steps": [ { "nodes": { "a": { "state": "failed" } } } ] } ] }
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "off": "a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "failed": "a"
+          }
+        }
+      ]
+    }
+  ]
+}

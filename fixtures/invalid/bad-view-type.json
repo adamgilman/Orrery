@@ -1,1 +1,13 @@
-{ "nodes": [ { "id": "a" } ], "edges": [], "views": [ { "id": "v", "type": "sequence" } ] }
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "type": "sequence"
+    }
+  ]
+}

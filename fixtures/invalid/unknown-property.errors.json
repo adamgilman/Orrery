@@ -1,1 +1,10 @@
-[ { "pointer": "/nodes/0", "message": "unknown property \"x\"" }, { "pointer": "", "message": "unknown property \"layers\"" } ]
+[
+  {
+    "pointer": "/components/0",
+    "message": "unknown property \"x\""
+  },
+  {
+    "pointer": "",
+    "message": "unknown property \"layers\""
+  }
+]

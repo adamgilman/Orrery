@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout",
+  "direction": "down",
+  "groups": [
+    { "id": "data", "label": "Data tier" }
+  ],
+  "components": [
+    { "id": "web", "label": "Web", "kind": "gateway" },
+    { "id": "api", "label": "Checkout API", "needs": ["orders", "payments"] },
+    { "id": "orders", "label": "Orders DB", "kind": "database", "tech": "PostgreSQL 16", "group": "data" },
+    { "id": "replica", "label": "Orders replica", "kind": "database", "group": "data" },
+    { "id": "payments", "label": "Payment provider", "kind": "external" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" },
+    { "from": "api", "to": "orders", "load": 0.6 },
+    { "from": "api", "to": "replica", "load": 0 },
+    { "from": "orders", "to": "replica", "kind": "replication", "load": 0.2 },
+    { "from": "api", "to": "payments", "load": 0.3, "label": "charge" }
+  ],
+  "scenarios": [
+    { "id": "orders-down", "label": "Orders DB fails", "steps": [
+      { "note": "Primary goes down", "set": { "failed": "orders" } },
+      { "note": "Recovered",         "restore": "orders" }
+    ] }
+  ]
+}

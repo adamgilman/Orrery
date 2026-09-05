@@ -1,0 +1,14 @@
+{
+  "states": {
+    "define": {
+      "x": {
+        "look": "pink"
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "a"
+    }
+  ]
+}

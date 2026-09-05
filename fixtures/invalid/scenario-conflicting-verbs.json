@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        {
+          "set": {
+            "failed": "a",
+            "off": [
+              "a"
+            ]
+          }
+        },
+        {
+          "set": {
+            "failed": "a"
+          },
+          "restore": "a"
+        }
+      ]
+    }
+  ]
+}

@@ -1,1 +1,0 @@
-[ { "pointer": "/edges/1", "message": "duplicate edge id \"a->b\"" }, { "pointer": "/edges/3/id", "message": "duplicate edge id \"x\"" } ]

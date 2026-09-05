@@ -1,74 +1,123 @@
-/** Normalised diagram model. All defaults applied, all references checked. The top level is the model; views describe drawings of it. */
+/**
+ * The normalised model. All defaults applied, every reference checked, every state and kind resolved.
+ * Vocabulary follows docs/MODEL.md: components, connections, groups, needs, states, kinds, views, scenarios.
+ * Layout and rendering internals still speak of nodes and edges; that boundary is `toLayoutGraph`.
+ */
 export type Direction = "right" | "down";
-export type NodeKind = "service" | "database" | "queue" | "cache" | "gateway" | "client" | "storage" | "function" | "external";
-export type GroupKind = "tier" | "region" | "zone" | "cluster" | "boundary";
-export type EdgeKind = "sync" | "async" | "replication" | "dataflow";
 export type ViewType = "topology";
-export type NodeState = "on" | "off" | "degraded" | "failed";
+export type ConnectionKind = "sync" | "async" | "replication" | "dataflow";
 
-export interface DiagramNode {
+export type LookPreset = "normal" | "warn" | "alert" | "muted" | "highlight";
+export interface LookStyle { stroke?: string; fill?: string; text?: string; dash?: boolean; pulse?: boolean; opacity?: number }
+
+export interface StateDef {
+  name: string;
+  look: LookPreset | LookStyle;
+  rank: number;
+  available: boolean;
+  flows: "keep" | "stop";
+  cascade: "none" | "children";
+  description?: string;
+}
+
+export interface States {
+  /** State of anything that declares none; what `restore` returns to. */
+  default: string;
+  needs: { unmet: string; reduced: string };
+  define: Record<string, StateDef>;
+}
+
+export interface ComponentKindDef { glyph?: string; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
+export interface GroupKindDef { frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
+export interface Kinds { components: Record<string, ComponentKindDef>; groups: Record<string, GroupKindDef> }
+
+export interface Need {
+  /** Alternatives in order of preference; entity ids (components or groups). */
+  any: string[];
+  min: number;
+  unmet: string;
+  reduced: string;
+}
+
+export interface Component {
   id: string;
   label: string;
-  kind: NodeKind;
-  /** Enclosing group id, if any. */
+  kind: string;
   group?: string;
-  /** Health. In a propagated diagram this is the effective state; see `reason`. */
-  state: NodeState;
-  /** Set by propagation when the state was derived from a dependency rather than declared. */
+  /** Declared state, or after propagation the effective state. */
+  state: string;
+  /** Set by propagation when the state was derived rather than declared. */
   reason?: string;
+  needs: Need[];
+  replicas: number;
+  tech?: string;
+  description?: string;
+  meta?: Record<string, unknown>;
+  /** Set by view scoping: an outside entity drawn at the edge of a scoped view. */
+  ghost?: true;
 }
 
-export interface DiagramGroup {
+export interface Group {
   id: string;
   label: string;
-  kind: GroupKind;
+  kind: string;
   parent?: string;
+  state: string;
+  reason?: string;
+  description?: string;
+  meta?: Record<string, unknown>;
+  ghost?: true;
 }
 
-export interface DiagramEdge {
-  /** Unique; defaults to "<from>-><to>". */
-  id: string;
+export interface Connection {
+  /** Internal key: the id if given, else "<from>-><to>". Used as the DOM handle; never authored. */
+  key: string;
+  id?: string;
   from: string;
   to: string;
-  kind: EdgeKind;
+  kind: ConnectionKind;
   label?: string;
-  /** 0..1, drives flow animation. In a propagated diagram this is the effective load. */
+  /** Declared load, or after propagation the effective load. */
   load: number;
-  /** true: hard dependency; "soft": target outage only degrades the source. */
-  dependsOn: boolean | "soft";
-  fallback: boolean;
-  /** For fallback edges: id of the dependsOn edge (same source) this one covers. Always set after validation. */
-  fallbackFor?: string;
+  bidirectional: boolean;
+  meta?: Record<string, unknown>;
+  /** Set by propagation: this connection satisfies a need of `from` (or `to`). Drawn darker. */
+  need?: true;
 }
 
-export interface ScenarioStep {
-  note?: string;
-  nodes: Record<string, { state: NodeState }>;
-  edges: Record<string, { load: number }>;
-}
-
-export interface Scenario {
-  id: string;
-  label: string;
-  steps: ScenarioStep[];
-}
-
-export interface DiagramView {
+export interface View {
   id: string;
   type: ViewType;
   direction: Direction;
   title?: string;
-  /** Group id to drill into; absent means everything. */
   scope?: string;
+  only?: string[];
 }
 
-export interface Diagram {
+export interface ScenarioStep {
+  note?: string;
+  /** state name → entity ids */
+  set: Record<string, string[]>;
+  restore: string[];
+  /** connection key → load */
+  load: Record<string, number>;
+}
+
+export interface Scenario { id: string; label: string; steps: ScenarioStep[] }
+
+export interface Model {
   title?: string;
   direction: Direction;
-  groups: DiagramGroup[];
-  nodes: DiagramNode[];
-  edges: DiagramEdge[];
+  states: States;
+  kinds: Kinds;
+  components: Component[];
+  connections: Connection[];
+  groups: Group[];
   /** Never empty: a default topology view is synthesised when the file has none. */
-  views: DiagramView[];
+  views: View[];
   scenarios: Scenario[];
 }
+
+/** Anything with an id and a state: a component or a group. */
+export type Entity = Component | Group;
+export const isGroup = (e: Entity): e is Group => "parent" in e || !("needs" in e);

@@ -1,1 +1,13 @@
-{ "nodes": [ { "id": "a" } ], "edges": [], "views": [ { "id": "v", "scope": "nope" } ] }
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "scope": "nope"
+    }
+  ]
+}

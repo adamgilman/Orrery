@@ -1,0 +1,13 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "connections": [
+    {
+      "from": "a",
+      "to": "a"
+    }
+  ]
+}

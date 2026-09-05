@@ -1,0 +1,14 @@
+[
+  {
+    "pointer": "/states/default",
+    "message": "unknown state \"on\""
+  },
+  {
+    "pointer": "/states/needs/unmet",
+    "message": "unknown state \"failed\""
+  },
+  {
+    "pointer": "/states/needs/reduced",
+    "message": "unknown state \"degraded\""
+  }
+]
