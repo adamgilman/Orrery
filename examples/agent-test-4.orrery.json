@@ -1,6 +1,78 @@
 {
   "title": "Ride-hailing platform",
   "direction": "right",
+  "states": {
+    "default": "healthy",
+    "needs": {
+      "unmet": "outage",
+      "reduced": "impaired"
+    },
+    "replace": true,
+    "define": {
+      "healthy": {
+        "look": "normal",
+        "rank": 0,
+        "available": true,
+        "description": "Serving normally."
+      },
+      "impaired": {
+        "look": "warn",
+        "rank": 1,
+        "available": true,
+        "description": "Serving, but with reduced redundancy or a nice-to-have missing."
+      },
+      "brownout": {
+        "look": {
+          "stroke": "#7c3aed",
+          "fill": "#f5f3ff",
+          "text": "#4c1d95",
+          "pulse": true
+        },
+        "rank": 1,
+        "available": true,
+        "description": "Deliberately shedding load: surge pricing and ETA predictions switched off."
+      },
+      "outage": {
+        "look": "alert",
+        "rank": 2,
+        "available": false,
+        "flows": "stop",
+        "description": "Down. Not serving."
+      },
+      "maintenance": {
+        "look": "muted",
+        "rank": 2,
+        "available": false,
+        "flows": "stop",
+        "cascade": "children",
+        "description": "Taken out of service on purpose; everything inside it too."
+      }
+    }
+  },
+  "kinds": {
+    "components": {
+      "ml-model": {
+        "glyph": "M2 12l3-4 3 2 3-5 3 3v4H2z",
+        "box": {
+          "dash": true,
+          "fill": "#f0fdf4",
+          "stroke": "#15803d"
+        },
+        "description": "A served machine-learning model."
+      }
+    },
+    "groups": {
+      "cell": {
+        "frame": {
+          "stroke": "#0891b2",
+          "dash": true,
+          "fill": "#ecfeff",
+          "fillOpacity": 0.4
+        },
+        "description": "An isolated deployment cell."
+      }
+    }
+  },
   "groups": [
     {
       "id": "edge",
@@ -28,6 +100,13 @@
       "id": "partners",
       "label": "Third parties",
       "kind": "boundary"
+    },
+    {
+      "id": "config",
+      "label": "Config store",
+      "kind": "cell",
+      "parent": "data",
+      "description": "3-node etcd cluster; needs a quorum of 2."
     }
   ],
   "components": [
@@ -36,7 +115,10 @@
       "label": "Rider app",
       "kind": "client",
       "group": "edge",
-      "tech": "iOS / Android"
+      "tech": "iOS / Android",
+      "needs": [
+        "api-gateway"
+      ]
     },
     {
       "id": "driver-app",
@@ -50,7 +132,16 @@
       "label": "API gateway",
       "kind": "gateway",
       "group": "core",
-      "replicas": 3
+      "replicas": 3,
+      "needs": [
+        "trip-service",
+        {
+          "any": [
+            "pricing"
+          ],
+          "unmet": "impaired"
+        }
+      ]
     },
     {
       "id": "trip-service",
@@ -58,7 +149,25 @@
       "kind": "service",
       "group": "core",
       "replicas": 4,
-      "tech": "Go"
+      "tech": "Go",
+      "needs": [
+        {
+          "any": [
+            "trip-db",
+            "trip-db-replica"
+          ]
+        },
+        {
+          "any": [
+            "etcd-1",
+            "etcd-2",
+            "etcd-3"
+          ],
+          "min": 2
+        },
+        "matching",
+        "partners"
+      ]
     },
     {
       "id": "matching",
@@ -66,14 +175,37 @@
       "kind": "service",
       "group": "core",
       "replicas": 2,
-      "tech": "Go"
+      "tech": "Go",
+      "needs": [
+        "location-cache",
+        {
+          "any": [
+            "maps"
+          ],
+          "unmet": "impaired"
+        },
+        {
+          "any": [
+            "eta-model"
+          ],
+          "unmet": "impaired"
+        }
+      ]
     },
     {
       "id": "pricing",
       "label": "Pricing service",
       "kind": "service",
       "group": "core",
-      "tech": "Python"
+      "tech": "Python",
+      "needs": [
+        {
+          "any": [
+            "surge"
+          ],
+          "unmet": "impaired"
+        }
+      ]
     },
     {
       "id": "surge",
@@ -128,6 +260,35 @@
       "label": "Payments processor",
       "kind": "external",
       "group": "partners"
+    },
+    {
+      "id": "etcd-1",
+      "label": "etcd 1",
+      "kind": "database",
+      "group": "config",
+      "tech": "etcd 3.5"
+    },
+    {
+      "id": "etcd-2",
+      "label": "etcd 2",
+      "kind": "database",
+      "group": "config",
+      "tech": "etcd 3.5"
+    },
+    {
+      "id": "etcd-3",
+      "label": "etcd 3",
+      "kind": "database",
+      "group": "config",
+      "tech": "etcd 3.5"
+    },
+    {
+      "id": "eta-model",
+      "label": "ETA model",
+      "kind": "ml-model",
+      "group": "core",
+      "tech": "PyTorch / Triton",
+      "replicas": 2
     }
   ],
   "connections": [
@@ -241,6 +402,34 @@
       "to": "maps",
       "kind": "sync",
       "label": "ETA",
+      "load": 0.5
+    },
+    {
+      "from": "trip-service",
+      "to": "etcd-1",
+      "kind": "sync",
+      "label": "watch",
+      "load": 0.2
+    },
+    {
+      "from": "trip-service",
+      "to": "etcd-2",
+      "kind": "sync",
+      "label": "watch",
+      "load": 0.2
+    },
+    {
+      "from": "trip-service",
+      "to": "etcd-3",
+      "kind": "sync",
+      "label": "watch",
+      "load": 0.2
+    },
+    {
+      "from": "matching",
+      "to": "eta-model",
+      "kind": "sync",
+      "label": "predict",
       "load": 0.5
     }
   ]

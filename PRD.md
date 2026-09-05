@@ -6,15 +6,26 @@
 
 ## 1. North Star
 
-**A diagram that is a model.** Every visual behaviour (flow animation, failure cascade, dimming, controls)
-is derived from a small semantic model, never hand-drawn. If it cannot be expressed in the model, it is not a feature.
+**A diagram that is a model, in the author's own language.** Every visual behaviour (flow, cascade, dimming,
+controls) derives from a small model, never from hand placement. The model is written in the words users use
+(components, connections, groups, needs) and in the author's own vocabulary for states and kinds. The tool owns
+three layers and nothing else:
+
+- **Representation**: looks, glyphs, frames, animation, legend. Presets provided, every one replaceable.
+- **Mechanics**: rank, availability, flow, cascade, counting. The engine never reads a state or kind by name.
+- **Navigation**: views, outline, zoom, step-through, morph.
+
+If something cannot be expressed in the model it is not a feature. If the engine has to know what "degraded"
+means, the design is wrong. Specification: [docs/MODEL.md](docs/MODEL.md), with numbered invariants.
 
 Three tests every release must pass:
 
-1. **The README test.** An `orrery.svg` dropped into a GitHub README shows animated load on connectors, with no plugin.
-2. **The click-through test.** The *same file* opened directly in a browser is fully interactive: outline, toggles, failure scenarios.
-3. **The agent test.** An AI agent given only the JSON Schema and the CLI can produce a correct, professional diagram of a
-   three-tier system in one validate/render loop, without ever choosing a coordinate.
+1. **The README test.** The rendered SVG dropped into a GitHub README shows animated flow, with no plugin.
+2. **The click-through test.** The *same file* opened directly in a browser is fully interactive: outline, state
+   changes with propagation, scenarios, views.
+3. **The agent test.** An AI agent given only MODEL.md, the JSON Schema and the CLI can grow a model through the
+   progressive walk (components, connections, needs, own vocabulary, scenarios), validating first time at each step,
+   and gets the propagated states it expected.
 
 ## 2. Users
 
@@ -27,19 +38,31 @@ Three tests every release must pass:
 ## 3. Scope
 
 ### v1 (in scope)
-- **Model**: nodes, groups (nested), edges with load and kind, scenarios (named state overrides), metadata.
-- **Layout**: automatic, deterministic, hierarchical, orthogonal edge routing. Author gives *hints* (direction, rank, pin-to-group), never coordinates.
-- **Render**: standalone SVG. CSS/SMIL animation of load along edges. Embedded model + vanilla-JS runtime for interactivity.
-- **Runtime** (inside the SVG): outline tree, focus/zoom on select, component on/off toggles, scenario picker, step-through mode, hover highlights full path, keyboard navigation.
-- **Failure simulation**: turning a node off (or a scenario doing so) propagates through `dependsOn` edges; downstream nodes degrade or fail unless a `fallback` edge exists. Rendered as dim + red pulse.
-- **Exports**: `svg` (graceful), `svg --static --scenario X`, `png`, `gif` (animated, N seconds, fixed fps), `html` (single file wrapper).
-- **Agent surface**: JSON Schema, `validate` with line/pointer-precise errors, `render`, `explain` (plain-English description of the model, for self-checking), `watch`.
-- **Icons**: built-in neutral icon set + cloud provider sets (AWS/GCP/Azure) where licence permits.
+- **Model** (implemented): components, connections (any entity to any entity), nested groups including empty
+  ones, needs with alternatives, quorum and outcome states, author-defined states and kinds with defaults, views
+  with scope and subset, scenarios with set/restore/load, `meta` as the extensibility escape hatch.
+- **Layout**: automatic, deterministic, hierarchical, orthogonal routing, connections to group frames. The author
+  gives direction and order, never coordinates. Engines are replaceable behind `LayoutEngine`.
+- **Render**: one standalone SVG; CSS animation of flow and pulse; looks and kinds rendered exactly as bound;
+  legend in the author's words; ghosts for one-ended connections in scoped views.
+- **Runtime** (inside the SVG): outline, zoom, click and state bar to set any state with live propagation,
+  scenarios with step-through, view morph, keyboard, hover focus.
+- **What-ifs without a scenario**: `render --set <state>=<ids>`.
+- **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
+  from the frame tooling (M4).
+- **Agent surface**: MODEL.md, JSON Schema with a description on every property, `validate` with pointer errors
+  and warnings, `render`, later `explain` and `check`.
+- **Vocabulary packs**: shippable `states`/`kinds` presets (e.g. an SRE pack, cloud provider kind packs) that a
+  file can import, so organisations share a vocabulary without copying blocks (M5).
 
 ### Non-goals (v1)
 - A GUI editor. Agents author; humans navigate.
-- Live data binding (real metrics driving load). Design the model so it is possible later; do not build it.
-- Sequence diagrams, ER diagrams, flowcharts. Architecture/topology only.
+- Live data binding (real metrics driving load or state). The model is designed so a feed could set declared
+  states later; do not build it.
+- Performance, latency or capacity modelling. Load is relative and cosmetic.
+- Health expressions as a syntax. Needs are data.
+- Flowcharts, ER, class diagrams, state machines, Gantt. Sequence and walkthrough *views of an interaction over
+  this model* are in scope (M3b); free-standing sequence diagrams are not.
 - Confluence native rendering. Documented fallback: GIF, or iframe macro to hosted HTML.
 
 ## 4. Model and views
@@ -224,16 +247,24 @@ PNG rasterisation with a bundled font, and the frame/diff tooling that GIF expor
 README test confirmed on github.com in Safari and in the GitHub mobile app (M0 complete). The mobile app cannot zoom
 markdown images, so the README's first diagram is narrow: direction "down", few nodes, short labels (the solar system).
 
-### Later milestones (reordered: model semantics before the runtime, so toggles have something to toggle)
+### Roadmap (aligned to the model, 2026-09-05)
+
+Done: M0 thin slice, M1 groups/kinds/views, M2 failure semantics, M3 runtime, and the model redesign that
+replaced fixed system states with the author's vocabulary (docs/MODEL.md). What remains is ordered by how much it
+strengthens the thesis that the file is a model in the author's language.
 
 | # | Deliverable | Done when |
 |---|---|---|
-| M1 | Model/view schema shape (edge ids and kinds, node and group kinds, `views` with `scope`); nested groups; neutral glyph set; visual polish | Three-tier example with tiers and a region reads as professional; contract tests cover group containment; `render --view` works |
-| M2 | Failure semantics: `state`, `dependsOn`, `fallback`, propagation; scenarios as override steps; static render of any scenario | Done: `orrery render --scenario db-failover --step 2` shows the cascade; propagation is unit-tested as a pure function |
-| M3 | Runtime inside the SVG: outline, camera zoom, toggles with failure propagation, scenario picker, step-through, keyboard nav; all views embedded in one file with a morph between views; < 25 KB gz (actual: ~6 KB). No layout engine in the browser. | Done in jsdom; awaiting a human click-through in a browser |
-| M3b | `sequence` view type: lifelines from nodes, messages from an interaction; and `walkthrough`: a token moving along the topology for the same interaction | A click on a component swaps to its sequence view with the morph |
-| M4 | GIF export from the frame tooling; `orrery render --png/--gif` | Confluence fallback documented with a real GIF; agents can look at their own output via `--png` |
-| M5 | Demo repo, docs site, MCP server, agent eval harness with retry counts | Public launch |
+| R1 | **Browser click-through by a human**; fix what only eyes can find (panel width, morph feel, legend placement). | The user reports the interactive file works on desktop Safari/Chrome |
+| R2 | **`orrery explain`**: the model in prose, in the author's vocabulary ("Checkout API needs Orders DB or Orders replica; today Orders DB is in outage, so it is impaired, running on the replica"). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
+| R3 | **`orrery check`: scenario notes as assertions.** A step may carry `expect: { "<state>": [ids] }` (and later expected loads); `check` runs every scenario and diffs expectations against propagation. The agent tests showed notes are claims about engine output; make them checkable. | CI fails when a model's story and its mechanics disagree |
+| R4 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
+| M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |
+| M4 | **GIF/PNG export** from the frame tooling; `render --png/--gif`. | Confluence fallback documented with a real GIF; agents can look at their own output |
+| M5 | **Launch**: docs site built from MODEL.md, examples gallery, MCP server exposing validate/render/explain/check, agent eval harness with retry counts, tags and neighbourhood views if the backlog still wants them. | Public |
+
+Principles for adding anything: it must be expressible in the author's vocabulary, it must add or change a
+numbered invariant in MODEL.md with a test, and the engine must still pass B10 (names do not matter).
 
 ## 8. Engineering rules
 
@@ -241,7 +272,11 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 - **Test layers**: (1) validator tests driven by fixture files under `fixtures/valid` and `fixtures/invalid` with expected error pointers; (2) `core` tests use a `FakeLayoutEngine` that places nodes on a grid, so render tests never touch ELK; (3) `layout-elk` has a contract test asserting determinism and that every node/edge gets a position/route; (4) SVG snapshot tests; (5) CLI e2e via child process on the fixture files.
 - **Determinism is tested**, not assumed: render twice, compare bytes.
 - **Layout hints** are the ELK vocabulary surfaced selectively (`direction`, then `rank`/`sameRank` when needed). No coordinates in the schema, ever.
-- **ELK quarantine**: `elkjs` is imported by `@orrery/layout-elk` only. Lint rule enforces it.
+- **ELK quarantine**: `elkjs` is imported by `@orrery/layout-elk` only. A test enforces it.
+- **Specification first**: a change to what the file can say starts in `docs/MODEL.md` as an invariant with a test
+  name, then the test, then the code. The engine reads mechanics only (B10); the renderer reads looks only (R8).
+- **Vocabulary boundary**: user-facing text (schema descriptions, errors, CLI, README, legend) says components,
+  connections, groups, needs, states, kinds. Graph words stay below `toLayoutGraph`.
 
 ## 9. Success metrics (first 90 days after launch)
 - An agent with no prior exposure produces a valid, good-looking diagram from the schema alone (measured with a fixed eval prompt set).
@@ -253,18 +288,18 @@ markdown images, so the README's first diagram is narrow: direction "down", few 
 Two fresh agents (M0 and M1 schemas) each validated on the first attempt. What they wanted and could not express,
 kept here so the model grows from evidence rather than guesswork:
 
-- Cross-boundary edges in a scoped view drawn as stubs (most requested; real information loss today).
-- Edges whose endpoint is a group ("routes to the region"), not a representative node.
-- Node attributes beyond label: technology, description/tooltip, role (primary/replica), replica count. Multi-line labels.
-- Bidirectional or request/response edges without drawing two.
-- Group-level layout direction (region left-to-right, a tier inside it top-to-bottom).
-- Inactive/failover edges expressed as state rather than `load: 0` (lands with M2).
-- View-level emphasis: highlight a subset of edges on the full topology (lands with interactions).
-- Subcommand `--help` (fixed), scope semantics spelled out in the schema (fixed).
-- From the M2 agent test: fallbacks must name what they cover (`fallbackFor`, fixed; the agent's standby card processor
-  had silently taken over a database failure); soft dependencies (`dependsOn: "soft"`, fixed); document that degradation
-  propagates and fallback activation is automatic (fixed). Still open: scenario steps that change topology or labels
-  ("replica promoted to primary"), and a way for a queue to absorb degradation so async consumers do not inherit it.
+- ~~Cross-boundary edges in a scoped view drawn as stubs~~ done: ghosts (R4).
+- ~~Edges whose endpoint is a group~~ done: connections and needs to any entity.
+- ~~Node attributes beyond label: technology, description, replica count~~ done: `tech`, `description`, `replicas`, `meta`. Multi-line labels: open.
+- ~~Bidirectional edges~~ done.
+- Group-level layout direction (region left-to-right, a tier inside it top-to-bottom): open.
+- ~~Inactive/failover edges as state~~ done: needs with alternatives, load shifts automatically.
+- View-level emphasis: highlight a subset on the full topology: lands with interactions (M3b).
+- ~~Subcommand `--help`, scope semantics~~ done.
+- From the M2 agent test: ~~fallbacks must name what they cover; soft dependencies~~ superseded by `needs` with
+  `any`/`min`/`unmet`/`reduced`. Still open: scenario steps that change topology or labels ("replica promoted to
+  primary"); a queue absorbing degradation is now expressible (do not declare the need, or give it `reduced` = the
+  default state).
 
 ## 11. Open questions
 1. **Resolved: CSS keyframes, not SMIL** (2026-09-04). Both play inside `<img>`; nothing outside browsers plays either. CSS wins on control: the Web Animations API gives the runtime one timeline (pause, scrub, playback rate) over every animation. Rule that follows: animation stays a pure function of (model, t); when load changes at runtime, continue from the current phase, never restart.
