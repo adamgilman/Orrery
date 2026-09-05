@@ -299,7 +299,8 @@
           }
         },
         {
-          "note": "Brownout instead: disable non-essential features on the edge",
+          "note": "Second sequencer back; edge in brownout while it catches up",
+          "restore": "seq-2",
           "set": {
             "brownout": "edge"
           }

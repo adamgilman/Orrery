@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
-  "title": "Edge kinds",
+  "title": "Connection kinds",
   "direction": "down",
   "components": [
     {

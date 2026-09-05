@@ -9,7 +9,7 @@ Orrery's first diagram is, naturally, an orrery.
 
 ![The solar system, as a service](examples/solar-system.svg)
 
-*A plain SVG file in an image tag. Dash speed and thickness follow each edge's `load`: the Sun pours heat into Venus,
+*A plain SVG file in an image tag. Dash speed and thickness follow each connection's `load`: the Sun pours heat into Venus,
 Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Moon mostly gets tides.*
 
 A more terrestrial example, a checkout service with tiers, a region, and a worker queue, is below.
@@ -19,20 +19,20 @@ A more terrestrial example, a checkout service with tiers, a region, and a worke
 Every diagram below is a plain SVG in an image tag, small enough to read on a phone. Sources are in
 [examples/readme](examples/readme).
 
-**Node kinds.** A small fixed vocabulary, each with its own glyph: client, gateway, service, database, cache, queue,
-function, storage, external.
+**Kinds.** The default component kinds, each with a glyph: client, gateway, service, database, cache, queue, function,
+storage, external. Define your own with a path and a box style.
 
-![Node kinds](examples/readme/kinds.svg)
+![Kinds](examples/readme/kinds.svg)
 
-**Nested groups.** Tiers, regions, zones, clusters and trust boundaries, each with a distinct frame. The hierarchy is
-also the outline for navigation.
+**Nested groups.** Tiers, regions, zones, clusters and trust boundaries by default, each with a distinct frame, or your
+own. The hierarchy is also the outline for navigation, and a group can be connected, needed and given a state.
 
 ![Nested groups](examples/readme/groups.svg)
 
 **Connection kinds and load.** Sync, async, replication and dataflow connections are drawn differently. Load drives
 the speed and weight of the flow.
 
-![Edge kinds](examples/readme/edge-kinds.svg)
+![Connection kinds](examples/readme/edge-kinds.svg)
 
 **Failure scenarios.** Components declare what they need, with alternatives. A scenario marks one component failed
 and the tool works out the rest: the worker fails with the primary, the API degrades onto its replica, the web tier
@@ -52,14 +52,19 @@ orrery render examples/readme/failover.orrery.json --scenario db-fails -o failed
 
 ![Billing only](examples/readme/views-billing.svg)
 
+**Your vocabulary.** States and kinds are yours to name: bind them to looks and mechanics, and the legend teaches the
+reader your words. A trading platform whose organisation says healthy, impaired, brownout, outage and drained, two
+sequencers into a quorum loss:
+
+![Own vocabulary](examples/next/4-own-vocabulary-quorum.svg)
+
 **Interactive.** The same SVG file, opened directly instead of through an image tag, runs a small embedded runtime:
 an outline to navigate, click a component to fail it and watch the cascade, step through scenarios, switch views with
 a morph, keyboard shortcuts. No page, no build, no server. Try the checkout example:
 [open it interactive](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text).
 
-A larger example, a checkout service with three tiers, a region, an external provider and a database failover, is at
-[examples/checkout.svg](examples/checkout.svg) and [examples/checkout-db-failover.svg](examples/checkout-db-failover.svg).
+
 
 ## Status
 
@@ -70,10 +75,12 @@ views, GIF export, and an MCP server. See the [PRD](PRD.md).
 
 ```sh
 yarn install && yarn build
-node packages/cli/dist/main.js validate examples/three-tier.orrery.json
-node packages/cli/dist/main.js render examples/three-tier.orrery.json -o out.svg   # interactive when opened directly
-node packages/cli/dist/main.js render examples/three-tier.orrery.json --static -o out.svg
+yarn orrery validate examples/three-tier.orrery.json
+yarn orrery render examples/three-tier.orrery.json -o out.svg            # interactive when opened directly
+yarn orrery render examples/three-tier.orrery.json --static -o out.svg   # one view, no runtime
 ```
+
+`yarn orrery` runs the CLI from the checkout; the commands below write `orrery` for short.
 
 ## Writing a model
 
@@ -108,9 +115,9 @@ without a scenario:
 orrery render app.json --set failed=orders
 ```
 
-Your vocabulary, not ours. The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A
-`states` block binds your own names to looks (preset or custom style) and mechanics (rank, availability, flow,
-cascade); a `kinds` block does the same for component and group kinds. The engine never reads a name.
+The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A `states` block binds your own
+names to looks (preset or custom style) and mechanics (rank, availability, flow, cascade); a `kinds` block does the
+same for component and group kinds. The engine never reads a name.
 
 Rules an agent needs to know:
 
@@ -119,17 +126,15 @@ Rules an agent needs to know:
 - Connections carry no health semantics. A component's `needs` do, and every need must have a connection.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
-The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md). The schema is
-[packages/core/schema/v1.json](packages/core/schema/v1.json).
+The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).
 
 ## Development
 
 Test-driven, no exceptions. Every behaviour lands as a failing test first.
 
 ```sh
-yarn test          # builds, then runs unit, contract, snapshot and CLI e2e tests
-yarn typecheck
-node test/preview.mjs out.svg out.png   # rasterise to look at a render
+yarn test                                   # builds, then runs unit, contract, snapshot, pixel and CLI e2e tests
+yarn inspect examples/checkout.orrery.json  # renders, freezes animation frames to PNG, checks them, writes a contact sheet
 ```
 
 Layout runs through the `LayoutEngine` interface. The Eclipse Layout Kernel adapter in `packages/layout-elk`

@@ -29,7 +29,7 @@ States and kinds are author-defined. The engine (`simulate.ts`) reads only mecha
 
 ## The loop
 
-1. Write or change a test under `packages/<pkg>/test/`. Fixtures live in `fixtures/valid` and `fixtures/invalid` (invalid ones pair with `<name>.errors.json`).
+1. Write or change a test under `packages/<pkg>/test/`. Fixtures live in `fixtures/valid` and `fixtures/invalid` (invalid ones pair with `<name>.errors.json`). Run source-only suites without the build step with `ORRERY_SKIP_BUILD=1 yarn vitest run packages/core`.
 2. `yarn test` until green. For renderer changes, review the snapshot diff before `yarn test -u`.
 3. Look at the result:
    ```
@@ -64,16 +64,18 @@ named there, then the code.
 
 | Path | What |
 |---|---|
-| `packages/core` | schema, validator, model, `LayoutEngine` + fake engine, SVG renderer |
+| `packages/core` | schema, validator, propagation, view scoping, `LayoutEngine` + fake engine, SVG renderer, document assembly |
 | `packages/layout-elk` | the only ELK importer |
 | `packages/raster` | freeze, rasterise, frames, contact sheet, `inspect` |
-| `packages/cli` | `orrery validate` / `orrery render` |
+| `packages/runtime` | the browser runtime bundled into every rendered SVG |
+| `packages/cli` | `orrery validate` / `orrery render` (`--view`, `--static`, `--scenario`, `--step`, `--set`) |
 | `tools/inspect.mjs` | the loop script above |
 | `site/` | examples page (`node site/build.mjs`, `node site/serve.mjs 8080`) |
 | `PRD.md` | scope, milestones, open questions |
 
-## Adding a model feature (e.g. groups)
+## Adding a model feature (e.g. `tags` on entities)
 
-Schema (`packages/core/schema/v1.json`, with descriptions) → invalid/valid fixtures → validator test → `types.ts`
-→ `toLayoutGraph` + `LayoutGraph` type → contract test → fake engine → ELK adapter → renderer test → renderer
-→ `yarn inspect` on an example → commit. Never skip the fake engine; renderer tests must not depend on ELK.
+`docs/MODEL.md` invariant with its test name → schema (`packages/core/schema/v1.json`, with descriptions) →
+invalid/valid fixtures → validator test → `types.ts` → engine test and code if it has mechanics → `toLayoutGraph`
+and the layout contract if it changes geometry → fake engine → ELK adapter → renderer test → renderer →
+`yarn inspect` on an example → commit. Never skip the fake engine; renderer tests must not depend on ELK.

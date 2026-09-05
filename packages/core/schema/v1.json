@@ -53,7 +53,7 @@
               "type": "string",
               "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
               "default": "degraded",
-              "description": "State a component enters when a need is met but not every alternative is available, or the preferred one is above the default rank."
+              "description": "State a component enters when a need is met with reduced redundancy: not every alternative is available, or the preferred one is above the default rank."
             }
           }
         },
@@ -123,7 +123,8 @@
                     }
                   }
                 ],
-                "default": "normal"
+                "default": "normal",
+                "description": "Visual treatment: a preset name or a style object. Only what you set changes; the rest stays normal."
               },
               "rank": {
                 "type": "integer",
@@ -195,17 +196,18 @@
                 "description": "Box style overrides.",
                 "properties": {
                   "dash": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Dashed box outline."
                   },
                   "fill": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "CSS colour."
+                    "description": "Box fill colour."
                   },
                   "stroke": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "CSS colour."
+                    "description": "Box outline colour."
                   }
                 }
               },
@@ -248,31 +250,36 @@
                       "stroke": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "CSS colour."
+                        "description": "Frame outline colour."
                       },
                       "fill": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "CSS colour."
+                        "description": "Frame fill colour."
                       },
                       "fillOpacity": {
                         "type": "number",
                         "minimum": 0,
-                        "maximum": 1
+                        "maximum": 1,
+                        "description": "Frame fill opacity, 0 to 1."
                       },
                       "dash": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Dashed outline."
                       },
                       "dotted": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Dotted outline."
                       }
                     }
                   }
-                ]
+                ],
+                "description": "A preset frame name or a style object."
               },
               "description": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "What this kind means to you. Shown in the legend."
               }
             }
           }
@@ -341,12 +348,12 @@
                         "type": "string",
                         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
                       },
-                      "description": "Alternative entities (components or groups) that satisfy this need, in order of preference. The first healthy one carries shifted load."
+                      "description": "Alternative entities (components or groups) that satisfy this need, in order of preference. The first available one carries shifted load."
                     },
                     "min": {
                       "type": "integer",
                       "minimum": 1,
-                      "description": "How many alternatives must be healthy for the need to be met (quorum). Must not exceed the number of alternatives."
+                      "description": "How many alternatives must be available for the need to be met (quorum). Must not exceed the number of alternatives."
                     },
                     "unmet": {
                       "type": "string",
@@ -377,11 +384,11 @@
           "description": {
             "type": "string",
             "minLength": 1,
-            "description": "One or two sentences. Shown as a tooltip and in the outline."
+            "description": "One or two sentences, shown as a tooltip."
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre. The only place unknown keys are allowed."
           }
         }
       }
@@ -409,7 +416,7 @@
           "id": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-            "description": "Optional handle. Required when the same pair of components has more than one connection, so scenarios can tell them apart."
+            "description": "Optional handle. Required when the same pair of entities has more than one connection, so scenarios can tell them apart."
           },
           "kind": {
             "type": "string",
@@ -432,7 +439,7 @@
             "minimum": 0,
             "maximum": 1,
             "default": 0.5,
-            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow. 0 hides the flow. Relative intensity, not real units. Shifts automatically when a need's alternative goes down."
+            "description": "Relative traffic, 0 to 1: speed and weight of the animated flow; 0 hides it. Not real units. Shifts automatically when a need's alternative becomes unavailable."
           },
           "bidirectional": {
             "type": "boolean",
@@ -441,7 +448,7 @@
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre."
           }
         }
       }
@@ -479,7 +486,7 @@
           },
           "meta": {
             "type": "object",
-            "description": "Free-form data ignored by rendering and semantics: owner, url, tags, cost centre. The only place unknown keys are allowed."
+            "description": "Free-form data ignored by rendering and mechanics: owner, url, tags, cost centre."
           },
           "state": {
             "type": "string",
@@ -489,7 +496,7 @@
           "description": {
             "type": "string",
             "minLength": 1,
-            "description": "One or two sentences. Shown as a tooltip and in the outline."
+            "description": "One or two sentences, shown as a tooltip."
           }
         }
       }
@@ -630,7 +637,7 @@
                 "load": {
                   "type": "array",
                   "minItems": 1,
-                  "description": "Connection load overrides. Refer to a connection by its ends, or by 'id' when the pair has several connections. Rarely needed: load shifts automatically when an alternative goes down.",
+                  "description": "Connection load overrides. Refer to a connection by its ends, or by 'id' when the pair has several connections. Rarely needed: load shifts automatically when an alternative becomes unavailable.",
                   "items": {
                     "type": "object",
                     "additionalProperties": false,

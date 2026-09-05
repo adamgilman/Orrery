@@ -9,6 +9,8 @@ const walk = (node: any, path: string, out: string[]) => {
     walk(prop, `${path}/${key}`, out);
   }
   if (node.items) walk(node.items, `${path}/items`, out);
+  if (typeof node.additionalProperties === "object") walk(node.additionalProperties, `${path}/*`, out);
+  for (const [i, alt] of (node.oneOf ?? []).entries()) walk(alt, `${path}/oneOf/${i}`, out);
 };
 
 describe("schema v1", () => {
