@@ -29,13 +29,19 @@
     },
     "states": {
       "type": "object",
-      "description": "Author-defined states: a map from state name to how it looks and how it behaves. Omitted names keep the defaults: on (normal, rank 0, available), degraded (warn, 1, available), failed (alert, 2, unavailable, stops flow), off (muted, 2, unavailable, stops flow, cascades to children). Add your own names (maintenance, canary) or rebind these. The engine never interprets a name; only look, rank, available, flows and cascade matter.",
       "additionalProperties": false,
+      "description": "Your state vocabulary bound to how each state looks and behaves. Omit for the defaults: on (normal, rank 0), degraded (warn, 1), failed (alert, 2, unavailable, stops flow), off (muted, 2, unavailable, stops flow, cascades to children). Define an existing name to override it, a new name to extend, or set replace to start from nothing. The engine never reads a name; only look, rank, available, flows and cascade matter.",
       "properties": {
+        "default": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+          "default": "on",
+          "description": "State of any entity that declares none, and what 'restore' returns to."
+        },
         "needs": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Document-wide defaults for what a need does to its component.",
+          "description": "Outcome states needs use unless they say otherwise.",
           "properties": {
             "unmet": {
               "type": "string",
@@ -47,28 +53,77 @@
               "type": "string",
               "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
               "default": "degraded",
-              "description": "State a component enters when a need is met but not every alternative is available, or the preferred one is not at rank 0."
+              "description": "State a component enters when a need is met but not every alternative is available, or the preferred one is above the default rank."
             }
           }
+        },
+        "replace": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: only the states in 'define' exist; 'default' and 'needs' must then name them."
         },
         "define": {
           "type": "object",
           "description": "State definitions by name.",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "look": {
-                "type": "string",
-                "enum": [
-                  "normal",
-                  "warn",
-                  "alert",
-                  "muted",
-                  "highlight"
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "normal",
+                      "warn",
+                      "alert",
+                      "muted",
+                      "highlight"
+                    ],
+                    "description": "Preset: normal; warn (amber); alert (red, pulsing outline); muted (dimmed, dashed); highlight (blue glow)."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Custom style. Only what you set changes; the rest stays normal.",
+                    "properties": {
+                      "stroke": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Outline colour."
+                      },
+                      "fill": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Box fill."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Label colour."
+                      },
+                      "dash": {
+                        "type": "boolean",
+                        "description": "Dashed outline."
+                      },
+                      "pulse": {
+                        "type": "boolean",
+                        "description": "Pulsing outline (animated; frame tooling freezes it)."
+                      },
+                      "opacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Whole-entity opacity."
+                      }
+                    }
+                  }
                 ],
-                "default": "normal",
-                "description": "Visual treatment: normal; warn (amber); alert (red, pulsing outline); muted (dimmed, dashed); highlight (blue glow)."
+                "default": "normal"
               },
               "rank": {
                 "type": "integer",
@@ -102,7 +157,122 @@
               "description": {
                 "type": "string",
                 "minLength": 1,
-                "description": "What this state means to you. The engine does not read it."
+                "description": "What this state means to you. Shown in the legend; never read by the engine."
+              }
+            }
+          }
+        }
+      }
+    },
+    "kinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Your kind vocabulary for components and groups, bound to a glyph or a frame. Omit for the defaults. Kinds have no mechanics; they are words with a picture.",
+      "properties": {
+        "replace": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: only the kinds defined here exist."
+        },
+        "components": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "description": "Component kinds by name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "glyph": {
+                "type": "string",
+                "description": "A preset glyph name (service, database, queue, cache, gateway, client, storage, function, external) or SVG path data drawn in a 16\u00d716 box."
+              },
+              "box": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Box style overrides.",
+                "properties": {
+                  "dash": {
+                    "type": "boolean"
+                  },
+                  "fill": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "CSS colour."
+                  },
+                  "stroke": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "CSS colour."
+                  }
+                }
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What this kind means to you. Shown in the legend."
+              }
+            }
+          }
+        },
+        "groups": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "description": "Group kinds by name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "frame": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "tier",
+                      "region",
+                      "zone",
+                      "cluster",
+                      "boundary"
+                    ],
+                    "description": "A preset frame."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "stroke": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "CSS colour."
+                      },
+                      "fill": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "CSS colour."
+                      },
+                      "fillOpacity": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "dash": {
+                        "type": "boolean"
+                      },
+                      "dotted": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                ]
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }
@@ -132,19 +302,9 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "service",
-              "database",
-              "queue",
-              "cache",
-              "gateway",
-              "client",
-              "storage",
-              "function",
-              "external"
-            ],
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
             "default": "service",
-            "description": "What the component is. Picks the glyph and box style; carries no health semantics. 'client' covers people and devices; 'external' is a system outside your control (drawn dashed)."
+            "description": "What the component is, from 'kinds' (defaults: service, database, queue, cache, gateway, client, storage, function, external). Picks the glyph and box style; no mechanics. 'client' covers people and devices; 'external' is a system outside your control."
           },
           "group": {
             "type": "string",
@@ -153,8 +313,7 @@
           "state": {
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "default": "on",
-            "description": "Declared state in the base model: one of the names in 'states' (defaults: on, degraded, failed, off). Propagation only ever moves an entity to a higher-ranked state."
+            "description": "Declared state in the base model, one of the names in 'states'. Defaults to states.default. Propagation only ever moves an entity to a higher-ranked state."
           },
           "needs": {
             "type": "array",
@@ -311,15 +470,9 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "tier",
-              "region",
-              "zone",
-              "cluster",
-              "boundary"
-            ],
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
             "default": "tier",
-            "description": "What the container represents; each has a distinct frame: tier (solid, tinted), region (dashed), zone (dotted), cluster (solid, darker), boundary (red dashed, no fill, for trust boundaries)."
+            "description": "What the container represents, from 'kinds' (defaults: tier, region, zone, cluster, boundary). Picks the frame style; no mechanics."
           },
           "parent": {
             "type": "string",
@@ -332,8 +485,7 @@
           "state": {
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-            "default": "on",
-            "description": "Declared state in the base model: one of the names in 'states' (defaults: on, degraded, failed, off). Propagation only ever moves an entity to a higher-ranked state."
+            "description": "Declared state of the group as an entity: what connections and needs pointing at the group see. Defaults to states.default. Reaches members only if the state cascades. A non-empty group is also derived from its members through the ordinary need mechanic."
           },
           "description": {
             "type": "string",
@@ -400,7 +552,7 @@
     "scenarios": {
       "type": "array",
       "default": [],
-      "description": "Named what-if stories. Each step sets declared states ('set') or restores them, or overrides a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --set failed=db`.",
+      "description": "Named what-if stories. Each step sets declared states ('set'), restores them, or overrides a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --set <state>=<id>`.",
       "items": {
         "type": "object",
         "additionalProperties": false,
