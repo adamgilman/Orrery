@@ -116,7 +116,7 @@ A connection is referenced (in scenarios) by `{ "from", "to" }` or, when that pa
 | `label` | string | id | Frame title. |
 | `kind` | `tier` `region` `zone` `cluster` `boundary` | `tier` | Frame style: tier solid tinted, region dashed, zone dotted, cluster solid darker, boundary red dashed with no fill. |
 | `parent` | id | | Enclosing group. |
-| `state` | `on` `degraded` `failed` `off` | `on` | Declared health of the group as a whole. A down group takes every member down with it (5.1). For an empty group this is its only health. |
+| `state` | `on` `degraded` `failed` `off` | `on` | Declared health of the group as an entity: what needs and connections on the group see. Does not force member states, except `off`, which switches the contents off too (5.1). For an empty group this is its only health. |
 | `description` | string | | Tooltip and outline text. |
 | `meta` | object | | Free-form. |
 
@@ -150,7 +150,7 @@ Step:
 | Field | Type | Meaning |
 |---|---|---|
 | `note` | string | What happens, shown during step-through. |
-| `fail`, `degrade`, `off`, `restore` | entity id or array | Set those entities' declared state to `failed`, `degraded`, `off`, `on`. Failing a group fails everything in it: `"fail": "us-east"` is a region outage. |
+| `fail`, `degrade`, `off`, `restore` | entity id or array | Set those entities' declared state to `failed`, `degraded`, `off`, `on`. On a group, `fail` and `degrade` affect the group as an entity (its dependants), not its members; `off` switches the members off too. |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Override a connection's load. Rarely needed: load shifts automatically when a need's alternative is unhealthy. |
 
 A step must change at least one thing. The same entity may not appear under two verbs in one step.
@@ -177,14 +177,19 @@ States rank `on` < `degraded` < `failed`; `off` ranks with `failed` for propagat
 A component is **down** when `failed` or `off`; **healthy** when `on`; `degraded` counts as healthy for quorum
 but propagates degradation.
 
-Groups have health too, in two directions:
+Groups have health too. A group's declared state describes the group **as an entity**: it is what connections
+and needs pointing at the group see. It is not a switch for the members. A component inside a failed region is
+evaluated on its own needs; if it has alternatives outside the region it may be degraded, or untouched. Failure
+travels along needs, never by containment.
 
-- **Down.** A group whose declared state is `failed` or `off` takes every descendant down with it: each member's
-  effective state is at least as bad as the worst declared state of its ancestors. This uses declared states only,
-  so it cannot loop.
 - **Up.** A non-empty group's effective state is derived from its direct members (components and subgroups): `failed`
   if all are down, `degraded` if any is not `on`, else `on`; never better than its own declared state. An empty
-  group's effective state is its declared state. This is what a need or connection on the group sees.
+  group's effective state is its declared state.
+- **Off is the one exception.** `off` means intentionally switched off, and switching a group off switches off
+  everything inside it (decommissioning a region). This uses declared states only, so it cannot loop.
+- A region-wide *outage* is therefore modelled the way it happens: fail the shared thing the members need (the
+  region's network, its control plane, its power) as a component inside the region, or fail the members. What
+  the region's dependants then experience follows from their needs.
 
 ### 5.2 Propagation
 
@@ -246,7 +251,7 @@ Each is enforced where stated and proven by the named test. `S` structural (vali
 | B5 | Propagation terminates on any graph including cycles (states move only upward in severity). | propagate | simulate: cycle |
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | propagate | simulate: reasons |
 | B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | applyScenario | simulate: cumulative |
-| B8 | A group declared down takes every descendant down (declared states only, so no loops). | propagate | simulate: group-down |
+| B8 | A group's declared `failed`/`degraded` never changes a member's state; failure reaches members only through their own needs. A group declared `off` switches every descendant off (declared states only, so no loops). | propagate | simulate: group-failed-members-untouched, group-off |
 | B9 | A non-empty group's effective state derives from its direct members (all down → failed, any not on → degraded), floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group |
 | R1 | The file never contains coordinates; layout is deterministic. | schema, engines | layoutContract: deterministic |
 | R2 | Rendering is byte-deterministic for the same model. | renderer | render: deterministic, cli: deterministic |
@@ -286,8 +291,9 @@ Decisions from the principal-engineer review of 2026-09-05, so the reasoning is 
 - **Accepted, after first rejecting it,** connections and needs to groups, including empty groups. The first
   draft rejected them for layout reasons and because "needs the data tier" seemed ambiguous. The ambiguity is
   resolved by giving groups health of their own (5.1): declared state propagates down, member health derives up,
-  an empty group is a black box with declared health. This makes region-outage scenarios one verb and lets a system
-  be modelled as closed boxes first and opened later. Layout risk (compound-node endpoints in ELK) is an
+  an empty group is a black box with declared health. A first draft had a failed group take its members down by
+  containment; dropped, because a member with alternatives outside the group may be merely degraded, and that
+  must come from its needs. Only `off` cascades. Systems can be modelled as closed boxes first and opened later. Layout risk (compound-node endpoints in ELK) is an
   implementation task, not a modelling argument.
 - **Rejected** health expressions (second syntax inside JSON) and inferring needs from `sync` connections
   (explicit over inferred).

@@ -256,7 +256,7 @@
               "failed"
             ],
             "default": "on",
-            "description": "Declared health of the group as a whole. A failed or off group takes every member down with it. For an empty group this is its only health; a non-empty group is also derived from its members (all down: failed; any not on: degraded)."
+            "description": "Declared health of the group as an entity: what connections and needs pointing at the group see. Does not change the members' states; a member inside a failed group is judged by its own needs. Exception: 'off' switches everything inside off too (intentional decommissioning). A non-empty group's health is also derived from its members (all down: failed; any not on: degraded), never better than the declared state."
           },
           "description": {
             "type": "string",
@@ -356,7 +356,7 @@
                   "description": "What happens in this step, shown during step-through."
                 },
                 "fail": {
-                  "description": "Entity id(s) whose state becomes 'failed'. Failing a group fails everything inside it: a region outage is one verb.",
+                  "description": "Entity id(s) whose state becomes 'failed'. On a group this fails the group as an entity (what depends on it suffers); the members keep their own states and needs.",
                   "oneOf": [
                     {
                       "type": "string",
@@ -392,7 +392,7 @@
                   ]
                 },
                 "off": {
-                  "description": "Entity id(s) switched off (intentional, drawn dimmed). Switching a group off takes its members with it.",
+                  "description": "Entity id(s) switched off (intentional, drawn dimmed). Switching a group off switches everything inside it off.",
                   "oneOf": [
                     {
                       "type": "string",
