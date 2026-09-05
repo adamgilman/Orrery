@@ -5,7 +5,7 @@ import { GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
 import { LOOK_PRESETS, lookOf } from "./looks.js";
 export { LOOK_PRESETS, lookOf } from "./looks.js";
 import { declare, ModelError, propagate } from "./simulate.js";
-import type { Component, Connection, Group, GroupKindDef, Model, Play, View } from "./types.js";
+import type { Component, Connection, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
 import { scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -257,6 +257,31 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
   return { markup, width, height, css };
 }
 
+/**
+ * A tour (R12): several views, each a complete layer, crossfaded by CSS with the declared period and captioned
+ * with the view's title. Pure CSS, so it plays inside <img>; the runtime tours with its morph instead.
+ */
+async function tourLayer(declared: Model, tour: Tour, engine: LayoutEngine, model: Model): Promise<ViewLayer> {
+  const views = tour.views.map((id) => selectView(model, id));
+  const frames = [];
+  for (const v of views) frames.push(await layerFor(declared, v, engine, undefined, v.title ?? model.title ?? v.id));
+  const width = Math.max(...frames.map((f) => f.width)), height = Math.max(...frames.map((f) => f.height)) + 24;
+  const n = frames.length, total = n * tour.seconds, fade = 5;
+  const pct = (k: number) => num((k / n) * 100);
+  const css = frames.map((_, k) => k === 0
+    ? `@keyframes orrery-tour-0{0%{opacity:1}${pct(1)}%{opacity:1}${num(Number(pct(1)) + fade)}%{opacity:0}${100 - fade}%{opacity:0}100%{opacity:1}}`
+    : k === n - 1
+      ? `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(Number(pct(k)) + fade)}%{opacity:1}${100 - fade}%{opacity:1}100%{opacity:0}}`
+      : `@keyframes orrery-tour-${k}{0%{opacity:0}${pct(k)}%{opacity:0}${num(Number(pct(k)) + fade)}%{opacity:1}${pct(k + 1)}%{opacity:1}${num(Number(pct(k + 1)) + fade)}%{opacity:0}100%{opacity:0}}`).join("\n");
+  const markup = frames.map((f, k) => [
+    `<g class="tour" data-frame="${k}" data-view="${escAttr(f.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
+    f.markup,
+    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.title)}</text>`,
+    `</g>`,
+  ].join("\n")).join("\n");
+  return { view: views[0]!, title: model.title ?? views[0]!.id, width, height, markup, css };
+}
+
 /** Lay out and render one view of a declared (un-propagated) model, playing a scenario when asked. */
 async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string): Promise<ViewLayer> {
   const base = scopeModel(propagate(declared), view);
@@ -300,12 +325,21 @@ export interface RenderOptions {
   set?: Record<string, string[]>;
   /** Play a scenario on a timer in the rendered view, overriding the view's own `play`. Ignored with `scenario`. */
   play?: { scenario: string; seconds?: number };
+  /** Render a tour of views instead of one view: `true` for the model's own tour, or an explicit list. */
+  tour?: true | { views: string[]; seconds?: number };
 }
 const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
   options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
 
 /** Select a view, apply scenario/overrides, propagate, scope, lay out and render one static view. */
 export async function render(model: Model, engine: LayoutEngine, options: RenderOptions = {}): Promise<string> {
+  if (options.tour) {
+    const tour: Tour = options.tour === true
+      ? model.tour ?? (() => { throw new ModelError("the model declares no tour; give --tour a list of view ids"); })()
+      : { views: options.tour.views, seconds: options.tour.seconds ?? 4 };
+    const d = declare(model, { ...(options.set ? { set: options.set } : {}) });
+    return wrapDocument(model, model.title, [await tourLayer(d.model, tour, engine, model)], []);
+  }
   const view = selectView(model, options.view);
   const play = playOf(view, options);
   if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);

@@ -12,8 +12,7 @@ jobs.push(["examples/solar-system.orrery.json", ["--static"], "site/landing/sola
 jobs.push(["examples/readme/failover.orrery.json", ["--static", "--play", "db-fails", "--every", "3"], "site/landing/failover-play.svg"]);
 jobs.push(["examples/next/4-own-vocabulary.orrery.json", ["--static", "--play", "quorum", "--every", "4"], "site/landing/quorum.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--static", "--view", "data"], "site/landing/checkout-data.svg"]);
-jobs.push(["examples/readme/drill-down.orrery.json", ["--static"], "site/landing/drill-down.svg"]);
-jobs.push(["examples/readme/drill-down.orrery.json", ["--static", "--view", "payments"], "site/landing/drill-down-payments.svg"]);
+jobs.push(["examples/readme/drill-down.orrery.json", ["--tour"], "site/landing/drill-down-tour.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--scenario", "db-failover", "--step", "2"], "examples/checkout-db-failover.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--view", "data"], "examples/checkout-data.svg"]);
 jobs.push(["examples/checkout.orrery.json", ["--view", "region"], "examples/checkout-region.svg"]);
@@ -21,10 +20,10 @@ const readme = {
   "kinds": [[]], "groups": [[]], "connection-kinds": [[]],
   "failover": [[], ["--scenario", "db-fails"], ["--static", "--play", "db-fails", "--every", "3"]],
   "views": [["--view", "overview"], ["--view", "billing"]],
-  "drill-down": [["--static"], ["--static", "--view", "payments"]],
+  "drill-down": [["--static"], ["--static", "--view", "payments"], ["--tour"]],
 };
 for (const [name, renders] of Object.entries(readme))
-  renders.forEach((args, i) => jobs.push([`examples/readme/${name}.orrery.json`, args, `examples/readme/${name}${i ? (args.includes("--play") ? "-play" : `-${args.at(-1)}`) : ""}.svg`]));
+  renders.forEach((args, i) => jobs.push([`examples/readme/${name}.orrery.json`, args, `examples/readme/${name}${i ? (args.includes("--play") ? "-play" : args.includes("--tour") ? "-tour" : `-${args.at(-1)}`) : ""}.svg`]));
 for (const [src, args, out] of jobs) {
   execFileSync("node", [cli, "render", src, ...args, "-o", out], { stdio: "inherit" });
   const size = execFileSync("grep", ["-o", 'viewBox="[^"]*"', out], { encoding: "utf8" }).trim();

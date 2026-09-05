@@ -123,7 +123,11 @@ export interface Model {
   /** Never empty: a default topology view is synthesised when the file has none. */
   views: View[];
   scenarios: Scenario[];
+  /** Views shown in turn on a timer: CSS crossfade in the file, the morph in the runtime. */
+  tour?: Tour;
 }
+
+export interface Tour { views: string[]; seconds: number }
 
 /** Anything with an id and a state: a component or a group. */
 export type Entity = Component | Group;

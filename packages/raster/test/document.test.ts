@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, renderDocument, validate } from "@orrery/core";
+import { FakeLayoutEngine, render, renderDocument, validate } from "@orrery/core";
 import { activeView, flowRegions, inspect } from "../src/index.js";
 
 const grouped = async () => {
@@ -36,6 +36,17 @@ describe("playing views in the frame tooling", () => {
     const one = activeView(svg);
     expect((one.match(/<g class="step"/g) ?? []).length).toBe(1);
     expect(one).toContain('data-step="0"');
+    expect(inspect(svg, { fps: 5, durationMs: 400 }).ok).toBe(true);
+  });
+});
+
+describe("tours in the frame tooling", () => {
+  it("activeView keeps only the first frame of a tour", async () => {
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await render(r.model, new FakeLayoutEngine(), { tour: true });
+    const one = activeView(svg);
+    expect((one.match(/<g class="tour"/g) ?? []).length).toBe(1);
     expect(inspect(svg, { fps: 5, durationMs: 400 }).ok).toBe(true);
   });
 });

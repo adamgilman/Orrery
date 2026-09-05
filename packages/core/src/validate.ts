@@ -63,6 +63,7 @@ interface Raw {
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
+  tour?: { views: string[]; seconds: number };
 }
 
 /* ---------- vocabulary ---------- */
@@ -273,7 +274,9 @@ export function validate(input: unknown): ValidationResult {
     return { id: sc.id, label: sc.label ?? sc.id, steps };
   });
 
+  raw.tour?.views.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
+
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios };
+  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", raw.tour) };
   return { ok: true, model, warnings };
 }

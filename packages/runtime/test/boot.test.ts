@@ -234,3 +234,24 @@ describe("runtime drill-down", () => {
     expect(closed.getAttribute("width")).not.toBe(before); // mid-morph, the box is growing
   });
 });
+
+describe("runtime tour", () => {
+  let rt: Runtime;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("tours the model's views on its timer with the morph, and stops on the first interaction", async () => {
+    const root = await doc("drill-down");
+    rt = boot(root, { size: { width: 1600, height: 900 } });
+    const shown = () => [...root.querySelectorAll(".view")].find((l) => (l as HTMLElement).style.display !== "none")!.getAttribute("data-view");
+    expect(shown()).toBe("overview");
+    vi.advanceTimersByTime(4000 + 400);
+    expect(shown()).toBe("payments");
+    vi.advanceTimersByTime(4000 + 400);
+    expect(shown()).toBe("identity");
+    vi.advanceTimersByTime(4000 + 400);
+    expect(shown()).toBe("overview");
+    key("ArrowDown");
+    vi.advanceTimersByTime(20000);
+    expect(shown()).toBe("overview");
+  });
+});

@@ -1,0 +1,18 @@
+{
+  "components": [
+    {
+      "id": "a"
+    }
+  ],
+  "views": [
+    {
+      "id": "v"
+    }
+  ],
+  "tour": {
+    "views": [
+      "v",
+      "nope"
+    ]
+  }
+}

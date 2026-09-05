@@ -696,6 +696,32 @@
           }
         }
       }
+    },
+    "tour": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "views"
+      ],
+      "description": "Show views in turn on a timer. The rendered file carries each view as a layer and crossfades between them with CSS, so it plays inside an image tag; the interactive runtime tours the views with its morph until the reader interacts.",
+      "properties": {
+        "views": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "description": "View ids in the order shown. Loops."
+        },
+        "seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 4,
+          "description": "Seconds each view stays on screen."
+        }
+      }
     }
   }
 }

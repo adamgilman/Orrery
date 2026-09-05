@@ -231,3 +231,16 @@ describe("orrery render --play", () => {
     expect(run("render", join(fixtures, "valid/alternatives.json"), "--play", "nope").code).toBe(1);
   });
 });
+
+describe("orrery render --tour", () => {
+  it("renders a static crossfading tour of views", () => {
+    const r = run("render", join(fixtures, "valid/drill-down.json"), "--tour", "overview,payments", "--every", "5");
+    expect(r.code).toBe(0);
+    expect((r.out.match(/<g class="tour"/g) ?? []).length).toBe(2);
+    expect(r.out).toContain("10s linear infinite");
+    expect(r.out).not.toMatch(/<script/);
+    const own = run("render", join(fixtures, "valid/drill-down.json"), "--tour");
+    expect(own.code).toBe(0);
+    expect((own.out.match(/<g class="tour"/g) ?? []).length).toBe(3);
+  });
+});

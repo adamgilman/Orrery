@@ -155,3 +155,27 @@ describe("renderSvg: collapsed groups (R11)", () => {
     expect(svg).toMatch(/data-edge="checkout->payments"/);
   });
 });
+
+describe("render: a tour of views (R12)", () => {
+  it("emits one complete layer per view, sized to the largest, crossfaded by CSS with the declared period", async () => {
+    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "payments", "identity"], seconds: 4 } });
+    const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)" style="animation:orrery-tour-(\d) (\d+)s linear infinite">/g)];
+    expect(frames.map((f) => f[2])).toEqual(["overview", "payments", "identity"]);
+    expect(frames.every((f) => f[4] === "12")).toBe(true);
+    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:1\}33\.3%\{opacity:1\}38\.3%\{opacity:0\}95%\{opacity:0\}100%\{opacity:1\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-tour-1\{0%\{opacity:0\}33\.3%\{opacity:0\}38\.3%\{opacity:1\}66\.7%\{opacity:1\}71\.7%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toContain(">Inside Payments</text>");
+    const [, w, h] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
+    expect(Number(w)).toBeGreaterThan(0);
+    expect(Number(h)).toBeGreaterThan(0);
+    expect(svg).toContain('data-collapsed="4"'); // the overview frame is the closed one
+    expect(svg).toContain('data-node="ledger"'); // the payments frame is open
+  });
+  it("uses the model's own tour when the file declares one", async () => {
+    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
+    expect((svg.match(/<g class="tour"/g) ?? []).length).toBe(3);
+  });
+  it("rejects a tour naming an unknown view", async () => {
+    await expect(render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "nope"] } })).rejects.toThrow(/unknown view "nope"/);
+  });
+});

@@ -200,8 +200,19 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const setScenario = (id: string | null, step = 1) => { session.setScenario(id, step); panel.scenarios.value = session.scenario?.id ?? ""; apply(); };
 
   /** Play the active view's scenario on its timer: base, each step, loop. Any interaction stops it. */
-  const stopAutoplay = () => { if (autoplay) { clearInterval(autoplay); autoplay = undefined; } };
+  let touring = false;
+  const stopAutoplay = () => { touring = false; if (autoplay) { clearInterval(autoplay); autoplay = undefined; } };
+  /** Tour the model's views on its timer with the morph. Any interaction stops it. */
+  const startTour = () => {
+    stopAutoplay();
+    const tour = model.tour;
+    if (!tour) return;
+    touring = true;
+    let k = tour.views.indexOf(activeId);
+    autoplay = setInterval(() => { k = (k + 1) % tour.views.length; showView(tour.views[k]!, true); }, tour.seconds * 1000);
+  };
   const startAutoplay = () => {
+    if (touring) return;
     stopAutoplay();
     const play = model.views.find((v) => v.id === activeId)?.play;
     if (!play) return;
@@ -222,8 +233,9 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   on(panel.reset, "click", reset);
 
   /* ---- view switching with a morph: shared components slide, the rest fades ---- */
-  const showView = (id: string) => {
+  const showView = (id: string, byTour = false) => {
     if (!layers.has(id) || id === activeId) return;
+    if (!byTour) stopAutoplay();
     if (morphing) morphing();
     const from = active(), to = layers.get(id)!;
     const moves: { el: SVGGElement; dx: number; dy: number; b: Box }[] = [];
@@ -292,7 +304,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   });
   on(window, "resize", () => { if (!zoomed) fit(false); });
 
-  rebuildOutline(); apply(); fit(false); startAutoplay();
+  rebuildOutline(); apply(); fit(false); if (model.tour) startTour(); else startAutoplay();
   return {
     showView, setScenario, setState, reset,
     destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (morphing) morphing(); panel.host.remove(); style.remove(); },

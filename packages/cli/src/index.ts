@@ -14,9 +14,10 @@ export const USAGE = `Usage:
                  [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
                  [--play <id>]           --static; --step <n> (1-based) stops after step n (default: last).
                  [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
-                                         (repeatable; applied after the scenario).
-                                         --play cycles a scenario's steps on a timer: pure CSS in the file, so
-                                         it plays inside <img>; --every sets the seconds per step (default 3).
+                 [--tour [<ids>]]        (repeatable; applied after the scenario).
+                                         --play cycles a scenario's steps on a timer; --tour cycles views
+                                         (comma-separated ids, or the model's own tour). Both are pure CSS in
+                                         the file, so they play inside <img>. --every: seconds per step or view.
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -29,6 +30,8 @@ export class CliError extends Error {
 interface Io { stdout(s: string): void; stderr(s: string): void }
 
 const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every"]);
+/** Flags whose value may be omitted (then the model's own declaration is used). */
+const OPTIONAL_VALUE_FLAGS = new Set(["--tour"]);
 const BOOL_FLAGS = new Set(["--static"]);
 
 interface Args { positionals: string[]; values: Map<string, string[]>; flags: Set<string> }
@@ -44,6 +47,10 @@ function parseArgs(tokens: string[]): Args {
       if (t !== "--set" && args.values.has(t)) throw new CliError(`${t} given twice`, 2);
       args.values.set(t, [...(args.values.get(t) ?? []), v]);
       i++;
+    } else if (OPTIONAL_VALUE_FLAGS.has(t)) {
+      if (args.values.has(t) || args.flags.has(t)) throw new CliError(`${t} given twice`, 2);
+      const v = tokens[i + 1];
+      if (v !== undefined && !v.startsWith("-")) { args.values.set(t, [v]); i++; } else args.flags.add(t);
     } else if (BOOL_FLAGS.has(t)) args.flags.add(t);
     else if (t.startsWith("-")) throw new CliError(`unknown option ${t}`, 2);
     else args.positionals.push(t);
@@ -102,15 +109,18 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const set = parseSets(args.values.get("--set"));
     const hasSet = Object.keys(set).length > 0;
     const playId = one(args, "--play"), everyRaw = one(args, "--every");
-    if (everyRaw !== undefined && playId === undefined) throw new CliError("--every requires --play", 2);
+    const tourIds = one(args, "--tour"), tourOwn = args.flags.has("--tour");
+    if (everyRaw !== undefined && playId === undefined && tourIds === undefined && !tourOwn) throw new CliError("--every requires --play or --tour", 2);
     const every = everyRaw !== undefined ? Number(everyRaw) : undefined;
     if (every !== undefined && !(every > 0)) throw new CliError(`--every must be a positive number of seconds, got "${everyRaw}"`, 2);
     const play = playId !== undefined ? { scenario: playId, ...(every !== undefined ? { seconds: every } : {}) } : undefined;
-    const isStatic = args.flags.has("--static") || scenario !== undefined;
+    const tour = tourIds !== undefined ? { views: tourIds.split(",").map((x) => x.trim()).filter(Boolean), ...(every !== undefined ? { seconds: every } : {}) } : tourOwn ? (true as const) : undefined;
+    if (tour === true && every !== undefined) throw new CliError("--every with --tour needs an explicit list of views", 2);
+    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
-      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}) };
+      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}) };
       svg = isStatic
         ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });

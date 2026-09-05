@@ -211,5 +211,13 @@
         }
       ]
     }
-  ]
+  ],
+  "tour": {
+    "views": [
+      "overview",
+      "payments",
+      "identity"
+    ],
+    "seconds": 4
+  }
 }

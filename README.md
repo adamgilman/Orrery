@@ -54,12 +54,11 @@ orrery render examples/readme/failover.orrery.json --play db-fails --every 3 -o 
 ![Billing only](examples/readme/views-billing.svg)
 
 **Drill down.** A view can draw a group closed, one box with a count of what is inside, and a second view opens it.
-In the interactive file, clicking the closed box morphs it into the open frame; Escape goes back. Health still comes
-from what is inside: fail the ledger in the payments box and the box, and the checkout that needs it, turn amber.
+This image tours the three views every four seconds, no script, crossfading between them. In the interactive file,
+clicking the closed box morphs it into the open frame and Escape goes back. Health still comes from what is inside:
+fail the ledger in the payments box and the box, and the checkout that needs it, turn amber.
 
-![Platform overview, two subsystems closed](examples/readme/drill-down.svg)
-
-![Inside the payments subsystem](examples/readme/drill-down-payments.svg)
+![Platform overview, then inside each subsystem](examples/readme/drill-down-tour.svg)
 
 **Your vocabulary.** States and kinds are yours to name: bind them to looks and mechanics, and the legend teaches the
 reader your words. A trading platform whose organisation says healthy, impaired, brownout, outage and drained, two
