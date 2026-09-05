@@ -27,6 +27,88 @@
       "default": "right",
       "description": "Default flow direction for views: connections run left-to-right (\"right\") or top-to-bottom (\"down\"). The only layout hint at this level; positions are computed automatically and are deterministic. Narrow, top-down diagrams read best on phones."
     },
+    "states": {
+      "type": "object",
+      "description": "Author-defined states: a map from state name to how it looks and how it behaves. Omitted names keep the defaults: on (normal, rank 0, available), degraded (warn, 1, available), failed (alert, 2, unavailable, stops flow), off (muted, 2, unavailable, stops flow, cascades to children). Add your own names (maintenance, canary) or rebind these. The engine never interprets a name; only look, rank, available, flows and cascade matter.",
+      "additionalProperties": false,
+      "properties": {
+        "needs": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Document-wide defaults for what a need does to its component.",
+          "properties": {
+            "unmet": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "default": "failed",
+              "description": "State a component enters when fewer than 'min' alternatives of a need are available."
+            },
+            "reduced": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "default": "degraded",
+              "description": "State a component enters when a need is met but not every alternative is available, or the preferred one is not at rank 0."
+            }
+          }
+        },
+        "define": {
+          "type": "object",
+          "description": "State definitions by name.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "look": {
+                "type": "string",
+                "enum": [
+                  "normal",
+                  "warn",
+                  "alert",
+                  "muted",
+                  "highlight"
+                ],
+                "default": "normal",
+                "description": "Visual treatment: normal; warn (amber); alert (red, pulsing outline); muted (dimmed, dashed); highlight (blue glow)."
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 1,
+                "description": "Severity order. Propagation only ever raises rank; the highest applies."
+              },
+              "available": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether an entity in this state counts toward a need's 'min'."
+              },
+              "flows": {
+                "type": "string",
+                "enum": [
+                  "keep",
+                  "stop"
+                ],
+                "default": "keep",
+                "description": "'stop': connections touching an entity in this state carry no flow."
+              },
+              "cascade": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "children"
+                ],
+                "default": "none",
+                "description": "'children': every descendant of a group in this state is set to it as well."
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What this state means to you. The engine does not read it."
+              }
+            }
+          }
+        }
+      }
+    },
     "components": {
       "type": "array",
       "minItems": 1,
@@ -70,19 +152,14 @@
           },
           "state": {
             "type": "string",
-            "enum": [
-              "on",
-              "off",
-              "degraded",
-              "failed"
-            ],
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
             "default": "on",
-            "description": "Declared health in the base model. 'off' is intentional (maintenance, decommissioned) and drawn dimmed; 'failed' is broken, drawn red and pulsing; 'degraded' is partially working, drawn amber. Propagation only ever worsens a component from its declared state."
+            "description": "Declared state in the base model: one of the names in 'states' (defaults: on, degraded, failed, off). Propagation only ever moves an entity to a higher-ranked state."
           },
           "needs": {
             "type": "array",
             "default": [],
-            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives. Every alternative must be connected to this component (either direction) and must not be a group that contains it. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
+            "description": "What this component cannot work without. Each entry is either an entity id (component or group: a hard need with one way to satisfy it) or an object listing alternatives with the states to enter when the need is unmet or only partly met. Every alternative must be connected to this component (either direction) and must not be a group that contains it. Needs add no lines; they make existing lines matter and are drawn as a cue on them. AND across entries, OR within 'any'.",
             "items": {
               "oneOf": [
                 {
@@ -113,10 +190,15 @@
                       "default": 1,
                       "description": "How many alternatives must be healthy for the need to be met (quorum). Must not exceed the number of alternatives."
                     },
-                    "soft": {
-                      "type": "boolean",
-                      "default": false,
-                      "description": "An unmet soft need degrades the component instead of failing it: a nice-to-have call."
+                    "unmet": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                      "description": "State this component enters when fewer than 'min' alternatives are available. Defaults to states.needs.unmet (failed). A nice-to-have call is \"unmet\": \"degraded\"."
+                    },
+                    "reduced": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                      "description": "State this component enters when the need is met with reduced redundancy. Defaults to states.needs.reduced (degraded)."
                     }
                   }
                 }
@@ -249,14 +331,9 @@
           },
           "state": {
             "type": "string",
-            "enum": [
-              "on",
-              "off",
-              "degraded",
-              "failed"
-            ],
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
             "default": "on",
-            "description": "Declared health of the group as an entity: what connections and needs pointing at the group see. Does not change the members' states; a member inside a failed group is judged by its own needs. Exception: 'off' switches everything inside off too (intentional decommissioning). A non-empty group's health is also derived from its members (all down: failed; any not on: degraded), never better than the declared state."
+            "description": "Declared state in the base model: one of the names in 'states' (defaults: on, degraded, failed, off). Propagation only ever moves an entity to a higher-ranked state."
           },
           "description": {
             "type": "string",
@@ -323,7 +400,7 @@
     "scenarios": {
       "type": "array",
       "default": [],
-      "description": "Named what-if stories. Each step changes declared states with verbs, or a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --fail <id>`.",
+      "description": "Named what-if stories. Each step sets declared states ('set') or restores them, or overrides a connection's load; steps are cumulative (step k applies steps 1..k). Propagation fills in every consequence. Render one with `orrery render --scenario <id> --step <n>`; try one-offs with `orrery render --set failed=db`.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -345,7 +422,7 @@
           "steps": {
             "type": "array",
             "minItems": 1,
-            "description": "Ordered changes. A step must change at least one thing and may name a component under only one verb.",
+            "description": "Ordered changes. A step must change at least one thing and may name an entity only once across 'set' and 'restore'.",
             "items": {
               "type": "object",
               "additionalProperties": false,
@@ -355,62 +432,33 @@
                   "minLength": 1,
                   "description": "What happens in this step, shown during step-through."
                 },
-                "fail": {
-                  "description": "Entity id(s) whose state becomes 'failed'. On a group this fails the group as an entity (what depends on it suffers); the members keep their own states and needs.",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                    },
-                    {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
+                "set": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "description": "State name to entity id(s): \"set\": { \"failed\": \"db\", \"off\": [\"eu-west\"] }. Any name from 'states'. On a group, the state applies to the group as an entity and reaches its members only if the state cascades.",
+                  "propertyNames": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+                  },
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
                         "type": "string",
                         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
                       },
-                      "uniqueItems": true
-                    }
-                  ]
-                },
-                "degrade": {
-                  "description": "Entity id(s) whose state becomes 'degraded'.",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                    },
-                    {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
-                        "type": "string",
-                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                      },
-                      "uniqueItems": true
-                    }
-                  ]
-                },
-                "off": {
-                  "description": "Entity id(s) switched off (intentional, drawn dimmed). Switching a group off switches everything inside it off.",
-                  "oneOf": [
-                    {
-                      "type": "string",
-                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                    },
-                    {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
-                        "type": "string",
-                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                      },
-                      "uniqueItems": true
-                    }
-                  ]
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                        }
+                      }
+                    ]
+                  }
                 },
                 "restore": {
-                  "description": "Entity id(s) returned to their base-model state.",
                   "oneOf": [
                     {
                       "type": "string",
@@ -419,13 +467,14 @@
                     {
                       "type": "array",
                       "minItems": 1,
+                      "uniqueItems": true,
                       "items": {
                         "type": "string",
                         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                      },
-                      "uniqueItems": true
+                      }
                     }
-                  ]
+                  ],
+                  "description": "Entity id(s) returned to their base-model state."
                 },
                 "load": {
                   "type": "array",

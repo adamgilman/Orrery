@@ -13,9 +13,13 @@ disagree, the code has a bug.
 - **Users' words, not graph words.** Components, connections, groups. Never nodes, edges, vertices.
 - **Progressive.** Components alone are a valid file and render. Every other field is an enrichment that adds a
   visible or behavioural change the author can see on the next render.
-- **Explicit over inferred.** Health semantics are declared by the author (`needs`). The engine never guesses
-  that a connection implies a dependency, that a database is a fallback for another database, or what "primary"
-  means from a label.
+- **Looks and mechanics, not meanings.** The tool owns how a state is drawn and how it travels: cascade to
+  children, stop the flow, count as available. What "failed" or "degraded" means belongs to the author, who binds
+  their own state names to those looks and mechanics. The default binding covers the common case; nothing in the
+  engine knows what "down" means.
+- **Explicit over inferred.** Dependencies are declared by the author (`needs`). The engine never guesses that a
+  connection implies a dependency, that a database is a fallback for another database, or what "primary" means
+  from a label.
 - **Connections are fluid.** Any entity can connect to any other entity: component to component, component to
   group, group to group, including empty groups. An empty group is a black box you have not opened yet.
 - **Small vocabulary.** Every enumerated value has a glyph or style and a meaning that holds across views.
@@ -58,7 +62,8 @@ disagree, the code has a bug.
 | **need** | What a component cannot work without, declared on that component, satisfied by one or more alternative entities. | A connection |
 | **view** | One drawing of the model: a scope, a subset, a direction. | A second model |
 | **scenario** | An ordered, cumulative sequence of what-ifs: fail, degrade, switch off, restore, shift load. | A test |
-| **state** | Health of a component: `on`, `degraded`, `failed`, `off`. Declared in the model or a scenario, then propagated. | A metric |
+| **state** | A named condition an entity can be in, declared in the model or a scenario, then propagated. State names are the author's; each is bound to a look and to mechanics (4.8). The default set is `on`, `degraded`, `failed`, `off`. | A metric, a fixed meaning |
+| **look** | A visual treatment the renderer guarantees: `normal`, `warn`, `alert`, `muted`, `highlight`. | A state |
 | **load** | Relative traffic on a connection, 0 to 1. Drives animation only. | Requests per second |
 
 ## 4. Entities
@@ -116,7 +121,7 @@ A connection is referenced (in scenarios) by `{ "from", "to" }` or, when that pa
 | `label` | string | id | Frame title. |
 | `kind` | `tier` `region` `zone` `cluster` `boundary` | `tier` | Frame style: tier solid tinted, region dashed, zone dotted, cluster solid darker, boundary red dashed with no fill. |
 | `parent` | id | | Enclosing group. |
-| `state` | `on` `degraded` `failed` `off` | `on` | Declared health of the group as an entity: what needs and connections on the group see. Does not force member states, except `off`, which switches the contents off too (5.1). For an empty group this is its only health. |
+| `state` | state name | `on` | Declared state of the group as an entity: what needs and connections on the group see. Reaches members only if the state's `cascade` says so (4.8). For an empty group this is its only state. |
 | `description` | string | | Tooltip and outline text. |
 | `meta` | object | | Free-form. |
 
@@ -150,73 +155,90 @@ Step:
 | Field | Type | Meaning |
 |---|---|---|
 | `note` | string | What happens, shown during step-through. |
-| `fail`, `degrade`, `off`, `restore` | entity id or array | Set those entities' declared state to `failed`, `degraded`, `off`, `on`. On a group, `fail` and `degrade` affect the group as an entity (its dependants), not its members; `off` switches the members off too. |
+| `set` | object: state name → entity id or array | Set those entities' declared state: `"set": { "failed": "db", "off": ["eu-west"] }`. Any name from `states`. |
+| `restore` | entity id or array | Return those entities to their base-model state. |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Override a connection's load. Rarely needed: load shifts automatically when a need's alternative is unhealthy. |
 
-A step must change at least one thing. The same entity may not appear under two verbs in one step.
+A step must change at least one thing. The same entity may not appear under two states, or under `set` and
+`restore`, in one step.
 
 ### 4.7 Need
 
 A need is an entry in a component's `needs` array. Two forms:
 
 - An entity id: a hard need with one way to satisfy it. `"needs": ["db"]` or `"needs": ["payments-platform"]`.
-- An object: `{ "any": [ids...], "min": 1, "soft": false }`. `any` lists alternatives in order of preference.
-  `min` is how many must be healthy for the need to be met (quorum). `soft` means an unmet need degrades the
-  component instead of failing it.
+- An object: `{ "any": [ids...], "min": 1, "unmet": "failed", "reduced": "degraded" }`. `any` lists
+  alternatives in order of preference. `min` is how many must be available for the need to be met (quorum).
+  `unmet` names the state the component enters when fewer than `min` are available; `reduced` the state when the
+  need is met but not every alternative is available. Both default from the document's `states` (4.8); a
+  nice-to-have call is simply `"unmet": "degraded"`.
 
 Every id in a need must be an entity that has a connection with the needing component, in either direction
 (invariant S9). Needs are about availability; they add no lines to the drawing, they change what the existing
 lines mean, and they are drawn as a cue on those lines (R3). A need on a group is the progressive form: need the
 black box now, refine to the component inside it once the box is opened.
 
+### 4.8 States
+
+The document may declare `states`: a map from state name to its look and mechanics. Omitted names take the
+defaults below; an omitted block is exactly this table. Authors add names (`maintenance`, `canary`,
+`deprecated`) or rebind the defaults; the engine treats every name the same way.
+
+| Name (default set) | `look` | `rank` | `available` | `flows` | `cascade` |
+|---|---|---|---|---|---|
+| `on` | `normal` | 0 | true | `keep` | `none` |
+| `degraded` | `warn` | 1 | true | `keep` | `none` |
+| `failed` | `alert` | 2 | false | `stop` | `none` |
+| `off` | `muted` | 2 | false | `stop` | `children` |
+
+| Field | Meaning |
+|---|---|
+| `look` | Visual treatment, one of `normal`, `warn` (amber), `alert` (red, pulsing), `muted` (dimmed, dashed), `highlight` (blue). The renderer guarantees these; nothing else about a state is visual. |
+| `rank` | Severity order. Propagation only ever raises rank; the worst applies. Ties keep the declared state. |
+| `available` | Whether an entity in this state counts toward a need's `min`. |
+| `flows` | `keep`: connections touching the entity keep their load. `stop`: they carry no flow. |
+| `cascade` | `none`: the state is about the entity alone. `children`: every descendant is set to this state too (declared states only, so it cannot loop). |
+| `unmet`, `reduced` | Document-level defaults for needs (4.7), given as `"needs": { "unmet": "failed", "reduced": "degraded" }` at the top level of `states`. |
+
+A state's meaning is whatever the author says in its description. `down` appears nowhere in this specification.
+
 ## 5. Semantics
 
-### 5.1 Health
+### 5.1 Rank and availability
 
-States rank `on` < `degraded` < `failed`; `off` ranks with `failed` for propagation but is drawn differently.
-A component is **down** when `failed` or `off`; **healthy** when `on`; `degraded` counts as healthy for quorum
-but propagates degradation.
+Every entity has a declared state (default `on`) and an effective state computed by propagation. Effective state is
+never lower-ranked than declared. An entity is **available** when its effective state's `available` is true.
 
-Groups have health too. A group's declared state describes the group **as an entity**: it is what connections
-and needs pointing at the group see. It is not a switch for the members. A component inside a failed region is
-evaluated on its own needs; if it has alternatives outside the region it may be degraded, or untouched. Failure
-travels along needs, never by containment.
-
-- **Up.** A non-empty group's effective state is derived from its direct members (components and subgroups): `failed`
-  if all are down, `degraded` if any is not `on`, else `on`; never better than its own declared state. An empty
-  group's effective state is its declared state.
-- **Off is the one exception.** `off` means intentionally switched off, and switching a group off switches off
-  everything inside it (decommissioning a region). This uses declared states only, so it cannot loop.
-- A region-wide *outage* is therefore modelled the way it happens: fail the shared thing the members need (the
-  region's network, its control plane, its power) as a component inside the region, or fail the members. What
-  the region's dependants then experience follows from their needs.
+Groups: a non-empty group's effective state is the highest-ranked of its declared state and the states its members
+imply: if no direct member is available, the group takes the document's `needs.unmet` state; if any member is not
+at rank 0, it takes `needs.reduced`; otherwise it keeps its declared state. An empty group's effective state is its
+declared state. A group's state reaches its members only through `cascade: children`.
 
 ### 5.2 Propagation
 
-Given declared states (base model plus scenario steps plus runtime toggles), the engine computes effective states
-by iterating to a fixed point. For each component that is not down, for each need:
+Given declared states (base model, then scenario steps, then runtime toggles), the engine first applies every
+`cascade: children` state downward, then iterates to a fixed point. For each entity, for each need:
 
-1. `healthy` = number of alternatives (components or groups, by their effective state) that are `on` or `degraded`.
-2. If `healthy < min`: the need is **unmet**. Hard need → component `failed`; soft need → `degraded`.
-3. Else if `healthy < total alternatives`, or the first healthy alternative is `degraded`: the need is **met with
-   reduced redundancy** → component `degraded`.
-4. Else the need is **met**.
+1. `available` = number of alternatives whose effective state is available.
+2. If `available < min`: the need is **unmet**; the entity enters the need's `unmet` state.
+3. Else if `available < total`, or the first available alternative is not at rank 0: the need is **met with
+   reduced redundancy**; the entity enters the need's `reduced` state.
+4. Else the need is **met** and contributes nothing.
 
-The component's effective state is the worst over its needs, but never better than its declared state (declared
-state is a floor). Every derived state carries a reason: which need, which alternatives are down, which one is in
-use.
+The entity's effective state is the highest-ranked of its declared state and every need's contribution. Every
+derived state carries a reason naming the need and the alternatives involved.
 
-### 5.3 Load
+### 5.3 Flow
 
-- A connection touching a down component carries load 0.
-- Within a need, load of alternatives that are down shifts to the first healthy alternative, added to its own.
-  Alternatives with their own base load keep it (active-active).
-- Loads not touched by the rules above keep their declared or scenario value.
+- A connection touching an entity whose effective state has `flows: stop` carries load 0.
+- Within a need, the load of alternatives that are not available shifts to the first available alternative, added
+  to its own. Alternatives with their own base load keep it (active-active).
+- All other loads keep their declared or scenario value.
 
 ### 5.4 Scenarios
 
-Verbs set declared states; `load` sets declared loads. Propagation then runs. `restore` returns a component to
-`on`, which is its declared base unless the base model says otherwise, in which case the base value applies.
+`set` assigns declared states; `load` sets declared loads; `restore` returns entities to their base-model state.
+Propagation then runs.
 
 ### 5.5 Views
 
@@ -238,26 +260,29 @@ Each is enforced where stated and proven by the named test. `S` structural (vali
 | S5 | No connection from an entity to itself, nor between an entity and one of its own ancestors or descendants (a component to the group that contains it says nothing). | validator | validate: self-connection, connection-to-ancestor |
 | S6 | Two connections between the same ordered pair must both carry ids. | validator | validate: parallel-without-ids |
 | S7 | A connection reference by `{from,to}` must be unambiguous; otherwise the reference must use `id`. | validator | validate: ambiguous-connection-ref |
-| S8 | A scenario step changes at least one thing, and names each component under at most one verb. | validator | validate: scenario-empty-step, scenario-conflicting-verbs |
+| S8 | A scenario step changes at least one thing, and names each entity at most once across `set` and `restore`. | validator | validate: scenario-empty-step, scenario-conflicting-verbs |
 | S9 | Every need alternative is an entity connected (either direction) to the needing component, and not an ancestor of it. | validator | validate: need-without-connection, need-on-ancestor |
 | S10 | `any` has at least `min` alternatives, `min ≥ 1`, no duplicate alternatives, a component does not need itself. | validator | validate: need-shape fixtures |
 | S11 | Every schema property has a description; unknown properties are errors. | schema test | schema: descriptions, unknown-property |
 | S12 | Only `components` is required; a file of components alone is valid. | schema | validate: components-only |
-| S13 | A group may be empty; it still renders and may be connected, needed and failed. | schema, engines | validate: empty-group, layoutContract: empty group box |
+| S13 | A group may be empty; it still renders and may be connected, needed and given a state. | schema, engines | validate: empty-group, layoutContract: empty group box |
+| S14 | Every state name used anywhere (declared, in a need's `unmet`/`reduced`, in a scenario) is defined in `states` or is one of the four defaults; ranks are integers ≥ 0; looks are from the fixed set. | validator | validate: unknown-state, bad-state-definition |
 | B1 | Propagation is pure, deterministic and never mutates its input. | propagate | simulate: pure |
-| B2 | Declared state is a floor: propagation only worsens. | propagate | simulate: floor |
-| B3 | Need evaluation follows 5.2 exactly: unmet, reduced redundancy, met. | propagate | simulate: needs-* |
-| B4 | Load follows 5.3: zero on down components, shift to first healthy alternative, active-active preserved. | propagate | simulate: load-* |
-| B5 | Propagation terminates on any graph including cycles (states move only upward in severity). | propagate | simulate: cycle |
+| B2 | Declared state is a floor: propagation only raises rank. | propagate | simulate: floor |
+| B3 | Need evaluation follows 5.2 exactly, using each state's `available` and each need's `unmet`/`reduced`. | propagate | simulate: needs-* |
+| B4 | Flow follows 5.3: zero on `flows: stop` entities, shift to the first available alternative, active-active preserved. | propagate | simulate: load-* |
+| B5 | Propagation terminates on any graph including cycles (rank only rises). | propagate | simulate: cycle |
 | B6 | Every derived state carries a reason naming the need and the alternatives involved. | propagate | simulate: reasons |
 | B7 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied. | applyScenario | simulate: cumulative |
-| B8 | A group's declared `failed`/`degraded` never changes a member's state; failure reaches members only through their own needs. A group declared `off` switches every descendant off (declared states only, so no loops). | propagate | simulate: group-failed-members-untouched, group-off |
-| B9 | A non-empty group's effective state derives from its direct members (all down → failed, any not on → degraded), floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group |
+| B8 | A state reaches descendants by containment only when its `cascade` is `children`; otherwise members are affected only through their own needs. | propagate | simulate: cascade-children, no-cascade |
+| B9 | A non-empty group's effective state derives from its direct members per 5.1, floored by its declared state; an empty group's is its declared state. | propagate | simulate: group-up, empty-group |
+| B10 | The engine references no state by name: replacing the default `states` block with different names and the same mechanics yields identical propagation. | propagate | simulate: renamed-states |
 | R1 | The file never contains coordinates; layout is deterministic. | schema, engines | layoutContract: deterministic |
 | R2 | Rendering is byte-deterministic for the same model. | renderer | render: deterministic, cli: deterministic |
 | R3 | A connection that satisfies a need is visibly marked (darker line). | renderer | render: need-cue |
 | R4 | A scoped view draws one-ended connections to a ghost; nothing is dropped silently. | renderer | view: ghosts |
 | R5 | Animation is a pure function of the model and time (flow period, pulse period). | renderer, raster | raster: freeze, periodic |
+| R8 | Every look renders distinctly and identically wherever it is used; an entity is drawn by its look, never by its state name. | renderer | render: looks |
 | R6 | Order in the file is a layout signal: siblings keep declaration order. | ELK adapter | elk: model order |
 | R7 | A connection whose end is a group attaches to that group's frame; an empty group is drawn as a frame of minimum size. | engines, renderer | layoutContract: group endpoints |
 
@@ -298,5 +323,10 @@ Decisions from the principal-engineer review of 2026-09-05, so the reasoning is 
 - **Rejected** health expressions (second syntax inside JSON) and inferring needs from `sync` connections
   (explicit over inferred).
 - **Deferred** interactions and sequence views (need the runtime to play them), tags, neighbourhood views.
+- **Separated meanings from mechanics** (2026-09-05, later). The tool had fixed states with fixed meanings and
+  rules written in those terms ("down"). With enough users the words stop agreeing. Now the author declares state
+  names bound to looks (`normal`, `warn`, `alert`, `muted`, `highlight`) and mechanics (`rank`, `available`,
+  `flows`, `cascade`), needs name their own outcome states, and the default block reproduces the old behaviour so
+  small files stay small. Scenario verbs became `set: { state: ids }` so new state names need no new verbs.
 - **Stance recorded**: a component is a deployed thing in one place. Multi-region deployments are several
   components, grouped by region. This keeps groups meaningful in deployment views and keeps health per instance.
