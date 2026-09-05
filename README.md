@@ -54,13 +54,11 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 
 ![Data tier](examples/checkout/5-views-data.svg)
 
-**6. Drill down.** A view can draw a group closed: its real footprint with its name and a count, members hidden until
-the group is in focus. Everything is one drawing, so opening a group is a camera move, not a new picture: the closed
-box keeps its name and its connections while the camera closes on it, and its members resolve once the camera has
-settled, the way a map resolves as you approach. This image plays a four-scene `tour` with no script: the camera closes
-on the session cache and its two nodes appear, one node fails and the step marks the cluster and the API degraded,
-and the camera pulls back to the overview with the closed box carrying the state. The interactive file plays the same
-scenes with its camera until you click, and a click on any closed group focuses it.
+**6. Drill down.** A view can draw a group closed. The reader sees a box with a name and a count, and what is inside
+stays hidden. Open it and the camera moves in; the members appear once it has settled. It is one drawing, so nothing
+jumps. This image plays a four-scene `tour` with no script: the session cache closed, then open, then one node fails
+and the step marks the cluster and the API degraded, then back out. In the interactive file the tour plays until you
+click, and a click on any closed group opens it.
 
 ![Closed, inside, a node fails, back out](examples/checkout/6-drill-down-tour.svg)
 
