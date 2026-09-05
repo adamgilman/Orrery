@@ -1,5 +1,5 @@
 import { ModelError } from "./simulate.js";
-import type { Component, Connection, Model, View } from "./types.js";
+import type { Component, Model, View } from "./types.js";
 
 /**
  * Reduce the model to what one view shows (docs/MODEL.md §5.5). Selection: everything, or the scope group and its
@@ -29,25 +29,16 @@ export function scopeModel(model: Model, view: View): Model {
   for (const id of selected) for (const g of chain(id)) { if (view.scope !== undefined && !within(g, view.scope)) break; shownGroups.add(g); }
   const shown = new Set([...selected].filter((id) => !isGroup(id)).concat([...shownGroups]));
 
-  // Collapsed groups (R11): hide everything inside, count the hidden components, and re-attach connections to the box.
+  // Collapsed groups (R11): level of detail. Members stay in the model and the layout; the renderer hides them
+  // until the group is in focus. Only the count of hidden components is recorded here.
   const collapsed = new Set((view.collapse ?? []).filter((id) => shownGroups.has(id) && id !== view.scope));
   const closedBy = (id: string): string | undefined => chain(id).find((g) => collapsed.has(g));
   const hiddenCount = new Map<string, number>();
   for (const c of model.components) { const box = closedBy(c.id); if (box) hiddenCount.set(box, (hiddenCount.get(box) ?? 0) + 1); }
-  for (const id of [...shown]) if (closedBy(id)) { shown.delete(id); shownGroups.delete(id); }
-  const rewired = new Map<string, Connection>();
-  for (const c of model.connections) {
-    const from = closedBy(c.from) ?? c.from, to = closedBy(c.to) ?? c.to;
-    if (from === to || chain(from).includes(to) || chain(to).includes(from)) continue; // vanished inside a box
-    const key = `${from}\u0000${to}`;
-    const seen = rewired.get(key);
-    if (seen) rewired.set(key, { ...seen, load: Math.min(1, seen.load + c.load), ...(seen.need || c.need ? { need: true as const } : {}) });
-    else rewired.set(key, from === c.from && to === c.to ? c : { ...c, from, to, key: `${from}->${to}` });
-  }
-
   const groups = model.groups.filter((g) => shownGroups.has(g.id))
     .map((g) => { if (g.id !== view.scope) return g; const { parent, ...root } = g; return root; })
     .map((g) => (collapsed.has(g.id) ? { ...g, collapsed: hiddenCount.get(g.id) ?? 0 } : g));
+  const rewired = new Map(model.connections.map((c) => [c.key, c]));
   const components: Component[] = model.components.filter((c) => shown.has(c.id));
   const ghosts = new Map<string, Component>();
   const connections = [...rewired.values()].filter((c) => {

@@ -27,7 +27,7 @@ describe("inspect", () => {
     expect(report.ok).toBe(false);
   });
   it("fails when a flow's dash pattern does not match the period the freeze assumes", async () => {
-    const svg = (await fixture("fan-out")).replace("stroke-dasharray:6 10", "stroke-dasharray:6 6");
+    const svg = (await fixture("fan-out")).replaceAll("stroke-dasharray:6 10", "stroke-dasharray:6 6");
     const report = inspect(svg);
     expect(report.ok).toBe(false);
     expect(report.connections.some((e) => e.load > 0 && !e.periodic)).toBe(true);

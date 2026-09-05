@@ -41,12 +41,22 @@ describe("playing views in the frame tooling", () => {
 });
 
 describe("tours in the frame tooling", () => {
-  it("activeView keeps only the first frame of a tour", async () => {
+  it("activeView keeps the first state of a one-drawing tour and shows closed groups at rest: summaries, no hidden detail", async () => {
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
     const svg = await render(r.model, new FakeLayoutEngine(), { tour: true });
     const one = activeView(svg);
-    expect((one.match(/<g class="tour"/g) ?? []).length).toBe(1);
-    expect(inspect(svg, { fps: 5, durationMs: 400 }).ok).toBe(true);
+    expect((one.match(/<g class="state"/g) ?? []).length).toBe(1);
+    expect(one).not.toMatch(/<[^>]*data-lod="detail"/); // no hidden elements remain (the stylesheet still names the attribute)
+    expect(one).not.toContain('data-node="ledger"');
+    expect(one).toMatch(/<path class="flow" data-flow="checkout->pay-api"/); // the summary stands in for the cut connection
+    const report = inspect(svg, { fps: 5, durationMs: 400 });
+    expect(report.problems).toEqual([]);
+  });
+  it("activeView keeps only the first frame of a crossfading tour of different views", async () => {
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/drill-down.json"), "utf8")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await render(r.model, new FakeLayoutEngine(), { tour: { views: ["overview", "payments"] } });
+    expect((activeView(svg).match(/<g class="tour"/g) ?? []).length).toBe(1);
   });
 });

@@ -63,7 +63,7 @@ interface Raw {
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, string | string[]>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
-  tour?: { seconds: number; views?: string[]; scenes?: { view: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number }[] };
+  tour?: { seconds: number; views?: string[]; scenes?: { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number }[] };
 }
 
 /* ---------- vocabulary ---------- */
@@ -280,11 +280,15 @@ export function validate(input: unknown): ValidationResult {
     const t = raw.tour;
     if (!t.views && !t.scenes) err("/tour", "give views or scenes");
     t.views?.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
-    type RawScene = { view: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number };
+    type RawScene = { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string | string[]>; note?: string; seconds?: number };
     const rawScenes: RawScene[] = t.scenes ?? (t.views ?? []).map((view) => ({ view }));
     const scenes: Scene[] = rawScenes.map((sc, k) => {
       const base = t.scenes ? `/tour/scenes/${k}` : `/tour/views/${k}`;
       if (t.scenes && !viewIds.has(sc.view)) err(`${base}/view`, `unknown view "${sc.view}"`);
+      if (sc.focus !== undefined) {
+        if (componentIds.has(sc.focus)) err(`${base}/focus`, `"${sc.focus}" is not a group`);
+        else if (!groupIds.has(sc.focus)) err(`${base}/focus`, `unknown group "${sc.focus}"`);
+      }
       const scenario = sc.scenario !== undefined ? scenarios.find((x) => x.id === sc.scenario) : undefined;
       if (sc.scenario !== undefined && !scenario) err(`${base}/scenario`, `unknown scenario "${sc.scenario}"`);
       if (sc.step !== undefined && scenario && (sc.step < 1 || sc.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
@@ -295,7 +299,7 @@ export function validate(input: unknown): ValidationResult {
         set[state] = list(ids);
         for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
       }
-      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...opt("note", sc.note) };
+      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("focus", sc.focus), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...opt("note", sc.note) };
     });
     tour = { seconds: t.seconds, scenes };
   }

@@ -133,7 +133,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     step();
   };
   const fit = (animate: boolean) => { zoomed = false; tween(fitView(layerSize(active()), screen(), frame), animate); };
-  const zoomTo = (id: string, type: EntityType) => { const el = elOf(id, type); if (el) { zoomed = true; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 1.5 }), true); } };
+  const zoomTo = (id: string, type: EntityType) => { const el = elOf(id, type); if (el) { zoomed = true; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), true); } };
 
   /* ---- outline and selection ---- */
   const order: { id: string; type: EntityType }[] = [];
@@ -166,19 +166,37 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
 
   /* ---- interactions ---- */
   const setState = (id: string, state: string) => { session.set(id, state); apply(); };
-  /** A closed group opens into the view scoped to it, if the model has one. */
+  /** Level of detail: a closed group in focus shows its members and hides its summary; the camera closes on it. */
+  let focusId: string | null = null;
+  const reveal = (groupId: string | null) => {
+    for (const layer of layers.values()) {
+      for (const el of layer.querySelectorAll<SVGElement>("[data-lod]")) {
+        const fors = (el.getAttribute("data-for") ?? "").split(" ");
+        const open = groupId !== null && fors.includes(groupId);
+        el.style.opacity = el.getAttribute("data-lod") === "detail" ? (open ? "1" : "0") : (open ? "0" : "1");
+      }
+    }
+  };
+  const focus = (groupId: string | null, animate = true) => {
+    focusId = groupId;
+    reveal(groupId);
+    if (groupId) zoomTo(groupId, "group"); else fit(animate);
+  };
+  /** Clicking a closed group focuses it. */
   const drillInto = (groupId: string): boolean => {
-    const target = model.views.find((v) => v.scope === groupId);
-    if (!target || !layers.has(target.id) || target.id === activeId) return false;
-    history.push(activeId);
-    showView(target.id);
+    if (!active().querySelector(`[data-group="${groupId}"][data-collapsed]`)) return false;
+    history.push(focusId ?? "");
+    focus(groupId);
     return true;
   };
   on(scene, "click", (ev) => {
-    const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
+    let g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
     if (!g) return;
+    // Hidden detail is not clickable: a click on a member of a closed, unfocused group is a click on the group.
+    const hiddenIn = g.getAttribute("data-lod") === "detail" ? (g.getAttribute("data-for") ?? "").split(" ")[0] : undefined;
+    if (hiddenIn && hiddenIn !== focusId) g = active().querySelector<SVGGElement>(`[data-group="${hiddenIn}"]`) ?? g;
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
-    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && drillInto(id)) return;
+    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
     select(id, g.hasAttribute("data-node") ? "node" : "group");
     if ((ev as MouseEvent).shiftKey) session.cycle(id); else session.toggle(id, model.states.needs.unmet);
     apply();
@@ -218,6 +236,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       panel.scenarios.value = session.scenario?.id ?? "";
       sceneNote = sc.note;
       apply();
+      if ((sc.focus ?? null) !== focusId) focus(sc.focus ?? null);
       sceneTimer = setTimeout(() => play((k + 1) % tour.scenes.length), sc.seconds * 1000);
     };
     play(0);
@@ -306,7 +325,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       if (n) select(n.id, n.type);
     } else if (k === "Enter" && selected) zoomTo(selected.id, selected.type);
     else if (k === "f" && selected) { session.toggle(selected.id, model.states.needs.unmet); apply(); }
-    else if (k === "Escape") { const back = history.pop(); if (back) showView(back); else { select(null); fit(true); } }
+    else if (k === "Escape") { if (history.length) { const back = history.pop()!; focus(back || null); } else { select(null); if (focusId) focus(null); else fit(true); } }
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);
     else if (/^[1-9]$/.test(k)) { const id = [...layers.keys()][Number(k) - 1]; if (id) showView(id); }
@@ -315,7 +334,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   });
   on(window, "resize", () => { if (!zoomed) fit(false); });
 
-  rebuildOutline(); apply(); fit(false); if (model.tour) startTour(); else startAutoplay();
+  rebuildOutline(); apply(); reveal(null); fit(false); if (model.tour) startTour(); else startAutoplay();
   return {
     showView, setScenario, setState, reset,
     destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (morphing) morphing(); panel.host.remove(); style.remove(); },

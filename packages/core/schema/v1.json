@@ -575,7 +575,7 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
-            "description": "Group ids drawn closed in this view: one box with the group's label and a count, members hidden, connections to members attached to the box. Health still derives from what is inside. Pair it with a second view whose 'scope' is the group, and the interactive file opens the box on click."
+            "description": "Group ids drawn closed in this view: the group keeps its real footprint, its name and a count sit centred on it, and its members are hidden until the group is in focus (a tour scene's 'focus', or a click in the interactive file). Connections into it stop at its frame until then. Health still derives from what is inside."
           }
         }
       }
@@ -700,7 +700,7 @@
     "tour": {
       "type": "object",
       "additionalProperties": false,
-      "description": "A story told over the model on a timer: scenes shown in turn, each a view at a moment of a scenario. The rendered file carries each scene as a layer and crossfades between them with CSS, so it plays inside an image tag; the interactive runtime plays the scenes with its morph until the reader interacts. Give 'views' for a plain tour of views, or 'scenes' for the full form.",
+      "description": "A story told over the model on a timer: scenes shown in turn, each the view at a moment of a scenario, optionally with the camera closed on a group. In the file this is CSS: one drawing, a camera track and level-of-detail tracks, so it plays inside an image tag; the interactive runtime plays the same scenes with its camera until the reader interacts.",
       "properties": {
         "seconds": {
           "type": "number",
@@ -777,6 +777,10 @@
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "description": "How long this scene stays. Defaults to the tour's seconds."
+              },
+              "focus": {
+                "type": "string",
+                "description": "Group id the camera closes on in this scene. The group's members are revealed while it is in focus; omit to show the whole view."
               }
             }
           }

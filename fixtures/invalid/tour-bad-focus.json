@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "id": "g"
+    }
+  ],
+  "components": [
+    {
+      "id": "a",
+      "group": "g"
+    },
+    {
+      "id": "b"
+    }
+  ],
+  "views": [
+    {
+      "id": "v",
+      "collapse": [
+        "g"
+      ]
+    }
+  ],
+  "tour": {
+    "scenes": [
+      {
+        "view": "v"
+      },
+      {
+        "view": "v",
+        "focus": "b"
+      },
+      {
+        "view": "v",
+        "focus": "zzz"
+      }
+    ]
+  }
+}

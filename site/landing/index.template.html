@@ -233,16 +233,18 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Drill down</p><h2>Close what the reader does not need yet.</h2></div>
-      <p class="o-lede o-muted">A view can draw a group closed: one box, a count of what is inside, every connection into it gathered onto the box. A second view opens it. The figure plays a four-scene story with no script: the camera zooms into the Payments box until it is the open frame, the ledger fails in there, and the camera zooms back out to the box and the checkout that needs it turned amber. In the interactive file the same scenes play with the morph until you click, and a click on any closed box opens it.</p>
+      <p class="o-lede o-muted">A view can draw a group closed: its real footprint with its name and a count, members hidden, connections into it stopping at its frame. It is all one drawing, so opening a group is a camera move, not a new picture. The figure plays a four-scene story with no script: the camera closes on Payments and its members appear, the ledger fails in there, and the camera pulls back with the box and the checkout that needs it turned amber. The interactive file plays the same scenes with its camera until you click, and a click on any closed group focuses it.</p>
     </div>
-    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Four scenes, sixteen seconds, two zooms.</b> Checkout needs Payments and Identity, and the darker lines say so. Inside Payments, the API needs the ledger or its replica, the card vault, and one of two providers; the checkout calling in from outside is a ghost at the edge, never dropped. When the ledger fails, the API runs reduced, and outside the closed box carries that state.</figcaption></figure>
+    <figure class="o-figure o-wide" style="max-width:760px"><!--svg:drill-down-tour--><figcaption><b>Four scenes, sixteen seconds, one drawing.</b> Checkout needs Payments and Identity, and the darker lines say so. Inside Payments, the API needs the ledger or its replica, the card vault, and one of two providers. When the ledger fails, the API runs reduced, and outside, the closed box carries that state.</figcaption></figure>
     <div class="o-split">
-      <pre><code><span class="k">"views"</span>: [
-  { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"payments"</span>, <span class="s">"identity"</span>] },
-  { <span class="k">"id"</span>: <span class="s">"payments"</span>, <span class="k">"scope"</span>: <span class="s">"payments"</span>, <span class="k">"direction"</span>: <span class="s">"down"</span> },
-  { <span class="k">"id"</span>: <span class="s">"identity"</span>, <span class="k">"scope"</span>: <span class="s">"identity"</span>, <span class="k">"direction"</span>: <span class="s">"down"</span> }
-]</code></pre>
-      <p class="o-body o-muted">Three views, one model, one story. The overview closes two groups; each of the others opens one. A <code>tour</code> lists scenes: a view, a moment of a scenario, a caption. Nothing is duplicated and nothing can drift: the same components, connections and needs draw every scene, so a change to the model is a change to all of them.</p>
+      <pre><code><span class="k">"views"</span>: [ { <span class="k">"id"</span>: <span class="s">"overview"</span>, <span class="k">"collapse"</span>: [<span class="s">"payments"</span>, <span class="s">"identity"</span>] } ],
+<span class="k">"tour"</span>: { <span class="k">"seconds"</span>: <span class="n">4</span>, <span class="k">"scenes"</span>: [
+  { <span class="k">"view"</span>: <span class="s">"overview"</span> },
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"payments"</span> },
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"focus"</span>: <span class="s">"payments"</span>, <span class="k">"scenario"</span>: <span class="s">"ledger-fails"</span> },
+  { <span class="k">"view"</span>: <span class="s">"overview"</span>, <span class="k">"scenario"</span>: <span class="s">"ledger-fails"</span> }
+] }</code></pre>
+      <p class="o-body o-muted">One view, one story. A <code>tour</code> lists scenes: a view, a group to focus on, a moment of a scenario, a caption. Nothing is duplicated and nothing can drift: the same components, connections and needs draw every scene, so a change to the model is a change to all of them.</p>
     </div>
   </div>
 </section>

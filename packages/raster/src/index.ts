@@ -29,9 +29,17 @@ export function activeView(svg: string): string {
   // Hidden layers carry their style right after the class (the renderer guarantees the attribute order).
   const hidden = '<g class="view" style="display:none"';
   for (let i = out.indexOf(hidden); i >= 0; i = out.indexOf(hidden, i)) out = dropElement(out, i);
-  // A playing view stacks one layer per step; the still picture is the base step.
-  const steps = /<g class="(?:step|tour)" data-(?:step|frame)="(\d+)"/g;
+  // A playing view stacks one layer per step, a tour one per state; the still picture is the first.
+  const steps = /<g class="(?:step|tour|state)" data-(?:step|frame|state)="(\d+)"/g;
   for (let m = steps.exec(out); m; m = steps.exec(out)) if (m[1] !== "0") { out = dropElement(out, m.index); steps.lastIndex = m.index; }
+  // Level of detail at rest: hidden detail goes, summaries become the ordinary elements the checks understand.
+  // Attribute-aware matching: keys like "a->b" put a ">" inside quoted attribute values.
+  const A = String.raw`(?:[^>"]|"[^"]*")*`;
+  const detailGroup = new RegExp(`<g class="[^"]*"${A}data-lod="detail"${A}>`, "g");
+  for (let m = detailGroup.exec(out); m; m = detailGroup.exec(out)) { out = dropElement(out, m.index); detailGroup.lastIndex = m.index; }
+  out = out.replace(new RegExp(`<(path|text) class="[^"]*"${A}data-lod="detail"${A}/?>(?:[^<]*</\\1>)?\\n?`, "g"), "");
+  out = out.replace(/<path class="flow-summary" data-flow-summary=/g, '<path class="flow" data-flow=').replace(/<path class="edge-summary/g, '<path class="edge');
+  // camera tracks are CSS animations; the still is the identity camera
   return out;
 }
 

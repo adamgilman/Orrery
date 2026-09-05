@@ -143,87 +143,72 @@ describe("renderDocument / render: a view that plays a scenario (R10)", () => {
   });
 });
 
-describe("renderSvg: collapsed groups (R11)", () => {
-  it("draws a closed box with the label and a count, and marks it as collapsed", async () => {
+describe("renderSvg: collapsed groups as level of detail (R11)", () => {
+  it("draws the real frame with a centred summary, hides members and internal connections until focused, and cuts inbound connections at the frame", async () => {
     const m = fixture("drill-down");
     const svg = await render(m, new FakeLayoutEngine(), { view: "overview" });
-    expect(svg).toMatch(/<g class="group gk-boundary st-on collapsed" data-group="payments"[^>]*data-collapsed="4"/);
-    const box = between(svg, 'data-group="payments"');
-    expect(box).toContain(">Payments</text>");
-    expect(box).toContain(">4 inside</text>");
-    expect(svg).not.toContain('data-node="ledger"');
-    expect(svg).toMatch(/data-edge="checkout->payments"/);
+    const payments = between(svg, 'data-group="payments"');
+    expect(payments).toContain('data-collapsed="4"');
+    expect(payments).toMatch(/<g class="lod-summary" data-lod="summary" data-for="payments">[\s\S]*>Payments<\/text>[\s\S]*>4 inside<\/text>/);
+    expect(payments).toMatch(/<text class="group-label" data-lod="detail" data-for="payments"/);
+    // members and the sub-group inside are detail
+    expect(svg).toMatch(/<g class="node[^"]*" data-node="ledger"[^>]*data-lod="detail" data-for="payments"/);
+    expect(svg).toMatch(/<g class="group[^"]*" data-group="pay-core"[^>]*data-lod="detail" data-for="payments"/);
+    // an internal connection is detail; an inbound one has a detail path to the member and a summary path cut at the frame
+    expect(svg).toMatch(/<path class="edge[^"]*" data-edge="pay-api->ledger"[^>]*data-lod="detail" data-for="payments"/);
+    expect(svg).toMatch(/<path class="edge[^"]*" data-edge="checkout->pay-api"[^>]*data-lod="detail" data-for="payments"/);
+    const summary = svg.match(/<path class="edge-summary[^"]*" data-edge-summary="checkout->pay-api" data-lod="summary" data-for="payments" d="([^"]+)" marker-end="url\(#arrow\)"\/>/);
+    expect(summary).toBeTruthy();
+    // the summary path ends on the payments frame boundary
+    const [bx, by, bw, bh] = between(svg, 'data-group="payments"').match(/data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
+    const end = summary![1]!.split(" L").at(-1)!.split(" ").map(Number);
+    const onEdge = Math.abs(end[0]! - bx) < 1 || Math.abs(end[0]! - (bx + bw)) < 1 || Math.abs(end[1]! - by) < 1 || Math.abs(end[1]! - (by + bh)) < 1;
+    expect(onEdge).toBe(true);
+    expect(svg).toMatch(/<path class="flow-summary" data-flow-summary="checkout->pay-api"/);
+    expect(svg).toMatch(/\[data-lod="detail"\]\{opacity:0/);
+    // a component outside any closed group carries no level-of-detail attribute
+    expect(svg).toMatch(/<g class="node[^"]*" data-node="web"[^>]*>/);
+    expect(svg).not.toMatch(/data-node="web"[^>]*data-lod/);
   });
 });
 
-describe("render: a tour of views (R12)", () => {
-  it("emits one complete layer per view, sized to the largest, crossfaded by CSS with the declared period", async () => {
-    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "payments", "identity"], seconds: 4 } });
-    const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)" style="animation:orrery-tour-(\d) (\d+)s linear infinite">/g)];
-    expect(frames.map((f) => f[2])).toEqual(["overview", "payments", "identity"]);
-    expect(frames.every((f) => f[4] === "12")).toBe(true);
-    // 12 s cycle, 1.2 s transitions = 10 % windows at each boundary; scene 1 enters at 33.3 % and leaves at 66.7 %
-    expect(svg).toMatch(/@keyframes orrery-tour-1\{0%\{opacity:0;[^}]*\}33\.33%\{[^}]*opacity:0;[^}]*\}43\.33%\{opacity:1;transform:none\}66\.67%\{[^}]*opacity:1;transform:none\}76\.67%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:0;[^}]*\}10%\{opacity:1;transform:none\}33\.33%\{[^}]*opacity:1;transform:none\}43\.33%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
-    expect(svg).toContain(">Inside Payments</text>");
-    const [, w, h] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
-    expect(Number(w)).toBeGreaterThan(0);
-    expect(Number(h)).toBeGreaterThan(0);
-    expect(svg).toContain('data-collapsed="4"'); // the overview frame is the closed one
-    expect(svg).toContain('data-node="ledger"'); // the payments frame is open
-  });
-  it("uses the model's own tour when the file declares one: scenes with scenario moments, captions and per-scene timing", async () => {
+describe("render: a tour is one drawing with a camera (R12)", () => {
+  it("emits one layout, state layers only where the scenario moment differs, a camera track and level-of-detail tracks", async () => {
     const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
-    const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)" style="animation:orrery-tour-\d (\d+)s linear infinite">/g)];
-    expect(frames.map((f) => f[2])).toEqual(["overview", "payments", "payments", "overview"]);
-    expect(frames[0]![3]).toBe("16");
-    const frame = (k: number) => svg.slice(svg.indexOf(`data-frame="${k}"`), k < 3 ? svg.indexOf(`data-frame="${k + 1}"`) : svg.length);
-    expect(frame(2)).toMatch(/data-node="ledger"[^>]*data-state="failed"/);
-    expect(frame(2)).toMatch(/data-node="pay-api"[^>]*data-state="degraded"/);
-    expect(frame(3)).toMatch(/data-group="payments"[^>]*data-state="degraded"/);
-    expect(frame(3)).toContain(">Back outside: the closed box and the checkout that needs it are amber.</text>");
-    // scenes are centred on the shared canvas by shifting their coordinates, never by a transform
-    expect(frame(1)).not.toContain("<g transform=");
-    const x = (k: number, id: string) => Number(frame(k).match(new RegExp(`data-node="${id}"[^>]*data-bbox="([\\d.]+)`))![1]);
-    expect(x(1, "pay-api")).toBeGreaterThan(100); // the narrow payments view sits mid-canvas, not at the left edge
+    // one scene group with a camera animation wrapping the state layers
+    expect(svg).toMatch(/<g class="camera" style="animation:orrery-camera 16s linear infinite">/);
+    const states = [...svg.matchAll(/<g class="state" data-state="(\d)" style="animation:orrery-state-\d 16s linear infinite">/g)];
+    expect(states.map((m) => m[1])).toEqual(["0", "1"]); // healthy, and ledger failed
+    // the ledger is drawn once per state layer, at the same place
+    const boxes = [...svg.matchAll(/data-node="ledger"[^>]*data-bbox="([^"]+)"/g)].map((m) => m[1]);
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0]).toBe(boxes[1]);
+    // camera: identity in scenes 0 and 3, closed on payments in 1 and 2, eased moves in between
+    const cam = svg.match(/@keyframes orrery-camera\{.*?\}\}(?=\n|<)/)![0];
+    expect(cam).toMatch(/^@keyframes orrery-camera\{0%\{transform:none\}25%\{animation-timing-function:ease-in-out;transform:none\}32\.5%\{transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\) translate\([\d.-]+px, [\d.-]+px\)\}/);
+    expect(cam).toMatch(/75%\{animation-timing-function:ease-in-out;transform:translate[^}]*\}82\.5%\{transform:none\}100%\{transform:none\}\}/);
+    // the camera's fixed point is the payments frame: it maps the frame centre to the canvas centre
+    const [bx, by, bw, bh] = svg.match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
+    const [, W, H] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!.map(Number) as [unknown, number, number];
+    const t = cam.match(/32\.5%\{transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/)!.slice(1).map(Number);
+    expect(t[0]).toBeCloseTo(W / 2, 0); expect(t[1]).toBeCloseTo((H - 24) / 2, 0); // the caption strip is outside the camera's frame
+    expect(t[3]).toBeCloseTo(-(bx + bw / 2), 0); expect(t[4]).toBeCloseTo(-(by + bh / 2), 0);
+    expect(t[2]).toBeGreaterThan(1);
+    // level of detail: payments' detail is visible exactly while focused, its summary the reverse; identity never opens
+    expect(svg).toMatch(/\[data-lod="detail"\]\[data-for~="payments"\]\{animation:orrery-lod-payments-detail 16s linear infinite\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}25%\{opacity:0\}32\.5%\{opacity:1\}75%\{opacity:1\}82\.5%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}32\.5%\{opacity:0\}75%\{opacity:0\}82\.5%\{opacity:1\}100%\{opacity:1\}\}/);
+    expect(svg).not.toContain("orrery-lod-identity");
+    // state layers crossfade at the scenario moment (scene 2) and back at the loop
+    expect(svg).toMatch(/@keyframes orrery-state-1\{0%\{opacity:0\}50%\{opacity:0\}57\.5%\{opacity:1\}100%\{opacity:1\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-state-0\{0%\{opacity:1\}50%\{opacity:1\}57\.5%\{opacity:0\}100%\{opacity:0\}\}/);
+    // captions per scene
+    expect(svg).toContain(">The ledger fails. The API runs reduced on the replica.</text>");
   });
-  it("zooms into a collapsed group and back out, and crossfades everywhere else (R12)", async () => {
-    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true });
-    const kf = (k: number) => svg.match(new RegExp(`@keyframes orrery-tour-${k}\\{.*?\\}\\}(?=\\n|<)`))![0];
-    // scene 0 (overview, payments closed) → scene 1 (inside payments): overview zooms up around the box, detail grows from it
-    expect(kf(0)).toMatch(/transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\) translate\([\d.-]+px, [\d.-]+px\)/);
-    expect(kf(1)).toMatch(/transform:translate\([\d.-]+px, [\d.-]+px\) scale\(0\.[\d]+\) translate/);
-    expect(kf(1)).toContain("animation-timing-function:ease-in-out");
-    // the detail's start transform maps its own drawing onto the closed box
-    const box = svg.slice(svg.indexOf('data-frame="0"')).match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number);
-    const [bx, by, bw, bh] = box as [number, number, number, number];
-    const start = kf(1).match(/transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\)/)!;
-    expect(Number(start[1])).toBeCloseTo(bx + bw / 2, 0);
-    expect(Number(start[2])).toBeCloseTo(by + bh / 2, 0);
-    expect(Number(start[3])).toBeLessThan(1);
-    // the overview zooms about the same point: the box is the fixed point, so it stays put and grows
-    const end = kf(0).match(/transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/)!;
-    expect(Number(end[1])).toBeCloseTo(bx + bw / 2, 0);
-    expect(Number(end[2])).toBeCloseTo(by + bh / 2, 0);
-    expect(Number(end[4])).toBeCloseTo(-(bx + bw / 2), 0);
-    expect(Number(end[5])).toBeCloseTo(-(by + bh / 2), 0);
-    expect(Number(end[3]) * Number(start[3])).toBeCloseTo(1, 1);
-    // scene 1 → scene 2 is the same layout with a state change: a plain crossfade (the 100% stop only repeats the entry)
-    const mid = kf(1).slice(kf(1).indexOf("opacity:1"), kf(1).indexOf("100%"));
-    expect(mid).not.toMatch(/scale\(/);
-    // scene 2 → scene 3 zooms back out: the detail shrinks into the box, the overview settles from the zoomed state
-    expect(kf(2)).toMatch(/opacity:1;transform:none\}[\d.]+%\{opacity:0;transform:translate/);
-    expect(kf(3)).toMatch(/opacity:0;transform:translate\([\d.-]+px, [\d.-]+px\) scale\([\d.]+\)/);
-  });
-
-  it("honours per-scene seconds in the keyframe timing", async () => {
-    const m = fixture("drill-down");
-    const svg = await render({ ...m, tour: { seconds: 2, scenes: [{ view: "overview", seconds: 6 }, { view: "payments", seconds: 2 }] } }, new FakeLayoutEngine(), { tour: true });
-    expect(svg).toMatch(/orrery-tour-0 8s linear infinite/);
-    // 8 s cycle: scene 0 holds 6 s, so it leaves at 75 % with a 1.2 s (15 %) transition
-    expect(svg).toMatch(/@keyframes orrery-tour-0\{0%\{opacity:0;[^}]*\}15%\{opacity:1;transform:none\}75%\{[^}]*opacity:1;transform:none\}90%\{opacity:0;[^}]*\}100%\{opacity:0;[^}]*\}\}/);
-  });
-  it("rejects a tour naming an unknown view", async () => {
-    await expect(render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "nope"] } })).rejects.toThrow(/unknown view "nope"/);
+  it("scenes across different views fall back to a crossfade between whole views", async () => {
+    const svg = await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: { views: ["overview", "payments"], seconds: 3 } });
+    const frames = [...svg.matchAll(/<g class="tour" data-frame="(\d)" data-view="([^"]+)"/g)];
+    expect(frames.map((f) => f[2])).toEqual(["overview", "payments"]);
+    expect(svg).not.toContain("orrery-camera");
   });
 });
