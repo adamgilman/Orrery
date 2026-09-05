@@ -5,9 +5,9 @@ import { FakeLayoutEngine, PULSE_PERIOD, render, validate } from "@orrery/core";
 import { decodePng, diffFrames, freezeFrame, inspect, pulseRegions, rasterize } from "../src/index.js";
 
 const failing = async () => {
-  const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/failover.json"), "utf8")));
+  const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/alternatives.json"), "utf8")));
   if (!r.ok) throw new Error();
-  return render(r.diagram, new FakeLayoutEngine(), { scenario: "db-failover", step: 1 });
+  return render(r.model, new FakeLayoutEngine(), { scenario: "orders-failover", step: 1 });
 };
 
 describe("failure pulse in frames", () => {
@@ -15,14 +15,14 @@ describe("failure pulse in frames", () => {
     const svg = await failing();
     const a = freezeFrame(svg, 0), b = freezeFrame(svg, (PULSE_PERIOD * 1000) / 2);
     expect(a).not.toContain("animation:orrery-pulse");
-    expect(a).toMatch(/\.node-state-failed \.node-box\{[^}]*stroke-opacity:1[;}]/);
-    expect(b).toMatch(/\.node-state-failed \.node-box\{[^}]*stroke-opacity:0\.4[;}]/);
+    expect(a).toMatch(/\.st-failed \.node-box\{[^}]*stroke-opacity:1[;}]/);
+    expect(b).toMatch(/\.st-failed \.node-box\{[^}]*stroke-opacity:0\.4[;}]/);
   });
   it("pulseRegions finds the failed node boxes", async () => {
     const svg = await failing();
     const regions = pulseRegions(svg, 1);
-    expect(Object.keys(regions)).toEqual(["db"]);
-    expect(regions.db!.width).toBeGreaterThan(0);
+    expect(Object.keys(regions)).toEqual(["orders"]);
+    expect(regions.orders!.width).toBeGreaterThan(0);
   });
   it("inspect treats pulsing nodes as allowed motion and passes", async () => {
     const svg = await failing();

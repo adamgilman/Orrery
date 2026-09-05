@@ -32,10 +32,12 @@ const GAP = 80;
 /** Inset between a group frame and its contents, on every side except the top, which adds the label band. */
 export const GROUP_PADDING = 12;
 
+const EMPTY_W = 120, EMPTY_H = 48;
+
 /**
- * Places nodes in a single row (direction "right") or column ("down") with straight edges between facing
- * boundaries. Nodes are ordered so each group's members are contiguous; group frames are the padded union of
- * their contents, so nesting and sibling separation hold. Used by tests so renderer tests never depend on ELK.
+ * Places nodes (and empty groups, as boxes) in a single row (direction "right") or column ("down") with straight
+ * edges between facing boundaries. Nodes are ordered so each group's members are contiguous; group frames are the
+ * padded union of their contents. Edge ends may be groups. Used by tests so renderer tests never depend on ELK.
  */
 export class FakeLayoutEngine implements LayoutEngine {
   async layout(graph: LayoutGraph): Promise<LayoutResult> {
@@ -43,65 +45,55 @@ export class FakeLayoutEngine implements LayoutEngine {
     const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
     const depthOf = (id: string | undefined): number => (id === undefined ? 0 : 1 + depthOf(parentOf.get(id)));
     const path = (id: string | undefined): string => (id === undefined ? "" : `${path(parentOf.get(id))}/${id}`);
-    // Stable sort by group path: members of a group (and its subgroups) end up adjacent.
-    const ordered = graph.nodes.map((n, i) => ({ n, i })).sort((a, b) => path(a.n.group).localeCompare(path(b.n.group)) || a.i - b.i).map((x) => x.n);
+    const hasMembers = new Set<string>([...graph.nodes.map((n) => n.group), ...groups.map((g) => g.parent)].filter((x): x is string => x !== undefined));
+    const empties = groups.filter((g) => !hasMembers.has(g.id));
+    // Items placed in the row: real nodes plus empty groups as pseudo-nodes.
+    const items = [
+      ...graph.nodes.map((n, i) => ({ id: n.id, width: n.width, height: n.height, group: n.group, i, empty: false })),
+      ...empties.map((g, i) => ({ id: g.id, width: EMPTY_W, height: EMPTY_H + g.labelHeight, group: g.parent, i: graph.nodes.length + i, empty: true })),
+    ].sort((a, b) => path(a.group).localeCompare(path(b.group)) || a.i - b.i);
     const horizontal = graph.direction === "right";
     const maxDepth = groups.reduce((m, g) => Math.max(m, depthOf(g.id)), 0);
     const outer = MARGIN + maxDepth * (GROUP_PADDING + 20);
 
-    const nodes: Record<string, Box> = {};
-    let cursor = outer;
-    let cross = 0;
-    let prevGroup: string | undefined;
-    for (const n of ordered) {
-      // Extra gap when crossing a group boundary so frames plus padding fit between neighbours.
-      if (cursor !== outer && n.group !== prevGroup) cursor += 2 * (GROUP_PADDING + 8) * (maxDepth || 1);
-      nodes[n.id] = horizontal
-        ? { x: cursor, y: outer, width: n.width, height: n.height }
-        : { x: outer, y: cursor, width: n.width, height: n.height };
-      cursor += (horizontal ? n.width : n.height) + GAP;
-      cross = Math.max(cross, horizontal ? n.height : n.width);
-      prevGroup = n.group;
+    const boxes: Record<string, Box> = {};
+    let cursor = outer, cross = 0, prevGroup: string | undefined;
+    for (const it of items) {
+      if (cursor !== outer && it.group !== prevGroup) cursor += 2 * (GROUP_PADDING + 8) * (maxDepth || 1);
+      boxes[it.id] = horizontal ? { x: cursor, y: outer, width: it.width, height: it.height } : { x: outer, y: cursor, width: it.width, height: it.height };
+      cursor += (horizontal ? it.width : it.height) + GAP;
+      cross = Math.max(cross, horizontal ? it.height : it.width);
+      prevGroup = it.group;
     }
+    const nodes: Record<string, Box> = Object.fromEntries(graph.nodes.map((n) => [n.id, boxes[n.id]!]));
 
     // Group frames: union of member nodes and child groups, padded; deepest first so parents see children.
-    const boxes: Record<string, Box> = {};
-    const byDepth = [...groups].sort((a, b) => depthOf(b.id) - depthOf(a.id));
-    for (const g of byDepth) {
+    const groupBoxes: Record<string, Box> = {};
+    for (const g of [...groups].sort((a, b) => depthOf(b.id) - depthOf(a.id))) {
+      if (!hasMembers.has(g.id)) { groupBoxes[g.id] = boxes[g.id]!; continue; }
       const members = [
         ...graph.nodes.filter((n) => n.group === g.id).map((n) => nodes[n.id]!),
-        ...groups.filter((c) => c.parent === g.id).map((c) => boxes[c.id]!),
+        ...groups.filter((c) => c.parent === g.id).map((c) => groupBoxes[c.id]!),
       ];
-      if (members.length === 0) { boxes[g.id] = { x: 0, y: 0, width: 2 * GROUP_PADDING, height: g.labelHeight + GROUP_PADDING }; continue; }
       const x0 = Math.min(...members.map((m) => m.x)) - GROUP_PADDING;
       const y0 = Math.min(...members.map((m) => m.y)) - GROUP_PADDING - g.labelHeight;
       const x1 = Math.max(...members.map((m) => m.x + m.width)) + GROUP_PADDING;
       const y1 = Math.max(...members.map((m) => m.y + m.height)) + GROUP_PADDING;
-      boxes[g.id] = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+      groupBoxes[g.id] = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
     }
 
     const edges: LayoutResult["edges"] = {};
+    const boxOf = (id: string) => nodes[id] ?? groupBoxes[id]!;
     for (const e of graph.edges) {
-      const a = nodes[e.from]!, b = nodes[e.to]!;
+      const a = boxOf(e.from), b = boxOf(e.to);
       const forward = horizontal ? b.x >= a.x : b.y >= a.y;
       const points = horizontal
-        ? forward
-          ? [{ x: a.x + a.width, y: a.y + a.height / 2 }, { x: b.x, y: b.y + b.height / 2 }]
-          : [{ x: a.x, y: a.y + a.height / 2 }, { x: b.x + b.width, y: b.y + b.height / 2 }]
-        : forward
-          ? [{ x: a.x + a.width / 2, y: a.y + a.height }, { x: b.x + b.width / 2, y: b.y }]
-          : [{ x: a.x + a.width / 2, y: a.y }, { x: b.x + b.width / 2, y: b.y + b.height }];
-      // Label sits in the gap right after the source, so it never lands on a node even when the edge skips past siblings.
-      const labelAt = e.label
-        ? horizontal
-          ? { x: a.x + a.width + GAP / 2, y: a.y + a.height / 2 }
-          : { x: a.x + a.width / 2, y: a.y + a.height + GAP / 2 }
-        : undefined;
+        ? forward ? [{ x: a.x + a.width, y: a.y + a.height / 2 }, { x: b.x, y: b.y + b.height / 2 }] : [{ x: a.x, y: a.y + a.height / 2 }, { x: b.x + b.width, y: b.y + b.height / 2 }]
+        : forward ? [{ x: a.x + a.width / 2, y: a.y + a.height }, { x: b.x + b.width / 2, y: b.y }] : [{ x: a.x + a.width / 2, y: a.y }, { x: b.x + b.width / 2, y: b.y + b.height }];
+      const labelAt = e.label ? (horizontal ? { x: a.x + a.width + GAP / 2, y: a.y + a.height / 2 } : { x: a.x + a.width / 2, y: a.y + a.height + GAP / 2 }) : undefined;
       edges[e.id] = labelAt ? { points, labelAt } : { points };
     }
-    const all = [...Object.values(nodes), ...Object.values(boxes)];
-    const width = Math.max(...all.map((b) => b.x + b.width)) + MARGIN;
-    const height = Math.max(...all.map((b) => b.y + b.height)) + MARGIN;
-    return { width, height, nodes, groups: boxes, edges };
+    const all = [...Object.values(nodes), ...Object.values(groupBoxes)];
+    return { width: Math.max(...all.map((b) => b.x + b.width)) + MARGIN, height: Math.max(...all.map((b) => b.y + b.height)) + MARGIN, nodes, groups: groupBoxes, edges };
   }
 }

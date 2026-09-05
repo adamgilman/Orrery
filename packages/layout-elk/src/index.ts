@@ -47,11 +47,14 @@ export class ElkLayoutEngine implements LayoutEngine {
     };
     // Build the compound-node tree: groups become ELK nodes with padding that reserves the label band.
     const elkNodes = new Map<string, ElkNode>();
+    const hasMembers = new Set<string>([...graph.nodes.map((n) => n.group), ...groups.map((g) => g.parent)].filter((x): x is string => x !== undefined));
     for (const g of groups) {
       elkNodes.set(g.id, {
         id: g.id,
         layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight},left=${GROUP_PADDING},bottom=${GROUP_PADDING},right=${GROUP_PADDING}]` },
         children: [],
+        // An empty group is a black box: give it a size, since ELK sizes compound nodes from their children.
+        ...(hasMembers.has(g.id) ? {} : { width: 120, height: 48 + g.labelHeight }),
       });
     }
     const root: ElkNode = {

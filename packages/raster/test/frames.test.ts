@@ -7,7 +7,7 @@ import { contactSheet, decodePng, flowRegions, isolateFlow, rasterize, regionEqu
 const fixture = async (name: string) => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
   if (!r.ok) throw new Error(name);
-  return render(r.diagram, new FakeLayoutEngine());
+  return render(r.model, new FakeLayoutEngine());
 };
 
 describe("rasterize", () => {

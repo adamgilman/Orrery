@@ -16,14 +16,14 @@ describe("orrery validate", () => {
     const r = run("validate", join(fixtures, "valid/three-tier.json"));
     expect(r.err).toBe("");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^OK: 3 nodes, 2 edges/);
+    expect(r.out).toMatch(/^OK: 3 components, 2 connections/);
   });
 
   it("exits 1 and prints one pointer-addressed error per line for an invalid file", () => {
-    const r = run("validate", join(fixtures, "invalid/unknown-node.json"));
+    const r = run("validate", join(fixtures, "invalid/unknown-entity.json"));
     expect(r.code).toBe(1);
     expect(r.out).toBe("");
-    expect(r.err).toContain('/edges/0/to: unknown node "zzz"');
+    expect(r.err).toContain('/connections/0/to: unknown entity "zzz"');
   });
 
   it("reports a missing file", () => {
@@ -71,7 +71,7 @@ describe("orrery render", () => {
     const r = run("render", join(fixtures, "invalid/duplicate-id.json"));
     expect(r.code).toBe(1);
     expect(r.out).toBe("");
-    expect(r.err).toContain('/nodes/2/id: duplicate node id "a"');
+    expect(r.err).toContain('/components/2/id: duplicate component id "a"');
   });
 });
 
@@ -108,7 +108,7 @@ describe("orrery render --view", () => {
   });
   it("validate reports the view count", () => {
     const r = run("validate", join(fixtures, "valid/grouped.json"));
-    expect(r.out).toBe("OK: 4 nodes, 4 edges, 3 groups, 2 views\n");
+    expect(r.out).toBe("OK: 4 components, 4 connections, 3 groups, 2 views\n");
   });
 });
 
@@ -127,7 +127,7 @@ describe("orrery render --scenario", () => {
   it("renders a scenario step", () => {
     const dir = mkdtempSync(join(tmpdir(), "orrery-"));
     const out = join(dir, "s.svg");
-    const r = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "1", "-o", out);
+    const r = run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "orders-failover", "--step", "1", "-o", out);
     expect(r.err).toBe("");
     expect(r.code).toBe(0);
     const svg = readFileSync(out, "utf8");
@@ -135,18 +135,30 @@ describe("orrery render --scenario", () => {
     expect(svg).toContain("Primary goes down");
   });
   it("defaults to the last step and rejects bad ids and steps", () => {
-    expect(run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover").out).toContain("(3/3)");
-    const bad = run("render", join(fixtures, "valid/failover.json"), "--scenario", "nope");
+    expect(run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "orders-failover").out).toContain("(4/4)");
+    const bad = run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "nope");
     expect(bad.code).toBe(1);
     expect(bad.err).toContain('unknown scenario "nope"');
-    const range = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "9");
+    const range = run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "orders-failover", "--step", "9");
     expect(range.code).toBe(1);
-    expect(range.err).toContain("between 1 and 3");
-    const noScenario = run("render", join(fixtures, "valid/failover.json"), "--step", "1");
+    expect(range.err).toContain("between 1 and 4");
+    const noScenario = run("render", join(fixtures, "valid/alternatives.json"), "--step", "1");
     expect(noScenario.code).toBe(2);
   });
-  it("validate counts scenarios", () => {
-    expect(run("validate", join(fixtures, "valid/failover.json")).out).toContain(", 1 scenarios");
+  it("validate counts scenarios and prints warnings without failing", () => {
+    expect(run("validate", join(fixtures, "valid/alternatives.json")).out).toContain(", 2 scenarios");
+    const w = run("validate", join(fixtures, "valid/warning-double.json"));
+    expect(w.code).toBe(0);
+    expect(w.err).toContain("(warning)");
+  });
+  it("--set declares states for a one-off what-if", () => {
+    const r = run("render", join(fixtures, "valid/alternatives.json"), "--static", "--set", "failed=orders,fraud");
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('data-node="api" data-kind="service" data-state="degraded"');
+    const bad = run("render", join(fixtures, "valid/alternatives.json"), "--set", "broken=orders");
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain('unknown state "broken"');
+    expect(run("render", join(fixtures, "valid/alternatives.json"), "--set", "nonsense").code).toBe(2);
   });
 });
 
@@ -172,7 +184,7 @@ describe("orrery render: interactive document by default", () => {
     expect(layers).toEqual([["data-tier", false], ["overview", true]]);
   });
   it("--scenario renders a static snapshot of that step", () => {
-    const r = run("render", join(fixtures, "valid/failover.json"), "--scenario", "db-failover", "--step", "1");
+    const r = run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "orders-failover", "--step", "1");
     expect(r.code).toBe(0);
     expect(r.out).not.toMatch(/<script/);
     expect(r.out).toContain('data-state="failed"');

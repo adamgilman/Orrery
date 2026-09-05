@@ -48,6 +48,49 @@ export function layoutContract(name: string, make: () => LayoutEngine) {
   const inside = (inner: { x: number; y: number; width: number; height: number }, outer: { x: number; y: number; width: number; height: number }, margin = 0) =>
     inner.x >= outer.x + margin && inner.y >= outer.y + margin && inner.x + inner.width <= outer.x + outer.width - margin && inner.y + inner.height <= outer.y + outer.height - margin;
 
+  /** Connections whose ends are groups, including an empty one (S13, R7). */
+  const groupEnds: LayoutGraph = {
+    direction: "right",
+    groups: [
+      { id: "platform", labelHeight: 20 },
+      { id: "empty", labelHeight: 20 },
+    ],
+    nodes: [
+      { id: "edge", width: 120, height: 48 },
+      { id: "svc", width: 120, height: 48, group: "platform" },
+    ],
+    edges: [
+      { id: "e0", from: "edge", to: "platform" },
+      { id: "e1", from: "edge", to: "empty" },
+    ],
+  };
+
+  describe(`LayoutEngine contract: ${name} (group endpoints)`, () => {
+    it("gives an empty group a box of minimum size that overlaps nothing", async () => {
+      const r = await make().layout(groupEnds);
+      const e = r.groups.empty!;
+      expect(e.width).toBeGreaterThanOrEqual(80);
+      expect(e.height).toBeGreaterThanOrEqual(40);
+      const boxes = [...Object.values(r.nodes), r.groups.platform!];
+      for (const b of boxes) {
+        const overlap = e.x < b.x + b.width && b.x < e.x + e.width && e.y < b.y + b.height && b.y < e.y + e.height;
+        expect(overlap).toBe(false);
+      }
+    });
+    it("routes edges to a group's frame boundary", async () => {
+      const r = await make().layout(groupEnds);
+      const onBoundary = (p: { x: number; y: number }, b: { x: number; y: number; width: number; height: number }) => {
+        const eps = 1.5;
+        const withinX = p.x >= b.x - eps && p.x <= b.x + b.width + eps, withinY = p.y >= b.y - eps && p.y <= b.y + b.height + eps;
+        const onV = Math.abs(p.x - b.x) <= eps || Math.abs(p.x - (b.x + b.width)) <= eps, onH = Math.abs(p.y - b.y) <= eps || Math.abs(p.y - (b.y + b.height)) <= eps;
+        return withinX && withinY && (onV || onH);
+      };
+      expect(onBoundary(r.edges.e0!.points.at(-1)!, r.groups.platform!)).toBe(true);
+      expect(onBoundary(r.edges.e1!.points.at(-1)!, r.groups.empty!)).toBe(true);
+      expect(onBoundary(r.edges.e0!.points[0]!, r.nodes.edge!)).toBe(true);
+    });
+  });
+
   describe(`LayoutEngine contract: ${name} (groups)`, () => {
     it("returns a box for every group", async () => {
       const r = await make().layout(grouped);

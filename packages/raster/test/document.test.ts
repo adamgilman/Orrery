@@ -7,7 +7,7 @@ import { activeView, flowRegions, inspect } from "../src/index.js";
 const grouped = async () => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/grouped.json"), "utf8")));
   if (!r.ok) throw new Error();
-  return renderDocument(r.diagram, new FakeLayoutEngine(), { runtime: "var x = 1; /* ]]> */" });
+  return renderDocument(r.model, new FakeLayoutEngine(), { runtime: "var x = 1; /* ]]> */" });
 };
 
 describe("multi-view documents in the frame tooling", () => {

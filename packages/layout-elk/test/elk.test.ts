@@ -23,11 +23,11 @@ describe("ElkLayoutEngine: compound graphs", () => {
     const { readFileSync } = await import("node:fs");
     const { join } = await import("node:path");
     const { validate, toLayoutGraph } = await import("@orrery/core");
-    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/checkout.json"), "utf8")));
-    if (!r.ok) throw new Error();
-    const out = await new ElkLayoutEngine().layout(toLayoutGraph(r.diagram));
-    expect(Object.keys(out.nodes)).toHaveLength(11);
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/own-vocabulary.json"), "utf8")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const out = await new ElkLayoutEngine().layout(toLayoutGraph(r.model));
+    expect(Object.keys(out.nodes)).toHaveLength(7);
     expect(Object.keys(out.groups)).toHaveLength(5);
-    expect(Object.keys(out.edges)).toHaveLength(12);
+    expect(Object.keys(out.edges)).toHaveLength(9);
   });
 });

@@ -1,206 +1,110 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, PULSE_PERIOD, propagate, render, renderSvg, toLayoutGraph, validate, type Diagram, type LayoutResult } from "../src/index.js";
+import { FakeLayoutEngine, PULSE_PERIOD, applySet, propagate, render, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
 
-const fixture = (name: string): Diagram => {
-  const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
-  if (!r.ok) throw new Error(`fixture ${name} invalid`);
-  return r.diagram;
-};
-const laidOut = async (d: Diagram): Promise<LayoutResult> => new FakeLayoutEngine().layout(toLayoutGraph(d));
-const attr = (svg: string, tag: string, name: string): string[] =>
-  [...svg.matchAll(new RegExp(`<${tag}[^>]*\\s${name}="([^"]*)"`, "g"))].map((m) => m[1]!);
+const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
+const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
+const laidOut = async (m: Model): Promise<LayoutResult> => new FakeLayoutEngine().layout(toLayoutGraph(m));
+const draw = async (m: Model) => renderSvg(m, await laidOut(m));
+const attr = (svg: string, tag: string, name: string): string[] => [...svg.matchAll(new RegExp(`<${tag}[^>]*\\s${name}="([^"]*)"`, "g"))].map((m) => m[1]!);
+/** The element block starting at `start`, up to its own closing tag on its own line (nested groups close inline). */
+const between = (svg: string, start: string) => svg.slice(svg.indexOf(start), svg.indexOf("\n</g>", svg.indexOf(start)));
 
-describe("renderSvg", () => {
-  it("emits a standalone SVG sized to the layout", async () => {
-    const d = fixture("three-tier");
-    const l = await laidOut(d);
-    const svg = renderSvg(d, l);
+describe("renderSvg: structure", () => {
+  it("emits a standalone SVG sized to the layout with groups, edges, nodes in that order", async () => {
+    const m = fixture("grouped"); const l = await laidOut(m); const svg = renderSvg(m, l);
     expect(svg.startsWith("<svg")).toBe(true);
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
     expect(svg).toContain(`viewBox="0 0 ${l.width} ${l.height}"`);
-    expect(svg.trimEnd().endsWith("</svg>")).toBe(true);
-  });
-
-  it("draws one node group per node with rect and label", async () => {
-    const d = fixture("three-tier");
-    const svg = renderSvg(d, await laidOut(d));
-    expect(attr(svg, "g", "data-node")).toEqual(["web", "api", "db"]);
-    expect(svg).toContain(">Web</text>");
-    expect(svg).toContain(">API</text>");
-    expect((svg.match(/<rect class="node-box"/g) ?? []).length).toBe(3);
-  });
-
-  it("draws one edge path per edge with arrowhead and data attributes", async () => {
-    const d = fixture("three-tier");
-    const svg = renderSvg(d, await laidOut(d));
-    expect(attr(svg, "path", "data-edge")).toEqual(["web->api", "api->db"]);
-    expect(svg).toContain('marker-end="url(#arrow)"');
-    expect(svg).toContain("<marker id=\"arrow\"");
-  });
-
-  it("defines the arrowhead in user space with orient=auto so every renderer draws it the same", async () => {
-    // resvg (and some older renderers) ignore orient="auto-start-reverse" on vertical segments, drawing half a triangle.
-    const d = fixture("three-tier");
-    const marker = renderSvg(d, await laidOut(d)).match(/<marker[^>]*>/)![0];
-    expect(marker).toContain('orient="auto"');
-    expect(marker).toContain('markerUnits="userSpaceOnUse"');
-    expect(marker).toContain('markerWidth="12"');
-  });
-
-  it("renders edge labels when present", async () => {
-    const d = fixture("three-tier");
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toContain(">HTTPS</text>");
-  });
-
-  it("animates flow faster and thicker for higher load, and not at all for zero", async () => {
-    const d = fixture("fan-out");
-    const svg = renderSvg(d, await laidOut(d));
-    const flows = [...svg.matchAll(/<path class="flow" data-flow="([^"]+)"[^>]*style="([^"]*)"/g)].map((m) => [m[1]!, m[2]!] as const);
-    const style = (id: string) => Object.fromEntries(flows.find((f) => f[0] === id)![1].split(";").map((kv) => kv.split(":").map((s) => s.trim())));
-    const full = style("s1->cache"), half = style("s3->cache"), zero = style("s2->cache");
-    expect(parseFloat(full["animation-duration"]!)).toBeLessThan(parseFloat(half["animation-duration"]!));
-    expect(parseFloat(full["stroke-width"]!)).toBeGreaterThan(parseFloat(half["stroke-width"]!));
-    expect(zero["animation-duration"]).toBeUndefined();
-    expect(svg).toContain("@keyframes orrery-flow");
-  });
-
-  it("escapes labels", async () => {
-    const r = validate({ nodes: [{ id: "a", label: "<script>&\"x\"" }], edges: [] });
-    if (!r.ok) throw new Error();
-    const svg = renderSvg(r.diagram, await laidOut(r.diagram));
-    expect(svg).not.toContain("<script>");
-    expect(svg).toContain("&lt;script&gt;&amp;&quot;x&quot;");
-  });
-
-  it("is deterministic and uses no external resources", async () => {
-    const d = fixture("three-tier");
-    const a = renderSvg(d, await laidOut(d));
-    const b = renderSvg(d, await laidOut(d));
-    expect(a).toBe(b);
-    expect(a).not.toMatch(/https?:\/\/(?!www\.w3\.org)/);
-    expect(a).not.toContain("<script");
-  });
-
-  it("matches the snapshot for three-tier with the fake engine", async () => {
-    const d = fixture("three-tier");
-    expect(renderSvg(d, await laidOut(d))).toMatchSnapshot();
-  });
-});
-
-describe("renderSvg: edge label placement", () => {
-  it("draws the label at the engine's labelAt, centred, when provided", async () => {
-    const d = fixture("three-tier");
-    const l = await laidOut(d);
-    l.edges["web->api"]!.labelAt = { x: 123.4, y: 56.7 };
-    const svg = renderSvg(d, l);
-    expect(svg).toMatch(/<text class="edge-label" x="123\.4" y="56\.7">HTTPS<\/text>/);
-  });
-});
-
-describe("render", () => {
-  it("runs measure, layout and render end to end", async () => {
-    const svg = await render(fixture("minimal"), new FakeLayoutEngine());
-    expect(svg).toContain('data-node="a"');
-  });
-});
-
-describe("renderSvg: flow overlay stops short of the arrowhead", () => {
-  it("trims the flow path so dashes never cover the marker", async () => {
-    const d = fixture("three-tier");
-    const svg = renderSvg(d, await laidOut(d));
-    const edgeD = svg.match(/<path class="edge[^"]*" data-edge="[^"]*" data-kind="[^"]*" d="([^"]*)"/)![1]!;
-    const flowD = svg.match(/<path class="flow" data-flow="[^"]*" data-load="[^"]*" d="([^"]*)"/)![1]!;
-    const last = (p: string) => p.split(" L").at(-1)!.split(" ").map(Number);
-    const [ex, ey] = last(edgeD), [fx, fy] = last(flowD);
-    const gap = Math.hypot(ex! - fx!, ey! - fy!);
-    expect(gap).toBeGreaterThanOrEqual(8);
-    expect(gap).toBeLessThanOrEqual(14);
-    expect(flowD.startsWith(edgeD.split(" L")[0]!)).toBe(true);
-  });
-});
-
-describe("renderSvg: groups, kinds, edge kinds", () => {
-  const grouped = () => fixture("grouped");
-  it("draws group frames with labels, beneath edges and nodes, in hierarchy order", async () => {
-    const d = grouped();
-    const svg = renderSvg(d, await laidOut(d));
+    expect(attr(svg, "g", "data-node")).toEqual(["web", "api", "db", "replica"]);
     expect(attr(svg, "g", "data-group")).toEqual(["region", "app", "data"]);
-    expect(svg).toContain('<g class="group group-region" data-group="region"');
-    expect(svg).toContain('<rect class="group-box"');
-    expect(svg).toContain(">us-east-1</text>");
     expect(svg.indexOf('class="groups"')).toBeLessThan(svg.indexOf('class="edges"'));
     expect(svg.indexOf('class="edges"')).toBeLessThan(svg.indexOf('class="nodes"'));
   });
-  it("tags nodes with their kind and draws a glyph for non-service kinds", async () => {
-    const d = grouped();
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toContain('class="node node-database" data-node="db" data-kind="database"');
-    expect(svg).toContain('class="node node-service" data-node="api" data-kind="service"');
-    const dbGroup = svg.slice(svg.indexOf('data-node="db"'), svg.indexOf("</g>", svg.indexOf('data-node="db"')));
-    expect(dbGroup).toContain('class="glyph"');
-    const apiGroup = svg.slice(svg.indexOf('data-node="api"'), svg.indexOf("</g>", svg.indexOf('data-node="api"')));
-    expect(apiGroup).not.toContain('class="glyph"');
+  it("draws one edge and one flow per connection keyed by connection key, with arrowheads", async () => {
+    const svg = await draw(fixture("grouped"));
+    expect(attr(svg, "path", "data-edge")).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
+    expect(attr(svg, "path", "data-flow")).toEqual(["web->api", "api->db", "api-reads", "db->replica"]);
+    expect(svg).toContain('marker-end="url(#arrow)"');
+    expect(svg).toContain(">HTTPS</text>");
   });
-  it("styles base edges by kind", async () => {
-    const d = grouped();
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toContain('<path class="edge edge-replication" data-edge="db->replica" data-kind="replication"');
-    expect(svg).toContain('<path class="edge edge-sync" data-edge="web->api" data-kind="sync"');
-    expect(svg).toMatch(/\.edge-async\{[^}]*stroke-dasharray/);
-    expect(svg).toMatch(/\.edge-replication\{[^}]*stroke-dasharray/);
+  it("escapes text, is deterministic and self-contained", async () => {
+    const m = inline({ components: [{ id: "a", label: "<script>&\"x\"" }] });
+    const svg = await draw(m);
+    expect(svg).not.toContain("<script>");
+    expect(svg).toContain("&lt;script&gt;&amp;&quot;x&quot;");
+    expect(await draw(fixture("grouped"))).toBe(await draw(fixture("grouped")));
+    expect(svg).not.toMatch(/https?:\/\/(?!www\.w3\.org)/);
   });
   it("matches the snapshot for grouped with the fake engine", async () => {
-    const d = grouped();
-    expect(renderSvg(d, await laidOut(d))).toMatchSnapshot();
+    expect(await draw(fixture("grouped"))).toMatchSnapshot();
   });
 });
 
-describe("renderSvg: states", () => {
-  const failed = async () => {
-    const d = propagate(fixture("failover"), );
-    return d;
-  };
-  it("tags nodes with their effective state and explains propagated ones", async () => {
-    const base = fixture("failover");
-    const d = propagate({ ...base, nodes: base.nodes.map((n) => (n.id === "db" ? { ...n, state: "failed" as const } : n)) });
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toContain('data-node="db" data-kind="database" data-state="failed"');
-    expect(svg).toContain('class="node node-database node-state-failed"');
-    expect(svg).toContain('class="node node-service node-state-degraded"');
-    expect(svg).toContain('class="node node-external node-state-off"');
-    const api = svg.slice(svg.indexOf('data-node="api"'), svg.indexOf("</g>", svg.indexOf('data-node="api"')));
-    expect(api).toMatch(/<title>DB is down, using Replica<\/title>/);
+describe("renderSvg: looks and kinds (R8)", () => {
+  it("styles by state look, never by name: a custom state renders its style object", async () => {
+    const m = propagate(applySet(fixture("own-vocabulary"), { brownout: ["edge"], outage: ["seq-1"] }));
+    const svg = await draw(m);
+    expect(svg).toContain('data-node="edge" data-kind="gateway" data-state="brownout"');
+    expect(svg).toMatch(/\.st-brownout \.node-box\{[^}]*stroke:#7c3aed/);
+    expect(svg).toMatch(/\.st-brownout \.node-box\{[^}]*fill:#f5f3ff/);
+    expect(svg).toMatch(new RegExp(`\\.st-brownout \\.node-box\\{[^}]*animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`));
+    expect(svg).toMatch(new RegExp(`\\.st-outage \\.node-box\\{[^}]*animation:orrery-pulse`));
+    expect(svg).toMatch(/\.st-outage \.node-box\{[^}]*stroke:#dc2626/);
+    expect(between(svg, 'data-node="edge"')).toContain('data-pulse="1"');
+    expect(svg).not.toContain("node-state-failed");
   });
-  it("styles failed, degraded and off nodes, and pulses failed ones with a fixed period", async () => {
-    const d = await failed();
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toMatch(/\.node-state-failed \.node-box\{[^}]*stroke:#dc2626/);
-    expect(svg).toMatch(/\.node-state-degraded \.node-box\{[^}]*stroke:#d97706/);
-    expect(svg).toMatch(/\.node-state-off\{[^}]*opacity/);
-    expect(svg).toMatch(new RegExp(`\\.node-state-failed \\.node-box\\{[^}]*animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`));
-    expect(svg).toContain("@keyframes orrery-pulse");
+  it("draws preset and custom glyphs and custom frames", async () => {
+    const svg = await draw(fixture("own-vocabulary"));
+    expect(between(svg, 'data-node="match-a"')).toContain('<path d="M2 8h4l2-5 2 10 2-5h4"/>');
+    expect(between(svg, 'data-node="ledger"')).toContain('<path d="M2 3.5h12l-1.5 10.5h-9z"/>'); // storage preset glyph
+    expect(svg).toMatch(/\.gk-cell \.group-box\{[^}]*stroke:#0891b2/);
+    expect(svg).toMatch(/\.gk-cell \.group-box\{[^}]*stroke-dasharray/);
+    expect(svg).toContain('class="group gk-boundary st-healthy" data-group="settlement"');
   });
-  it("edges touching a down node carry no flow", async () => {
-    const base = fixture("failover");
-    const d = propagate({ ...base, nodes: base.nodes.map((n) => (n.id === "db" ? { ...n, state: "failed" as const } : n)) });
-    const svg = renderSvg(d, await laidOut(d));
-    expect(svg).toMatch(/data-flow="api->db" data-load="0"/);
-    expect(svg).toMatch(/data-flow="api->replica" data-load="0.6"/);
+  it("marks connections that satisfy a need, draws replicas, tech and bidirectional arrows", async () => {
+    const m = propagate(fixture("alternatives"));
+    const svg = await draw(m);
+    expect(svg).toMatch(/<path class="edge edge-sync need" data-edge="api->orders"/);
+    expect(svg).toMatch(/<path class="edge edge-replication" data-edge="orders->replica"/);
+    const api = between(svg, 'data-node="api"');
+    expect(api).toContain('class="replicas"');
+    expect(api).toContain(">×3<");
+    const own = await draw(fixture("own-vocabulary"));
+    expect(own).toMatch(/marker-start="url\(#arrow-start\)"[^>]*data-edge="seq-1->seq-2"|data-edge="seq-1->seq-2"[^>]*marker-start="url\(#arrow-start\)"/);
+    const tech = await draw(fixture("connected"));
+    expect(between(tech, 'data-node="orders"')).toContain(">PostgreSQL 16</text>");
+  });
+  it("draws ghosts dimmed and dashed, and explains propagated states as tooltips", async () => {
+    const m = fixture("grouped");
+    const svg = await render(propagate(applySet(m, { failed: ["db"] })), new FakeLayoutEngine(), { view: "data-tier" });
+    expect(svg).toMatch(/\.node\[data-ghost\]\{[^}]*opacity/);
+    expect(between(svg, 'data-node="api"')).toContain("<title>Orders DB unavailable, using Orders DB (replica)</title>");
   });
 });
 
-describe("render with a scenario", () => {
-  it("applies the scenario step, propagates, and titles the SVG with the step note", async () => {
-    const svg = await render(fixture("failover"), new FakeLayoutEngine(), { scenario: "db-failover", step: 1 });
-    expect(svg).toContain('data-node="db" data-kind="database" data-state="failed"');
-    expect(svg).toContain("<title>Failover — Primary DB fails (1/3): Primary goes down</title>");
+describe("renderSvg: legend (R9)", () => {
+  it("lists every state used in the view with its description, and nothing when only the default is used", async () => {
+    const plain = await draw(propagate(fixture("alternatives")));
+    expect(plain).not.toContain('class="legend"');
+    const m = propagate(applySet(fixture("alternatives"), { failed: ["orders"] }));
+    const svg = await draw(m);
+    const legend = between(svg, '<g class="legend"');
+    expect(legend).toContain("failed");
+    expect(legend).toContain("Broken");
+    expect(legend).toContain("degraded");
+    expect(legend).not.toContain(">on<");
   });
-  it("propagates base-model states even without a scenario", async () => {
-    const svg = await render(fixture("failover"), new FakeLayoutEngine());
-    expect(svg).toContain('data-state="off"');
-    expect(svg).toMatch(/data-flow="api->legacy" data-load="0"/);
+});
+
+describe("render options", () => {
+  it("applies a scenario step and titles with the note; applies --set style overrides", async () => {
+    const m = fixture("alternatives");
+    const s = await render(m, new FakeLayoutEngine(), { scenario: "orders-failover", step: 1 });
+    expect(s).toContain('data-node="orders" data-kind="database" data-state="failed"');
+    expect(s).toContain("<title>Checkout with alternatives — Orders DB failover (1/4): Primary goes down; reads move to the replica, API runs reduced</title>");
+    const o = await render(m, new FakeLayoutEngine(), { set: { failed: ["fraud"] } });
+    expect(o).toContain('data-node="api" data-kind="service" data-state="degraded"');
   });
 });

@@ -1,6 +1,6 @@
-import { propagate } from "@orrery/core/simulate";
+import { applySet, propagate } from "@orrery/core/simulate";
 import { flowDuration, flowStyle } from "@orrery/core/flow";
-import type { Diagram, NodeState } from "@orrery/core/types";
+import type { Model } from "@orrery/core/types";
 import { fitView, transformOf, zoomToBox, type Box, type Camera, type Size } from "./camera.js";
 import { continuedDelay } from "./phase.js";
 
@@ -25,8 +25,8 @@ const PANEL_CSS = `
 .orrery-outline li{padding:3px 6px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .orrery-outline li:hover{background:#e2e8f0}.orrery-outline li.is-active{background:#dbeafe}
 .orrery-outline li[data-type=group]{color:#475569;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
-.orrery-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex:none}
-.orrery-dot[data-state=failed]{background:#dc2626}.orrery-dot[data-state=degraded]{background:#d97706}.orrery-dot[data-state=off]{background:#cbd5e1}.orrery-dot[data-state=on]{background:#16a34a}
+.orrery-dot{width:8px;height:8px;border-radius:50%;background:#16a34a;flex:none;border:1px solid transparent}
+.orrery-states{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.orrery-states button{font-size:11px;padding:2px 7px}.orrery-states button.is-on{border-color:#2563eb;color:#2563eb}
 .orrery-help{margin-top:14px;color:#64748b;font-size:11px;line-height:1.6}
 .orrery-help kbd{border:1px solid #cbd5e1;border-radius:4px;padding:0 4px;background:#fff;font:inherit}
 .orrery-reset{margin-top:12px}`;
@@ -47,7 +47,12 @@ const h = <K extends string>(tag: K, cls?: string, text?: string) => {
 };
 
 export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
-  const model = JSON.parse(root.querySelector("#orrery-model")!.textContent ?? "{}") as Diagram;
+  const model = JSON.parse(root.querySelector("#orrery-model")!.textContent ?? "{}") as Model;
+  const stateNames = Object.keys(model.states.define);
+  type Look = { stroke?: string; pulse?: boolean };
+  const PRESETS: Record<string, Look> = { normal: {}, warn: { stroke: "#d97706" }, alert: { stroke: "#dc2626", pulse: true }, muted: { stroke: "#94a3b8" }, highlight: { stroke: "#2563eb" } };
+  const lookOf = (name: string): Look => { const l = model.states.define[name]?.look; return typeof l === "string" ? PRESETS[l] ?? {} : (l ?? {}); };
+  const dotColor = (name: string) => (name === model.states.default ? "#16a34a" : lookOf(name).stroke ?? "#94a3b8");
   const scene = root.querySelector<SVGGElement>(".scene")!;
   const layers = new Map([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => [g.getAttribute("data-view")!, g]));
   const screen = (): Size => opts.size ?? { width: window.innerWidth, height: window.innerHeight };
@@ -55,7 +60,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
 
   // ---- state ----
   let activeId = [...layers.keys()][0]!;
-  const overrides = new Map<string, NodeState>();
+  const overrides = new Map<string, string>();
   let scenario: { id: string; step: number } | null = null;
   let selected: { id: string; type: "node" | "group" } | null = null;
   let camera: Camera = { k: 1, tx: 0, ty: 0 };
@@ -89,62 +94,73 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   const prev = h("button", "orrery-prev", "◀"), next = h("button", "orrery-next", "▶"), stepLbl = h("span", "orrery-step", "");
   steps.append(prev, stepLbl, next); panel.appendChild(steps);
   const note = h("p", "orrery-note", ""); panel.appendChild(note);
+  panel.appendChild(h("label", undefined, "Selected"));
+  const stateBar = h("div", "orrery-states"); panel.appendChild(stateBar);
+  for (const name of stateNames) {
+    const b = h("button", "orrery-state", name); b.setAttribute("data-state", name);
+    b.addEventListener("click", () => { if (selected) setState(selected.id, name); });
+    stateBar.appendChild(b);
+  }
   panel.appendChild(h("label", undefined, "Outline"));
   const outline = h("ul", "orrery-outline"); panel.appendChild(outline);
   const help = h("div", "orrery-help");
-  help.innerHTML = "Click a component to fail it, <kbd>shift</kbd>+click to switch it off. <kbd>↑</kbd><kbd>↓</kbd> select, <kbd>⏎</kbd> zoom, <kbd>f</kbd> fail, <kbd>o</kbd> off, <kbd>[</kbd> <kbd>]</kbd> scenario steps, <kbd>1</kbd>–<kbd>9</kbd> views, <kbd>esc</kbd> reset view.";
+  help.innerHTML = `Click a component to set it to <b>${model.states.needs.unmet}</b> (click again to undo), <kbd>shift</kbd>+click to cycle states, or pick a state above. <kbd>↑</kbd><kbd>↓</kbd> select, <kbd>⏎</kbd> zoom, <kbd>f</kbd> ${model.states.needs.unmet}, <kbd>[</kbd> <kbd>]</kbd> scenario steps, <kbd>1</kbd>–<kbd>9</kbd> views, <kbd>esc</kbd> reset view.`;
   panel.appendChild(help);
   const reset = h("button", "orrery-reset", "Reset"); panel.appendChild(reset);
   fo.appendChild(panel);
   root.appendChild(fo);
 
   // ---- model evaluation ----
-  const effective = (): Diagram => {
-    const states = new Map<string, NodeState>(), loads = new Map<string, number>();
+  const baseState = new Map<string, string>([...model.components.map((c) => [c.id, c.state] as const), ...model.groups.map((g) => [g.id, g.state] as const)]);
+  const effective = (): Model => {
+    const states = new Map<string, string>(), loads = new Map<string, number>();
     if (scenario) {
       const sc = model.scenarios.find((s) => s.id === scenario!.id)!;
       for (const st of sc.steps.slice(0, scenario.step)) {
-        for (const [id, v] of Object.entries(st.nodes ?? {})) states.set(id, v.state);
-        for (const [id, v] of Object.entries(st.edges ?? {})) loads.set(id, v.load);
+        for (const [name, ids] of Object.entries(st.set)) for (const id of ids) states.set(id, name);
+        for (const id of st.restore) states.set(id, baseState.get(id)!);
+        for (const [k, v] of Object.entries(st.load)) loads.set(k, v);
       }
     }
-    for (const [id, s] of overrides) states.set(id, s);
-    return propagate({
-      ...model,
-      nodes: model.nodes.map((n) => (states.has(n.id) ? { ...n, state: states.get(n.id)! } : n)),
-      edges: model.edges.map((e) => (loads.has(e.id) ? { ...e, load: loads.get(e.id)! } : e)),
-    });
+    for (const [id, name] of overrides) states.set(id, name);
+    const set: Record<string, string[]> = {};
+    for (const [id, name] of states) set[name] = [...(set[name] ?? []), id];
+    return propagate(applySet(model, set, Object.fromEntries(loads)));
   };
 
   const apply = () => {
     const d = effective();
-    const nodes = new Map(d.nodes.map((n) => [n.id, n]));
-    const edges = new Map(d.edges.map((e) => [e.id, e]));
+    const entities = new Map<string, { state: string; reason?: string }>([...d.components.map((c) => [c.id, c] as const), ...d.groups.map((g) => [g.id, g] as const)]);
+    const conns = new Map(d.connections.map((c) => [c.key, c]));
     for (const layer of layers.values()) {
-      for (const g of layer.querySelectorAll<SVGGElement>("[data-node]")) {
-        const n = nodes.get(g.getAttribute("data-node")!);
-        if (!n) continue;
-        g.classList.remove("node-state-failed", "node-state-degraded", "node-state-off");
-        if (n.state !== "on") g.classList.add(`node-state-${n.state}`);
-        g.setAttribute("data-state", n.state);
-        let t: Element | null = g.querySelector("title");
-        if (n.reason) {
-          if (!t) { t = document.createElementNS("http://www.w3.org/2000/svg", "title"); g.insertBefore(t, g.firstChild); }
-          t.textContent = n.reason;
-        } else t?.remove();
+      for (const g of layer.querySelectorAll<SVGGElement>("[data-node],[data-group]")) {
+        const e = entities.get(g.getAttribute("data-node") ?? g.getAttribute("data-group")!);
+        if (!e) continue;
+        for (const cls of [...g.classList]) if (cls.startsWith("st-")) g.classList.remove(cls);
+        g.classList.add(`st-${e.state}`);
+        g.setAttribute("data-state", e.state);
+        if (lookOf(e.state).pulse) g.setAttribute("data-pulse", "1"); else g.removeAttribute("data-pulse");
+        let t: Element | null = g.querySelector(":scope > title");
+        if (e.reason) { if (!t) { t = document.createElementNS("http://www.w3.org/2000/svg", "title"); g.insertBefore(t, g.firstChild); } t.textContent = e.reason; }
+        else t?.remove();
       }
       for (const f of layer.querySelectorAll<SVGPathElement>("[data-flow]")) {
-        const e = edges.get(f.getAttribute("data-flow")!);
-        if (!e) continue;
+        const c = conns.get(f.getAttribute("data-flow")!);
+        if (!c) continue;
         const oldLoad = Number(f.getAttribute("data-load"));
-        if (oldLoad === e.load) continue;
+        if (oldLoad === c.load) continue;
         const anim = (f as unknown as { getAnimations?: () => { currentTime: number | null }[] }).getAnimations?.()[0];
-        const delay = continuedDelay(anim?.currentTime ?? null, flowDuration(oldLoad) * 1000, flowDuration(e.load) * 1000);
-        f.setAttribute("data-load", String(e.load));
-        f.setAttribute("style", flowStyle(e.load) + (e.load > 0 && delay ? `;animation-delay:${Math.round(delay)}ms` : ""));
+        const delay = continuedDelay(anim?.currentTime ?? null, flowDuration(oldLoad) * 1000, flowDuration(c.load) * 1000);
+        f.setAttribute("data-load", String(c.load));
+        f.setAttribute("style", flowStyle(c.load) + (c.load > 0 && delay ? `;animation-delay:${Math.round(delay)}ms` : ""));
       }
     }
-    for (const li of outline.querySelectorAll<HTMLElement>("li[data-type=node] .orrery-dot")) li.setAttribute("data-state", nodes.get(li.parentElement!.getAttribute("data-id")!)?.state ?? "on");
+    for (const dot of outline.querySelectorAll<HTMLElement>("li .orrery-dot")) {
+      const st = entities.get(dot.parentElement!.getAttribute("data-id")!)?.state ?? model.states.default;
+      dot.setAttribute("data-state", st); dot.style.background = dotColor(st);
+    }
+    const sel = selected ? entities.get(selected.id)?.state : undefined;
+    for (const b of stateBar.querySelectorAll<HTMLElement>("button")) b.classList.toggle("is-on", b.getAttribute("data-state") === sel);
     stepLbl.textContent = scenario ? `${scenario.step} / ${model.scenarios.find((s) => s.id === scenario!.id)!.steps.length}` : "";
     note.textContent = scenario ? (model.scenarios.find((s) => s.id === scenario!.id)!.steps[scenario.step - 1]!.note ?? "") : "";
   };
@@ -173,16 +189,17 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     const layer = active();
     const has = (sel: string) => layer.querySelector(sel) !== null;
     const groupIn = new Set(model.groups.filter((g) => has(`[data-group="${g.id}"]`)).map((g) => g.id));
+    const isGhost = (id: string) => layer.querySelector(`[data-node="${id}"][data-ghost]`) !== null;
     const add = (id: string, type: "node" | "group", label: string, depth: number, state?: string) => {
       const li = h("li"); li.setAttribute("data-id", id); li.setAttribute("data-type", type); li.style.paddingLeft = `${6 + depth * 14}px`;
-      if (type === "node") { const dot = h("span", "orrery-dot"); dot.setAttribute("data-state", state ?? "on"); li.appendChild(dot); }
+      const dot = h("span", "orrery-dot"); dot.setAttribute("data-state", state ?? model.states.default); dot.style.background = dotColor(state ?? model.states.default); li.appendChild(dot);
       li.appendChild(h("span", undefined, label));
       li.addEventListener("click", () => { select(id, type); zoomTo(id, type); });
       outline.appendChild(li); order.push({ id, type });
     };
     const walk = (parent: string | undefined, depth: number) => {
-      for (const n of model.nodes) if (has(`[data-node="${n.id}"]`) && (n.group === parent || (parent === undefined && (n.group === undefined || !groupIn.has(n.group))))) add(n.id, "node", n.label, depth, layer.querySelector(`[data-node="${n.id}"]`)!.getAttribute("data-state") ?? "on");
-      for (const g of model.groups) if (groupIn.has(g.id) && (g.parent === parent || (parent === undefined && (g.parent === undefined || !groupIn.has(g.parent))))) { add(g.id, "group", g.label, depth); walk(g.id, depth + 1); }
+      for (const n of model.components) if (has(`[data-node="${n.id}"]`) && !isGhost(n.id) && (n.group === parent || (parent === undefined && (n.group === undefined || !groupIn.has(n.group))))) add(n.id, "node", n.label, depth, layer.querySelector(`[data-node="${n.id}"]`)!.getAttribute("data-state") ?? model.states.default);
+      for (const g of model.groups) if (groupIn.has(g.id) && (g.parent === parent || (parent === undefined && (g.parent === undefined || !groupIn.has(g.parent))))) { add(g.id, "group", g.label, depth, layer.querySelector(`[data-group="${g.id}"]`)!.getAttribute("data-state") ?? model.states.default); walk(g.id, depth + 1); }
     };
     walk(undefined, 0);
   };
@@ -194,17 +211,21 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     if (!id) return;
     elOf(id, type)?.classList.add("is-selected");
     outline.querySelector(`li[data-id="${id}"]`)?.classList.add("is-active");
+    const st = elOf(id, type)?.getAttribute("data-state");
+    for (const b of stateBar.querySelectorAll<HTMLElement>("button")) b.classList.toggle("is-on", b.getAttribute("data-state") === st);
   };
   const zoomTo = (id: string, type: "node" | "group") => { const el = elOf(id, type); if (el) setCamera(zoomToBox(bbox(el), screen(), { ...frame(), maxZoom: type === "node" ? 2 : 1.5 }), true); };
 
   // ---- interactions ----
-  const toggle = (id: string, state: NodeState) => { if (overrides.get(id) === state) overrides.delete(id); else overrides.set(id, state); apply(); };
+  const setState = (id: string, state: string) => { if (state === baseState.get(id)) overrides.delete(id); else overrides.set(id, state); apply(); };
+  const toggle = (id: string, state: string) => setState(id, overrides.get(id) === state ? baseState.get(id)! : state);
+  const cycle = (id: string) => { const cur = overrides.get(id) ?? baseState.get(id)!; setState(id, stateNames[(stateNames.indexOf(cur) + 1) % stateNames.length]!); };
   scene.addEventListener("click", (ev) => {
-    const g = (ev.target as Element).closest?.("[data-node]") as SVGGElement | null;
+    const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
     if (!g) return;
-    const id = g.getAttribute("data-node")!;
-    select(id, "node");
-    toggle(id, (ev as MouseEvent).shiftKey ? "off" : "failed");
+    const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
+    select(id, g.hasAttribute("data-node") ? "node" : "group");
+    if ((ev as MouseEvent).shiftKey) cycle(id); else toggle(id, model.states.needs.unmet);
   });
   scene.addEventListener("mouseover", (ev) => {
     const g = (ev.target as Element).closest?.("[data-node]") as SVGGElement | null;
@@ -214,9 +235,9 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
     if (!g) return;
     const id = g.getAttribute("data-node")!;
     g.classList.add("is-hot");
-    for (const e of model.edges) if (e.from === id || e.to === id) {
-      layer.querySelector(`[data-edge="${e.id}"]`)?.classList.add("is-hot");
-      layer.querySelector(`[data-flow="${e.id}"]`)?.classList.add("is-hot");
+    for (const e of model.connections) if (e.from === id || e.to === id) {
+      layer.querySelector(`[data-edge="${e.key}"]`)?.classList.add("is-hot");
+      layer.querySelector(`[data-flow="${e.key}"]`)?.classList.add("is-hot");
       layer.querySelector(`[data-node="${e.from === id ? e.to : e.from}"]`)?.classList.add("is-hot");
     }
   });
@@ -275,8 +296,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       const n = order[Math.min(order.length - 1, Math.max(0, i + (k === "ArrowDown" ? 1 : -1)))];
       if (n) select(n.id, n.type);
     } else if (k === "Enter" && selected) zoomTo(selected.id, selected.type);
-    else if (k === "f" && selected?.type === "node") toggle(selected.id, "failed");
-    else if (k === "o" && selected?.type === "node") toggle(selected.id, "off");
+    else if (k === "f" && selected) toggle(selected.id, model.states.needs.unmet);
     else if (k === "Escape") { select(null); fit(true); }
     else if (k === "[" && scenario) setScenario(scenario.id, scenario.step - 1);
     else if (k === "]" && scenario) setScenario(scenario.id, scenario.step + 1);

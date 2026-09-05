@@ -7,7 +7,7 @@ import { decodePng, diffFrames, flowRegions, inspect, isolateFlow, renderFrames,
 const fixture = async (name: string) => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
   if (!r.ok) throw new Error(name);
-  return render(r.diagram, new FakeLayoutEngine());
+  return render(r.model, new FakeLayoutEngine());
 };
 const bitmap = (w: number, h: number, paint: (x: number, y: number) => number): Bitmap => {
   const data = Buffer.alloc(w * h * 4, 255);

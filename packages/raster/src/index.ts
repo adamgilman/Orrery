@@ -42,7 +42,7 @@ export function freezeFrame(svg: string, tMs: number): string {
   const phase = (tMs / (PULSE_PERIOD * 1000)) % 1;
   const tri = 1 - Math.abs(2 * phase - 1);
   const opacity = 1 - (1 - PULSE_MIN_OPACITY) * tri;
-  svg = svg.replace(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, `stroke-opacity:${fmt(opacity)}`);
+  svg = svg.replaceAll(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, `stroke-opacity:${fmt(opacity)}`);
   return svg.replace(FLOW_RE, (whole, key: string, load: string, d: string, style: string) => {
     const m = style.match(/animation-duration:([\d.]+)s/);
     if (!m) return whole;
@@ -56,7 +56,7 @@ export function freezeFrame(svg: string, tMs: number): string {
 }
 
 /** Hold the failure pulse at full opacity so a check of something else is not disturbed by it. */
-const stillPulse = (svg: string) => svg.replace(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, "stroke-opacity:1");
+const stillPulse = (svg: string) => svg.replaceAll(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, "stroke-opacity:1");
 
 /** Drop every flow overlay except `key`, so one edge's animation can be judged without neighbours interfering. */
 export function isolateFlow(svg: string, key: string): string {
@@ -106,16 +106,18 @@ export function flowRegions(svg: string, scale = 1): Record<string, Region> {
 
 export interface Rect { x: number; y: number; width: number; height: number }
 
-const PULSE_RE = /<g class="node [^"]*node-state-failed[^"]*" data-node="([^"]+)"[^>]*transform="translate\(([\d.-]+) ([\d.-]+)\)">(?:\s*<title>[^<]*<\/title>)?\s*<rect class="node-box" width="([\d.]+)" height="([\d.]+)"/g;
-
-/** Padded, scaled box of every failed (pulsing) node, keyed by node id. */
+/** Padded, scaled box of every pulsing entity (any state whose look pulses), keyed by id. */
 export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
   svg = activeView(svg);
   const out: Record<string, Rect> = {};
-  const pad = 3;
-  for (const m of svg.matchAll(PULSE_RE)) {
-    const [, id, x, y, w, h] = m;
-    out[id!] = { x: Math.floor((Number(x) - pad) * scale), y: Math.floor((Number(y) - pad) * scale), width: Math.ceil((Number(w) + 2 * pad) * scale), height: Math.ceil((Number(h) + 2 * pad) * scale) };
+  const pad = 6;
+  for (const m of svg.matchAll(/<g class="(?:node|group)[^>]*>/g)) {
+    const tag = m[0];
+    if (!tag.includes('data-pulse="1"')) continue;
+    const id = tag.match(/data-(?:node|group)="([^"]+)"/)?.[1];
+    const bb = tag.match(/data-bbox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/);
+    if (!id || !bb) continue;
+    out[id] = { x: Math.floor((Number(bb[1]) - pad) * scale), y: Math.floor((Number(bb[2]) - pad) * scale), width: Math.ceil((Number(bb[3]) + 2 * pad) * scale), height: Math.ceil((Number(bb[4]) + 2 * pad) * scale) };
   }
   return out;
 }
