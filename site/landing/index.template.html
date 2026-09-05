@@ -34,7 +34,8 @@ p{margin:0}
 .o-body + .o-body{margin-top:1em}
 .o-muted{color:var(--ink-muted)}
 code,pre{font-family:var(--mono);font-size:.875rem}
-pre{margin:0;padding:18px 20px;background:var(--night);color:var(--on-night);border-radius:6px;overflow-x:auto;line-height:1.55;font-size:.8125rem}
+pre{margin:0;padding:18px 20px;background:var(--night);color:var(--on-night);border-radius:6px;overflow-x:auto;max-width:100%;line-height:1.55;font-size:.8125rem}
+.o-pair>*,.o-split>*{min-width:0}
 pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 
 /* ---------- header ---------- */
@@ -107,11 +108,11 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF}
 .o-foot a{color:var(--on-night-muted)}.o-foot a:hover{color:var(--on-night)}
 
 @media (max-width:900px){
-  .o-hero .o-wrap,.o-section-head,.o-pair,.o-split{grid-template-columns:1fr}
+  .o-hero .o-wrap,.o-section-head,.o-pair,.o-split,.o-three,.o-facts{grid-template-columns:minmax(0,1fr)}
+  .o-hero .o-wrap>*,.o-section-head>*,.o-pair>*,.o-split>*,.o-three>*,.o-facts>*{min-width:0;max-width:100%}
   .o-plate{justify-self:start;max-width:420px;width:100%}
   .o-figure{padding:12px}
   .o-scroll svg{min-width:820px}
-  .o-three,.o-facts{grid-template-columns:1fr}
   .o-list li{grid-template-columns:1fr;gap:6px}
   .o-nav{display:none}
 }
