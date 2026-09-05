@@ -328,13 +328,20 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const starts = scenes.map((_, k) => scenes.slice(0, k).reduce((a, s) => a + s.sc.seconds, 0));
   const pc = (sec: number) => `${Math.round((sec / total) * 10000) / 100}%`;
   const ease = "animation-timing-function:ease-in-out;";
-  /** Keyframes for a value that holds per scene and changes at each boundary over the fade window. */
-  const track = (valueAt: (k: number) => string, easeMoves: boolean): string => {
+  /**
+   * Keyframes for a value that holds per scene and changes at each boundary over the fade window. Staged tracks
+   * (level of detail) hide early and show late within the window, so nothing overlaps while the camera moves:
+   * a value turning off is gone by 40% of the move; a value turning on appears only in the last 40%.
+   */
+  const track = (valueAt: (k: number) => string, easeMoves: boolean, staged = false): string => {
     const stops: [string, string][] = [["0%", valueAt(0)]];
     for (let k = 1; k < n; k++) {
       const prev = valueAt(k - 1), next = valueAt(k);
       if (prev === next) continue;
-      stops.push([pc(starts[k]!), (easeMoves ? ease : "") + prev], [pc(starts[k]! + fadeS), next]);
+      const s0 = starts[k]!;
+      if (!staged) stops.push([pc(s0), (easeMoves ? ease : "") + prev], [pc(s0 + fadeS), next]);
+      else if (next.endsWith(":1")) stops.push([pc(s0 + fadeS * 0.6), prev], [pc(s0 + fadeS), next]);
+      else stops.push([pc(s0), prev], [pc(s0 + fadeS * 0.4), next]);
     }
     stops.push(["100%", valueAt(n - 1)]);
     return stops.filter(([p], i) => i === 0 || p !== stops[i - 1]![0]).map(([p, v]) => `${p}{${v}}`).join("");
@@ -359,8 +366,8 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       ...focused.flatMap((g) => [
         `[data-lod="detail"][data-for~="${g}"]{animation:orrery-lod-${g}-detail ${num(total)}s linear infinite}`,
         `[data-lod="summary"][data-for~="${g}"]{animation:orrery-lod-${g}-summary ${num(total)}s linear infinite}`,
-        `@keyframes orrery-lod-${g}-detail{${track((k) => (focusOf(k) === g ? "opacity:1" : "opacity:0"), false)}}`,
-        `@keyframes orrery-lod-${g}-summary{${track((k) => (focusOf(k) === g ? "opacity:0" : "opacity:1"), false)}}`,
+        `@keyframes orrery-lod-${g}-detail{${track((k) => (focusOf(k) === g ? "opacity:1" : "opacity:0"), false, true)}}`,
+        `@keyframes orrery-lod-${g}-summary{${track((k) => (focusOf(k) === g ? "opacity:0" : "opacity:1"), false, true)}}`,
       ]),
     ].join("\n");
     const captions = scenes.map((s, k) => `<text class="step-note" x="20" y="${num(height - 12)}" style="animation:orrery-caption-${k} ${num(total)}s linear infinite">${esc(s.caption)}</text>`).join("\n");

@@ -177,10 +177,13 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
       }
     }
   };
+  let revealTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Hide early, show late: detail appears once the camera has arrived, and is gone before it leaves. */
   const focus = (groupId: string | null, animate = true) => {
     focusId = groupId;
-    reveal(groupId);
-    if (groupId) zoomTo(groupId, "group"); else fit(animate);
+    if (revealTimer) clearTimeout(revealTimer);
+    if (groupId) { reveal(null); zoomTo(groupId, "group"); revealTimer = setTimeout(() => reveal(groupId), 300); }
+    else { reveal(null); fit(animate); }
   };
   /** Clicking a closed group focuses it. */
   const drillInto = (groupId: string): boolean => {
@@ -337,7 +340,7 @@ export function boot(root: SVGSVGElement, opts: BootOptions = {}): Runtime {
   rebuildOutline(); apply(); reveal(null); fit(false); if (model.tour) startTour(); else startAutoplay();
   return {
     showView, setScenario, setState, reset,
-    destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
+    destroy: () => { ac.abort(); stopAutoplay(); if (timer) clearTimeout(timer); if (revealTimer) clearTimeout(revealTimer); if (morphing) morphing(); panel.host.remove(); style.remove(); },
   };
 }
 

@@ -48,8 +48,8 @@
 @keyframes orrery-state-1{0%{opacity:0}50%{opacity:0}57.5%{opacity:1}100%{opacity:1}}
 [data-lod="detail"][data-for~="payments"]{animation:orrery-lod-payments-detail 16s linear infinite}
 [data-lod="summary"][data-for~="payments"]{animation:orrery-lod-payments-summary 16s linear infinite}
-@keyframes orrery-lod-payments-detail{0%{opacity:0}25%{opacity:0}32.5%{opacity:1}75%{opacity:1}82.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-lod-payments-summary{0%{opacity:1}25%{opacity:1}32.5%{opacity:0}75%{opacity:0}82.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-lod-payments-detail{0%{opacity:0}29.5%{opacity:0}32.5%{opacity:1}75%{opacity:1}78%{opacity:0}100%{opacity:0}}
+@keyframes orrery-lod-payments-summary{0%{opacity:1}25%{opacity:1}28%{opacity:0}79.5%{opacity:0}82.5%{opacity:1}100%{opacity:1}}
 @keyframes orrery-caption-0{0%{opacity:1}25%{opacity:1}32.5%{opacity:0}100%{opacity:0}}
 @keyframes orrery-caption-1{0%{opacity:0}25%{opacity:0}32.5%{opacity:1}50%{opacity:1}57.5%{opacity:0}100%{opacity:0}}
 @keyframes orrery-caption-2{0%{opacity:0}50%{opacity:0}57.5%{opacity:1}75%{opacity:1}82.5%{opacity:0}100%{opacity:0}}

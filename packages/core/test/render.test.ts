@@ -196,8 +196,9 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(t[2]).toBeGreaterThan(1);
     // level of detail: payments' detail is visible exactly while focused, its summary the reverse; identity never opens
     expect(svg).toMatch(/\[data-lod="detail"\]\[data-for~="payments"\]\{animation:orrery-lod-payments-detail 16s linear infinite\}/);
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}25%\{opacity:0\}32\.5%\{opacity:1\}75%\{opacity:1\}82\.5%\{opacity:0\}100%\{opacity:0\}\}/);
-    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}32\.5%\{opacity:0\}75%\{opacity:0\}82\.5%\{opacity:1\}100%\{opacity:1\}\}/);
+    // staged: detail appears only in the last 40% of the move in (29.5→32.5) and is gone within the first 40% of the move out (75→78)
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-detail\{0%\{opacity:0\}29\.5%\{opacity:0\}32\.5%\{opacity:1\}75%\{opacity:1\}78%\{opacity:0\}100%\{opacity:0\}\}/);
+    expect(svg).toMatch(/@keyframes orrery-lod-payments-summary\{0%\{opacity:1\}25%\{opacity:1\}28%\{opacity:0\}79\.5%\{opacity:0\}82\.5%\{opacity:1\}100%\{opacity:1\}\}/);
     expect(svg).not.toContain("orrery-lod-identity");
     // state layers crossfade at the scenario moment (scene 2) and back at the loop
     expect(svg).toMatch(/@keyframes orrery-state-1\{0%\{opacity:0\}50%\{opacity:0\}57\.5%\{opacity:1\}100%\{opacity:1\}\}/);
