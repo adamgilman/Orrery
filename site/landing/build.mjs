@@ -19,12 +19,13 @@ for (const name of ["solar", "failover-play", "vocabulary-play", "data-view", "d
  */
 function orrery(size, earthSeconds, cls) {
   const c = size / 2, R = c - 8;
+  // Projected light: the planets are tones of the projector, the Earth the diagrams' blue, the Sun the lamp.
   const planets = [
-    { name: "Mercury", years: 0.2408, r: 2.2, fill: "#D9CFB8" },
-    { name: "Venus", years: 0.6152, r: 3.2, fill: "#E9E4D6" },
-    { name: "Earth", years: 1, r: 3.4, fill: "#2563EB", moon: { years: 0.0748, dist: 9, r: 1.1 } },
-    { name: "Mars", years: 1.8809, r: 2.6, fill: "#C98C6A" },
-    { name: "Jupiter", years: 11.862, r: 5.2, fill: "#E3D6BE" },
+    { name: "Mercury", years: 0.2408, r: 2.2, fill: "#C9CEDD" },
+    { name: "Venus", years: 0.6152, r: 3.2, fill: "#F2F4FF" },
+    { name: "Earth", years: 1, r: 3.4, fill: "#5B8CFF", moon: { years: 0.0748, dist: 9, r: 1.1 } },
+    { name: "Mars", years: 1.8809, r: 2.6, fill: "#E7B79A" },
+    { name: "Jupiter", years: 11.862, r: 5.2, fill: "#E9E2CF" },
   ];
   const first = R * 0.30, ratio = Math.pow((R * 0.86) / first, 1 / (planets.length - 1));
   const orbits = planets.map((p, i) => ({ ...p, a: first * Math.pow(ratio, i) }));
@@ -33,15 +34,14 @@ function orrery(size, earthSeconds, cls) {
   for (let d = 0; d < 360; d++) ticks.push(tick(d, d % 90 === 0 ? 14 : d % 30 === 0 ? 9 : 4, d % 30 === 0 ? 1 : 0.5));
   const bodies = orbits.map((p, i) => {
     const dur = (p.years * earthSeconds).toFixed(2), delay = (-(i * 7.3) % (p.years * earthSeconds)).toFixed(2);
-    // The moon turns about the Earth: its origin is the Earth's position in this group's own user space.
-    const moon = p.moon ? `<g class="o-turn" style="animation-duration:${(p.moon.years * earthSeconds).toFixed(2)}s;transform-origin:${(c + p.a).toFixed(2)}px ${c}px"><circle cx="${(c + p.a + p.moon.dist).toFixed(2)}" cy="${c}" r="${p.moon.r}" fill="#E9E4D6"/></g>` : "";
+    const moon = p.moon ? `<g class="o-turn" style="animation-duration:${(p.moon.years * earthSeconds).toFixed(2)}s;transform-origin:${(c + p.a).toFixed(2)}px ${c}px"><circle cx="${(c + p.a + p.moon.dist).toFixed(2)}" cy="${c}" r="${p.moon.r}" fill="#F2F4FF"/></g>` : "";
     return `<g class="o-turn" style="animation-duration:${dur}s;animation-delay:${delay}s"><circle cx="${(c + p.a).toFixed(2)}" cy="${c}" r="${p.r}" fill="${p.fill}"/>${moon}<title>${p.name}, ${p.years} years</title></g>`;
   }).join("");
   return `<svg class="${cls}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
 <g class="o-engrave">${ticks.join("")}</g>
 <circle class="o-ring" cx="${c}" cy="${c}" r="${R - 18}"/>
 ${orbits.map((p) => `<circle class="o-orbit" cx="${c}" cy="${c}" r="${p.a.toFixed(2)}"/>`).join("")}
-<circle cx="${c}" cy="${c}" r="6.5" fill="#C9A15A"/><circle cx="${c}" cy="${c}" r="13" fill="none" stroke="#C9A15A" stroke-opacity=".35" stroke-width=".8"/>
+<circle class="o-sun" cx="${c}" cy="${c}" r="6.5"/><circle class="o-sun-halo" cx="${c}" cy="${c}" r="13"/>
 <g transform-origin="${c} ${c}" class="o-bodies">${bodies}</g>
 </svg>`;
 }
