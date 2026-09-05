@@ -201,6 +201,13 @@ describe("render: a tour of views (R12)", () => {
     expect(Number(start[1])).toBeCloseTo(bx + bw / 2, 0);
     expect(Number(start[2])).toBeCloseTo(by + bh / 2, 0);
     expect(Number(start[3])).toBeLessThan(1);
+    // the overview zooms about the same point: the box is the fixed point, so it stays put and grows
+    const end = kf(0).match(/transform:translate\(([\d.-]+)px, ([\d.-]+)px\) scale\(([\d.]+)\) translate\(([\d.-]+)px, ([\d.-]+)px\)/)!;
+    expect(Number(end[1])).toBeCloseTo(bx + bw / 2, 0);
+    expect(Number(end[2])).toBeCloseTo(by + bh / 2, 0);
+    expect(Number(end[4])).toBeCloseTo(-(bx + bw / 2), 0);
+    expect(Number(end[5])).toBeCloseTo(-(by + bh / 2), 0);
+    expect(Number(end[3]) * Number(start[3])).toBeCloseTo(1, 1);
     // scene 1 → scene 2 is the same layout with a state change: a plain crossfade (the 100% stop only repeats the entry)
     const mid = kf(1).slice(kf(1).indexOf("opacity:1"), kf(1).indexOf("100%"));
     expect(mid).not.toMatch(/scale\(/);

@@ -287,18 +287,20 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const starts = frames.map((_, k) => frames.slice(0, k).reduce((a, f) => a + f.seconds, 0));
   const pc = (sec: number) => { const v = Math.round((sec / total) * 10000) / 100; return `${v}%`; };
   const fmt = (v: number) => String(Math.round(v * 100) / 100);
+  const fmtScale = (v: number) => String(Math.round(v * 10000) / 10000);
 
-  // Transitions. Between a view that collapses a group and the view scoped to it, the camera zooms: the overview
-  // scales up around the closed box while the detail scales in from the box's rectangle, with one shared mapping so
-  // box and frame coincide throughout. Everything else crossfades.
+  // Transitions. Between a view that collapses a group and the view scoped to it, the camera zooms with the closed
+  // box as the fixed point: the overview scales up about the box's centre, so the box stays where the reader is
+  // looking and grows; the detail starts scaled down onto that box and settles into its own place. Everything
+  // else crossfades.
   type Transition = { enterOf: string; exitOf: string; zoom: boolean };
   const drawn = (k: number) => { const m = measured[k]!; return { x: Math.round((canvasW - m.width) / 2), y: Math.round((canvasH - m.height) / 2), w: m.width, h: m.height }; };
   const mapping = (box: { x: number; y: number; width: number; height: number }, rect: { x: number; y: number; w: number; h: number }) => {
     const sc = Math.min(box.width / rect.w, box.height / rect.h);
     const bc = { x: box.x + box.width / 2, y: box.y + box.height / 2 }, tc = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
     return {
-      detailStart: `translate(${fmt(bc.x)}px, ${fmt(bc.y)}px) scale(${fmt(sc)}) translate(${fmt(-tc.x)}px, ${fmt(-tc.y)}px)`,
-      overviewEnd: `translate(${fmt(tc.x)}px, ${fmt(tc.y)}px) scale(${fmt(1 / sc)}) translate(${fmt(-bc.x)}px, ${fmt(-bc.y)}px)`,
+      detailStart: `translate(${fmt(bc.x)}px, ${fmt(bc.y)}px) scale(${fmtScale(sc)}) translate(${fmt(-tc.x)}px, ${fmt(-tc.y)}px)`,
+      overviewEnd: `translate(${fmt(bc.x)}px, ${fmt(bc.y)}px) scale(${fmtScale(1 / sc)}) translate(${fmt(-bc.x)}px, ${fmt(-bc.y)}px)`,
     };
   };
   /** How scene i hands over to scene j: what j's transform is as it enters, what i's is as it leaves. */
