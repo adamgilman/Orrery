@@ -93,10 +93,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
 .o-list p{color:var(--ink-muted)}
 .o-quote{font-family:var(--serif);font-size:clamp(1.5rem,2.4vw,2rem);line-height:1.25;max-width:30ch;color:var(--ink)}
 .o-quote em{color:var(--brass)}
-.o-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:32px}
-.o-facts div{border-top:1px solid var(--rule);padding-top:14px}
-.o-facts .o-num{font-family:var(--serif);font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
-.o-facts p{color:var(--ink-muted);font-size:.9rem;margin-top:6px}
+pre .ins{color:#9FD8A8} pre .del{color:#E8A0A0}
 
 /* ---------- close ---------- */
 .o-close{background:var(--night);color:var(--on-night);position:relative;overflow:hidden}
@@ -110,8 +107,8 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
 .o-foot a{color:var(--on-night-muted)}.o-foot a:hover{color:var(--on-night)}
 
 @media (max-width:900px){
-  .o-hero .o-wrap,.o-section-head,.o-pair,.o-split,.o-three,.o-facts{grid-template-columns:minmax(0,1fr)}
-  .o-hero .o-wrap>*,.o-section-head>*,.o-pair>*,.o-split>*,.o-three>*,.o-facts>*{min-width:0;max-width:100%}
+  .o-hero .o-wrap,.o-section-head,.o-pair,.o-split,.o-three{grid-template-columns:minmax(0,1fr)}
+  .o-hero .o-wrap>*,.o-section-head>*,.o-pair>*,.o-split>*,.o-three>*{min-width:0;max-width:100%}
   .o-plate{justify-self:start;max-width:420px;width:100%;padding:36px 0}
   .o-orrery-hero{width:150%}
   .o-dial,.o-dial-caption{margin-left:0}
@@ -131,6 +128,7 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
       <a href="#crank">Failure</a>
       <a href="#vocabulary">Vocabulary</a>
       <a href="#drill">Drill down</a>
+      <a href="#code">Diagrams are code</a>
       <a href="https://github.com/adamgilman/Orrery/blob/main/docs/MODEL.md">Specification</a>
       <a href="https://github.com/adamgilman/Orrery">GitHub</a>
     </nav>
@@ -264,17 +262,37 @@ pre .k{color:#9AA3B8} pre .s{color:#F1D9A5} pre .n{color:#8FB4FF} pre .c{color:#
   </div>
 </section>
 
+<section class="o-section" id="code">
+  <div class="o-wrap">
+    <div class="o-section-head">
+      <div><p class="o-eyebrow">Diagrams are code</p><h2>The diagram lives next to the code it describes.</h2></div>
+      <p class="o-lede o-muted">An Orrery model is a JSON file in your repository. It is versioned with the code, reviewed in the same pull request, and rendered by the same build. When the system changes, the diagram changes in the same commit, and the reviewer sees exactly what changed: a component added, a connection removed, a scenario step reworded. No exported image goes stale in a wiki.</p>
+    </div>
+    <div class="o-split">
+      <pre><code>$ git diff -- checkout.orrery.json
+ <span class="k">"components"</span>: [
+   { <span class="k">"id"</span>: <span class="s">"api"</span>, <span class="k">"label"</span>: <span class="s">"Checkout API"</span> },
+<span class="ins">+  { <span class="k">"id"</span>: <span class="s">"replica"</span>, <span class="k">"label"</span>: <span class="s">"Read replica"</span>, <span class="k">"kind"</span>: <span class="s">"database"</span>, <span class="k">"group"</span>: <span class="s">"data"</span> },</span>
+ <span class="k">"connections"</span>: [
+<span class="ins">+  { <span class="k">"id"</span>: <span class="s">"failover"</span>, <span class="k">"from"</span>: <span class="s">"api"</span>, <span class="k">"to"</span>: <span class="s">"replica"</span>, <span class="k">"load"</span>: <span class="n">0</span> },</span>
+ <span class="k">"scenarios"</span>: [ { <span class="k">"id"</span>: <span class="s">"db-fails"</span>, <span class="k">"steps"</span>: [ {
+<span class="del">-  <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span>, <span class="k">"failed"</span>: { <span class="k">"api"</span>: <span class="s">"no database"</span> } }</span>
+<span class="ins">+  <span class="k">"set"</span>: { <span class="k">"failed"</span>: <span class="s">"db"</span>, <span class="k">"degraded"</span>: { <span class="k">"api"</span>: <span class="s">"reads from the replica"</span> } },</span>
+<span class="ins">+  <span class="k">"load"</span>: [ { <span class="k">"id"</span>: <span class="s">"failover"</span>, <span class="k">"load"</span>: <span class="n">0.6</span> } ]</span></code></pre>
+      <div>
+        <p class="o-body">A review reads like any other: the replica arrives, the failover line with it, and the story of a database outage changes from "the API fails" to "the API reads from the replica". Layout is automatic and deterministic, so there is no drawing to re-export and the same file always renders the same bytes.</p>
+        <p class="o-body o-muted" style="margin-top:12px">Render it in CI and commit the SVG next to it, or point a README at the rendered file. Either way the picture in the docs is the model in the repo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="o-section" id="agents">
   <div class="o-wrap">
     <div class="o-section-head">
       <div><p class="o-eyebrow">Written by agents, read by humans</p><h2>Designed so a coding agent gets it right first time.</h2></div>
       <div>
         <p class="o-lede o-muted">Every property in the schema explains itself. Unknown properties are errors. Every error is a JSON pointer and a sentence. A fresh agent given only the specification, the schema and the command line has grown a model through every step, from components to a replaced vocabulary, validating first time at each.</p>
-        <div class="o-facts">
-          <div><div class="o-num">4</div><p>independent fresh-agent walks, from a blank file to scenarios</p></div>
-          <div><div class="o-num">0</div><p>validation failures on the required path of the last walk</p></div>
-          <div><div class="o-num">1</div><p>file: model, views, scenarios, vocabulary and runtime</p></div>
-        </div>
       </div>
     </div>
     <pre><code>$ orrery validate platform.orrery.json
