@@ -18,9 +18,14 @@ derived from one master file, [examples/checkout.orrery.json](examples/checkout.
 
 ## Building a model, one stage at a time
 
-**1. The parts.** Name the components and give each a kind. Components alone render: client, service, cache, database
-here; gateway, queue, function, storage and external are the other defaults, and you can define your own with a glyph
-and a box style. The session cache is one part for now; stage 6 opens it up.
+**1. The parts.** Name the components and give each a kind. Components alone render. The defaults are client,
+service, database, cache, queue, gateway, function, storage and external, each with a plain glyph; you can define
+your own with a glyph and a box style; or pull in a pack. `"kinds": { "use": ["aws"] }` is in this file, so the
+API is `aws:fargate`, the databases `aws:rds` and the storefront a plain `client`, and the boxes carry the
+provider's own icons. Three packs ship, `aws`, `gcp` and `azure`, every service in each provider's official icon
+set under the names people say (`aws:s3`, `gcp:run`, `azure:aks`); `orrery packs aws` lists them, and
+[docs/PACKS.md](docs/PACKS.md) carries the providers' terms. The session cache is one part for now; stage 6 opens
+it up.
 
 ![The parts](examples/checkout/1-parts.svg)
 
@@ -83,14 +88,6 @@ width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
-**8. On a cloud.** Kinds can come from a pack. `"kinds": { "use": ["aws"] }` and the same checkout is drawn with
-the provider's own icons: `aws:fargate`, `aws:rds`, `aws:elasticache`, and `aws:private-subnet` as a frame. Three
-packs ship, `aws`, `gcp` and `azure`, every service in each provider's official icon set under the names people say
-(`aws:s3`, `gcp:run`, `azure:aks`), and `sre`, a states vocabulary. `orrery packs aws` lists the names. The icons
-belong to the providers; [docs/PACKS.md](docs/PACKS.md) carries their terms.
-
-![Checkout on AWS](examples/checkout/8-cloud.svg)
-
 ## Two ways out
 
 **Scenes, for documents.** A model lists the pictures it produces, and one command writes them all as enclosed
@@ -146,6 +143,7 @@ yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one vie
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "direction": "down",
+  "kinds": {"use": ["aws"]},
   "groups": [
     {"id": "data", "label": "Data", "kind": "tier"},
     {"id": "sessions", "label": "Session cache", "kind": "cluster", "parent": "data"},
@@ -154,13 +152,13 @@ yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one vie
   ],
   "components": [
     {"id": "web", "label": "Storefront", "kind": "client"},
-    {"id": "api", "label": "Checkout API", "kind": "service"},
-    {"id": "db", "label": "Orders DB", "kind": "database", "group": "data"},
-    {"id": "replica", "label": "Read replica", "kind": "database", "group": "data"},
-    {"id": "redis-a", "label": "Redis", "kind": "cache", "group": "cache-a"},
-    {"id": "aof-a", "label": "Append-only file", "kind": "storage", "group": "cache-a"},
-    {"id": "redis-b", "label": "Redis", "kind": "cache", "group": "cache-b"},
-    {"id": "aof-b", "label": "Append-only file", "kind": "storage", "group": "cache-b"}
+    {"id": "api", "label": "Checkout API", "kind": "aws:fargate"},
+    {"id": "db", "label": "Orders DB", "kind": "aws:rds", "group": "data"},
+    {"id": "replica", "label": "Read replica", "kind": "aws:rds", "group": "data"},
+    {"id": "redis-a", "label": "Redis", "kind": "aws:elasticache", "group": "cache-a"},
+    {"id": "aof-a", "label": "Append-only file", "kind": "aws:s3", "group": "cache-a"},
+    {"id": "redis-b", "label": "Redis", "kind": "aws:elasticache", "group": "cache-b"},
+    {"id": "aof-b", "label": "Append-only file", "kind": "aws:s3", "group": "cache-b"}
   ],
   "connections": [
     {"from": "web", "to": "api", "load": 0.8},

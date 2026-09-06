@@ -141,3 +141,6 @@ URL), and the Microsoft 365, Entra, Fabric and Power Platform sets.
   (the VPC service icon) and a group frame.
 - **Sources as built:** AWS from the `aws-icons` npm package (the official set, 01/30/2026); Azure V24; Google's
   legacy set (216) plus the current core products set (19), the core drawing winning where both have a product.
+- **The README runs on the pack (user, 2026-09-06).** Rather than a separate stage 8, the master checkout model
+  declares `"kinds": { "use": ["aws"] }`, so every stage picture and the landing page carry the AWS icons from the
+  first picture on; stage 1's text introduces packs.

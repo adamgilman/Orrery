@@ -2,6 +2,11 @@
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Checkout",
   "direction": "down",
+  "kinds": {
+    "use": [
+      "aws"
+    ]
+  },
   "groups": [
     {
       "id": "data",
@@ -36,42 +41,42 @@
     {
       "id": "api",
       "label": "Checkout API",
-      "kind": "service"
+      "kind": "aws:fargate"
     },
     {
       "id": "db",
       "label": "Orders DB",
-      "kind": "database",
+      "kind": "aws:rds",
       "group": "data"
     },
     {
       "id": "replica",
       "label": "Read replica",
-      "kind": "database",
+      "kind": "aws:rds",
       "group": "data"
     },
     {
       "id": "redis-a",
       "label": "Redis",
-      "kind": "cache",
+      "kind": "aws:elasticache",
       "group": "cache-a"
     },
     {
       "id": "aof-a",
       "label": "Append-only file",
-      "kind": "storage",
+      "kind": "aws:s3",
       "group": "cache-a"
     },
     {
       "id": "redis-b",
       "label": "Redis",
-      "kind": "cache",
+      "kind": "aws:elasticache",
       "group": "cache-b"
     },
     {
       "id": "aof-b",
       "label": "Append-only file",
-      "kind": "storage",
+      "kind": "aws:s3",
       "group": "cache-b"
     }
   ],

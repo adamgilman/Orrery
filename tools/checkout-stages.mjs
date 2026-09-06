@@ -2,11 +2,11 @@
 // model, examples/checkout.orrery.json, so the stages can never drift apart. Usage: node tools/checkout-stages.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 const master = JSON.parse(readFileSync("examples/checkout.orrery.json", "utf8"));
-const { $schema, direction, groups, components, connections, views, scenarios, tour } = master;
+const { $schema, direction, kinds, groups, components, connections, views, scenarios, tour } = master;
 const bare = (c) => { const { group, ...rest } = c; return rest; };
 // Before the drill-down stage the session cache is one closed box. Stage 1 has no groups yet, so it is one part.
 const topLevel = (c) => !["cache-a", "cache-b"].includes(c.group);
-const parts = [...components.filter(topLevel).map(bare), { id: "sessions", label: "Session cache", kind: "cache" }];
+const parts = [...components.filter(topLevel).map(bare), { id: "sessions", label: "Session cache", kind: "aws:elasticache" }];
 const closedViews = [{ id: "overview", title: "Overview", collapse: ["sessions"] }, { id: "data", title: "Data tier", scope: "data", direction: "down", collapse: ["sessions"] }];
 const stages = {
   "1-parts": { title: "Checkout: the parts", direction: "right", components: parts, exports: [{ id: "1-parts" }] },
@@ -39,13 +39,7 @@ const stages = {
       set: { drained: ["sessions", "cache-a", "cache-b", "redis-a", "aof-a", "redis-b", "aof-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },
     }] }],
   },
-  // The same checkout on AWS: kinds from the aws pack, so the boxes carry the provider's own icons.
-  "8-cloud": {
-    title: "Checkout on AWS", direction, kinds: { use: ["aws"] },
-    groups: groups.map((g) => (g.id === "data" ? { ...g, kind: "aws:private-subnet" } : g)),
-    components: components.map((c) => ({ ...c, kind: { api: "aws:fargate", db: "aws:rds", replica: "aws:rds", "redis-a": "aws:elasticache", "redis-b": "aws:elasticache", "aof-a": "aws:s3", "aof-b": "aws:s3" }[c.id] ?? c.kind })),
-    connections, views: [closedViews[0]], exports: [{ id: "8-cloud" }],
-  },
 };
-for (const [name, stage] of Object.entries(stages)) writeFileSync(`examples/checkout/${name}.orrery.json`, JSON.stringify({ $schema, ...stage }, null, 2) + "\n");
+// Every stage draws with the aws pack, so the provider icons are on every picture from the first.
+for (const [name, stage] of Object.entries(stages)) writeFileSync(`examples/checkout/${name}.orrery.json`, JSON.stringify({ $schema, title: stage.title, direction: stage.direction, kinds, ...stage }, null, 2) + "\n");
 console.log(`${Object.keys(stages).length} stages written to examples/checkout/`);

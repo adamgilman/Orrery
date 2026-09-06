@@ -25,6 +25,16 @@
 .gk-zone .group-box{stroke-dasharray:3 5}
 .gk-cluster .group-box{stroke:#94a3b8}
 .gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.gk-aws\:cloud .group-box{stroke:#232f3e}
+.gk-aws\:account .group-box{stroke:#e7157b}
+.gk-aws\:region .group-box{stroke:#00a4a6;stroke-dasharray:8 6}
+.gk-aws\:availability-zone .group-box{stroke:#00a4a6;stroke-dasharray:3 5}
+.gk-aws\:vpc .group-box{stroke:#8c4fff;stroke-dasharray:8 6}
+.gk-aws\:public-subnet .group-box{stroke:#7aa116;fill:#f2f6e8}
+.gk-aws\:private-subnet .group-box{stroke:#00a4a6;fill:#e6f6f7}
+.gk-aws\:security-group .group-box{stroke:#dd344c;stroke-dasharray:8 6}
+.gk-aws\:auto-scaling-group .group-box{stroke:#ed7100;stroke-dasharray:8 6}
+.gk-aws\:on-premises .group-box{stroke:#5a6b86;stroke-dasharray:8 6}
 .edge-async{stroke-dasharray:6 5}
 .edge-replication{stroke-dasharray:2 4}
 .edge-dataflow{stroke-width:3}
@@ -53,30 +63,30 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M244.5 68 L244.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M244.5 68 L244.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M250.5 68 L250.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.6" d="M250.5 68 L250.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="263.5" y="136">writes</text>
-<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M275.5 68 L275.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 335.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="failover" data-load="0" d="M275.5 68 L275.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 323.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 335.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="failover" data-load="0" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 323.5" style="stroke-width:1.5;animation:none;opacity:0"/>
 <path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M289.5 285.5 L289.5 335.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="db->replica" data-load="0.2" d="M289.5 285.5 L289.5 323.5" style="stroke-width:2.1;animation-duration:2.5s"/>
 <path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M213.5 68 L213.5 169 L109.5 169 L109.5 237.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M213.5 68 L213.5 169 L109.5 169 L109.5 225.5" style="stroke-width:3;animation-duration:1.8s"/>
 </g>
 <g class="nodes">
-<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="227 237.5 125 48" transform="translate(227 237.5)">
+<g class="node kind-aws:rds st-on" data-node="db" data-kind="aws:rds" data-state="on" data-bbox="227 237.5 125 48" transform="translate(227 237.5)">
 <rect class="node-box" width="125" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 64 64"><g fill="none" fill-rule="evenodd"><path fill="#c925d1" d="M0 0h64v64H0z"/><path fill="#fff" d="M54 11v8h-2v-5.586l-6.293 6.293-1.414-1.414L50.586 12h-5.461v-2H53a1 1 0 0 1 1 1m-42 7.875h-2V11a1 1 0 0 1 1-1h8v2h-5.586l6.293 6.293-1.414 1.414L12 13.414zm7.707 26.832L13.414 52h5.461v2H11a1 1 0 0 1-1-1v-8h2v5.586l6.293-6.293zM51.5 31.781c0-2.429-2.866-4.849-7.667-6.474l.641-1.894c5.736 1.941 9.026 4.991 9.026 8.368s-3.29 6.427-9.026 8.369l-.641-1.895c4.801-1.624 7.667-4.045 7.667-6.474m-38.957 0c0 2.324 2.681 4.679 7.172 6.3l-.68 1.88c-5.396-1.947-8.492-4.928-8.492-8.18s3.096-6.233 8.492-8.18l.68 1.881c-4.491 1.621-7.172 3.976-7.172 6.299M52 45.125h2V53a1 1 0 0 1-1 1h-8v-2h5.586l-6.293-6.293 1.414-1.414L52 50.586zM32.022 31.402c-5.023 0-7.896-1.343-8.022-1.919v-3.226c2.159 1.009 5.609 1.336 8 1.336s5.841-.327 8-1.336v3.226c-.106.574-2.949 1.919-7.978 1.919m0 5.728c-5.023 0-7.896-1.344-8.022-1.92v-3.254c1.953.981 5.055 1.446 8.022 1.446 2.951 0 6.033-.464 7.978-1.442v3.25c-.106.575-2.948 1.92-7.978 1.92M32 42.268c-5.05 0-7.896-1.351-8-1.922v-2.663c1.953.982 5.055 1.447 8.022 1.447 2.951 0 6.033-.464 7.978-1.443v2.655c-.104.575-2.95 1.926-8 1.926m0-20.075c4.971 0 7.642 1.177 7.982 1.701-.34.523-3.011 1.699-7.982 1.699-5.091 0-7.767-1.232-8-1.644v-.019c.233-.504 2.909-1.737 8-1.737m0-2c-3.714 0-10 .78-10 3.701v16.452c0 2.695 5.184 3.922 10 3.922s10-1.227 10-3.922V23.894c0-2.921-6.286-3.701-10-3.701"/></g></svg>
 <text class="node-label" x="80.5" y="24">Orders DB</text>
 </g>
-<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="240.2 335.5 148 48" transform="translate(240.2 335.5)">
+<g class="node kind-aws:rds st-on" data-node="replica" data-kind="aws:rds" data-state="on" data-bbox="240.2 335.5 148 48" transform="translate(240.2 335.5)">
 <rect class="node-box" width="148" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 64 64"><g fill="none" fill-rule="evenodd"><path fill="#c925d1" d="M0 0h64v64H0z"/><path fill="#fff" d="M54 11v8h-2v-5.586l-6.293 6.293-1.414-1.414L50.586 12h-5.461v-2H53a1 1 0 0 1 1 1m-42 7.875h-2V11a1 1 0 0 1 1-1h8v2h-5.586l6.293 6.293-1.414 1.414L12 13.414zm7.707 26.832L13.414 52h5.461v2H11a1 1 0 0 1-1-1v-8h2v5.586l6.293-6.293zM51.5 31.781c0-2.429-2.866-4.849-7.667-6.474l.641-1.894c5.736 1.941 9.026 4.991 9.026 8.368s-3.29 6.427-9.026 8.369l-.641-1.895c4.801-1.624 7.667-4.045 7.667-6.474m-38.957 0c0 2.324 2.681 4.679 7.172 6.3l-.68 1.88c-5.396-1.947-8.492-4.928-8.492-8.18s3.096-6.233 8.492-8.18l.68 1.881c-4.491 1.621-7.172 3.976-7.172 6.299M52 45.125h2V53a1 1 0 0 1-1 1h-8v-2h5.586l-6.293-6.293 1.414-1.414L52 50.586zM32.022 31.402c-5.023 0-7.896-1.343-8.022-1.919v-3.226c2.159 1.009 5.609 1.336 8 1.336s5.841-.327 8-1.336v3.226c-.106.574-2.949 1.919-7.978 1.919m0 5.728c-5.023 0-7.896-1.344-8.022-1.92v-3.254c1.953.981 5.055 1.446 8.022 1.446 2.951 0 6.033-.464 7.978-1.442v3.25c-.106.575-2.948 1.92-7.978 1.92M32 42.268c-5.05 0-7.896-1.351-8-1.922v-2.663c1.953.982 5.055 1.447 8.022 1.447 2.951 0 6.033-.464 7.978-1.443v2.655c-.104.575-2.95 1.926-8 1.926m0-20.075c4.971 0 7.642 1.177 7.982 1.701-.34.523-3.011 1.699-7.982 1.699-5.091 0-7.767-1.232-8-1.644v-.019c.233-.504 2.909-1.737 8-1.737m0-2c-3.714 0-10 .78-10 3.701v16.452c0 2.695 5.184 3.922 10 3.922s10-1.227 10-3.922V23.894c0-2.921-6.286-3.701-10-3.701"/></g></svg>
 <text class="node-label" x="92" y="24">Read replica</text>
 </g>
-<g class="node st-on" data-node="api" data-kind="service" data-state="on" data-ghost="1" data-bbox="182.5 20 124 48" transform="translate(182.5 20)">
-<rect class="node-box" width="124" height="48" rx="8"/>
-<text class="node-label" x="62" y="24">Checkout API</text>
+<g class="node st-on" data-node="api" data-kind="aws:fargate" data-state="on" data-ghost="1" data-bbox="176.5 20 148 48" transform="translate(176.5 20)">
+<rect class="node-box" width="148" height="48" rx="8"/>
+<text class="node-label" x="74" y="24">Checkout API</text>
 </g>
 </g>
 </g>
