@@ -13,7 +13,7 @@ export const EXPAND_MARK_WIDTH = 24;
 /** Extra width for the "×n" replicas badge. */
 const REPLICA_BADGE_WIDTH = 28;
 const CHAR_WIDTH = 7.6; // average glyph width at 14px
-const TECH_CHAR_WIDTH = 6.2; // 11px
+const TECH_CHAR_WIDTH = 6.7; // 12px
 const PADDING = 32;
 const CONNECTION_LABEL_HEIGHT = 16;
 const LABEL_CHAR_WIDTH = 6.6;

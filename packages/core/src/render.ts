@@ -20,7 +20,9 @@ const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 const css = (s: string) => s.replace(/[;{}<>"'\\]/g, "");
 const num = (n: number) => String(Math.round(n * 10) / 10);
 const pathD = (pts: Point[]) => pts.map((p, i) => `${i === 0 ? "M" : "L"}${num(p.x)} ${num(p.y)}`).join(" ");
-const FONT = `system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
+/** Inter where the reader has it (our frame tooling rasterises with it), then the platform face. */
+const FONT = `Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
+/** Type scale on the 48px box: 14 labels, 12 secondary text, 11 the group eyebrow, 13 captions. Inks: #0f172a text, #334155 captions, #64748b secondary. */
 
 /** Arrowhead length in user units. Fixed via markerUnits="userSpaceOnUse" so it does not scale with stroke width. */
 const ARROW_LENGTH = 12;
@@ -125,24 +127,24 @@ function vocabularyCss(model: Model): string {
 
 const BASE_STYLE = `
 .group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
-.group-label{font:600 11px ${FONT};fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+.group-label{font:700 11px ${FONT};fill:#64748b;letter-spacing:.1em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:3px;stroke-linejoin:round}
 .group-label.centred{text-anchor:middle}
 .group[data-collapsed] .group-box{fill-opacity:.7}
-.summary-label{font:500 16px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.summary-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
-.node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
 .replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
-.badge{font:600 11px ${FONT};fill:#475569;text-anchor:end;dominant-baseline:central}
+.badge{font:600 12px ${FONT};fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .glyph-text{font:600 13px ${FONT};fill:#475569;text-anchor:middle;dominant-baseline:central}
 .edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
 .flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:${FLOW_DASH[0]} ${FLOW_DASH[1]};animation:orrery-flow 1s linear infinite}
-.edge-label{font:12px ${FONT};fill:#475569;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:5px;stroke-linejoin:round}
-.legend text{font:12px ${FONT};fill:#475569;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
-.step-note{font:500 12px ${FONT};fill:#475569;dominant-baseline:central}
+.edge-label{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.legend text{font:12px ${FONT};fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 13px ${FONT};fill:#334155;dominant-baseline:central}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:${PULSE_MIN_OPACITY}}100%{stroke-opacity:1}}`.trim();
 
@@ -244,6 +246,8 @@ function connectionMarkup(c: Connection, model: Model, route: { points: Point[];
 const routeOf = (c: Connection, layout: LayoutResult) => { const r = layout.edges[c.key]; if (!r) throw new Error(`layout returned no route for connection ${c.key}`); return r; };
 const edgesMarkup = (model: Model, layout: LayoutResult) => model.connections.map((c) => connectionMarkup(c, model, routeOf(c, layout))).join("\n");
 
+/** The legend sits LEGEND_GAP below the picture, one row per state on a LEGEND_ROW pitch; a caption strip is CAPTION_STRIP tall. */
+const LEGEND_ROW = 22, LEGEND_GAP = 16, CAPTION_STRIP = 28;
 /** Legend rows for every non-default state used in this (scoped, declared) model (R9). Empty when none. */
 function legendMarkup(model: Model, y: number): { markup: string; height: number; width: number } {
   const used = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
@@ -253,15 +257,15 @@ function legendMarkup(model: Model, y: number): { markup: string; height: number
   const lines = rows.map((d, i) => {
     const look = lookOf(d);
     const style = [`fill:${css(look.fill ?? "#ffffff")}`, `stroke:${css(look.stroke ?? "#64748b")}`, "stroke-width:1.5", ...(look.dash ? [`stroke-dasharray:${DASH}`] : []), ...(look.opacity !== undefined ? [`opacity:${look.opacity}`] : [])].join(";");
-    return `<g transform="translate(0 ${i * 20})"><rect width="14" height="14" rx="3" style="${style}"/><text x="22" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? `: ${esc(d.description)}` : ""}</text></g>`;
+    return `<g transform="translate(0 ${i * LEGEND_ROW})"><rect y="1" width="12" height="12" rx="3" style="${style}"/><text x="20" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? `: ${esc(d.description)}` : ""}</text></g>`;
   });
   const chars = Math.max(...rows.map((d) => d.name.length + (d.description ? d.description.length + 2 : 0)));
-  return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * 20 + 10, width: 20 + 22 + textWidth(chars, 12) + 20 };
+  return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * LEGEND_ROW + LEGEND_GAP, width: 20 + 20 + textWidth(chars, 12) + 20 };
 }
 
 /** One view's drawing (groups, connections, components) and its legend, apart, with the size both need together. */
 export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number } {
-  const legend = legendMarkup(model, layout.height + 8);
+  const legend = legendMarkup(model, layout.height + LEGEND_GAP);
   const picture = [
     `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout)).join("\n")}\n</g>`,
     `<g class="edges">\n${edgesMarkup(model, layout)}\n</g>`,
@@ -285,7 +289,7 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
     { model: stopFlows(declared), caption: scenario.label },
     ...scenario.steps.map((st, i) => ({ model: stopFlows(declare(declared, { scenario: play.scenario, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
   ].map((f) => ({ ...f, view: renderView(scopeModel(f.model, view), layout) }));
-  const height = Math.max(...frames.map((f) => f.view.height)) + 24;
+  const height = Math.max(...frames.map((f) => f.view.height)) + CAPTION_STRIP;
   const width = Math.max(...frames.map((f) => f.view.width));
   const total = frames.length * play.seconds;
   const name = (k: number) => `orrery-play-${view.id}-${k}`;
@@ -296,7 +300,7 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
   const markup = frames.map((f, k) => [
     `<g class="step" data-step="${k}" style="animation:${name(k)} ${num(total)}s step-end infinite">`,
     withLegend(f.view),
-    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(f.caption)}</text>`,
+    `<text class="step-note" x="20" y="${num(height - CAPTION_STRIP / 2)}">${esc(f.caption)}</text>`,
     `</g>`,
   ].join("\n")).join("\n");
   return { markup, width, height, css };
@@ -369,14 +373,14 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     for (const s of scenes) if (!layouts.has(s.configKey)) layouts.set(s.configKey, await engine.layout(toLayoutGraph(scopeModel(stopFlows(s.declared), anchor, s.open))));
     const models = scenes.map((s) => scopeModel(stopFlows(s.declared), anchor, s.open));
     const layoutAt = (k: number) => layouts.get(scenes[k]!.configKey)!;
-    const legends = models.map((m, k) => legendMarkup(m, layoutAt(k).height + 8));
+    const legends = models.map((m, k) => legendMarkup(m, layoutAt(k).height + LEGEND_GAP));
     // The stage is the size of the whole pictures (the scenes without a zoom); a zoomed scene fits its target into
     // it, and an unzoomed scene fits its whole layout, so larger layouts never enlarge the image.
     const wide = scenes.filter((s) => s.scene.zoom === undefined).map((_, i, all) => layoutAt(scenes.indexOf(all[i]!)));
     const stageOf = wide.length ? wide : [layoutAt(0)];
     const stageW = Math.max(...stageOf.map((l) => l.width)), stageH = Math.max(...stageOf.map((l) => l.height));
     const width = Math.max(stageW, ...legends.map((l) => l.width));
-    const height = stageH + Math.max(...legends.map((l) => l.height)) + 24;
+    const height = stageH + Math.max(...legends.map((l) => l.height)) + CAPTION_STRIP;
     const stage = { width: stageW, height: stageH };
     const css: string[] = [];
     const parts: string[] = [];
@@ -464,7 +468,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     });
     const captions = scenes.map((sc, k) => {
       css.push(`@keyframes orrery-caption-${k}{${track((j) => j === k, opacity, staged)}}`);
-      return `<text class="step-note" x="20" y="${num(height - 12)}" data-t0="${k === 0 ? 1 : 0}" style="${anim(`orrery-caption-${k}`)}">${esc(sc.caption)}</text>`;
+      return `<text class="step-note" x="20" y="${num(height - CAPTION_STRIP / 2)}" data-t0="${k === 0 ? 1 : 0}" style="${anim(`orrery-caption-${k}`)}">${esc(sc.caption)}</text>`;
     });
     // The camera closes on the scene's zoom in its layout, or fits the whole layout when there is none.
     const cameraBox = (k: number) => { const z = scenes[k]!.scene.zoom; const l = layoutAt(k); return (z ? l.groups[z] ?? l.nodes[z] : undefined) ?? { x: 0, y: 0, width: l.width, height: l.height }; };
@@ -491,12 +495,12 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const canvasW = Math.max(...measured.map((m) => m.width)), canvasH = Math.max(...measured.map((m) => m.height));
   const frames: ViewLayer[] = [];
   for (const [i, s] of scenes.entries()) frames.push(await layerFor(s.declared, s.view, engine, undefined, s.title, { dx: Math.round((canvasW - measured[i]!.width) / 2), dy: Math.round((canvasH - measured[i]!.height) / 2) }));
-  const height = canvasH + 24;
+  const height = canvasH + CAPTION_STRIP;
   const css = frames.map((_, k) => `@keyframes orrery-tour-${k}{${track((j) => j === k, opacity, whole)}}`).join("\n");
   const markup = frames.map((f, k) => [
     `<g class="tour" data-frame="${k}" data-view="${escAttr(f.view.id)}" style="animation:orrery-tour-${k} ${num(total)}s linear infinite">`,
     f.markup,
-    `<text class="step-note" x="20" y="${num(height - 12)}">${esc(scenes[k]!.caption)}</text>`,
+    `<text class="step-note" x="20" y="${num(height - CAPTION_STRIP / 2)}">${esc(scenes[k]!.caption)}</text>`,
     `</g>`,
   ].join("\n")).join("\n");
   return { view: anchor, title: model.title ?? anchor.id, width: canvasW, height, markup, css };

@@ -392,6 +392,12 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   cascade rule that then needs tie-breaking.
 - **Vocabulary is the author's.** Fixed system states (and the word "down") were removed from the engine. Defaults
   reproduce the old behaviour exactly.
+- **One type scale (2026-09-06).** Labels 14 medium, secondary text 12 (tech lines, edge labels, legend, badges),
+  the group eyebrow 11 bold uppercase tracked, captions 13 medium in a darker ink; a closed group's name is a
+  peer of a label, not a step up. The stack names Inter first, then the platform face, so the frame tooling's Inter
+  is what most readers see; nothing is embedded, so a README picture stays small. Legend rows on a 22px pitch with
+  16px above; captions in a 28px strip. Rejected: a sentence-case group title (a title and a label would look
+  alike); embedding a font subset in every picture (80 KB each).
 - **Shapes are vocabulary (2026-09-06).** An outline is named by a kind and defined in `shapes`, presets first,
   like states. A custom shape is path data in a unit box plus a declared pad; the renderer scales the coordinates
   rather than transforming the element, so strokes stay true. Rejected: a shape on a component (the kind is the
