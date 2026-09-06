@@ -14,10 +14,9 @@ Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Mo
 
 Every other diagram in this README is the same small system, a checkout, built up one stage at a time. The stages are
 in [examples/checkout](examples/checkout), each a plain SVG in an image tag, small enough to read on a phone, and each
-derived from one master file, [examples/checkout.orrery.json](examples/checkout.orrery.json). Every variant the
-vocabulary offers, states, looks, kinds, frames, lines, shapes and packs, is drawn on one page,
-[the kitchen sink](examples/kitchen-sink/README.md), and every way a model moves, views, drill-down, scenarios,
-play and the tour, on another, [the moving parts](examples/moving-parts/README.md).
+derived from one master file, [examples/checkout.orrery.json](examples/checkout.orrery.json). Two reference pages,
+[the kitchen sink](examples/kitchen-sink/README.md) and [the moving parts](examples/moving-parts/README.md), draw
+everything else the vocabulary offers and every way a model moves.
 
 ## Building a model, one stage at a time
 
@@ -93,6 +92,17 @@ storefront behind it is impaired. Line styles are yours too: a `kinds.connection
 width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
+
+## Two reference pages
+
+Every variant and every movement, drawn from the same checkout, regenerated with the examples:
+
+- **[The kitchen sink](examples/kitchen-sink/README.md)**: every state and look, the default kinds with their
+  glyphs and shapes, the group frames open and closed, every line style and load, the eleven shapes and one of
+  your own, the cloud packs, replicas, tech lines and ghosts.
+- **[The moving parts](examples/moving-parts/README.md)**: views that scope, restrict and close groups; open and
+  zoom as separate actions; a scenario stepping through failure and recovery; a what-if; play; the tour; and the
+  keys and clicks of the interactive file.
 
 ## Two ways out
 
