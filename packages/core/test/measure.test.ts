@@ -7,7 +7,7 @@ describe("measureComponent", () => {
   it("grows width with label, glyph and replicas badge; grows height with a tech line", () => {
     const L = "Orders database";
     const m = model({ components: [{ id: "a", label: L }, { id: "b", label: "Recommendation service cluster" }, { id: "c", label: L, kind: "database" }, { id: "d", label: L, tech: "PostgreSQL 16" }, { id: "e", label: L, replicas: 3 }] });
-    const [a, b, c, d, e] = m.components.map((x) => measureComponent(x, m.kinds));
+    const [a, b, c, d, e] = m.components.map((x) => measureComponent(x, m));
     expect(b!.width).toBeGreaterThan(a!.width);
     expect(c!.width).toBeGreaterThan(a!.width); // glyph
     expect(d!.height).toBeGreaterThan(a!.height); // tech line

@@ -1,0 +1,1 @@
+{ "shapes": { "replace": true, "define": { "hex": { "path": "M15 0H85L100 50 85 100H15L0 50Z" } } }, "components": [{ "id": "x" }] }

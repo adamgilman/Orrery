@@ -19,8 +19,10 @@ derived from one master file, [examples/checkout.orrery.json](examples/checkout.
 ## Building a model, one stage at a time
 
 **1. The parts.** Name the components and give each a kind. Components alone render. The defaults are client,
-service, database, cache, queue, gateway, function, storage and external, each with a plain glyph; you can define
-your own with a glyph and a box style; or pull in a pack. `"kinds": { "use": ["aws"] }` is in this file, so the
+service, database, cache, queue, gateway, function, storage and external, each with a plain glyph and a shape (a
+database is a cylinder, a client a pill, a gateway a hexagon); you can define your own kind with a glyph, a shape
+and a box style, and your own shapes as path data (`shapes` in the model, next to `states` and `kinds`); or pull
+in a pack. `"kinds": { "use": ["aws"] }` is in this file, so the
 API is `aws:fargate`, the databases `aws:rds` and the storefront a plain `client`, and the boxes carry the
 provider's own icons. Three packs ship, `aws`, `gcp` and `azure`, every service in each provider's official icon
 set under the names people say (`aws:s3`, `gcp:run`, `azure:aks`); `orrery packs aws` lists them, and

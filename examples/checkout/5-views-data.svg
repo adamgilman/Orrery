@@ -8,7 +8,7 @@
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
 .badge{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:end;dominant-baseline:central}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}

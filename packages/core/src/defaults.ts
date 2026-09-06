@@ -15,14 +15,14 @@ export const NEW_STATE_DEFAULTS: Omit<StateDef, "name"> = { look: "normal", flow
 export const GLYPH_PRESETS = ["database", "queue", "cache", "gateway", "client", "storage", "function"] as const;
 export const DEFAULT_COMPONENT_KINDS: Record<string, ComponentKindDef> = {
   service: { description: "A running service" },
-  database: { glyph: "database", description: "A database" },
-  queue: { glyph: "queue", description: "A message queue or stream" },
+  database: { glyph: "database", shape: "cylinder", description: "A database" },
+  queue: { glyph: "queue", shape: "parallelogram", description: "A message queue or stream" },
   cache: { glyph: "cache", description: "A cache" },
-  gateway: { glyph: "gateway", description: "An entry point: load balancer, API gateway, CDN" },
-  client: { glyph: "client", description: "A person, browser or device" },
+  gateway: { glyph: "gateway", shape: "hexagon", description: "An entry point: load balancer, API gateway, CDN" },
+  client: { glyph: "client", shape: "pill", description: "A person, browser or device" },
   storage: { glyph: "storage", description: "Object or file storage" },
   function: { glyph: "function", description: "A function or job" },
-  external: { box: { dash: true, fill: "#f8fafc" }, description: "A system outside your control" },
+  external: { box: { dash: true, fill: "#f8fafc" }, shape: "cloud", description: "A system outside your control" },
 };
 export const FRAME_PRESETS = ["tier", "region", "zone", "cluster", "boundary"] as const;
 export const LINE_PRESETS = ["solid", "dashed", "dotted", "heavy"] as const;

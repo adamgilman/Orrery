@@ -1,5 +1,5 @@
 import type { LayoutGraph } from "./layout.js";
-import type { Component, Kinds, Model } from "./types.js";
+import type { Component, Kinds, Model, ShapeDef } from "./types.js";
 
 const COMPONENT_HEIGHT = 48;
 const COMPONENT_TECH_HEIGHT = 62;
@@ -19,15 +19,18 @@ const CONNECTION_LABEL_HEIGHT = 16;
 const LABEL_CHAR_WIDTH = 6.6;
 
 export const hasGlyph = (c: Component, kinds: Kinds) => kinds.components[c.kind]?.glyph !== undefined;
+/** The outline a component is drawn with: its kind's shape, or `box`. */
+export const shapeOf = (c: Component, model: Pick<Model, "kinds" | "shapes">): ShapeDef => model.shapes[model.kinds.components[c.kind]?.shape ?? "box"]!;
 /** Width of a run of text at the node label size. */
 export const textWidth = (chars: number, px = 14) => chars * (px * 0.54);
 
 /** Estimate a component's box from its label, tech line, glyph and badge. Engines receive sizes; they never measure text. */
-export function measureComponent(c: Component, kinds: Kinds): { width: number; height: number } {
-  const glyph = hasGlyph(c, kinds) ? GLYPH_WIDTH : 0;
+export function measureComponent(c: Component, model: Pick<Model, "kinds" | "shapes">): { width: number; height: number } {
+  const glyph = hasGlyph(c, model.kinds) ? GLYPH_WIDTH : 0;
+  const pad = shapeOf(c, model).pad;
   const badge = c.replicas > 1 ? REPLICA_BADGE_WIDTH : 0;
   const text = Math.max(c.label.length * CHAR_WIDTH, (c.tech?.length ?? 0) * TECH_CHAR_WIDTH);
-  return { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(text + PADDING + glyph + badge)), height: c.tech !== undefined ? COMPONENT_TECH_HEIGHT : COMPONENT_HEIGHT };
+  return { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(text + PADDING + glyph + badge)) + 2 * pad.x, height: (c.tech !== undefined ? COMPONENT_TECH_HEIGHT : COMPONENT_HEIGHT) + 2 * pad.y };
 }
 
 export function measureConnectionLabel(text: string): { width: number; height: number } {
@@ -45,7 +48,7 @@ export function toLayoutGraph(model: Model): LayoutGraph {
       // A closed group is the size of a component with that label, plus room for the expand mark.
       ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH)), height: COMPONENT_HEIGHT } } : {}),
     })),
-    nodes: model.components.map((c) => ({ id: c.id, ...measureComponent(c, model.kinds), ...(c.group !== undefined ? { group: c.group } : {}) })),
+    nodes: model.components.map((c) => ({ id: c.id, ...measureComponent(c, model), ...(c.group !== undefined ? { group: c.group } : {}) })),
     edges: model.connections.map((c) => ({ id: c.key, from: c.from, to: c.to, ...(c.label !== undefined ? { label: measureConnectionLabel(c.label) } : {}) })),
   };
 }

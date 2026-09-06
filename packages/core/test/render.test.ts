@@ -294,3 +294,25 @@ describe("renderSvg: icon glyphs and namespaced kinds (R13)", () => {
     expect(between(svg, 'data-node="b"')).not.toContain("<svg");
   });
 });
+
+describe("renderSvg: shapes (R14)", () => {
+  it("draws a corner shape as a rect and a path shape as a scaled path, both as the node-box; pads move the glyph and label in", async () => {
+    const svg = await draw(inline({ components: [{ id: "web", label: "Storefront", kind: "client" }, { id: "db", label: "Orders", kind: "database" }, { id: "api", label: "API" }] }));
+    const web = between(svg, 'data-node="web"');
+    expect(web).toMatch(/<rect class="node-box" width="\d+" height="48" rx="24"\/>/);
+    const db = between(svg, 'data-node="db"');
+    expect(db).toMatch(/<path class="node-box" d="M0 7\.2A[\d.]+ 7\.2 0 0 1 [\d.]+ 7\.2V52\.8A/);
+    expect(db).not.toContain("<rect");
+    expect(db).toMatch(/<g class="glyph" transform="translate\(18 /); // 12 + pad.x 6
+    expect(between(svg, 'data-node="api"')).toMatch(/<rect class="node-box" width="\d+" height="48" rx="8"\/>/);
+  });
+  it("draws a custom shape from shapes and stacks replicas as copies of the outline", async () => {
+    const svg = await draw(inline({ shapes: { define: { chevron: { path: "M0 0H85L100 50 85 100H0L15 50Z", pad: { x: 16, y: 0 } } } }, kinds: { components: { stage: { shape: "chevron" } } }, components: [{ id: "s", label: "Ingest", kind: "stage", replicas: 2 }] }));
+    const s = between(svg, 'data-node="s"');
+    const w = Number(s.match(/data-bbox="\S+ \S+ (\S+) /)![1]);
+    expect(s).toContain(`<path class="node-box" d="M0 0H${Math.round(w * 0.85 * 10) / 10}L${w} 24 ${Math.round(w * 0.85 * 10) / 10} 48H0L${Math.round(w * 0.15 * 10) / 10} 24Z"/>`);
+    expect(s.match(/class="replica-box"/g)).toHaveLength(2);
+    expect(s).toContain('<g transform="translate(6 -6)"><path class="replica-box"');
+    expect(svg).not.toContain(".replicas rect");
+  });
+});

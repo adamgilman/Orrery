@@ -64,7 +64,8 @@ has a bug.
 | **state** | A named condition an entity is in, declared in the model, a scenario step or a what-if. Names are the author's; each is bound to a look and a flow rule (4.7). | A metric, a fixed meaning, something computed |
 | **reason** | The author's one-line explanation of why an entity is in a state at a step. Shown as a tooltip. | |
 | **look** | A visual treatment for a state: a preset (`normal`, `warn`, `alert`, `muted`, `highlight`) or an author-defined style. | A state |
-| **kind** | A vocabulary word for what a component, group or connection is, bound to a glyph, a frame or a line style (4.8). | A behaviour |
+| **kind** | A vocabulary word for what a component, group or connection is, bound to a glyph, a shape, a frame or a line style (4.8). | A behaviour |
+| **shape** | The outline a component is drawn with: a preset (`box`, `cylinder`, `hexagon`, …) or an author-defined path (4.8). Named by a kind. | A layout hint |
 | **view** | One drawing of the model: a scope, a subset, a direction. | A second model |
 | **scenario** | An ordered, cumulative sequence of what-ifs: set states with reasons, restore them, set loads. | A test, a simulation |
 | **load** | Relative traffic on a connection, 0 to 1. Drives animation only. | Requests per second |
@@ -209,7 +210,7 @@ defaults, in which case `default` must name a state from `define` (S14).
 "kinds": {
   "replace": false,
   "components": {
-    "mainframe": { "glyph": "storage", "description": "z/OS LPAR" },          // reuse a preset glyph
+    "mainframe": { "glyph": "storage", "shape": "cylinder", "description": "z/OS LPAR" }, // a preset glyph and shape
     "sidecar":   { "glyph": "M2 2h12v12H2z", "box": { "dash": true } },       // or an SVG path in a 16×16 box
     "acme:vault": { "glyph": { "viewBox": "0 0 64 64", "svg": "<path fill=\"#7aa116\" d=\"…\"/>" } } // or an icon
   },
@@ -235,6 +236,27 @@ colour of the animated traffic). Kinds are vocabulary with a picture.
 A glyph is a preset name, SVG path data drawn with the theme's stroke in a 16×16 box, or an icon object: `viewBox`
 and `svg`, the icon's own markup in its own colours, drawn as a nested `<svg>` in the glyph slot. Icon markup is
 pictures only: no script, foreignObject, image, style or event handlers (S15).
+
+**Shapes.** A component kind names its outline with `shape`; a kind without one is drawn as `box`. The presets
+are `box` (rounded), `sharp`, `pill`, `ellipse`, `cylinder`, `hexagon`, `diamond`, `parallelogram`, `document`,
+`card` and `cloud`, and the default kinds bind `database` to `cylinder`, `queue` to `parallelogram`, `gateway`
+to `hexagon`, `client` to `pill` and `external` to `cloud`. A top-level `shapes` block defines your own the way
+`states` does: define an existing name to override it, a new name to extend, `replace: true` to keep only yours
+(then `box` must be among them).
+
+```jsonc
+"shapes": {
+  "define": {
+    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A pipeline stage" },
+    "box":     { "corner": 2 }
+  }
+}
+```
+
+An outline is `path`, SVG path data in a 100×100 box scaled to the component's size, or `corner`, a rounded
+rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is the room the label needs to
+clear the outline, per side, declared rather than computed. A pack's `shapes` come in with `kinds.use`, prefixed
+like its kinds.
 
 **Packs.** `"use": ["aws"]` pulls in a vocabulary shipped with the tool (docs/PACKS.md). A kinds pack's names are
 prefixed with the pack's name, `aws:s3`, `gcp:cloud-run`, `azure:sql-database`, so a kind name may carry one
@@ -318,7 +340,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
 | S13 | A group may be empty; it still renders and may be connected and given a state. | valid fixture `group-endpoints`; layoutContract "(group endpoints)" |
 | S14 | Every state and kind name used anywhere (components, groups, connections) is defined after defaults and overrides; with `replace: true`, `default` is given explicitly. | validate.test "vocabulary (S14)"; invalid fixtures `unknown-state`, `unknown-kind`, `unknown-group-kind`, `unknown-connection-kind`, `replace-without-default`, `scenario-unknown-state` |
-| S15 | Colours are CSS colours; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-look`, `bad-line`; validate.test "glyph objects" |
+| S15 | Colours are CSS colours; a shape is `path` or `corner` with a `pad`; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-shape`, `shapes-replace-without-box`, `bad-look`, `bad-line`; validate.test "glyph objects"; shapes.test |
 | S16 | Export ids are unique; `view`, `scenario`, `step`, `set` and `play` resolve as elsewhere; `play` and `scenario` are exclusive; `tour` needs a tour and stands alone. | validate.test "exports (S16)"; invalid fixtures `export-duplicate-id`, `export-unknown-view`, `export-play-and-scenario`, `export-tour-without-tour` |
 | S17 | Opening and zooming are declared apart and checked the same way in a scene and an export: every `open` id is a group in the view's `collapse`, and a group inside another closed group needs that one in `open` too, so what is open is exactly what is written; `zoom` is an entity not inside a closed group. `open` is kept in declaration order. | invalid fixtures `open-and-zoom`, `tour-bad-zoom`; validate.test "exports (S16)" |
 | B1 | Declaring is pure, deterministic and never mutates its input. | declare.test "pure (B1)" |
@@ -338,6 +360,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R12 | A tour whose scenes share one view is one drawing that moves. Each scene says which closed groups are open and what the camera closes on, every distinct set of open groups has its own layout, and the drawing holds the union of entities: each has a position track, a visibility track and one variant per state it takes; a group's frame also has a size track and swaps its title for its summary. Edges are one set per distinct drawing. A transition has three phases that never overlap: what leaves fades (caption, entities, edges), then positions, sizes and the camera ease to the new layout, then what arrives fades in. States crossfade over the whole window. The camera closes on the scene's zoom in its layout, or fits the whole layout, clipped to the stage; the legend and caption are a fixed strip below. Everything shown per scene carries whether it is visible at t = 0, so a still keeps exactly the first scene. Scenes across views crossfade between whole views. | render.test "tour of views (R12)"; raster document.test "tours"; boot.test "runtime tour" |
 | R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 | R13 | A pack is data merged into the model before validation continues: kinds under the pack's prefix, states as they are. Defaults, then packs in order, then the author's own definitions; a states pack stands in for the default states. An icon glyph is drawn as a nested `<svg>` in the glyph slot, in its own colours, and a kind's colon is escaped in the stylesheet. Nothing in the renderer knows a provider. | packs.test; render.test "icon glyphs and namespaced kinds (R13)"; cli.test "orrery packs"; invalid fixture `unknown-pack` |
+| R14 | A component is drawn with its kind's shape, or `box`: a `corner` shape as a rounded rect, a `path` shape as its path data scaled from the unit box to the measured size, coordinate by coordinate; the outline carries the `node-box` class so every state, kind and ghost rule applies to it; replica stacks are copies of the outline; the shape's pad is added to the measured size and moves the glyph and label in. Connections end at the bounding box. | shapes.test; render.test "shapes (R14)"; fixture `shapes` |
 
 ## 7. Non-goals (v1)
 
@@ -367,6 +390,10 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   cascade rule that then needs tie-breaking.
 - **Vocabulary is the author's.** Fixed system states (and the word "down") were removed from the engine. Defaults
   reproduce the old behaviour exactly.
+- **Shapes are vocabulary (2026-09-06).** An outline is named by a kind and defined in `shapes`, presets first,
+  like states. A custom shape is path data in a unit box plus a declared pad; the renderer scales the coordinates
+  rather than transforming the element, so strokes stay true. Rejected: a shape on a component (the kind is the
+  picture); computing the pad from the path; a template syntax with `{w}` and `{h}` (a second language).
 - **Packs are data (2026-09-06).** A cloud pack is the provider's own icon set, every icon, turned into kinds by a
   script and committed; the engine merges it like any other `kinds` block and draws an icon glyph as a nested
   `<svg>`. Rejected: a glyph registry in the renderer (it would know providers), monochrome icons (gradients flatten

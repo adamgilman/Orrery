@@ -9,3 +9,4 @@ export * from "./view.js";
 export * from "./flow.js";
 export * from "./looks.js";
 export * from "./packs.js";
+export * from "./shapes.js";

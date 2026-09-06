@@ -207,6 +207,11 @@
                 ],
                 "description": "How the kind is drawn inside its box: a preset name, path data, or an icon object."
               },
+              "shape": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$",
+                "description": "The outline, a name from 'shapes' (presets: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud). Default box. The default kinds bind database to cylinder, queue to parallelogram, gateway to hexagon, client to pill, external to cloud."
+              },
               "box": {
                 "type": "object",
                 "additionalProperties": false,
@@ -356,6 +361,81 @@
               "description": {
                 "type": "string",
                 "description": "What this kind means to you."
+              }
+            }
+          }
+        }
+      }
+    },
+    "shapes": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Your shape vocabulary: component outlines by name. Omit for the presets: box (the default), sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud. Define an existing name to override it, a new name to extend, or set replace to start from nothing (then define box). A component kind names one with 'shape'.",
+      "properties": {
+        "replace": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: only the shapes in 'define' exist; 'box' must then be one of them."
+        },
+        "define": {
+          "type": "object",
+          "description": "Shape definitions by name.",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "One outline: either 'path' or 'corner'.",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "description": "SVG path data drawn in a 100×100 box and scaled to the component's size (M L H V C S Q T A Z, absolute or relative)."
+              },
+              "corner": {
+                "oneOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Corner radius in px."
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "round"
+                    ],
+                    "description": "Fully rounded ends: a pill."
+                  }
+                ],
+                "description": "A rounded rectangle with this corner radius in px, or 'round' for a pill."
+              },
+              "pad": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "description": "Room the label needs to clear the outline, in px on each side. Default 0.",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Extra width on each side."
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Extra height above and below."
+                  }
+                }
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "What this shape means to you."
               }
             }
           }

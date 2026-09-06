@@ -1,0 +1,6 @@
+[
+  { "pointer": "/shapes/define/a/path", "message": "SVG path data" },
+  { "pointer": "/shapes/define/b", "message": "either path or corner, not both" },
+  { "pointer": "/shapes/define/c", "message": "needs path or corner" },
+  { "pointer": "/kinds/components/k/shape", "message": "unknown shape \"octagon\"; known: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud, a, b, c" }
+]

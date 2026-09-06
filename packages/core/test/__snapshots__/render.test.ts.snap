@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`renderSvg: structure > matches the snapshot for grouped with the fake engine 1`] = `
-"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1095 176" width="1095" height="176" data-orrery="1">
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1151 188" width="1151" height="188" data-orrery="1">
 <title>Grouped three tier</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
@@ -11,7 +11,7 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
 .badge{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:end;dominant-baseline:central}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
@@ -44,53 +44,53 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 .st-off{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
-<g class="view" data-view="overview" data-open="" data-title="Grouped three tier" data-size="1095 176">
+<g class="view" data-view="overview" data-open="" data-title="Grouped three tier" data-size="1151 188">
 <g class="groups">
-<g class="group gk-region st-on" data-group="region" data-bbox="337 12 738 144" data-state="on" transform="translate(337 12)">
-<rect class="group-box" width="738" height="144" rx="10"/>
+<g class="group gk-region st-on" data-group="region" data-bbox="369 12 762 156" data-state="on" transform="translate(369 12)">
+<rect class="group-box" width="762" height="156" rx="10"/>
 <text class="group-label" x="12" y="16">us-east-1</text>
 </g>
-<g class="group gk-tier st-on" data-group="app" data-bbox="349 48 148 96" data-state="on" transform="translate(349 48)">
+<g class="group gk-tier st-on" data-group="app" data-bbox="381 48 148 96" data-state="on" transform="translate(381 48)">
 <rect class="group-box" width="148" height="96" rx="10"/>
 <text class="group-label" x="12" y="16">Application</text>
 </g>
-<g class="group gk-tier st-on" data-group="data" data-bbox="633 48 430 96" data-state="on" transform="translate(633 48)">
-<rect class="group-box" width="430" height="96" rx="10"/>
+<g class="group gk-tier st-on" data-group="data" data-bbox="665 48 454 108" data-state="on" transform="translate(665 48)">
+<rect class="group-box" width="454" height="108" rx="10"/>
 <text class="group-label" x="12" y="16">Data</text>
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M201 108 L361 108" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="web->api" data-load="0.7" d="M201 108 L349 108" style="stroke-width:3.6;animation-duration:1.3s"/>
-<text class="edge-label" x="241" y="108">HTTPS</text>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M485 108 L645 108" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.5" d="M485 108 L633 108" style="stroke-width:3;animation-duration:1.8s"/>
-<text class="edge-label" x="525" y="108">writes</text>
-<path class="edge edge-sync" data-edge="api-reads" data-kind="sync" d="M485 108 L850 108" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api-reads" data-load="0" d="M485 108 L838 108" style="stroke-width:1.5;animation:none;opacity:0"/>
-<text class="edge-label" x="525" y="108">reads</text>
-<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M770 108 L850 108" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="db->replica" data-load="0.2" d="M770 108 L838 108" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M233 108 L393 108" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="web->api" data-load="0.7" d="M233 108 L381 108" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="273" y="108">HTTPS</text>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M517 108 L677 114" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.5" d="M517 108 L665 113.6" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="557" y="108">writes</text>
+<path class="edge edge-sync" data-edge="api-reads" data-kind="sync" d="M517 108 L894 114" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api-reads" data-load="0" d="M517 108 L882 113.8" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="557" y="108">reads</text>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M814 114 L894 114" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M814 114 L882 114" style="stroke-width:2.1;animation-duration:2.5s"/>
 </g>
 <g class="nodes">
-<g class="node kind-gateway st-on" data-node="web" data-kind="gateway" data-state="on" data-bbox="84 84 117 48" transform="translate(84 84)">
-<rect class="node-box" width="117" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
-<text class="node-label" x="76.5" y="24">Web tier</text>
+<g class="node kind-gateway st-on" data-node="web" data-kind="gateway" data-state="on" data-bbox="84 84 149 48" transform="translate(84 84)">
+<path class="node-box" d="M22.4 0H126.7L149 24 126.7 48H22.4L0 24Z"/>
+<g class="glyph" transform="translate(28 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="92.5" y="24">Web tier</text>
 </g>
-<g class="node kind-service st-on" data-node="api" data-kind="service" data-state="on" data-bbox="361 84 124 48" transform="translate(361 84)">
+<g class="node kind-service st-on" data-node="api" data-kind="service" data-state="on" data-bbox="393 84 124 48" transform="translate(393 84)">
 <rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text>
 </g>
-<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="645 84 125 48" transform="translate(645 84)">
-<rect class="node-box" width="125" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
-<text class="node-label" x="80.5" y="24">Orders DB</text>
+<g class="node kind-database st-on" data-node="db" data-kind="database" data-state="on" data-bbox="677 84 137 60" transform="translate(677 84)">
+<path class="node-box" d="M0 7.2A68.5 7.2 0 0 1 137 7.2V52.8A68.5 7.2 0 0 1 0 52.8ZM0 7.2A68.5 7.2 0 0 0 137 7.2"/>
+<g class="glyph" transform="translate(18 22)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="86.5" y="30">Orders DB</text>
 </g>
-<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="850 84 201 48" transform="translate(850 84)">
-<rect class="node-box" width="201" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
-<text class="node-label" x="118.5" y="24">Orders DB (replica)</text>
+<g class="node kind-database st-on" data-node="replica" data-kind="database" data-state="on" data-bbox="894 84 213 60" transform="translate(894 84)">
+<path class="node-box" d="M0 7.2A106.5 7.2 0 0 1 213 7.2V52.8A106.5 7.2 0 0 1 0 52.8ZM0 7.2A106.5 7.2 0 0 0 213 7.2"/>
+<g class="glyph" transform="translate(18 22)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
+<text class="node-label" x="124.5" y="30">Orders DB (replica)</text>
 </g>
 </g>
 </g>

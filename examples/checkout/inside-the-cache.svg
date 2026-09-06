@@ -8,7 +8,7 @@
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
 .badge{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:end;dominant-baseline:central}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
@@ -86,10 +86,10 @@
 <path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M95 409.5 L95 437.5" style="stroke-width:2.1;animation-duration:2.5s"/>
 </g>
 <g class="nodes">
-<g class="node kind-client st-on" data-node="web" data-kind="client" data-state="on" data-bbox="155.5 20 132 48" transform="translate(155.5 20)">
-<rect class="node-box" width="132" height="48" rx="8"/>
-<g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
-<text class="node-label" x="84" y="24">Storefront</text>
+<g class="node kind-client st-on" data-node="web" data-kind="client" data-state="on" data-bbox="149.5 20 144 48" transform="translate(149.5 20)">
+<rect class="node-box" width="144" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="90" y="24">Storefront</text>
 </g>
 <g class="node kind-aws:fargate st-on" data-node="api" data-kind="aws:fargate" data-state="on" data-bbox="147.5 108 148 48" transform="translate(147.5 108)">
 <rect class="node-box" width="148" height="48" rx="8"/>

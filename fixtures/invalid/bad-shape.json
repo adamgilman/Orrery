@@ -1,0 +1,1 @@
+{ "shapes": { "define": { "a": { "path": "circle" }, "b": { "path": "M0 0H100V100Z", "corner": 4 }, "c": { "pad": { "x": 2, "y": 2 } } } }, "kinds": { "components": { "k": { "shape": "octagon" } } }, "components": [{ "id": "x", "kind": "k" }] }

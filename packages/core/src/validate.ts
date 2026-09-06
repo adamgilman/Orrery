@@ -3,9 +3,10 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
-import { loadPack, packNames } from "./packs.js";
+import { loadPack, packNames, type Pack } from "./packs.js";
+import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
 import { configurationsOf, openOrder } from "./view.js";
-import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
+import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -62,6 +63,7 @@ interface RawStateDef { look?: LookPreset | LookStyle; flows?: "keep" | "stop"; 
 interface Raw {
   title?: string; direction: Direction;
   states?: { default?: string; replace?: boolean; use?: string | string[]; define?: Record<string, RawStateDef> };
+  shapes?: { replace?: boolean; define?: Record<string, Omit<ShapeDef, "name" | "pad"> & { pad?: { x: number; y: number } }> };
   kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
@@ -102,12 +104,29 @@ function buildStates(raw: Raw["states"], given: Raw["states"], err: (p: string, 
   return { default: def, define };
 }
 
-function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kinds {
+/** The author's shapes over the packs' over the presets (R14). A kind without a shape is drawn as `box`, so that name must exist. */
+function buildShapes(raw: Raw["shapes"], packs: Pack[], err: (p: string, m: string) => void): Record<string, ShapeDef> {
+  const shapes: Record<string, ShapeDef> = Object.create(null);
+  if (!raw?.replace) for (const [name, s] of Object.entries(DEFAULT_SHAPES)) shapes[name] = { name, ...s };
+  for (const pack of packs) for (const [name, s] of Object.entries(pack.shapes?.define ?? {})) shapes[`${pack.name}:${name}`] = { name: `${pack.name}:${name}`, ...s };
+  for (const [name, s] of Object.entries(raw?.define ?? {})) {
+    const base = shapes[name];
+    if (s.path !== undefined && s.corner !== undefined) err(`/shapes/define/${name}`, "a shape is either path or corner, not both");
+    else if (s.path === undefined && s.corner === undefined && !base) err(`/shapes/define/${name}`, "a shape needs path or corner");
+    if (s.path !== undefined && !PATH_DATA.test(s.path)) err(`/shapes/define/${name}/path`, "must be SVG path data in a 100×100 box, starting with M");
+    const outline = s.path !== undefined ? { path: s.path } : s.corner !== undefined ? { corner: s.corner } : { ...opt("path", base?.path), ...opt("corner", base?.corner) };
+    shapes[name] = { name, ...outline, pad: s.pad ?? base?.pad ?? { x: 0, y: 0 }, ...opt("description", s.description ?? base?.description) };
+  }
+  if (!Object.hasOwn(shapes, "box")) err("/shapes/define", 'shapes.replace is true, so "box" must be defined: a kind without a shape is drawn as box');
+  return shapes;
+}
+
+function buildKinds(raw: Raw["kinds"], shapes: Record<string, ShapeDef>, packs: Pack[], err: (p: string, m: string) => void): Kinds {
   const components: Record<string, ComponentKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_COMPONENT_KINDS);
   const groups: Record<string, GroupKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_GROUP_KINDS);
   const connections: Record<string, ConnectionKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_CONNECTION_KINDS);
   const colour = (p: string, v: string | undefined) => { if (v !== undefined && !CSS_COLOR.test(v)) err(p, `"${v}" is not a CSS colour`); };
-  for (const pack of packsOf(raw?.use, "/kinds/use", err)) {
+  for (const pack of packs) {
     for (const [name, k] of Object.entries(pack.kinds?.components ?? {})) components[`${pack.name}:${name}`] = k;
     for (const [name, k] of Object.entries(pack.kinds?.groups ?? {})) groups[`${pack.name}:${name}`] = k;
     for (const [name, k] of Object.entries(pack.kinds?.connections ?? {})) connections[`${pack.name}:${name}`] = k;
@@ -115,6 +134,7 @@ function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kin
   for (const [name, k] of Object.entries(raw?.components ?? {})) {
     components[name] = { ...(components[name] ?? {}), ...k };
     colour(`/kinds/components/${name}/box/fill`, k.box?.fill); colour(`/kinds/components/${name}/box/stroke`, k.box?.stroke);
+    if (k.shape !== undefined && !Object.hasOwn(shapes, k.shape)) err(`/kinds/components/${name}/shape`, `unknown shape "${k.shape}"; known: ${Object.keys(shapes).join(", ")}`);
     const g = k.glyph;
     if (typeof g === "string" && !(GLYPH_PRESETS as readonly string[]).includes(g) && !/^[Mm][\d\s.,+a-zA-Z-]+$/.test(g))
       err(`/kinds/components/${name}/glyph`, `must be a preset glyph (${GLYPH_PRESETS.join(", ")}) or SVG path data starting with M`);
@@ -150,7 +170,9 @@ export function validate(input: unknown): ValidationResult {
 
   // Schema defaults have filled `raw`; the untouched input says what the author actually wrote.
   const states = buildStates(raw.states, (input as Raw | undefined)?.states, err);
-  const kinds = buildKinds(raw.kinds, err);
+  const packs = packsOf(raw.kinds?.use, "/kinds/use", err);
+  const shapes = buildShapes(raw.shapes, packs, err);
+  const kinds = buildKinds(raw.kinds, shapes, packs, err);
   const stateOk = (name: string) => Object.hasOwn(states.define, name);
   const componentKindOk = (name: string) => Object.hasOwn(kinds.components, name);
   const groupKindOk = (name: string) => Object.hasOwn(kinds.groups, name);
@@ -377,6 +399,6 @@ export function validate(input: unknown): ValidationResult {
   views.forEach((v, i) => { const n = configurationsOf(raw.groups, v.collapse ?? []).length; if (n > 32) warnings.push(new ValidationWarning(`/views/${i}/collapse`, `${n} combinations of open groups; the interactive file will carry a layer for each`)); });
 
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
+  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, shapes, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
 }

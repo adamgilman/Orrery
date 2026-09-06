@@ -1,0 +1,20 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "Every shape",
+  "direction": "right",
+  "shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A stage in a pipeline" } } },
+  "kinds": { "components": {
+    "box": { "shape": "box" }, "sharp": { "shape": "sharp" }, "pill": { "shape": "pill" }, "ellipse": { "shape": "ellipse" }, "cylinder": { "shape": "cylinder", "glyph": "database" },
+    "hexagon": { "shape": "hexagon" }, "diamond": { "shape": "diamond" }, "parallelogram": { "shape": "parallelogram" }, "document": { "shape": "document" }, "card": { "shape": "card" }, "cloud": { "shape": "cloud" },
+    "stage": { "shape": "chevron" }
+  } },
+  "groups": [{ "id": "presets", "label": "Presets" }, { "id": "own", "label": "Your own" }],
+  "components": [
+    { "id": "box", "label": "Box", "kind": "box", "group": "presets" }, { "id": "sharp", "label": "Sharp", "kind": "sharp", "group": "presets" }, { "id": "pill", "label": "Pill", "kind": "pill", "group": "presets" },
+    { "id": "ellipse", "label": "Ellipse", "kind": "ellipse", "group": "presets" }, { "id": "cylinder", "label": "Cylinder", "kind": "cylinder", "group": "presets", "replicas": 3 }, { "id": "hexagon", "label": "Hexagon", "kind": "hexagon", "group": "presets" },
+    { "id": "diamond", "label": "Diamond", "kind": "diamond", "group": "presets" }, { "id": "parallelogram", "label": "Parallelogram", "kind": "parallelogram", "group": "presets" }, { "id": "document", "label": "Document", "kind": "document", "group": "presets" },
+    { "id": "card", "label": "Card", "kind": "card", "group": "presets" }, { "id": "cloud", "label": "Cloud", "kind": "cloud", "group": "presets" },
+    { "id": "ingest", "label": "Ingest", "kind": "stage", "group": "own" }, { "id": "enrich", "label": "Enrich", "kind": "stage", "group": "own" }, { "id": "publish", "label": "Publish", "kind": "stage", "group": "own" }
+  ],
+  "connections": [{ "from": "ingest", "to": "enrich" }, { "from": "enrich", "to": "publish" }]
+}

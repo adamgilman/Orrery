@@ -1,11 +1,12 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
-import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } from "./measure.js";
+import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
+import { scalePath } from "./shapes.js";
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
-import type { Component, Connection, Export, Glyph, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
+import type { Component, Connection, Export, Glyph, Group, GroupKindDef, Model, Play, ShapeDef, Tour, View } from "./types.js";
 import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -53,10 +54,15 @@ const GLYPHS: Record<string, string> = {
   function: `<text class="glyph-text" x="8" y="8.5">λ</text>`,
 };
 /** A stroke glyph in its 16×16 slot, or an icon (R13) as a nested svg 20×20, outside `.glyph` so its own colours apply. */
-const glyphMarkup = (glyph: string | Glyph, height: number) =>
+const glyphMarkup = (glyph: string | Glyph, height: number, pad: number) =>
   typeof glyph === "string"
-    ? `<g class="glyph" transform="translate(12 ${num(height / 2 - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
-    : `<svg class="icon" x="10" y="${num(height / 2 - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
+    ? `<g class="glyph" transform="translate(${num(12 + pad)} ${num(height / 2 - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
+    : `<svg class="icon" x="${num(10 + pad)}" y="${num(height / 2 - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
+/** A component's outline at its size (R14): a rounded rect for a `corner` shape, a scaled path for a `path` shape. */
+const outline = (shape: ShapeDef, b: { width: number; height: number }, cls: string) =>
+  shape.path !== undefined
+    ? `<path class="${cls}" d="${scalePath(shape.path, b.width, b.height)}"/>`
+    : `<rect class="${cls}" width="${num(b.width)}" height="${num(b.height)}" rx="${num(shape.corner === "round" ? b.height / 2 : shape.corner ?? 8)}"/>`;
 /** A kind name as a CSS class selector: the pack prefix's colon needs escaping. */
 const cls = (name: string) => name.replace(/:/g, "\\:");
 const DASH = "4 4";
@@ -126,7 +132,7 @@ const BASE_STYLE = `
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
-.replicas rect{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
 .badge{font:600 11px ${FONT};fill:#475569;text-anchor:end;dominant-baseline:central}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
@@ -156,17 +162,19 @@ const pulses = (model: Model, state: string) => !!lookOf(model.states.define[sta
 
 /** Box, glyph, label: the drawing of a component inside its own `<g class="node">`, at (0,0). Reused by the tour's state variants. */
 function componentBody(c: Component, model: Model, b: { width: number; height: number }): string {
-  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!, b.height) : undefined;
+  const shape = shapeOf(c, model);
+  const pad = shape.pad.x;
+  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!, b.height, pad) : undefined;
   const inset = glyph ? 12 + GLYPH_WIDTH : 0;
   const badge = c.replicas > 1;
   const labelY = c.tech !== undefined ? b.height / 2 - 8 : b.height / 2;
   return [
-    ...(badge ? [`<g class="replicas"><rect x="6" y="-6" width="${num(b.width)}" height="${num(b.height)}" rx="8"/><rect x="3" y="-3" width="${num(b.width)}" height="${num(b.height)}" rx="8"/></g>`] : []),
-    `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
+    ...(badge ? [`<g class="replicas"><g transform="translate(6 -6)">${outline(shape, b, "replica-box")}</g><g transform="translate(3 -3)">${outline(shape, b, "replica-box")}</g></g>`] : []),
+    outline(shape, b, "node-box"),
     ...(glyph ? [glyph] : []),
-    `<text class="node-label" x="${num((inset + b.width - (badge ? 20 : 0)) / 2)}" y="${num(labelY)}">${esc(c.label)}</text>`,
-    ...(c.tech !== undefined ? [`<text class="node-tech" x="${num((inset + b.width - (badge ? 20 : 0)) / 2)}" y="${num(b.height / 2 + 10)}">${esc(c.tech)}</text>`] : []),
-    ...(badge ? [`<text class="badge" x="${num(b.width - 8)}" y="12">×${c.replicas}</text>`] : []),
+    `<text class="node-label" x="${num((pad + inset + b.width - pad - (badge ? 20 : 0)) / 2)}" y="${num(labelY)}">${esc(c.label)}</text>`,
+    ...(c.tech !== undefined ? [`<text class="node-tech" x="${num((pad + inset + b.width - pad - (badge ? 20 : 0)) / 2)}" y="${num(b.height / 2 + 10)}">${esc(c.tech)}</text>`] : []),
+    ...(badge ? [`<text class="badge" x="${num(b.width - 8)}" y="${num(12 + shape.pad.y)}">×${c.replicas}</text>`] : []),
   ].join("\n");
 }
 

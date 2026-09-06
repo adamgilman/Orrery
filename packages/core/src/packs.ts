@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ComponentKindDef, ConnectionKindDef, GroupKindDef, StateDef } from "./types.js";
+import type { ComponentKindDef, ConnectionKindDef, GroupKindDef, ShapeDef, StateDef } from "./types.js";
 
 /**
  * A vocabulary shipped with the tool (docs/PACKS.md): kinds bound to icons and frames, or states bound to looks.
@@ -16,6 +16,8 @@ export interface Pack {
   terms: string;
   kinds?: { components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   states?: { default?: string; define?: Record<string, Omit<StateDef, "name">> };
+  /** Shapes come in with `kinds.use`, prefixed like the kinds. */
+  shapes?: { define?: Record<string, Omit<ShapeDef, "name">> };
 }
 
 const DIR = join(import.meta.dirname, "../packs");
