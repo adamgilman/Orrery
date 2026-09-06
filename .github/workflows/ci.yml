@@ -22,6 +22,9 @@ jobs:
       - run: yarn lint
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
       - run: corepack enable
@@ -34,3 +37,51 @@ jobs:
       - run: yarn perf
         env:
           ORRERY_SKIP_BUILD: "1"
+          ORRERY_PERF_BASELINE_JSON: ${{ vars.PERF_BASELINE }}
+      - name: Performance table
+        if: always()
+        run: cat test/perf/last.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Comment the performance table on the pull request
+        # One comment per pull request, updated on every push. A metric marked SLOWER has already failed the job above.
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          body="$(printf '<!-- perf-ratchet -->\n## Performance ratchet\n\n%s\n_Measured on this runner against the baseline CI keeps in `PERF_BASELINE`. Bytes and counts must not grow; timings may not exceed the baseline by more than 1.6× plus 2 ms. A metric marked SLOWER blocks the merge._\n' "$(cat test/perf/last.md)")"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- perf-ratchet -->")) | .id' | head -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" >/dev/null
+          else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -f body="$body" >/dev/null; fi
+  ratchet:
+    # Every push to main measures again and tightens the baseline to the best numbers ever seen. No one edits it.
+    if: github.event_name == 'push'
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn build
+      - run: yarn perf
+        env:
+          ORRERY_SKIP_BUILD: "1"
+          ORRERY_PERF_MODE: ratchet
+          ORRERY_PERF_BASELINE_JSON: ${{ vars.PERF_BASELINE }}
+      - name: Store the tightened baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh variable get PERF_BASELINE --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh variable set PERF_BASELINE --repo "$GITHUB_REPOSITORY" < test/perf/ratchet.json
+          else
+            gh variable set PERF_BASELINE --repo "$GITHUB_REPOSITORY" < test/perf/ratchet.json
+          fi
+          { echo "## Performance ratchet"; cat test/perf/last.md; } >> "$GITHUB_STEP_SUMMARY"

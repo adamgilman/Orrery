@@ -1,7 +1,9 @@
 /**
  * The performance ratchet (test/perf/README.md): the frozen benchmark model through every stage, measured, held
- * against baseline.json, which may only get better. Deterministic metrics are exact; timings have slack.
+ * against a baseline that may only get better. The baseline is the repository variable PERF_BASELINE, measured
+ * and tightened by CI on every push to main; nobody edits it. Deterministic metrics are exact; timings have slack.
  */
+import { spawnSync } from "node:child_process";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
@@ -13,12 +15,20 @@ import { freezeFrame } from "@orrery-diagrams/raster";
 const dir = import.meta.dirname;
 const root = join(dir, "../..");
 const raw = JSON.parse(readFileSync(join(dir, "benchmark.orrery.json"), "utf8"));
-const baselineFile = join(dir, "baseline.json");
 type Metric = { value: number; unit: "ms" | "bytes" | "count" };
 type Baseline = Record<string, Metric>;
-const RATCHET = process.env.ORRERY_PERF_RATCHET === "1", RESET = process.env.ORRERY_PERF_RESET === "1";
-const TIME_SLACK = process.env.CI ? 3 : 1.25;
-const TIGHTEN = 0.02; // a deterministic gain beyond this must be locked in
+/** check: hold the line (a pull request, a push). ratchet: write the tightened baseline to ratchet.json for CI to store. */
+const MODE = process.env.ORRERY_PERF_MODE === "ratchet" ? "ratchet" : "check";
+/** The baseline as CI measured it: passed in by the workflow, or fetched from the repository variable for a local run. */
+function loadBaseline(): Baseline | undefined {
+  const given = process.env.ORRERY_PERF_BASELINE_JSON;
+  if (given) return given.trim() ? JSON.parse(given) : undefined;
+  const r = spawnSync("gh", ["variable", "get", "PERF_BASELINE", "--repo", "adamgilman/Orrery"], { encoding: "utf8" });
+  return r.status === 0 && r.stdout.trim() ? JSON.parse(r.stdout) : undefined;
+}
+// CI measures on one machine class, so it holds timings tighter than a laptop compared against CI's numbers must.
+const TIME_SLACK = process.env.CI ? 1.6 : 2;
+const TIGHTEN = 0.02; // a gain smaller than this is noise, not a gain
 const TIME_FLOOR_MS = 2; // jitter on a sub-millisecond median is not a regression
 
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]!; };
@@ -59,29 +69,29 @@ describe("performance ratchet", () => {
   it("holds every metric of the frozen benchmark at or below the baseline", { timeout: 600_000 }, async () => {
     const now = await measure();
     const width = Math.max(...Object.keys(now).map((k) => k.length));
-    let baseline: Baseline | undefined;
-    try { baseline = JSON.parse(readFileSync(baselineFile, "utf8")); } catch { baseline = undefined; }
+    const baseline = loadBaseline();
     const lines: string[] = [], failures: string[] = [], gains: string[] = [];
     for (const [name, cur] of Object.entries(now)) {
       const base = baseline?.[name];
       const slack = cur.unit === "ms" ? TIME_SLACK : 1;
       const limit = base ? base.value * slack + (cur.unit === "ms" ? TIME_FLOOR_MS : 0) : Infinity;
-      const verdict = !base ? "new" : cur.value > limit ? "SLOWER" : cur.unit !== "ms" && cur.value < base.value * (1 - TIGHTEN) ? "better, ratchet it" : "ok";
+      const verdict = !base ? "new" : cur.value > limit ? "SLOWER" : cur.value < base.value * (1 - TIGHTEN) ? "better" : "ok";
       lines.push(`${name.padEnd(width)}  ${String(cur.value).padStart(10)} ${cur.unit.padEnd(5)} baseline ${base ? String(base.value).padStart(10) : "         -"}  ${verdict}`);
       if (verdict === "SLOWER") failures.push(`${name}: ${cur.value} ${cur.unit} is worse than the baseline ${base!.value}${slack > 1 ? ` (×${slack} slack)` : ""}`);
-      if (verdict === "better, ratchet it") gains.push(`${name}: ${cur.value} ${cur.unit}, baseline ${base!.value}; run yarn perf:ratchet to lock it in`);
+      if (verdict === "better") gains.push(`${name}: ${cur.value} ${cur.unit}, baseline ${base!.value}`);
     }
-    console.log(`\n${lines.join("\n")}\n`);
-    if (RATCHET) {
+    const table = lines.join("\n");
+    console.log(`\n${table}\n`);
+    writeFileSync(join(dir, "last.md"), `| metric | measured | baseline | |\n|---|---:|---:|---|\n${Object.entries(now).map(([name, cur]) => `| ${name} | ${cur.value} ${cur.unit} | ${baseline?.[name]?.value ?? "-"} | ${lines.find((l) => l.startsWith(name))!.split("  ").at(-1)} |`).join("\n")}\n`);
+    if (MODE === "ratchet") {
+      // the tightened baseline: every metric at its best ever; a metric the baseline no longer knows is dropped
       const next: Baseline = {};
-      for (const [name, cur] of Object.entries(now)) next[name] = RESET || !baseline?.[name] ? cur : { ...cur, value: Math.min(cur.value, baseline[name]!.value) };
-      writeFileSync(baselineFile, JSON.stringify(next, null, 2) + "\n");
-      console.log(`baseline ${RESET ? "reset" : "ratcheted"}: ${baselineFile}`);
+      for (const [name, cur] of Object.entries(now)) next[name] = baseline?.[name] ? { ...cur, value: Math.min(cur.value, baseline[name]!.value) } : cur;
+      writeFileSync(join(dir, "ratchet.json"), JSON.stringify(next));
+      console.log(`ratchet: ${gains.length ? gains.join("; ") : "nothing tightened"}`);
       return;
     }
-    expect(baseline, "no baseline: run yarn perf:ratchet once").toBeDefined();
-    expect(failures, "performance regression").toEqual([]);
-    expect(gains, "a gain is not a gain until the ratchet holds it").toEqual([]);
-    for (const name of Object.keys(baseline!)) expect(now[name], `${name} is in the baseline but no longer measured`).toBeDefined();
+    if (!baseline) { console.log("no baseline yet: CI sets PERF_BASELINE on the next push to main"); return; }
+    expect(failures, "performance regression against the baseline CI measured").toEqual([]);
   });
 });

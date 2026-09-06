@@ -13,7 +13,6 @@
     "test:smoke": "vitest run test/orrery/smoke.test.ts",
     "test:integration": "vitest run test/orrery/integration.test.ts",
     "perf": "vitest run --config vitest.perf.config.ts",
-    "perf:ratchet": "ORRERY_PERF_RATCHET=1 vitest run --config vitest.perf.config.ts",
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

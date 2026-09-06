@@ -130,7 +130,7 @@ interface LayoutEngine {
 | Callouts | `callouts` on a scenario step, a tour scene, an export and the model: a note with a leader pointing at an entity or connection, placed where there is room or on a declared side, drawn per moment in stills, play, tours and the interactive file (every step's carried hidden, the current step's shown). |
 | Landing and Pages | The landing page covers callouts, kinds/shapes/packs and headings and links the reference pages; `.github/workflows/site.yml` tests every push and pull request and publishes site/dist to GitHub Pages on every push to main. |
 | Orrery drawn in Orrery | `examples/orrery.orrery.json` models the tool with every feature; `test/orrery` is the regression (schema walked against the file), smoke (the built CLI) and integration (every export, the frame tooling, the runtime in a DOM) suite around it. |
-| Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against `baseline.json`, which may only improve; deterministic metrics exact, timings with slack; `yarn perf:ratchet` locks gains in. |
+| Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against the `PERF_BASELINE` repository variable, which CI tightens itself on every push to main; deterministic metrics exact, timings with slack; pull requests may only be no worse. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 

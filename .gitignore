@@ -13,3 +13,5 @@ site/dist/
 site/server.log
 .orrery-inspect/
 tools/packs/cache/
+test/perf/last.md
+test/perf/ratchet.json
