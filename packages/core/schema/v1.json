@@ -643,10 +643,11 @@
           "type": {
             "type": "string",
             "enum": [
-              "topology"
+              "topology",
+              "sequence"
             ],
             "default": "topology",
-            "description": "Kind of drawing. Only 'topology' exists today; 'sequence' and 'walkthrough' are reserved."
+            "description": "Kind of drawing. 'topology' draws the entities and their connections; 'sequence' draws this view's messages between them as a sequence diagram, each participant its own box on a lifeline. 'walkthrough' is reserved."
           },
           "direction": {
             "type": "string",
@@ -673,20 +674,18 @@
           "play": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "scenario"
-            ],
-            "description": "Play a scenario on a timer in this view. The rendered file carries every step as a layer and cycles them with CSS, so it animates inside an image tag with no script; the interactive runtime plays the same steps until the reader interacts.",
+            "required": [],
+            "description": "Play on a timer in this view. A topology view plays a scenario: the rendered file carries every step as a layer and cycles them with CSS, so it animates inside an image tag with no script; the interactive runtime plays the same steps until the reader interacts. A sequence view reveals its messages one per period; give seconds only.",
             "properties": {
               "scenario": {
                 "type": "string",
-                "description": "Scenario id to play. The base model shows first, then each step in order, then it loops."
+                "description": "Scenario id to play (topology views). The base model shows first, then each step in order, then it loops."
               },
               "seconds": {
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "default": 3,
-                "description": "Seconds each step stays on screen."
+                "description": "Seconds each step, or each message, stays on screen."
               }
             }
           },
@@ -699,6 +698,47 @@
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
             "description": "Group ids drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark, nothing inside, connections re-attached to it. Opening it (a scene's or export's 'open', a click in the interactive file, or a page's call) lays the view out again with the group open and moves the picture there. Closed groups nest to any depth; opening an inner one means opening the ones above it too."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to"
+              ],
+              "description": "One message, over a connection the model declares between its ends (either direction); a self-message needs none.",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The sending entity."
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The receiving entity."
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The label on the arrow."
+                },
+                "kind": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$",
+                  "description": "A connection kind for the line style. Default: the kind of the connection the message runs over."
+                },
+                "reply": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "true: a return message, drawn dashed; it closes the activation the call opened on its sender."
+                }
+              }
+            },
+            "description": "For a sequence view: the messages in order. Participants are the entities the messages touch, in order of first appearance, each drawn as its own box on a lifeline."
           }
         }
       }

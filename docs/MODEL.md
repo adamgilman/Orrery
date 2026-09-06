@@ -66,7 +66,8 @@ has a bug.
 | **look** | A visual treatment for a state: a preset (`normal`, `warn`, `alert`, `muted`, `highlight`) or an author-defined style. | A state |
 | **kind** | A vocabulary word for what a component, group or connection is, bound to a glyph, a shape, a frame or a line style (4.8). | A behaviour |
 | **shape** | The outline a component is drawn with: a preset (`box`, `cylinder`, `hexagon`, …) or an author-defined path (4.8). Named by a kind. | A layout hint |
-| **view** | One drawing of the model: a scope, a subset, a direction. | A second model |
+| **view** | One drawing of the model: a scope, a subset, a direction; or a sequence of messages. | A second model |
+| **message** | One step of an interaction in a sequence view: from one entity to another over a connection the model declares, with a label; a reply is the dashed return (4.5). | A connection |
 | **scenario** | An ordered, cumulative sequence of what-ifs: set states with reasons, restore them, set loads. | A test, a simulation |
 | **load** | Relative traffic on a connection, 0 to 1. Drives animation only. | Requests per second |
 | **callout** | A short text pointing at an entity or a connection: the author's visible explanation of a moment (4.6). | A reason (a tooltip), a caption |
@@ -146,15 +147,26 @@ connection pointing at it keeps working.
 | `id` | id | required | Used by `render --view`. |
 | `title` | string | document title | |
 | `description` | string | document description | What this view shows; with its title, the heading block for pictures of this view. |
-| `type` | `topology` | `topology` | `sequence` and `walkthrough` are reserved. |
+| `type` | `topology` \| `sequence` | `topology` | A topology draws the entities and their connections; a sequence draws this view's `messages` (below). `walkthrough` is reserved. |
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group becomes the outer frame and only its descendants are shown. |
 | `only` | array of entity id | | Restrict to these entities; a group id means the group and everything in it. Groups containing a selected entity are shown. Combines with `scope` by intersection. |
 | `collapse` | array of group id | | Groups drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark in the corner; what is inside is not drawn, and connections to it re-attach to the box. Opening it, from a scene's or export's `open`, a click, or a page's call, lays the view out again with the group as a frame and its members inside, and the picture moves from one layout to the other. Closed groups nest to any depth; opening an inner one means opening the ones above it too (R11). |
-| `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view: the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
+| `messages` | array of `{ from, to, text?, kind?, reply? }` | | A sequence view's messages, in order (R17). `from` and `to` are entities; each message runs over a connection the model declares between them, in either direction, or it is an error (a self-message needs none). `kind` names a connection kind for the line, default the connection's own; `reply: true` draws the dashed return and closes the activation its call opened. Only a sequence view has messages; a sequence view has no `scope`, `only`, `collapse` or `direction`. |
+| `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view (a sequence view gives `seconds` alone: reveal one message per period, looping): the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
 
 Connections with exactly one end inside a view are drawn to a ghost of the outside entity at the view's edge
 (R4). Nothing is dropped silently.
+
+**Sequence views.** A sequence view is a projection of the topology: the participants are the entities its
+messages touch, in order of first appearance, each drawn as its own box (its kind, shape, pack icon and state, so a
+sequence exported at a scenario step colours its participants as the topology would, with the same legend) on a
+dashed lifeline; the messages are rows in order, an arrow from sender to receiver in the line of its kind, the
+label above; a reply is dashed; a self-message is a small loop. A call opens an activation bar on its receiver
+and the receiver's reply closes it; a call never answered stays active to the end. Layout is a pure function:
+columns spaced by the widest label between them. A model may have as many sequence views as it has stories, each
+with its own title and description. Exports, scenario moments, what-ifs, callouts (at participants) and the
+heading apply as to any view; a tour may show one as a scene.
 
 ### 4.6 Scenario
 
@@ -372,6 +384,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R14 | A component, and a group's frame open or closed, is drawn with its kind's shape, or `box`: a `corner` shape as a rounded rect, a `path` shape as its path data scaled from the unit box to the measured size, coordinate by coordinate; the outline carries the `node-box` class so every state, kind and ghost rule applies to it; replica stacks are copies of the outline; the shape's pad is added to the measured size and moves the glyph, label, title and expand mark in; a group's pad is extra frame inset for the layout. A shaped frame carries its unit path, and resizing it (the tour's size track, the runtime's morph) rescales the path. Connections end at the bounding box. | shapes.test; render.test "shapes (R14)", "group shapes (R14)"; layoutContract "pad"; freeze.test "path data"; boot.test "shaped frames"; fixture `shapes` |
 | R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, centred unless the export or command line says `left`, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
+| R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
 
 ## 7. Non-goals (v1)
 
@@ -381,8 +394,8 @@ kept and the outside end becomes a ghost at the top level (R4).
 
 ## 8. Reserved
 
-`interactions` (ordered messages over connections, for sequence and walkthrough views), view `type` values
-`sequence` and `walkthrough`, `tags` on entities and by-tag view selection, `around` (neighbourhood) views.
+The view `type` `walkthrough` (a sequence view's messages as a token moving along the topology), messages that
+carry a moment (`set` mid-sequence), `tags` on entities and by-tag view selection, `around` (neighbourhood) views.
 
 ## 9. Decisions
 
@@ -401,6 +414,11 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   cascade rule that then needs tie-breaking.
 - **Vocabulary is the author's.** Fixed system states (and the word "down") were removed from the engine. Defaults
   reproduce the old behaviour exactly.
+- **A sequence is a view, not a second model (2026-09-06).** Its messages live on the view and must run over
+  connections the topology declares, so the two drawings cannot disagree; participants are the entities' own boxes
+  so states, kinds, shapes and packs carry over. Rejected: a top-level `interactions` block (nothing shares it yet;
+  the walkthrough can lift the messages out later), messages between unconnected entities with a warning (the
+  sequence would then say something the topology does not), animating every sequence by default.
 - **Callouts are per moment (2026-09-06).** A step's callouts show at that step and not the next, unlike states,
   which persist: a callout explains what is happening now. They are declared, never derived from reasons, and
   placed automatically with a declared override, the same shape as everything else. Rejected: cumulative callouts;

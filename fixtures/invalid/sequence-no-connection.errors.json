@@ -1,0 +1,5 @@
+[
+  { "pointer": "/views/0/messages/1", "message": "no connection between \"b\" and \"c\"; connections: a->b" },
+  { "pointer": "/views/0/messages/2/to", "message": "unknown entity \"zzz\"" },
+  { "pointer": "/views/0/messages/3/kind", "message": "unknown connection kind \"grpc\"" }
+]

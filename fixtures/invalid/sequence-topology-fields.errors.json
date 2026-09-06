@@ -1,0 +1,7 @@
+[
+  { "pointer": "/views/0/collapse", "message": "not for a sequence view" },
+  { "pointer": "/views/0/scope", "message": "not for a sequence view" },
+  { "pointer": "/views/0/play/scenario", "message": "a sequence view plays its messages" },
+  { "pointer": "/views/1/messages", "message": "only a sequence view has messages" },
+  { "pointer": "/views/2/messages", "message": "a sequence view needs messages" }
+]

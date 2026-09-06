@@ -465,3 +465,39 @@ describe("callouts (R16)", () => {
     expect(stepSets()).toEqual([]);
   });
 });
+
+describe("sequence views (R17)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("steps the messages of a sequence view with next, prev and the brackets; play reveals them; reset shows all", async () => {
+    const root = await doc("sequence");
+    rt = mount(root, SIZE);
+    rt.stop();
+    expect(rt.snapshot().message).toBeNull();
+    rt.showView("checkout");
+    vi.advanceTimersByTime(900);
+    const shown = () => [...shownLayer(root).querySelectorAll<SVGGElement>(".message")].filter((g) => g.style.display !== "none").length;
+    expect(shown()).toBe(6);
+    expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
+    rt.prev(); rt.prev();
+    expect(shown()).toBe(4);
+    expect(rt.snapshot().message).toEqual({ index: 4, count: 6 });
+    key("]");
+    expect(shown()).toBe(5);
+    key("[");
+    expect(shown()).toBe(4);
+    rt.play();
+    expect(rt.snapshot().playing).toBe(true);
+    expect(shown()).toBe(0);
+    vi.advanceTimersByTime(2100); // the view plays one message per second
+    expect(shown()).toBe(2);
+    rt.stop();
+    rt.reset();
+    expect(shown()).toBe(6);
+    expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
+    // a participant is an entity: clicking it steps its state as on the topology
+    click(vis(root, '[data-node="db"]'));
+    expect(state(root, "db")).toBe("degraded");
+  });
+});

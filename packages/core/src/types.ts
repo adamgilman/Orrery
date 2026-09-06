@@ -4,7 +4,7 @@
  * Layout and rendering internals still speak of nodes and edges; that boundary is `toLayoutGraph`.
  */
 export type Direction = "right" | "down";
-export type ViewType = "topology";
+export type ViewType = "topology" | "sequence";
 
 export type LookPreset = "normal" | "warn" | "alert" | "muted" | "highlight";
 export interface LookStyle { stroke?: string; fill?: string; text?: string; dash?: boolean; pulse?: boolean; opacity?: number }
@@ -80,7 +80,10 @@ export interface Connection {
   meta?: Record<string, unknown>;
 }
 
-export interface Play { scenario: string; seconds: number }
+/** A topology view plays a scenario; a sequence view reveals its messages one per period. */
+export interface Play { scenario?: string; seconds: number }
+/** One message of a sequence view (R17): over a declared connection, drawn in `kind`'s line; a reply is the dashed return. */
+export interface Message { from: string; to: string; text?: string; kind: string; reply: boolean }
 
 export interface View {
   id: string;
@@ -95,6 +98,8 @@ export interface View {
   play?: Play;
   /** Groups drawn closed in this view: one box, members hidden, connections re-attached. */
   collapse?: string[];
+  /** A sequence view's messages, in order. Present exactly when `type` is `sequence`. */
+  messages?: Message[];
 }
 
 /** A short text pointing at an entity or a connection (R16): the author's visible explanation of a moment. */

@@ -18,7 +18,7 @@ describe("smoke: the orrery command on the diagram of Orrery", () => {
     const r = run("validate", file);
     expect(r.err).toBe("");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^OK: \d+ components, \d+ connections, \d+ groups, 4 views, 2 scenarios, \d+ exports/);
+    expect(r.out).toMatch(/^OK: \d+ components, \d+ connections, \d+ groups, 5 views, 2 scenarios, \d+ exports/);
   });
   it("renders the interactive file with the model and the engine inside, and a static one without", { timeout: SLOW }, () => {
     const doc = run("render", file);

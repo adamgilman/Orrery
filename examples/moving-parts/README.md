@@ -115,6 +115,25 @@ until the reader interacts.
 
 ![Primary fails, on a loop](play.svg)
 
+## A sequence
+
+A view of type `sequence` draws the messages of one interaction between entities the model already has, over the
+connections it declares. Participants appear in order of first appearance, each as its own box on a lifeline; a
+reply is the dashed return and closes the activation its call opened. Exported at a scenario step, the participants
+wear that step's states.
+
+```jsonc
+{ "id": "checkout-seq", "type": "sequence", "title": "A customer checks out", "messages": [
+  { "from": "web", "to": "api", "text": "POST /checkout" },
+  { "from": "api", "to": "db", "text": "insert order" },
+  { "from": "db", "to": "api", "text": "ok", "reply": true },
+  { "from": "api", "to": "web", "text": "201 Created", "reply": true }
+] }
+```
+
+![A customer checks out](sequence.svg)
+![The same request while the primary is down](sequence-failed.svg)
+
 ## A heading
 
 A model and a view may carry a `description`. A picture draws the title and the description above the scene when

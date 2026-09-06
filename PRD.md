@@ -131,6 +131,7 @@ interface LayoutEngine {
 | Landing and Pages | The landing page covers callouts, kinds/shapes/packs and headings and links the reference pages; `.github/workflows/site.yml` tests every push and pull request and publishes site/dist to GitHub Pages on every push to main, at https://adamgilman.github.io/Orrery/. |
 | Orrery drawn in Orrery | `examples/orrery.orrery.json` models the tool with every feature; `test/orrery` is the regression (schema walked against the file), smoke (the built CLI) and integration (every export, the frame tooling, the runtime in a DOM) suite around it. |
 | Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against `baseline.json` on the `perf-baseline` branch, which CI tightens itself on every push to main; deterministic metrics exact, timings with slack; pull requests may only be no worse. |
+| Sequence views | `type: sequence` on a view: messages in order over declared connections, participants as the entities' own boxes in their states on lifelines, activations from call and reply, `play` reveals, the runtime steps them; the checkout and the diagram of Orrery each carry one (M3b, the sequence half; the walkthrough is reserved). |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
@@ -140,7 +141,7 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 |---|---|---|
 | N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). Standalone file confirmed in Safari on 2026-09-06: tour, morphs, drill-down, clicks and keys all good. Still to look at: the embed's sample page, Chrome, a phone. | The user reports the interactive file works on desktop Safari/Chrome |
 | N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
-| M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |
+| M3b | **Walkthrough view**: a sequence view's messages as a token moving along the topology, stepping through the runtime with the morph. (The sequence view shipped 2026-09-06.) | The same messages animate on the topology |
 | M4 | **GIF/PNG export** from the frame tooling; `render --png/--gif`. | Confluence fallback documented with a real GIF; agents can look at their own output |
 | M5 | **Launch**: docs site built from MODEL.md, examples gallery, MCP server exposing validate/render/explain/check, agent eval harness with retry counts, tags and neighbourhood views if the backlog still wants them. | Public |
 

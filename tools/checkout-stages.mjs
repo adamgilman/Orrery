@@ -39,6 +39,8 @@ const stages = {
       set: { drained: ["sessions", "cache-a", "cache-b", "redis-a", "aof-a", "redis-b", "aof-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },
     }] }],
   },
+  // The same checkout as a sequence: the messages of one request, over the connections the topology declares.
+  "8-sequence": { title: "Checkout: one request", direction, kinds, groups, components, connections, views: [closedViews[0], views.find((v) => v.id === "checkout-seq")], exports: [{ id: "8-sequence", view: "checkout-seq" }] },
 };
 // Every stage draws with the aws pack, so the provider icons are on every picture from the first.
 for (const [name, stage] of Object.entries(stages)) writeFileSync(`examples/checkout/${name}.orrery.json`, JSON.stringify({ $schema, title: stage.title, direction: stage.direction, kinds, ...stage }, null, 2) + "\n");

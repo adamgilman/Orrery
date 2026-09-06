@@ -1,0 +1,6 @@
+{ "components": [{ "id": "a" }, { "id": "b" }], "connections": [{ "from": "a", "to": "b" }], "groups": [{ "id": "g" }], "scenarios": [{ "id": "s", "steps": [{ "set": { "failed": "a" } }] }],
+  "views": [
+    { "id": "seq", "type": "sequence", "messages": [{ "from": "a", "to": "b" }], "collapse": ["g"], "scope": "g", "play": { "scenario": "s" } },
+    { "id": "topo", "messages": [{ "from": "a", "to": "b" }] },
+    { "id": "empty", "type": "sequence" }
+  ] }

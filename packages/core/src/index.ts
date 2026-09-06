@@ -10,3 +10,4 @@ export * from "./flow.js";
 export * from "./looks.js";
 export * from "./packs.js";
 export * from "./shapes.js";
+export * from "./sequence.js";

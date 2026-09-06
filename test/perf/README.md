@@ -12,6 +12,9 @@ The baseline is `baseline.json` on the `perf-baseline` branch, whose history is 
   updated on every push. A metric worse than the baseline fails the required check and blocks the merge: bytes
   and counts exactly, timings with slack (1.6× on the runner, plus two milliseconds so jitter on a sub-millisecond
   median is not a regression). Better is simply fine.
+- **Growth on purpose** is declared, not smuggled: a line `perf-accept: runtime.bytes, document.bytes` in the pull
+  request body, with the reason beside it. Those metrics show as accepted growth instead of failing, and when the
+  pull request merges the ratchet resets them to what was measured. Everything else still may only improve.
 - **Every push to main** measures again and stores `min(baseline, measured)` for every metric. A gain is kept the
   moment it lands; the baseline can only go down. The table goes into the run's summary, so the history is on the
   Actions page.

@@ -3,6 +3,7 @@ import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } fr
 export * from "./flow.js";
 import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, groupShapeOf, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
 import { scalePath } from "./shapes.js";
+import { layoutSequence, sequenceLayoutResult, type SequenceLayout } from "./sequence.js";
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
@@ -324,7 +325,9 @@ function legendMarkup(model: Model, y: number): { markup: string; height: number
 }
 
 /** One view's drawing (groups, connections, components) and its legend, apart, with the size both need together. */
-export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number; layout: LayoutResult } {
+export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number; layout: LayoutResult; css?: string } {
+  const view = model.views[0];
+  if (view?.type === "sequence") return renderSequenceView(model, view);
   let notes = calloutsMarkup(model, layout);
   // a note pinned past the top or left edge moves the whole picture over to make room
   if (notes.left < 0 || notes.top < 0) { layout = shiftLayout(layout, Math.max(0, CALLOUT_MARGIN - notes.left), Math.max(0, CALLOUT_MARGIN - notes.top)); notes = calloutsMarkup(model, layout); }
@@ -340,6 +343,40 @@ export function renderView(model: Model, layout: LayoutResult): { picture: strin
 }
 const withLegend = (v: { picture: string; legend: string }) => (v.legend ? `${v.picture}\n${v.legend}` : v.picture);
 
+/* ---------------- sequence views (R17) ---------------- */
+/** Only a layer that draws a sequence carries these rules, so a file without one is byte for byte what it was. */
+const SEQUENCE_STYLE = ".lifeline{fill:none;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:4 4}\n.activation{fill:#e2e8f0;stroke:#94a3b8;stroke-width:1}\n.message.reply .edge{stroke-dasharray:6 5}";
+/** Heads, lifelines, activations and messages; with `play`, each message revealed in turn by a visibility track. */
+function sequenceMarkup(model: Model, s: SequenceLayout, play: Play | undefined): { picture: string; css: string } {
+  const layout = sequenceLayoutResult(s);
+  const heads = s.participants.map((p) => {
+    const c = model.components.find((x) => x.id === p.id);
+    if (c) return componentMarkup(c, model, layout);
+    const g = model.groups.find((x) => x.id === p.id)!;
+    return `<g class="group gk-${g.kind} st-${g.state}" data-group="${escAttr(g.id)}" ${bboxAttr(p.box)} ${entityAttrs(g, model)} ${at(p.box)}>\n<rect class="group-box" width="${num(p.box.width)}" height="${num(p.box.height)}" rx="8"/>\n<text class="summary-label" x="${num(p.box.width / 2)}" y="${num(p.box.height / 2)}">${esc(g.label)}</text>\n</g>`;
+  });
+  const lifelines = s.participants.map((p) => `<path class="lifeline" data-lifeline="${escAttr(p.id)}" d="M${num(p.box.x + p.box.width / 2)} ${num(p.box.y + p.box.height)} V${num(s.lifelineBottom)}"/>`);
+  const activations = s.activations.map((a) => `<rect class="activation" x="${num(a.x)}" y="${num(a.y0)}" width="8" height="${num(a.y1 - a.y0)}"/>`);
+  const n = s.messages.length, period = play ? (n + 1) * play.seconds : 0;
+  const css = [SEQUENCE_STYLE, ...(play ? s.messages.map((m) => `@keyframes orrery-message-${m.index}{0%{visibility:hidden}${num(((m.index + 1) / (n + 1)) * 100)}%{visibility:visible}100%{visibility:visible}}`) : [])].join("\n");
+  const messages = s.messages.map((m) => {
+    const d = m.self ? `M${num(m.x0)} ${num(m.y)} h28 v20 h-28` : `M${num(m.x0)} ${num(m.y)} L${num(m.x1)} ${num(m.y)}`;
+    const label = m.text !== undefined ? (m.self ? `<text class="edge-label" style="text-anchor:start" x="${num(m.x0 + 34)}" y="${num(m.y + 10)}">${esc(m.text)}</text>` : `<text class="edge-label" x="${num((m.x0 + m.x1) / 2)}" y="${num(m.y - 8)}">${esc(m.text)}</text>`) : "";
+    const anim = play ? ` data-t0="0" style="animation:orrery-message-${m.index} ${num(period)}s step-end infinite"` : "";
+    return `<g class="message${m.reply ? " reply" : ""}" data-message="${m.index}"${anim}><path class="edge edge-${escAttr(m.kind)}" d="${d}" marker-end="url(#arrow)"/>${label}</g>`;
+  });
+  return { picture: [`<g class="lifelines">\n${lifelines.join("\n")}\n</g>`, `<g class="activations">\n${activations.join("\n")}\n</g>`, `<g class="nodes">\n${heads.join("\n")}\n</g>`, `<g class="messages">\n${messages.join("\n")}\n</g>`].join("\n"), css };
+}
+function renderSequenceView(model: Model, view: View): { picture: string; legend: string; width: number; height: number; layout: LayoutResult; css?: string } {
+  const s = layoutSequence(model, view);
+  const layout = sequenceLayoutResult(s);
+  const { picture, css } = sequenceMarkup(model, s, view.play);
+  const notes = calloutsMarkup(model, layout);
+  const bottom = Math.max(layout.height, notes.bottom + CALLOUT_MARGIN);
+  const legend = legendMarkup(model, bottom + LEGEND_GAP);
+  return { picture: notes.markup ? `${picture}\n${notes.markup}` : picture, legend: legend.markup, width: Math.max(layout.width, notes.right + CALLOUT_MARGIN, legend.width), height: bottom + legend.height, layout, ...(css ? { css } : {}) };
+}
+
 interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string; open?: readonly string[]; layout?: LayoutResult }
 
 /**
@@ -352,7 +389,7 @@ function playingLayer(declared: Model, view: View, play: Play, layout: LayoutRes
   const n = scenario.steps.length;
   const frames = [
     { model: stopFlows(declared), caption: scenario.label },
-    ...scenario.steps.map((st, i) => ({ model: stopFlows(declare(declared, { scenario: play.scenario, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
+    ...scenario.steps.map((st, i) => ({ model: stopFlows(declare(declared, { scenario: play.scenario!, step: i + 1 }).model), caption: `Step ${i + 1} of ${n}${st.note !== undefined ? `: ${st.note}` : ""}` })),
   ].map((f) => ({ ...f, view: renderView(scopeModel(f.model, view), layout) }));
   const height = Math.max(...frames.map((f) => f.view.height)) + CAPTION_STRIP;
   const width = Math.max(...frames.map((f) => f.view.width));
@@ -430,7 +467,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const shown = (name: string, isOn: (k: number) => boolean, inner: string, cls = "shown", extra = "") =>
     `<g class="${cls}"${extra} data-t0="${isOn(0) ? 1 : 0}" style="${anim(name)}">${inner}</g>`;
   const anchor = scenes[0]!.view;
-  const oneView = scenes.every((s) => s.view.id === anchor.id);
+  const oneView = scenes.every((s) => s.view.id === anchor.id) && anchor.type !== "sequence";
 
   if (oneView) {
     // One layout per configuration of open groups; the scene's own states on top of it.
@@ -596,6 +633,12 @@ function shiftLayout(l: LayoutResult, dx: number, dy: number): LayoutResult {
 /** Lay out and render one view of a declared model with the given groups open, playing a scenario when asked. */
 async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string, shift?: { dx: number; dy: number }, open: readonly string[] = []): Promise<ViewLayer> {
   const base = scopeModel(stopFlows(declared), view, open);
+  if (view.type === "sequence") {
+    if (play?.scenario !== undefined) throw new ModelError(`a sequence view plays its messages, not a scenario: "${view.id}" takes play.seconds only`);
+    let v = renderView(base, sequenceLayoutResult(layoutSequence(base, view)));
+    if (shift) { const layout = shiftLayout(v.layout, shift.dx, shift.dy); v = { ...v, layout, picture: `<g transform="translate(${num(shift.dx)} ${num(shift.dy)})">${v.picture}</g>`, width: v.width + shift.dx, height: v.height + shift.dy }; }
+    return { view, title, open, layout: v.layout, width: v.width, height: v.height, markup: withLegend(v), ...(v.css ? { css: v.css } : {}) };
+  }
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   if (play) return { view, title, open, layout, ...playingLayer(declared, view, play, layout) };
@@ -699,8 +742,9 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
     return wrapDocument(model, model.title, [layer], [], undefined, options.heading ? headingFor(model, undefined, layer.width, options.heading) : undefined);
   }
   const view = selectView(model, options.view);
+  if (view.type === "sequence" && options.play) throw new ModelError(`a sequence view plays its messages, not a scenario: "${view.id}" takes play.seconds only`);
   const play = playOf(view, options);
-  if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
+  if (play && play.scenario !== undefined && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
   const open = openOrder(model.groups, options.open ?? []);
   for (const g of open) if (!(view.collapse ?? []).includes(g)) throw new ModelError(`"${g}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
   const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}), ...(options.callouts ? { callouts: options.callouts } : {}) });
@@ -728,6 +772,7 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   return render(model, engine, {
     view: x.view,
     ...(x.heading ? { heading: x.heading } : {}),
+    ...(x.play?.scenario !== undefined ? { play: { scenario: x.play.scenario, seconds: x.play.seconds } } : {}),
     ...(x.callouts ? { callouts: x.callouts } : {}),
     ...(x.open ? { open: x.open } : {}),
     ...(x.zoom !== undefined ? { zoom: x.zoom } : {}),
@@ -735,7 +780,6 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
     ...(x.step !== undefined ? { step: x.step } : {}),
     ...(x.set ? { set: x.set } : {}),
     ...(x.reasons ? { reasons: x.reasons } : {}),
-    ...(x.play ? { play: x.play } : {}),
   });
 }
 
@@ -779,7 +823,7 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   const layers: ViewLayer[] = [];
   for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
     const play = view === first ? playOf(view, options) : view.play;
-    if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
+    if (play && play.scenario !== undefined && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
     const withSteps = (layer: ViewLayer, open: readonly string[]) => (layer.css === undefined ? { ...layer, markup: [layer.markup, stepCallouts(declared, view, open, layer.layout!)].filter(Boolean).join("\n") } : layer);
     layers.push(withSteps(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id), []));
     for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(withSteps(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open), open));

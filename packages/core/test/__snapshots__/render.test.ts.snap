@@ -22,6 +22,9 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 .edge-label{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
 .legend text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
 .step-note{font:500 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.lifeline{fill:none;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:4 4}
+.activation{fill:#e2e8f0;stroke:#94a3b8;stroke-width:1}
+.message.reply .edge{stroke-dasharray:6 5}
 .callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
 .callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
