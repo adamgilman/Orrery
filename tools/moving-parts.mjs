@@ -6,7 +6,9 @@ const master = JSON.parse(readFileSync("examples/checkout.orrery.json", "utf8"))
 const { $schema, direction, kinds, groups, components, connections, views, scenarios, tour } = master;
 const dbFails = scenarios.find((s) => s.id === "db-fails");
 const model = {
-  $schema, title: "Checkout: the moving parts", direction, kinds, groups, components, connections,
+  $schema, title: "Checkout: the moving parts",
+  description: "One small checkout, the README's own: a storefront, an API, an orders database with a read replica, and a session cache of two Redis nodes. Every picture on the moving parts page is a view, a moment or a story drawn from this one model.",
+  direction, kinds, groups, components, connections,
   views: [
     ...views,
     { id: "front", title: "The front door", only: ["web", "api"] },
@@ -26,6 +28,7 @@ const model = {
     { id: "open-sessions", open: ["sessions"] }, { id: "open-deep", open: ["sessions", "cache-a"] }, { id: "zoom-db", zoom: "db" }, { id: "open-and-zoom", open: ["sessions"], zoom: "sessions" },
     { id: "step-1", scenario: "db-fails", step: 1 }, { id: "step-2", scenario: "db-fails", step: 2 }, { id: "step-3", scenario: "db-fails", step: 3 },
     { id: "what-if", set: { off: { replica: "out for maintenance" }, degraded: { api: "no failover while the replica is out" } } },
+    { id: "heading", heading: true },
     { id: "play", play: "db-fails", seconds: 3 },
     { id: "tour", tour: true },
   ],

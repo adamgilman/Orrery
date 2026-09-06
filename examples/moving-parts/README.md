@@ -110,6 +110,19 @@ until the reader interacts.
 
 ![Primary fails, on a loop](play.svg)
 
+## A heading
+
+A model and a view may carry a `description`. A picture draws the title and the description above the scene when
+an export sets `heading: true`, or `render --heading` asks for it; the view's own title and description win over
+the model's. Off by default, since a page introduces its pictures in its own words.
+
+```jsonc
+"description": "One small checkout, the README's own: …",
+"exports": [{ "id": "heading", "heading": true }]
+```
+
+![With its heading](heading.svg)
+
 ## The tour
 
 A tour is a story told on a timer: scenes that open groups, zoom, apply a scenario moment and carry a caption. When

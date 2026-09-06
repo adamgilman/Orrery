@@ -200,8 +200,12 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     };
     step();
   };
-  const fit = (animate: boolean) => { zoomId = null; tween(fitView(layerSize(active()), screen(), frame), animate); };
-  const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomId = id; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), animate); return true; };
+  // A heading block (R15) sits above the scene; the camera works in the screen below it.
+  const inset = Number(root.getAttribute("data-heading") ?? 0);
+  const stage = (): Size => { const s = screen(); return { width: s.width, height: s.height - inset }; };
+  const below = (c: Camera): Camera => ({ ...c, ty: c.ty + inset });
+  const fit = (animate: boolean) => { zoomId = null; tween(below(fitView(layerSize(active()), stage(), frame)), animate); };
+  const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomId = id; tween(below(zoomToBox(bbox(el), stage(), { ...frame, maxZoom: type === "node" ? 2 : 4 })), animate); return true; };
 
   /* ---- selection: the entities of the active layer, in outline order (components first, then groups and what they hold) ---- */
   const order: { id: string; type: EntityType }[] = [];

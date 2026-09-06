@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
   "title": "Checkout: the moving parts",
+  "description": "One small checkout, the README's own: a storefront, an API, an orders database with a read replica, and a session cache of two Redis nodes. Every picture on the moving parts page is a view, a moment or a story drawn from this one model.",
   "direction": "down",
   "kinds": {
     "use": [
@@ -365,6 +366,10 @@
           "api": "no failover while the replica is out"
         }
       }
+    },
+    {
+      "id": "heading",
+      "heading": true
     },
     {
       "id": "play",

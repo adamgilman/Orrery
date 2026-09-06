@@ -17,7 +17,9 @@ export const USAGE = `Usage:
                  [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
                  [--tour [<ids>]]        (repeatable; applied after the scenario). --open draws closed groups
                  [--open <ids>]          open (comma-separated, with their closed ancestors); --zoom crops the
-                 [--zoom <id>]           picture to one entity. Both imply --static.
+                 [--zoom <id>]           picture to one entity. Both imply --static. --heading draws the
+                 [--heading]             title and description block above the picture (a view's own, else
+                                         the model's), still or interactive.
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
                                          the file, so they play inside <img>. --every: seconds per step or view.
@@ -46,7 +48,7 @@ interface Io { stdout(s: string): void; stderr(s: string): void }
 const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--open", "--zoom", "--out"]);
 /** Flags whose value may be omitted (then the model's own declaration is used). */
 const OPTIONAL_VALUE_FLAGS = new Set(["--tour"]);
-const BOOL_FLAGS = new Set(["--static"]);
+const BOOL_FLAGS = new Set(["--static", "--heading"]);
 
 interface Args { positionals: string[]; values: Map<string, string[]>; flags: Set<string> }
 
@@ -186,7 +188,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const model = loadModel(file, io);
     let svg: string;
     try {
-      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}) };
+      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}), ...(args.flags.has("--heading") ? { heading: true } : {}) };
       svg = isStatic
         ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}), ...(open ? { open } : {}), ...(zoom !== undefined ? { zoom } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });

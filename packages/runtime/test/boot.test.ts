@@ -414,3 +414,26 @@ describe("shaped frames (R14)", () => {
     expect(vis(root, '[data-group="own"] .group-box').getAttribute("d")).toBe(openD);
   });
 });
+
+describe("heading (R15)", () => {
+  let rt: Orrery;
+  afterEach(() => { rt?.destroy(); });
+  it("keeps the camera below the heading", async () => {
+    const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/cloud.json"), "utf8")));
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "", heading: true });
+    const h = Number(svg.match(/data-heading="([\d.]+)"/)![1]);
+    const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
+    const walker = parsed.createTreeWalker(parsed, 8);
+    const cdata: Node[] = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) cdata.push(n);
+    for (const n of cdata) n.parentNode!.replaceChild(parsed.createTextNode(n.textContent ?? ""), n);
+    const root = document.importNode(parsed.documentElement, true) as unknown as SVGSVGElement;
+    document.body.innerHTML = ""; document.body.appendChild(root);
+    rt = mount(root, { size: { width: 1600, height: 900 } });
+    rt.stop();
+    const ty = Number(root.querySelector(".scene")!.getAttribute("transform")!.match(/translate\([\d.-]+ ([\d.-]+)\)/)![1]);
+    expect(ty).toBeGreaterThanOrEqual(h);
+    expect(root.querySelector(".heading")).not.toBeNull();
+  });
+});

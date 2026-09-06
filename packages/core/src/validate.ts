@@ -61,17 +61,17 @@ const reasonsOf = (v: SetEntry): Record<string, string> => (typeof v === "object
 /* ---------- raw shapes (after schema defaults) ---------- */
 interface RawStateDef { look?: LookPreset | LookStyle; flows?: "keep" | "stop"; description?: string }
 interface Raw {
-  title?: string; direction: Direction;
+  title?: string; description?: string; direction: Direction;
   states?: { default?: string; replace?: boolean; use?: string | string[]; define?: Record<string, RawStateDef> };
   shapes?: { replace?: boolean; define?: Record<string, Omit<ShapeDef, "name" | "pad"> & { pad?: { x: number; y: number } }> };
   kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
-  views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
+  views?: { id: string; title?: string; description?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
   tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
-  exports?: { id: string; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
+  exports?: { id: string; heading?: boolean; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
 }
 
 /* ---------- vocabulary ---------- */
@@ -260,7 +260,7 @@ export function validate(input: unknown): ValidationResult {
       if (!groupIds.has(id)) return err(`/views/${i}/collapse/${k}`, `unknown group "${id}"`);
       if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/collapse/${k}`, `"${id}" is not inside scope "${v.scope}"`);
     });
-    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play), ...opt("collapse", v.collapse) };
+    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("description", v.description), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play), ...opt("collapse", v.collapse) };
   });
 
   /* scenarios */
@@ -375,7 +375,7 @@ export function validate(input: unknown): ValidationResult {
     if (x.tour) {
       if (!tour) err(`${base}/tour`, "the model has no tour");
       for (const f of ["view", "open", "zoom", "scenario", "step", "set", "play", "seconds"] as const) if (x[f] !== undefined) err(`${base}/${f}`, "a tour export takes no other field");
-      return { id: x.id, view: viewId, tour: true };
+      return { id: x.id, view: viewId, tour: true, ...(x.heading ? { heading: true as const } : {}) };
     }
     const open = checkOpen(base, view, x.open, x.zoom);
     const scenario = x.scenario !== undefined ? scenarios.find((sc) => sc.id === x.scenario) : undefined;
@@ -393,13 +393,13 @@ export function validate(input: unknown): ValidationResult {
       Object.assign(reasons, reasonsOf(entry));
       for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
     }
-    return { id: x.id, view: viewId, ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
+    return { id: x.id, view: viewId, ...(x.heading ? { heading: true as const } : {}), ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
   });
 
   // W2: the interactive file carries one layer per way the closed groups of a view can be open; warn when that is many.
   views.forEach((v, i) => { const n = configurationsOf(raw.groups, v.collapse ?? []).length; if (n > 32) warnings.push(new ValidationWarning(`/views/${i}/collapse`, `${n} combinations of open groups; the interactive file will carry a layer for each`)); });
 
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, shapes, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
+  const model: Model = { ...opt("title", raw.title), ...opt("description", raw.description), direction: raw.direction, states, kinds, shapes, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
 }

@@ -42,3 +42,13 @@ describe("renderDocument", () => {
     expect(a).toMatch(/data-group="app" data-bbox="[\d.]+ [\d.]+ [\d.]+ [\d.]+"/);
   });
 });
+
+describe("renderDocument: heading (R15)", () => {
+  it("carries the heading outside the scene and tells the runtime its height", async () => {
+    const svg = await renderDocument(fixture("cloud"), engine(), { runtime: "", heading: true });
+    const h = Number(svg.match(/data-heading="([\d.]+)"/)![1]);
+    expect(h).toBeGreaterThan(40);
+    expect(svg.indexOf('class="heading"')).toBeLessThan(svg.indexOf('class="scene"'));
+    expect(await renderDocument(fixture("cloud"), engine(), { runtime: "" })).not.toContain("data-heading");
+  });
+});

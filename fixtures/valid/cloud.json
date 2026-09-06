@@ -1,18 +1,89 @@
 {
   "$schema": "../../packages/core/schema/v1.json",
   "title": "Checkout on AWS",
-  "kinds": { "use": ["aws"] },
-  "states": { "use": "sre" },
-  "groups": [{ "id": "vpc", "label": "Checkout VPC", "kind": "aws:vpc" }],
+  "description": "The checkout path on AWS: the storefront reaches the API through CloudFront, orders land in RDS, and static assets are served from S3. Drawn from the model in fixtures/valid/cloud.json, which every picture on this page shares.",
+  "kinds": {
+    "use": [
+      "aws"
+    ]
+  },
+  "states": {
+    "use": "sre"
+  },
+  "groups": [
+    {
+      "id": "vpc",
+      "label": "Checkout VPC",
+      "kind": "aws:vpc"
+    }
+  ],
   "components": [
-    { "id": "web", "label": "Storefront", "kind": "client" },
-    { "id": "cdn", "label": "CDN", "kind": "aws:cloudfront" },
-    { "id": "api", "label": "Checkout API", "kind": "aws:lambda", "group": "vpc" },
-    { "id": "db", "label": "Orders DB", "kind": "aws:rds", "group": "vpc" },
-    { "id": "assets", "label": "Assets", "kind": "aws:s3" }
+    {
+      "id": "web",
+      "label": "Storefront",
+      "kind": "client"
+    },
+    {
+      "id": "cdn",
+      "label": "CDN",
+      "kind": "aws:cloudfront"
+    },
+    {
+      "id": "api",
+      "label": "Checkout API",
+      "kind": "aws:lambda",
+      "group": "vpc"
+    },
+    {
+      "id": "db",
+      "label": "Orders DB",
+      "kind": "aws:rds",
+      "group": "vpc"
+    },
+    {
+      "id": "assets",
+      "label": "Assets",
+      "kind": "aws:s3"
+    }
   ],
   "connections": [
-    { "from": "web", "to": "cdn" }, { "from": "cdn", "to": "api" }, { "from": "api", "to": "db" }, { "from": "cdn", "to": "assets" }
+    {
+      "from": "web",
+      "to": "cdn"
+    },
+    {
+      "from": "cdn",
+      "to": "api"
+    },
+    {
+      "from": "api",
+      "to": "db"
+    },
+    {
+      "from": "cdn",
+      "to": "assets"
+    }
   ],
-  "scenarios": [{ "id": "db-fails", "steps": [{ "set": { "outage": "db", "impaired": { "api": "orders queue up" } } }] }]
+  "scenarios": [
+    {
+      "id": "db-fails",
+      "steps": [
+        {
+          "set": {
+            "outage": "db",
+            "impaired": {
+              "api": "orders queue up"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Checkout on AWS, overview",
+      "description": "The overview's own description wins over the model's."
+    }
+  ]
 }

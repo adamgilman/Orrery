@@ -18,6 +18,11 @@
       "minLength": 1,
       "description": "Title of the system. Shown on views that do not set their own."
     },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the system is, in a sentence or a paragraph. With the title it is the heading block a picture carries when an export sets heading: true or render is given --heading."
+    },
     "direction": {
       "type": "string",
       "enum": [
@@ -630,6 +635,11 @@
             "minLength": 1,
             "description": "Title for this view. Defaults to the document title."
           },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What this view shows. With the view's title it is the heading block for pictures of this view; wins over the model's description."
+          },
           "type": {
             "type": "string",
             "enum": [
@@ -1020,6 +1030,10 @@
           "zoom": {
             "type": "string",
             "description": "The entity the picture is cropped to, with a little air around it: a component or a group not inside a closed group. Omit for the whole picture."
+          },
+          "heading": {
+            "type": "boolean",
+            "description": "true: draw the title and description block above the picture (the view's own, else the model's). Allowed with tour."
           }
         }
       }

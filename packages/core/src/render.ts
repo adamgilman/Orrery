@@ -145,6 +145,9 @@ const BASE_STYLE = `
 .edge-label{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
 .legend text{font:12px ${FONT};fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
 .step-note{font:500 13px ${FONT};fill:#334155;dominant-baseline:central}
+.heading-back{fill:#ffffff}
+.heading-title{font:600 16px ${FONT};fill:#0f172a}
+.heading-text{font:12px ${FONT};fill:#64748b}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:${PULSE_MIN_OPACITY}}100%{stroke-opacity:1}}`.trim();
 
@@ -532,16 +535,44 @@ const viewLayer = (l: ViewLayer, visible: boolean) =>
 /** Only the CDATA terminator can break out of a CDATA section; split it across two sections. Browsers merge them. */
 const cdata = (s: string) => `<![CDATA[${s.replace(/]]>/g, "]]]]><![CDATA[>")}]]>`;
 
-function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[], viewBox?: { x: number; y: number; width: number; height: number }): string {
+/** The heading block (R15): the title at 16, the description at 12 wrapped to the picture's width, on a white backing, above the scene. */
+interface Heading { markup: string; height: number; width: number }
+const HEADING_PAD = 20, HEADING_LINE = 17, HEADING_MIN_WIDTH = 360;
+function wrap(text: string, px: number, maxWidth: number): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && textWidth(next.length, px) > maxWidth) { lines.push(line); line = word; } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function headingBlock(title: string | undefined, description: string | undefined, width: number): Heading | undefined {
+  if (title === undefined && description === undefined) return undefined;
+  const w = Math.max(width, HEADING_MIN_WIDTH);
+  const lines = description !== undefined ? wrap(description, 12, w - 2 * HEADING_PAD) : [];
+  let y = HEADING_PAD;
+  const parts: string[] = [];
+  if (title !== undefined) { y += 10; parts.push(`<text class="heading-title" x="${HEADING_PAD}" y="${y}">${esc(title)}</text>`); y += 14; }
+  if (lines.length) { y += 8; parts.push(`<text class="heading-text" x="${HEADING_PAD}" y="${y}">${lines.map((l, i) => `<tspan x="${HEADING_PAD}" dy="${i === 0 ? 0 : HEADING_LINE}">${esc(l)}</tspan>`).join("")}</text>`); y += (lines.length - 1) * HEADING_LINE + 4; }
+  const height = y + HEADING_PAD - 4;
+  return { markup: `<rect class="heading-back" width="${num(w)}" height="${num(height)}"/>\n${parts.join("\n")}`, height, width: w };
+}
+
+function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[], viewBox?: { x: number; y: number; width: number; height: number }, heading?: Heading): string {
   const first = layers[0]!;
-  const vb = viewBox ?? { x: 0, y: 0, width: first.width, height: first.height };
+  const crop = viewBox ?? { x: 0, y: 0, width: first.width, height: first.height };
+  // the heading sits in a band above the crop; the scene moves down by its height
+  const vb = heading ? { x: crop.x, y: crop.y, width: Math.max(crop.width, heading.width), height: crop.height + heading.height } : crop;
   const m = (id: string, reverse: boolean) => `<marker id="${id}" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${reverse ? 1 : ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="${reverse ? `M${ARROW_LENGTH} 0L0 ${ARROW_LENGTH / 2}L${ARROW_LENGTH} ${ARROW_LENGTH}z` : `M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z`}" fill="#94a3b8"/></marker>`;
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${num(vb.x)} ${num(vb.y)} ${num(vb.width)} ${num(vb.height)}" width="${num(vb.width)}" height="${num(vb.height)}" data-orrery="1">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${num(vb.x)} ${num(vb.y)} ${num(vb.width)} ${num(vb.height)}" width="${num(vb.width)}" height="${num(vb.height)}" data-orrery="1"${heading ? ` data-heading="${num(heading.height)}"` : ""}>`,
     (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths.
     `<defs>${m("arrow", false)}${m("arrow-start", true)}</defs>`,
-    `<g class="scene">\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
+    ...(heading ? [`<g class="heading" transform="translate(${num(vb.x)} ${num(vb.y)})">\n${heading.markup}\n</g>`] : []),
+    `<g class="scene"${heading ? ` transform="translate(0 ${num(heading.height)})"` : ""}>\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
     ...extra,
     `</svg>`,
   ].join("\n") + "\n";
@@ -568,6 +599,8 @@ export interface RenderOptions {
   tour?: true | { views: string[]; seconds?: number };
   /** Closed groups drawn open, each with its closed ancestors listed too: a still of the inside (R11). */
   open?: string[];
+  /** Draw the title and description block above the picture (R15): the view's own, else the model's. */
+  heading?: boolean;
   /** The entity the picture is cropped to, with a little air around it. */
   zoom?: string;
 }
@@ -586,7 +619,8 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
       const seconds = options.tour.seconds ?? 4;
       tour = { seconds, scenes: options.tour.views.map((view) => ({ view, seconds })) };
     }
-    return wrapDocument(model, model.title, [await tourLayer(model, tour, engine, options.set)], []);
+    const layer = await tourLayer(model, tour, engine, options.set);
+    return wrapDocument(model, model.title, [layer], [], undefined, options.heading ? headingFor(model, undefined, layer.width) : undefined);
   }
   const view = selectView(model, options.view);
   const play = playOf(view, options);
@@ -607,14 +641,15 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
     const pad = 24;
     viewBox = { x: Math.max(0, b.x - pad), y: Math.max(0, b.y - pad), width: Math.min(layer.width, b.width + 2 * pad), height: Math.min(layer.height, b.height + 2 * pad) };
   }
-  return wrapDocument(model, title, [layer], [], viewBox);
+  return wrapDocument(model, title, [layer], [], viewBox, options.heading ? headingFor(model, view, viewBox?.width ?? layer.width) : undefined);
 }
 
 /** Render one of the model's `exports` (MODEL.md 4.9): an enclosed file, CSS animation only. */
 export function renderExport(model: Model, engine: LayoutEngine, x: Export): Promise<string> {
-  if (x.tour) return render(model, engine, { tour: true });
+  if (x.tour) return render(model, engine, { tour: true, ...(x.heading ? { heading: true } : {}) });
   return render(model, engine, {
     view: x.view,
+    ...(x.heading ? { heading: true } : {}),
     ...(x.open ? { open: x.open } : {}),
     ...(x.zoom !== undefined ? { zoom: x.zoom } : {}),
     ...(x.scenario !== undefined ? { scenario: x.scenario } : {}),
@@ -625,7 +660,9 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   });
 }
 
-export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number } }
+export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number }; heading?: boolean }
+/** The heading a picture of `view` carries: the view's title and description, falling back to the model's, sized to the picture. */
+const headingFor = (model: Model, view: View | undefined, width: number) => headingBlock(view?.title ?? model.title, view?.description ?? model.description, width);
 
 /**
  * The shippable file: every view pre-laid-out and embedded (first visible), the normalised model as JSON, and the
@@ -658,5 +695,5 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
   const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
-  return wrapDocument(model, model.title, layers, extra);
+  return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width))) : undefined);
 }

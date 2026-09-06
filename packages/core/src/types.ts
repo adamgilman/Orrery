@@ -87,6 +87,8 @@ export interface View {
   type: ViewType;
   direction: Direction;
   title?: string;
+  /** Prose about this view; with `title`, the heading block a picture may carry (R15). Wins over the model's. */
+  description?: string;
   scope?: string;
   only?: string[];
   /** Cycle this scenario's steps on a timer: as CSS layers in the file, and in the runtime until the reader interacts. */
@@ -110,6 +112,8 @@ export interface Scenario { id: string; label: string; steps: ScenarioStep[] }
 
 export interface Model {
   title?: string;
+  /** Prose about the system; with `title`, the heading block a picture may carry (R15). */
+  description?: string;
   direction: Direction;
   states: States;
   kinds: Kinds;
@@ -130,7 +134,7 @@ export interface Model {
  * One file the model produces (4.9): a view at a moment, a scenario playing, or the tour. `open` lists the closed
  * groups drawn open (in declaration order); `zoom` is the entity the picture is cropped to.
  */
-export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true }
+export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true; /** Draw the title and description block above the picture (R15). */ heading?: true }
 
 /**
  * One moment of a tour: a view, the closed groups drawn open, what the camera closes on, optionally a point in a

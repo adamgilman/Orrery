@@ -340,3 +340,43 @@ describe("renderSvg: group shapes (R14)", () => {
     expect(svg).toMatch(/<path class="group-box" data-shape="M15 0H85L100 50 85 100H15L0 50Z" d="M[^"]+" style="animation:orrery-size-g /);
   });
 });
+
+describe("render: heading (R15)", () => {
+  const m = fixture("cloud");
+  const engine = () => new FakeLayoutEngine();
+  it("draws the title and the wrapped description above the picture when asked, and moves the scene down by its height", async () => {
+    const plain = await render(m, engine(), { view: "overview" });
+    expect(plain).not.toContain('class="heading"');
+    expect(plain).toContain('<g class="scene">');
+    const svg = await render(m, engine(), { view: "overview", heading: true });
+    const h = Number(svg.match(/data-heading="([\d.]+)"/)![1]);
+    expect(h).toBeGreaterThan(40);
+    expect(svg).toContain(`<g class="scene" transform="translate(0 ${h})">`);
+    expect(svg).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS, overview</text>');
+    expect(svg).toMatch(/<text class="heading-text"[^>]*><tspan x="20" dy="0">The overview's own description wins over the model's.<\/tspan><\/text>/);
+    const [, w, ph] = plain.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
+    expect(svg).toContain(`viewBox="0 0 ${w} ${Number(ph) + h}"`);
+    expect(svg.indexOf('class="heading"')).toBeLessThan(svg.indexOf('class="scene"'));
+  });
+  it("falls back to the model's title and description, wrapping long text to the picture's width", async () => {
+    const svg = await render({ ...m, views: [{ ...m.views[0]!, title: undefined as unknown as string, description: undefined }] } as Model, engine(), { heading: true });
+    expect(svg).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS</text>');
+    const lines = [...svg.matchAll(/<tspan x="20" dy="(\d+)">([^<]*)<\/tspan>/g)];
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.map((l) => l[2]).join(" ")).toBe(m.description);
+    expect(lines.slice(1).every((l) => l[1] === "17")).toBe(true);
+    const w = Number(svg.match(/viewBox="0 0 ([\d.]+)/)![1]);
+    for (const l of lines) expect(l[2]!.length * 12 * 0.54).toBeLessThanOrEqual(w - 40);
+  });
+  it("crops with the heading kept when zoomed, and an export or tour asks for it the same way", async () => {
+    const zoomed = await render(m, engine(), { zoom: "db", heading: true });
+    const [, x, y, , hh] = zoomed.match(/viewBox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!;
+    const h = Number(zoomed.match(/data-heading="([\d.]+)"/)![1]);
+    expect(zoomed).toContain(`<g class="heading" transform="translate(${x} ${y})">`);
+    expect(Number(hh)).toBeGreaterThan(h);
+    const exported = await renderExport(m, engine(), { id: "x", view: "overview", heading: true });
+    expect(exported).toContain('class="heading"');
+    const tour = await render({ ...m, tour: { seconds: 2, scenes: [{ view: "overview", seconds: 2 }] } }, engine(), { tour: true, heading: true });
+    expect(tour).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS</text>');
+  });
+});

@@ -82,6 +82,7 @@ the id.
 |---|---|---|---|
 | `$schema` | string | | Schema URL, for editor support. |
 | `title` | string | | Title of the system. Shown on views that do not set their own. |
+| `description` | string | | What the system is, in a sentence or a paragraph. With the title it is the heading block a picture carries when asked (R15). |
 | `direction` | `right` \| `down` | `right` | Default flow direction for views. The only layout hint at this level. |
 | `states` | object | the default set | See 4.7. |
 | `kinds` | object | the default set | See 4.8. |
@@ -142,6 +143,7 @@ connection pointing at it keeps working.
 |---|---|---|---|
 | `id` | id | required | Used by `render --view`. |
 | `title` | string | document title | |
+| `description` | string | document description | What this view shows; with its title, the heading block for pictures of this view. |
 | `type` | `topology` | `topology` | `sequence` and `walkthrough` are reserved. |
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group becomes the outer frame and only its descendants are shown. |
@@ -284,7 +286,8 @@ inside an image tag anywhere.
 | `scenario`, `step` | A scenario moment, as `render --scenario --step`. |
 | `set` | A what-if, as a scenario step's `set`. |
 | `play` | Scenario id to play on a loop, as a view's `play`; `seconds` per step (default 3). |
-| `tour` | `true`: the model's tour, as one drawing that moves. Exclusive with every field but `id`. |
+| `tour` | `true`: the model's tour, as one drawing that moves. Exclusive with every field but `id` and `heading`. |
+| `heading` | `true`: draw the title and description block above the picture (R15): the view's own, else the model's. `render --heading` does the same from the command line, for a still or the interactive file. Off by default: a document introduces its pictures in its own prose. |
 
 `play` and `scenario` are exclusive (S16).
 
@@ -363,6 +366,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 | R13 | A pack is data merged into the model before validation continues: kinds under the pack's prefix, states as they are. Defaults, then packs in order, then the author's own definitions; a states pack stands in for the default states. An icon glyph is drawn as a nested `<svg>` in the glyph slot, in its own colours, and a kind's colon is escaped in the stylesheet. Nothing in the renderer knows a provider. The interactive file embeds only the kinds and shapes the model's entities use, never a pack whole. | packs.test; render.test "icon glyphs and namespaced kinds (R13)"; cli.test "orrery packs"; invalid fixture `unknown-pack`; document.test "only the kinds and shapes the model uses" |
 | R14 | A component, and a group's frame open or closed, is drawn with its kind's shape, or `box`: a `corner` shape as a rounded rect, a `path` shape as its path data scaled from the unit box to the measured size, coordinate by coordinate; the outline carries the `node-box` class so every state, kind and ghost rule applies to it; replica stacks are copies of the outline; the shape's pad is added to the measured size and moves the glyph, label, title and expand mark in; a group's pad is extra frame inset for the layout. A shaped frame carries its unit path, and resizing it (the tour's size track, the runtime's morph) rescales the path. Connections end at the bounding box. | shapes.test; render.test "shapes (R14)", "group shapes (R14)"; layoutContract "pad"; freeze.test "path data"; boot.test "shaped frames"; fixture `shapes` |
+| R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
 
 ## 7. Non-goals (v1)
 
@@ -392,6 +396,10 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   cascade rule that then needs tie-breaking.
 - **Vocabulary is the author's.** Fixed system states (and the word "down") were removed from the engine. Defaults
   reproduce the old behaviour exactly.
+- **A heading is opt-in (2026-09-06).** A model and a view may carry a `description`; a picture draws title and
+  description as a block above the scene only when an export or the command line asks. A README introduces its
+  pictures in its own prose, so a heading on every one would repeat it. Placed above rather than in the caption
+  strip so a picture reads heading, drawing, moment.
 - **One type scale (2026-09-06).** Labels 14 medium, secondary text 12 (tech lines, edge labels, legend, badges),
   the group eyebrow 11 bold uppercase tracked, captions 13 medium in a darker ink; a closed group's name is a
   peer of a label, not a step up. The stack names Inter first, then the platform face, so the frame tooling's Inter

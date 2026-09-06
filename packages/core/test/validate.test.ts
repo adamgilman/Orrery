@@ -153,3 +153,13 @@ describe("validate: namespaced kinds and glyph objects", () => {
     expect(bad({ viewBox: "0 0 64 64" })).toEqual(['/kinds/components/k/glyph: missing required property "svg"']);
   });
 });
+
+describe("validate: descriptions and headings (R15)", () => {
+  it("keeps the model's and a view's description, and an export's heading, including on a tour export", () => {
+    const r = validate({ title: "T", description: "About the system", views: [{ id: "v", description: "About this view" }], tour: { seconds: 2, scenes: [{ view: "v" }, { view: "v", note: "again" }] }, exports: [{ id: "a", heading: true }, { id: "b", tour: true, heading: true }], components: [{ id: "x" }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    expect(r.model.description).toBe("About the system");
+    expect(r.model.views[0]!.description).toBe("About this view");
+    expect(r.model.exports.map((x) => x.heading)).toEqual([true, true]);
+  });
+});
