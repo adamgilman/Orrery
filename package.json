@@ -9,7 +9,7 @@
     "build": "tsc -b && yarn workspace @orrery/runtime run bundle",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "yarn typecheck && yarn lint && yarn test",
