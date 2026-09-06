@@ -13,7 +13,7 @@ const out = args.find((a, i) => !a.startsWith("--") && i !== themeAt + 1);
 let html = readFileSync(join(dir, "index.template.html"), "utf8");
 html = html.replace("<!--theme-->", readFileSync(join(dir, `themes/${theme}.head.html`), "utf8"));
 html = html.replace("<!--theme-script-->", readFileSync(join(dir, `themes/${theme}.tail.html`), "utf8"));
-for (const name of ["solar", "failover-play", "vocabulary-play", "data-view", "drill-down-tour"]) {
+for (const name of ["solar", "failover-play", "vocabulary-play", "data-view", "drill-down-tour", "shapes", "packs-aws"]) {
   // Inline the SVG. Keep width/height (the intrinsic size browsers scale from) and add an explicit aspect ratio;
   // drop the document title so the page's own text carries.
   const raw = readFileSync(join(dir, `${name}.svg`), "utf8");

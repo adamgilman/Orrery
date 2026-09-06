@@ -22,3 +22,4 @@ for (const line of run("export", "examples/moving-parts/moving-parts.orrery.json
 // the landing page inlines these
 run("render", "examples/solar-system.orrery.json", "--static", "-o", "site/landing/solar.svg");
 for (const [from, to] of [["4-scenarios-play", "failover-play"], ["7-vocabulary-play", "vocabulary-play"], ["5-views-data", "data-view"], ["6-drill-down-tour", "drill-down-tour"]]) copyFileSync(`examples/checkout/${from}.svg`, `site/landing/${to}.svg`);
+for (const [from, to] of [["kitchen-sink/shapes-1", "shapes"], ["kitchen-sink/packs-aws", "packs-aws"]]) copyFileSync(`examples/${from}.svg`, `site/landing/${to}.svg`);

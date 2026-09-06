@@ -128,6 +128,7 @@ interface LayoutEngine {
 | Type pass | One scale on the 48px box (14 labels, 12 secondary, 11 eyebrow, 13 captions), Inter-first stack matching the frame tooling, closed-group names as peers of labels, legend and caption strips with air, tabular numerals. |
 | Heading block | `description` on the model and on a view; `heading: true` on an export or `render --heading` draws title and description above the picture, centred or `left`, still or interactive (the runtime's camera works below it). |
 | Callouts | `callouts` on a scenario step, a tour scene, an export and the model: a note with a leader pointing at an entity or connection, placed where there is room or on a declared side, drawn per moment in stills, play, tours and the interactive file (every step's carried hidden, the current step's shown). |
+| Landing and Pages | The landing page covers callouts, kinds/shapes/packs and headings and links the reference pages; `.github/workflows/site.yml` tests every push and pull request and publishes site/dist to GitHub Pages on every push to main. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
