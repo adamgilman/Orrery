@@ -34,10 +34,18 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn test
+      - name: Fetch the performance baseline
+        id: baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          json=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/baseline.json?ref=perf-baseline" 2>/dev/null || true)
+          case "$json" in "{"*) ;; *) json="" ;; esac
+          echo "json=$json" >> "$GITHUB_OUTPUT"
       - run: yarn perf
         env:
           ORRERY_SKIP_BUILD: "1"
-          ORRERY_PERF_BASELINE_JSON: ${{ vars.PERF_BASELINE }}
+          ORRERY_PERF_BASELINE_JSON: ${{ steps.baseline.outputs.json }}
       - name: Performance table
         if: always()
         run: cat test/perf/last.md >> "$GITHUB_STEP_SUMMARY" || true
@@ -49,18 +57,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          body="$(printf '<!-- perf-ratchet -->\n## Performance ratchet\n\n%s\n_Measured on this runner against the baseline CI keeps in `PERF_BASELINE`. Bytes and counts must not grow; timings may not exceed the baseline by more than 1.6× plus 2 ms. A metric marked SLOWER blocks the merge._\n' "$(cat test/perf/last.md)")"
+          body="$(printf '<!-- perf-ratchet -->\n## Performance ratchet\n\n%s\n_Measured on this runner against the baseline CI keeps on the `perf-baseline` branch. Bytes and counts must not grow; timings may not exceed the baseline by more than 1.6× plus 2 ms. A metric marked SLOWER blocks the merge._\n' "$(cat test/perf/last.md)")"
           id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- perf-ratchet -->")) | .id' | head -1)
           if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" >/dev/null
           else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -f body="$body" >/dev/null; fi
   ratchet:
-    # Every push to main measures again and tightens the baseline to the best numbers ever seen. No one edits it.
+    # Every push to main measures again and tightens the baseline to the best numbers ever seen, on the
+    # perf-baseline branch: nobody edits it, and its git history is the record.
     if: github.event_name == 'push'
     needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      actions: write
+      contents: write
     steps:
       - uses: actions/checkout@v7
       - run: corepack enable
@@ -70,18 +78,34 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn build
+      - name: Fetch the performance baseline
+        id: baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          json=$(gh api -H "Accept: application/vnd.github.raw" "repos/$GITHUB_REPOSITORY/contents/baseline.json?ref=perf-baseline" 2>/dev/null || true)
+          case "$json" in "{"*) ;; *) json="" ;; esac
+          echo "json=$json" >> "$GITHUB_OUTPUT"
       - run: yarn perf
         env:
           ORRERY_SKIP_BUILD: "1"
           ORRERY_PERF_MODE: ratchet
-          ORRERY_PERF_BASELINE_JSON: ${{ vars.PERF_BASELINE }}
-      - name: Store the tightened baseline
+          ORRERY_PERF_BASELINE_JSON: ${{ steps.baseline.outputs.json }}
+      - name: Store the tightened baseline on the perf-baseline branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh variable get PERF_BASELINE --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh variable set PERF_BASELINE --repo "$GITHUB_REPOSITORY" < test/perf/ratchet.json
-          else
-            gh variable set PERF_BASELINE --repo "$GITHUB_REPOSITORY" < test/perf/ratchet.json
-          fi
+          set -e
           { echo "## Performance ratchet"; cat test/perf/last.md; } >> "$GITHUB_STEP_SUMMARY"
+          dir=$(mktemp -d); cd "$dir"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q origin perf-baseline 2>/dev/null; then git checkout -q -b perf-baseline FETCH_HEAD; else git checkout -q --orphan perf-baseline; fi
+          cp "$GITHUB_WORKSPACE/test/perf/ratchet.json" baseline.json
+          printf '# Performance baseline\n\nWritten by the ratchet job of ci.yml on every push to main: every metric at its best ever (test/perf/README.md on main). Do not edit.\n' > README.md
+          git add -A
+          if git diff --cached --quiet; then echo "baseline unchanged"; exit 0; fi
+          git commit -q -m "ratchet: ${GITHUB_SHA::7}"
+          git push -q origin perf-baseline

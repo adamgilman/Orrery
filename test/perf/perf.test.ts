@@ -1,6 +1,6 @@
 /**
  * The performance ratchet (test/perf/README.md): the frozen benchmark model through every stage, measured, held
- * against a baseline that may only get better. The baseline is the repository variable PERF_BASELINE, measured
+ * against a baseline that may only get better. The baseline is baseline.json on the perf-baseline branch, measured
  * and tightened by CI on every push to main; nobody edits it. Deterministic metrics are exact; timings have slack.
  */
 import { spawnSync } from "node:child_process";
@@ -19,12 +19,12 @@ type Metric = { value: number; unit: "ms" | "bytes" | "count" };
 type Baseline = Record<string, Metric>;
 /** check: hold the line (a pull request, a push). ratchet: write the tightened baseline to ratchet.json for CI to store. */
 const MODE = process.env.ORRERY_PERF_MODE === "ratchet" ? "ratchet" : "check";
-/** The baseline as CI measured it: passed in by the workflow, or fetched from the repository variable for a local run. */
+/** The baseline as CI measured it: passed in by the workflow, or fetched from the perf-baseline branch for a local run. */
 function loadBaseline(): Baseline | undefined {
   const given = process.env.ORRERY_PERF_BASELINE_JSON;
-  if (given) return given.trim() ? JSON.parse(given) : undefined;
-  const r = spawnSync("gh", ["variable", "get", "PERF_BASELINE", "--repo", "adamgilman/Orrery"], { encoding: "utf8" });
-  return r.status === 0 && r.stdout.trim() ? JSON.parse(r.stdout) : undefined;
+  if (given !== undefined) return given.trim() ? JSON.parse(given) : undefined;
+  const r = spawnSync("gh", ["api", "-H", "Accept: application/vnd.github.raw", "repos/adamgilman/Orrery/contents/baseline.json?ref=perf-baseline"], { encoding: "utf8" });
+  return r.status === 0 && r.stdout.trim().startsWith("{") ? JSON.parse(r.stdout) : undefined;
 }
 // CI measures on one machine class, so it holds timings tighter than a laptop compared against CI's numbers must.
 const TIME_SLACK = process.env.CI ? 1.6 : 2;
@@ -91,7 +91,7 @@ describe("performance ratchet", () => {
       console.log(`ratchet: ${gains.length ? gains.join("; ") : "nothing tightened"}`);
       return;
     }
-    if (!baseline) { console.log("no baseline yet: CI sets PERF_BASELINE on the next push to main"); return; }
+    if (!baseline) { console.log("no baseline yet: CI writes the perf-baseline branch on the next push to main"); return; }
     expect(failures, "performance regression against the baseline CI measured").toEqual([]);
   });
 });
