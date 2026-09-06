@@ -66,8 +66,8 @@ interface Raw {
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
-  tour?: { seconds: number; views?: string[]; scenes?: { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
-  exports?: { id: string; view?: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
+  tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
+  exports?: { id: string; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
 }
 
 /* ---------- vocabulary ---------- */
@@ -257,21 +257,43 @@ export function validate(input: unknown): ValidationResult {
     return { id: sc.id, label: sc.label ?? sc.id, steps };
   });
 
+  /**
+   * Open and zoom (S17). `open` names closed groups of the view drawn open; a group inside another closed group needs
+   * that one open too, so what is open is exactly what is written. `zoom` names an entity not inside a closed group.
+   * Returns `open` in declaration order, the canonical form every layer and layout is keyed by.
+   */
+  const groupOrder = new Map(raw.groups.map((g, i) => [g.id, i] as const));
+  const checkOpen = (base: string, view: View | undefined, open: string[] | undefined, zoom: string | undefined): string[] | undefined => {
+    const collapse = new Set(view?.collapse ?? []);
+    const opened = new Set(open ?? []);
+    (open ?? []).forEach((id, k) => {
+      if (!groupIds.has(id)) return err(`${base}/open/${k}`, componentIds.has(id) ? `"${id}" is not a group` : `unknown group "${id}"`);
+      if (!collapse.has(id)) return err(`${base}/open/${k}`, `"${id}" is not closed in view "${view?.id ?? "?"}"; list it in the view's collapse`);
+      const above = ancestors(id).find((g) => collapse.has(g));
+      if (above !== undefined && !opened.has(above)) err(`${base}/open/${k}`, `"${id}" is inside "${above}", which is closed; open "${above}" too`);
+    });
+    if (zoom !== undefined) {
+      if (!isEntity(zoom)) err(`${base}/zoom`, `unknown entity "${zoom}"`);
+      else {
+        const inside = ancestors(zoom).find((g) => collapse.has(g) && !opened.has(g));
+        if (inside !== undefined) err(`${base}/zoom`, `"${zoom}" is inside "${inside}", which is closed here`);
+      }
+    }
+    return open ? [...open].sort((a, b) => (groupOrder.get(a) ?? 0) - (groupOrder.get(b) ?? 0)) : undefined;
+  };
+
   /* tour: a plain list of views, or scenes */
   let tour: Tour | undefined;
   if (raw.tour) {
     const t = raw.tour;
     if (!t.views && !t.scenes) err("/tour", "give views or scenes");
     t.views?.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
-    type RawScene = { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number };
+    type RawScene = { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number };
     const rawScenes: RawScene[] = t.scenes ?? (t.views ?? []).map((view) => ({ view }));
     const scenes: Scene[] = rawScenes.map((sc, k) => {
       const base = t.scenes ? `/tour/scenes/${k}` : `/tour/views/${k}`;
       if (t.scenes && !viewIds.has(sc.view)) err(`${base}/view`, `unknown view "${sc.view}"`);
-      if (sc.focus !== undefined) {
-        if (componentIds.has(sc.focus)) err(`${base}/focus`, `"${sc.focus}" is not a group`);
-        else if (!groupIds.has(sc.focus)) err(`${base}/focus`, `unknown group "${sc.focus}"`);
-      }
+      const open = checkOpen(base, views.find((v) => v.id === sc.view), sc.open, sc.zoom);
       const scenario = sc.scenario !== undefined ? scenarios.find((x) => x.id === sc.scenario) : undefined;
       if (sc.scenario !== undefined && !scenario) err(`${base}/scenario`, `unknown scenario "${sc.scenario}"`);
       if (sc.step !== undefined && scenario && (sc.step < 1 || sc.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
@@ -284,7 +306,7 @@ export function validate(input: unknown): ValidationResult {
         Object.assign(reasons, reasonsOf(entry));
         for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
       }
-      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...opt("focus", sc.focus), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...opt("note", sc.note) };
+      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...(open ? { open } : {}), ...opt("zoom", sc.zoom), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...opt("note", sc.note) };
     });
     tour = { seconds: t.seconds, scenes };
   }
@@ -300,13 +322,10 @@ export function validate(input: unknown): ValidationResult {
     if (!view) err(`${base}/view`, `unknown view "${viewId}"`);
     if (x.tour) {
       if (!tour) err(`${base}/tour`, "the model has no tour");
-      for (const f of ["view", "focus", "scenario", "step", "set", "play", "seconds"] as const) if (x[f] !== undefined) err(`${base}/${f}`, "a tour export takes no other field");
+      for (const f of ["view", "open", "zoom", "scenario", "step", "set", "play", "seconds"] as const) if (x[f] !== undefined) err(`${base}/${f}`, "a tour export takes no other field");
       return { id: x.id, view: viewId, tour: true };
     }
-    if (x.focus !== undefined) {
-      if (!groupIds.has(x.focus)) err(`${base}/focus`, componentIds.has(x.focus) ? `"${x.focus}" is not a group` : `unknown group "${x.focus}"`);
-      else if (view && !(view.collapse ?? []).includes(x.focus)) err(`${base}/focus`, `"${x.focus}" is not closed in view "${viewId}"; list it in the view's collapse`);
-    }
+    const open = checkOpen(base, view, x.open, x.zoom);
     const scenario = x.scenario !== undefined ? scenarios.find((sc) => sc.id === x.scenario) : undefined;
     if (x.scenario !== undefined && !scenario) err(`${base}/scenario`, `unknown scenario "${x.scenario}"`);
     if (x.step !== undefined && scenario && (x.step < 1 || x.step > scenario.steps.length)) err(`${base}/step`, `step must be between 1 and ${scenario.steps.length}`);
@@ -322,10 +341,31 @@ export function validate(input: unknown): ValidationResult {
       Object.assign(reasons, reasonsOf(entry));
       for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
     }
-    return { id: x.id, view: viewId, ...opt("focus", x.focus), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
+    return { id: x.id, view: viewId, ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
   });
+
+  // W2: the interactive file carries one layer per way the closed groups of a view can be open; warn when that is many.
+  views.forEach((v, i) => { const n = configurationsOf(raw.groups, v.collapse ?? []).length; if (n > 32) warnings.push(new ValidationWarning(`/views/${i}/collapse`, `${n} combinations of open groups; the interactive file will carry a layer for each`)); });
 
   if (errors.length) return { ok: false, errors: dedupe(errors) };
   const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
+}
+
+/**
+ * Every way the closed groups of a view can be open, each closed under its closed ancestors, in declaration order
+ * (R11). The interactive file carries a layer per configuration.
+ */
+export function configurationsOf(groups: { id: string; parent?: string | undefined }[], collapse: readonly string[]): string[][] {
+  const order = new Map(groups.map((g, i) => [g.id, i] as const));
+  const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
+  const closed = new Set(collapse);
+  const closedParent = (id: string): string | undefined => { for (let cur = parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; };
+  const childrenOf = (id: string | undefined) => collapse.filter((g) => closedParent(g) === id);
+  /** The open sets for a forest of closed groups: each root closed, or open with any combination of its children's sets. */
+  const combos = (roots: string[]): string[][] => roots.reduce<string[][]>((acc, g) => {
+    const own: string[][] = [[], ...combos(childrenOf(g)).map((c) => [g, ...c])];
+    return acc.flatMap((a) => own.map((o) => [...a, ...o]));
+  }, [[]]);
+  return combos(childrenOf(undefined)).map((c) => c.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)));
 }

@@ -51,7 +51,7 @@ Three tests every release must pass:
   legend in the author's words; ghosts for one-ended connections in scoped views.
 - **Runtime** (inside the SVG): an engine with no user interface of its own. Clicks and the keyboard work in the
   standalone file; a page mounts the engine and builds its own controls from the interface it exposes (views,
-  scenarios, states, focus, play, change events with a snapshot).
+  scenarios, states, open and zoom as separate actions, play, change events with a snapshot).
 - **What-ifs without a scenario**: `render --set <state>=<ids>`.
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
   from the frame tooling (M4).
@@ -95,7 +95,7 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 | `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
 | `@orrery/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
 | `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
-| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--focus`), `export`, `embed` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
+| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`), `export`, `embed` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
 Layout boundary, so we can swap engines or write our own:
 

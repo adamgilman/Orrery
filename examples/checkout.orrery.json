@@ -202,26 +202,58 @@
       },
       {
         "view": "overview",
-        "focus": "sessions",
-        "note": "Inside the session cache: two nodes, still closed."
+        "open": [
+          "sessions"
+        ],
+        "note": "Open the session cache. The picture reflows; you still see everything."
       },
       {
         "view": "overview",
-        "focus": "cache-a",
-        "note": "Inside node A: a Redis process and its append-only file."
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "note": "Open both nodes too. Still the whole system."
       },
       {
         "view": "overview",
-        "focus": "cache-a",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "zoom": "cache-a",
+        "note": "Zoom in on node A: a Redis process and its append-only file."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "zoom": "cache-a",
         "scenario": "redis-fails",
         "step": 1,
         "note": "Redis dies. The step marks the node failed and the cluster and API degraded."
       },
       {
         "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
         "scenario": "redis-fails",
         "step": 1,
-        "note": "Back out: the closed boxes carry the state."
+        "note": "Zoom out. Everything is still open; the states are where they were put."
+      },
+      {
+        "view": "overview",
+        "scenario": "redis-fails",
+        "step": 1,
+        "note": "Close it all. The closed boxes carry the state."
       }
     ]
   },
@@ -240,11 +272,17 @@
     },
     {
       "id": "inside-the-cache",
-      "focus": "sessions"
+      "open": [
+        "sessions"
+      ]
     },
     {
       "id": "inside-node-a",
-      "focus": "cache-a"
+      "open": [
+        "sessions",
+        "cache-a"
+      ],
+      "zoom": "cache-a"
     },
     {
       "id": "drill-down",

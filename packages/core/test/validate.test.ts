@@ -132,7 +132,9 @@ describe("validate: exports (S16)", () => {
       { id: "what-if", view: "overview", set: { failed: ["fraud"], degraded: ["api"] }, reasons: { api: "no fraud scoring" } },
     ]);
     expect(model("nested-drill").exports.map((x) => x.id)).toEqual(["overview", "inside-outer", "inside-inner", "story"]);
+    expect(model("nested-drill").exports[2]).toEqual({ id: "inside-inner", view: "overview", open: ["outer", "inner"], zoom: "inner" });
     expect(model("nested-drill").exports[3]).toEqual({ id: "story", view: "overview", tour: true });
+    expect(model("nested-drill").tour!.scenes[2]).toMatchObject({ open: ["outer", "inner"], zoom: "inner" });
     expect(model("minimal").exports).toEqual([]);
   });
 });

@@ -17,7 +17,7 @@ const stages = {
   "5-views": { title: "Checkout: views", direction, groups, components, connections, scenarios, views: closedViews,
     exports: [{ id: "5-views-overview", view: "overview" }, { id: "5-views-data", view: "data" }] },
   "6-drill-down": { title: "Checkout: drill down", direction, groups, components, connections, scenarios, views, tour,
-    exports: [{ id: "6-drill-down" }, { id: "6-drill-down-inside", focus: "cache-a" }, { id: "6-drill-down-tour", tour: true }] },
+    exports: [{ id: "6-drill-down" }, { id: "6-drill-down-inside", open: ["sessions", "cache-a"], zoom: "cache-a" }, { id: "6-drill-down-tour", tour: true }] },
   // The same system in one company's words. The session cache is a nice-to-have for this team: drained for
   // maintenance, checkout runs on for guests, a brownout. Nothing in the tool knows these names.
   "7-vocabulary": {

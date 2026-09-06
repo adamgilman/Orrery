@@ -28,11 +28,16 @@
       },
       {
         "view": "v",
-        "focus": "b"
+        "open": [
+          "b"
+        ]
       },
       {
         "view": "v",
-        "focus": "zzz"
+        "open": [
+          "zzz"
+        ],
+        "zoom": "zzz"
       }
     ]
   }

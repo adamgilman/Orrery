@@ -6,6 +6,7 @@ import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
 import type { Component, Connection, Export, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
+import { configurationsOf } from "./validate.js";
 import { scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -250,7 +251,7 @@ export function renderView(model: Model, layout: LayoutResult): { picture: strin
 }
 const withLegend = (v: { picture: string; legend: string }) => (v.legend ? `${v.picture}\n${v.legend}` : v.picture);
 
-interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string; open?: readonly string[] }
+interface ViewLayer { view: View; title: string; width: number; height: number; markup: string; css?: string; open?: readonly string[]; layout?: LayoutResult }
 
 /**
  * A view that plays a scenario (R10): the base model and every step, each a complete render on the same layout,
@@ -290,25 +291,21 @@ function cameraFor(box: { x: number; y: number; width: number; height: number },
 }
 
 /**
- * A tour (R12). When every scene shares one view it is one drawing that moves: each scene opens some closed groups
- * (the focus and the groups above it), every distinct set of open groups has its own layout, and between layouts
+ * A tour (R12). When every scene shares one view it is one drawing that moves: each scene says which closed groups
+ * are open and what the camera closes on, every distinct set of open groups has its own layout, and between layouts
  * the entities that exist in both slide to their new places while frames resize, edges are swapped for the new
- * layout's, entities that appear fade in once the camera has settled, and the camera closes on the focus. States
- * crossfade. The legend and the caption are a fixed strip below the stage. Scenes across different views fall back
- * to a crossfade between whole views.
+ * layout's, entities that appear fade in once the camera has settled, and the camera moves to the scene's zoom.
+ * States crossfade. The legend and the caption are a fixed strip below the stage. Scenes across different views
+ * fall back to a crossfade between whole views.
  */
 async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Record<string, string[]> | undefined): Promise<ViewLayer> {
-  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
   const scenes = tour.scenes.map((scene) => {
     const view = selectView(model, scene.view);
     const merged = { ...(set ?? {}), ...(scene.set ?? {}) };
     const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}), ...(scene.reasons ? { reasons: scene.reasons } : {}) });
     const title = view.title ?? model.title ?? view.id;
     const stateKey = JSON.stringify([scene.scenario ?? null, scene.step ?? null, merged]);
-    // The groups this scene opens: the focus and every closed group above it, outermost first.
-    const collapse = new Set(view.collapse ?? []);
-    const open: string[] = [];
-    for (let cur = scene.focus; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
+    const open = scene.open ?? [];
     return { scene, view, declared: d.model, title, caption: scene.note ?? (d.note !== undefined ? `${title}: ${d.note}` : title), stateKey, open, configKey: open.join(" ") };
   });
   const n = scenes.length, total = scenes.reduce((a, s) => a + s.scene.seconds, 0);
@@ -353,9 +350,9 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     const models = scenes.map((s) => scopeModel(stopFlows(s.declared), anchor, s.open));
     const layoutAt = (k: number) => layouts.get(scenes[k]!.configKey)!;
     const legends = models.map((m, k) => legendMarkup(m, layoutAt(k).height + 8));
-    // The stage is the size of the whole-system picture (the scenes without a focus); a focused scene fits its group
-    // into it, and an unfocused scene fits its whole layout, so deeper layouts never enlarge the image.
-    const wide = scenes.filter((s) => s.scene.focus === undefined).map((_, i, all) => layoutAt(scenes.indexOf(all[i]!)));
+    // The stage is the size of the whole pictures (the scenes without a zoom); a zoomed scene fits its target into
+    // it, and an unzoomed scene fits its whole layout, so larger layouts never enlarge the image.
+    const wide = scenes.filter((s) => s.scene.zoom === undefined).map((_, i, all) => layoutAt(scenes.indexOf(all[i]!)));
     const stageOf = wide.length ? wide : [layoutAt(0)];
     const stageW = Math.max(...stageOf.map((l) => l.width)), stageH = Math.max(...stageOf.map((l) => l.height));
     const width = Math.max(stageW, ...legends.map((l) => l.width));
@@ -444,14 +441,14 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       css.push(`@keyframes orrery-caption-${k}{${track((j) => j === k, opacity, staged)}}`);
       return `<text class="step-note" x="20" y="${num(height - 12)}" data-t0="${k === 0 ? 1 : 0}" style="${anim(`orrery-caption-${k}`)}">${esc(sc.caption)}</text>`;
     });
-    // The camera closes on the focus in its scene's layout, or fits the whole layout when there is none.
-    const cameraBox = (k: number) => { const g = scenes[k]!.scene.focus; const l = layoutAt(k); return (g ? l.groups[g] : undefined) ?? { x: 0, y: 0, width: l.width, height: l.height }; };
-    const cameraAt = (k: number) => cameraFor(cameraBox(k), stage, scenes[k]!.scene.focus ? 24 : 0);
+    // The camera closes on the scene's zoom in its layout, or fits the whole layout when there is none.
+    const cameraBox = (k: number) => { const z = scenes[k]!.scene.zoom; const l = layoutAt(k); return (z ? l.groups[z] ?? l.nodes[z] : undefined) ?? { x: 0, y: 0, width: l.width, height: l.height }; };
+    const cameraAt = (k: number) => cameraFor(cameraBox(k), stage, scenes[k]!.scene.zoom ? 24 : 0);
     css.push(`@keyframes orrery-camera{${track(cameraAt, (v) => `transform:${v}`, move, ease)}}`);
     parts.push(
       `<clipPath id="orrery-stage-${escAttr(anchor.id)}"><rect width="${num(stage.width)}" height="${num(stage.height)}"/></clipPath>`,
       `<g class="stage" clip-path="url(#orrery-stage-${escAttr(anchor.id)})">`,
-      `<g class="camera" data-stage="${num(stage.width)} ${num(stage.height)}" transform="${cameraFor(cameraBox(0), stage, scenes[0]!.scene.focus ? 24 : 0, "svg")}" style="${anim("orrery-camera")}">`,
+      `<g class="camera" data-stage="${num(stage.width)} ${num(stage.height)}" transform="${cameraFor(cameraBox(0), stage, scenes[0]!.scene.zoom ? 24 : 0, "svg")}" style="${anim("orrery-camera")}">`,
       `<g class="groups">\n${groupsMarkup.join("\n")}\n</g>`,
       ...edgesMarkupAll,
       `<g class="nodes">\n${nodesMarkup.join("\n")}\n</g>`,
@@ -496,9 +493,9 @@ async function layerFor(declared: Model, view: View, engine: LayoutEngine, play:
   const base = scopeModel(stopFlows(declared), view, open);
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
-  if (play) return { view, title, open, ...playingLayer(declared, view, play, layout) };
+  if (play) return { view, title, open, layout, ...playingLayer(declared, view, play, layout) };
   const v = renderView(base, layout);
-  return { view, title, open, width: v.width, height: v.height, markup: withLegend(v) };
+  return { view, title, open, layout, width: v.width, height: v.height, markup: withLegend(v) };
 }
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. `data-open` lists the closed groups this layer opens. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>
@@ -506,11 +503,12 @@ const viewLayer = (l: ViewLayer, visible: boolean) =>
 /** Only the CDATA terminator can break out of a CDATA section; split it across two sections. Browsers merge them. */
 const cdata = (s: string) => `<![CDATA[${s.replace(/]]>/g, "]]]]><![CDATA[>")}]]>`;
 
-function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[]): string {
+function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[], viewBox?: { x: number; y: number; width: number; height: number }): string {
   const first = layers[0]!;
+  const vb = viewBox ?? { x: 0, y: 0, width: first.width, height: first.height };
   const m = (id: string, reverse: boolean) => `<marker id="${id}" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${reverse ? 1 : ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="${reverse ? `M${ARROW_LENGTH} 0L0 ${ARROW_LENGTH / 2}L${ARROW_LENGTH} ${ARROW_LENGTH}z` : `M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z`}" fill="#94a3b8"/></marker>`;
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(first.width)} ${num(first.height)}" width="${num(first.width)}" height="${num(first.height)}" data-orrery="1">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${num(vb.x)} ${num(vb.y)} ${num(vb.width)} ${num(vb.height)}" width="${num(vb.width)}" height="${num(vb.height)}" data-orrery="1">`,
     (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths.
     `<defs>${m("arrow", false)}${m("arrow-start", true)}</defs>`,
@@ -539,17 +537,13 @@ export interface RenderOptions {
   play?: { scenario: string; seconds?: number };
   /** Render a tour of views instead of one view: `true` for the model's own tour, or an explicit list. */
   tour?: true | { views: string[]; seconds?: number };
-  /** A closed group to draw open, with the closed groups above it: a still of the inside (R11). */
-  focus?: string;
+  /** Closed groups drawn open, each with its closed ancestors listed too: a still of the inside (R11). */
+  open?: string[];
+  /** The entity the picture is cropped to, with a little air around it. */
+  zoom?: string;
 }
-/** The groups a focus opens in a view: the focus and every closed group above it, outermost first. */
-export function openFor(model: Model, view: View, focus: string | undefined): string[] {
-  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
-  const collapse = new Set(view.collapse ?? []);
-  const open: string[] = [];
-  for (let cur = focus; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
-  return open;
-}
+/** `open` in declaration order: the canonical form layers and layouts are keyed by. */
+export const openKey = (model: Model, open: readonly string[]): string[] => { const order = new Map(model.groups.map((g, i) => [g.id, i] as const)); return [...open].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)); };
 const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
   options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
 
@@ -569,15 +563,23 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   const view = selectView(model, options.view);
   const play = playOf(view, options);
   if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
-  if (options.focus !== undefined && !(view.collapse ?? []).includes(options.focus)) throw new ModelError(`"${options.focus}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
+  const open = openKey(model, options.open ?? []);
+  for (const g of open) if (!(view.collapse ?? []).includes(g)) throw new ModelError(`"${g}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
   const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}) });
   let title = view.title ?? model.title;
   if (options.scenario !== undefined) {
     const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
     title = `${model.title ?? "Model"} - ${label} (${d.step}/${d.steps})${d.note !== undefined ? `: ${d.note}` : ""}`;
   }
-  const layer = await layerFor(d.model, view, engine, play, title ?? view.id, undefined, openFor(model, view, options.focus));
-  return wrapDocument(model, title, [layer], []);
+  const layer = await layerFor(d.model, view, engine, play, title ?? view.id, undefined, open);
+  let viewBox: { x: number; y: number; width: number; height: number } | undefined;
+  if (options.zoom !== undefined) {
+    const b = layer.layout!.groups[options.zoom] ?? layer.layout!.nodes[options.zoom];
+    if (!b) throw new ModelError(`"${options.zoom}" is not drawn in view "${view.id}" with ${open.length ? `${open.join(", ")} open` : "everything closed"}`);
+    const pad = 24;
+    viewBox = { x: Math.max(0, b.x - pad), y: Math.max(0, b.y - pad), width: Math.min(layer.width, b.width + 2 * pad), height: Math.min(layer.height, b.height + 2 * pad) };
+  }
+  return wrapDocument(model, title, [layer], [], viewBox);
 }
 
 /** Render one of the model's `exports` (MODEL.md 4.9): an enclosed file, CSS animation only. */
@@ -585,7 +587,8 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   if (x.tour) return render(model, engine, { tour: true });
   return render(model, engine, {
     view: x.view,
-    ...(x.focus !== undefined ? { focus: x.focus } : {}),
+    ...(x.open ? { open: x.open } : {}),
+    ...(x.zoom !== undefined ? { zoom: x.zoom } : {}),
     ...(x.scenario !== undefined ? { scenario: x.scenario } : {}),
     ...(x.step !== undefined ? { step: x.step } : {}),
     ...(x.set ? { set: x.set } : {}),
@@ -599,8 +602,8 @@ export interface DocumentOptions { runtime: string; view?: string; set?: Record<
 /**
  * The shippable file: every view pre-laid-out and embedded (first visible), the normalised model as JSON, and the
  * runtime script. Inside <img> it is the animated first view; opened directly, the runtime makes it interactive. A
- * view with closed groups also carries one layer per group a reader can open (that group and the closed groups above
- * it), so drilling down is a morph between layouts the runtime never has to compute.
+ * view with closed groups also carries one layer per way they can be open, so opening and closing is a morph between
+ * layouts the runtime never has to compute.
  */
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
   // The declared model with the what-if applied is what the runtime starts from.
@@ -611,7 +614,7 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
     const play = view === first ? playOf(view, options) : view.play;
     if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
     layers.push(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id));
-    for (const g of view.collapse ?? []) layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, openFor(model, view, g)));
+    for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(declared).replace(/]]>/g, "]]\\u003e");

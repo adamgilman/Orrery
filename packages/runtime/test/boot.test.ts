@@ -40,7 +40,7 @@ describe("mount: the engine's interface", () => {
     expect(rt.states.map((s) => s.name)).toEqual(["on", "degraded", "failed", "off"]);
     expect(rt.states[2]).toEqual({ name: "failed", description: "Broken" });
     expect(rt.scenarios).toEqual([]);
-    expect(rt.groups()).toEqual([{ id: "region", label: "us-east-1", closed: false }, { id: "app", label: "Application", closed: false }, { id: "data", label: "Data", closed: false }]);
+    expect(rt.groups()).toEqual([{ id: "region", label: "us-east-1", closable: false, open: false }, { id: "app", label: "Application", closable: false, open: false }, { id: "data", label: "Data", closable: false, open: false }]);
     expect(root.querySelector("foreignObject")).toBeNull();
     expect(root.getAttribute("width")).toBe("100%");
   });
@@ -145,7 +145,7 @@ describe("mount: the engine's interface", () => {
     rt.reset();
     vi.runAllTimers();
     expect(state(root, "orders")).toBe("on");
-    expect(rt.snapshot()).toMatchObject({ scenario: null, selected: null, focus: null, open: [] });
+    expect(rt.snapshot()).toMatchObject({ scenario: null, selected: null, zoom: null, open: [] });
   });
 
   it("destroy stops listening and leaves the diagram as it is", async () => {
@@ -221,7 +221,10 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
     expect(rt.snapshot().scenario!.step).toBe(2);
     key("[");
     expect(rt.snapshot().scenario!.step).toBe(1);
-    key("Escape");
+    key("Escape"); // zoomed: the first Escape zooms out
+    vi.runAllTimers();
+    expect(rt.snapshot()).toMatchObject({ zoom: null, selected: "fraud" });
+    key("Escape"); // nothing to undo: the second clears the selection and refits
     vi.runAllTimers();
     expect(root.querySelector(".is-selected")).toBeNull();
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
@@ -270,58 +273,83 @@ describe("playing", () => {
   });
 });
 
-describe("drill-down", () => {
+describe("open and zoom", () => {
   let rt: Orrery;
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
-  it("clicking a closed group opens it: a morph to the layer with that group open, then the camera closes on it; Escape returns", async () => {
+  it("clicking a closed box opens it and the whole picture stays in view; Enter zooms; Escape zooms out, then closes", async () => {
     const root = await doc("drill-down");
     rt = mount(root, SIZE);
     rt.stop();
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
     expect(shownLayer(root).getAttribute("data-open")).toBe("");
     expect(vis(root, '[data-node="ledger"]')).toBeNull();
-    expect(rt.groups()).toEqual([{ id: "storefront", label: "Storefront", closed: false }, { id: "payments", label: "Payments", closed: true }, { id: "identity", label: "Identity", closed: true }]);
+    expect(rt.groups()).toEqual([{ id: "storefront", label: "Storefront", closable: false, open: false }, { id: "payments", label: "Payments", closable: true, open: false }, { id: "identity", label: "Identity", closable: true, open: false }]);
     click(vis(root, '[data-group="payments"]'));
     vi.advanceTimersByTime(100);
     expect(shownLayer(root).getAttribute("data-open")).toBe(""); // still morphing on the old layer
     vi.advanceTimersByTime(800);
     expect(shownLayer(root).getAttribute("data-open")).toBe("payments");
-    expect(rt.snapshot()).toMatchObject({ open: ["payments"], focus: "payments" });
+    expect(rt.snapshot()).toMatchObject({ open: ["payments"], zoom: null }); // open is not zoom
     expect(vis(root, '[data-node="ledger"]')).not.toBeNull();
     expect(vis(root, '[data-group="payments"]').hasAttribute("data-collapsed")).toBe(false);
     expect(vis(root, '[data-node="login"]')).toBeNull(); // identity stays closed
+    expect(state(root, "payments")).toBe("on"); // opening is navigation, not a state change
+    rt.select("payments");
+    key("Enter");
+    vi.advanceTimersByTime(400);
+    expect(rt.snapshot().zoom).toBe("payments");
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
-    expect(state(root, "payments")).toBe("on"); // focusing is navigation, not a state change
-    key("Escape");
+    key("Escape"); // zoom out
+    vi.advanceTimersByTime(400);
+    expect(rt.snapshot()).toMatchObject({ open: ["payments"], zoom: null });
+    key("Escape"); // close
     vi.advanceTimersByTime(900);
     expect(shownLayer(root).getAttribute("data-open")).toBe("");
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
     expect(vis(root, '[data-node="ledger"]')).toBeNull();
   });
-  it("focus and back from the interface: an inner closed group opens inside an open one, one level back at a time", async () => {
+  it("open sets exactly which groups are open, in any order, and refuses a set whose closed parent is not in it", async () => {
     const root = await doc("nested-drill");
     rt = mount(root, SIZE);
-    rt.focus("outer");
-    vi.advanceTimersByTime(900);
-    expect(shownLayer(root).getAttribute("data-open")).toBe("outer");
-    expect(rt.groups()).toEqual([{ id: "outer", label: "Outer", closed: false }, { id: "inner", label: "Inner", closed: true }]);
-    rt.focus("inner");
+    expect(rt.open(["inner"])).toBe(false); // outer is closed around it
+    expect(rt.open(["app"])).toBe(false); // not a group
+    expect(rt.open(["inner", "outer"])).toBe(true);
     vi.advanceTimersByTime(900);
     expect(shownLayer(root).getAttribute("data-open")).toBe("outer inner");
     expect(rt.snapshot().open).toEqual(["outer", "inner"]);
-    expect(rt.back()).toBe(true);
+    expect(rt.groups()).toEqual([{ id: "outer", label: "Outer", closable: true, open: true }, { id: "inner", label: "Inner", closable: true, open: true }]);
+    expect(rt.open(["outer"])).toBe(true);
     vi.advanceTimersByTime(900);
     expect(shownLayer(root).getAttribute("data-open")).toBe("outer");
+    expect(vis(root, '[data-group="inner"]').hasAttribute("data-collapsed")).toBe(true);
     expect(rt.back()).toBe(true);
     vi.advanceTimersByTime(900);
     expect(shownLayer(root).getAttribute("data-open")).toBe("");
     expect(rt.back()).toBe(false);
   });
-  it("a state set while drilled in shows in every layer", async () => {
+  it("zoom is its own action: a group can be zoomed while closed, and the zoom holds through opening if its target is still drawn", async () => {
+    const root = await doc("nested-drill");
+    rt = mount(root, SIZE);
+    const fitT = root.querySelector(".scene")!.getAttribute("transform");
+    rt.zoom("outer");
+    vi.advanceTimersByTime(400);
+    expect(rt.snapshot()).toMatchObject({ open: [], zoom: "outer" });
+    const zoomedT = root.querySelector(".scene")!.getAttribute("transform");
+    expect(zoomedT).not.toBe(fitT);
+    rt.open(["outer"]);
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot()).toMatchObject({ open: ["outer"], zoom: "outer" });
+    expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
+    rt.zoom(null);
+    vi.advanceTimersByTime(400);
+    expect(rt.snapshot().zoom).toBeNull();
+    expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(zoomedT);
+  });
+  it("a state set while a group is open shows in every layer", async () => {
     const root = await doc("drill-down");
     rt = mount(root, SIZE);
-    rt.focus("payments");
+    rt.open(["payments"]);
     vi.advanceTimersByTime(900);
     click(vis(root, '[data-node="ledger"]'));
     expect(state(root, "ledger")).toBe("degraded");
@@ -335,14 +363,15 @@ describe("the tour", () => {
   let rt: Orrery;
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
-  it("plays on mount: opens the focus, applies the scenario moment, carries the caption; stops on the first interaction", async () => {
+  it("plays on mount: opens and zooms per scene, applies the scenario moment, carries the caption; stops on the first interaction", async () => {
     const root = await doc("drill-down");
     rt = mount(root, SIZE);
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
-    expect(rt.snapshot()).toMatchObject({ playing: true, focus: null });
+    expect(rt.snapshot()).toMatchObject({ playing: true, open: [], zoom: null });
     expect(vis(root, '[data-node="ledger"]')).toBeNull();
     vi.advanceTimersByTime(4000 + 800);
     expect(vis(root, '[data-node="ledger"]')).not.toBeNull();
+    expect(rt.snapshot()).toMatchObject({ open: ["payments"], zoom: "payments" });
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
     vi.advanceTimersByTime(4000);
     expect(state(root, "ledger")).toBe("failed");

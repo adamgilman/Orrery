@@ -546,7 +546,7 @@
               "type": "string",
               "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
             },
-            "description": "Group ids drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark, nothing inside, connections re-attached to it. Opening it (a tour scene's 'focus', or a click in the interactive file) lays the view out again with the group open and moves the picture there. Closed groups nest to any depth."
+            "description": "Group ids drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark, nothing inside, connections re-attached to it. Opening it (a scene's or export's 'open', a click in the interactive file, or a page's call) lays the view out again with the group open and moves the picture there. Closed groups nest to any depth; opening an inner one means opening the ones above it too."
           }
         }
       }
@@ -771,9 +771,17 @@
                 "exclusiveMinimum": 0,
                 "description": "How long this scene stays. Defaults to the tour's seconds."
               },
-              "focus": {
+              "open": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true,
+                "description": "Closed groups drawn open, by id. Each must be in the view's 'collapse', and a group inside another closed group needs that one listed too: what is open is exactly what is written. Omit for everything closed."
+              },
+              "zoom": {
                 "type": "string",
-                "description": "Group id to open and close the camera on in this scene. The groups above it open too. Must be a group; leave out for the whole view."
+                "description": "The entity the camera closes on: a component, an open group's frame or a closed group's box, as long as it is not inside a closed group. Omit for the whole picture. Opening and zooming are separate: a scene can open two groups and stay zoomed out, or zoom in on one of them."
               }
             }
           }
@@ -799,10 +807,6 @@
           "view": {
             "type": "string",
             "description": "View id to draw. Defaults to the first view."
-          },
-          "focus": {
-            "type": "string",
-            "description": "Group id to draw open, with the closed groups above it: a still of the inside. Must be in the view's 'collapse'."
           },
           "scenario": {
             "type": "string",
@@ -862,6 +866,18 @@
           "tour": {
             "type": "boolean",
             "description": "true: the model's tour as one drawing that moves. Exclusive with every other field but 'id'."
+          },
+          "open": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "description": "Closed groups drawn open in this picture, by id: a still of the inside. Each must be in the view's 'collapse', and a group inside another closed group needs that one listed too."
+          },
+          "zoom": {
+            "type": "string",
+            "description": "The entity the picture is cropped to, with a little air around it: a component or a group not inside a closed group. Omit for the whole picture."
           }
         }
       }

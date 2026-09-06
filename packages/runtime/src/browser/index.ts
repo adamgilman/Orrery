@@ -19,9 +19,10 @@ export interface MountOptions { size?: Size }
 /** What the diagram shows right now. Emitted after every change; enough to build any control from. */
 export interface Snapshot {
   view: string;
-  /** Closed groups the reader has opened, outermost first. */
+  /** Closed groups drawn open, in declaration order. */
   open: string[];
-  focus: string | null;
+  /** What the camera is closed on, or null for the whole picture. */
+  zoom: string | null;
   scenario: { id: string; step: number; steps: number; note?: string } | null;
   /** Every entity, as drawn. */
   states: Record<string, { state: string; reason?: string }>;
@@ -32,20 +33,26 @@ export interface Snapshot {
 /**
  * The engine's interface: what a page builds its controls from and calls. The engine has no user interface of its
  * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to step a state,
- * click a closed group to drill in, Escape back, arrows select, Enter zooms, f steps, s cycles scenarios, [ and ]
- * step one, digits switch views (MODEL.md R11, the spec
+ * click a closed box to open it, double-click or Enter to zoom, Escape to zoom out then close, arrows select, f
+ * steps, s cycles scenarios, [ and ] step one, digits switch views (MODEL.md R11, the spec
  * docs/superpowers/specs/2026-09-05-two-paths-design.md).
  */
 export interface Orrery {
   readonly views: { id: string; title: string }[];
   readonly scenarios: { id: string; label: string; steps: number }[];
   readonly states: { name: string; description?: string }[];
-  /** Groups in the current view; `closed` says whether `focus` can open it. */
-  groups(): { id: string; label: string; closed: boolean }[];
+  /** Groups drawn in the current layout: `closable` ones can be opened and closed; `open` says which are. */
+  groups(): { id: string; label: string; closable: boolean; open: boolean }[];
   showView(id: string): void;
-  /** Open a closed group (and the closed groups above it) and close the camera on it; `null` closes everything. */
-  focus(groupId: string | null): void;
-  /** One level back out. False when already at the top. */
+  /**
+   * Set exactly which closed groups are open (a group inside another closed group needs that one listed too; any
+   * other set is refused and returns false). The picture moves to that layout; the camera keeps its zoom if the
+   * target is still drawn, else fits. Opening and zooming are separate actions.
+   */
+  open(groupIds: readonly string[]): boolean;
+  /** Close the camera on an entity drawn in the current layout, or `null` to fit the whole picture. */
+  zoom(id: string | null): void;
+  /** One step back: zoomed → fit; else close the innermost open group; false when there is nothing to undo. */
   back(): boolean;
   setScenario(id: string | null, step?: number): void;
   next(): void;
@@ -81,12 +88,16 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const layers = new Map([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => [layerKey(g.getAttribute("data-view")!, g.getAttribute("data-open") ?? ""), g]));
   const viewIds = [...new Set([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => g.getAttribute("data-view")!))];
   const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
-  /** The groups a focus opens in a view: the focus and every closed group above it, outermost first. */
-  const openFor = (viewId: string, focus: string | null): string[] => {
-    const collapse = new Set(model.views.find((v) => v.id === viewId)?.collapse ?? []);
-    const open: string[] = [];
-    for (let cur: string | undefined = focus ?? undefined; cur !== undefined; cur = parentOf.get(cur)) if (collapse.has(cur)) open.unshift(cur);
-    return open;
+  const groupOrder = new Map(model.groups.map((g, i) => [g.id, i] as const));
+  const collapseOf = (viewId: string) => model.views.find((v) => v.id === viewId)?.collapse ?? [];
+  /** A valid open set for a view, in declaration order, or null: every id closable, and its closed ancestors open too. */
+  const canonical = (viewId: string, ids: readonly string[]): string[] | null => {
+    const closed = new Set(collapseOf(viewId)), set = new Set(ids);
+    for (const id of ids) {
+      if (!closed.has(id)) return null;
+      for (let cur = parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur) && !set.has(cur)) return null;
+    }
+    return [...set].sort((a, b) => (groupOrder.get(a) ?? 0) - (groupOrder.get(b) ?? 0));
   };
   // The space the diagram has: the option, else the element's own box (an embed on a page), else the window.
   const screen = (): Size => { if (opts.size) return opts.size; const r = root.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { width: r.width, height: r.height } : { width: window.innerWidth, height: window.innerHeight }; };
@@ -105,8 +116,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   let sceneTimer: ReturnType<typeof setTimeout> | undefined;
   let sceneNote: string | undefined;
   let playing = false;
-  let focusId: string | null = null;
-  const history: string[] = [];
+  let openSet: string[] = [];
+  let zoomId: string | null = null;
   const listeners = new Set<(s: Snapshot) => void>();
 
   // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
@@ -135,7 +146,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     const sc = session.scenario;
     const note = sceneNote ?? session.note();
     return {
-      view: activeId(), open: openFor(activeId(), focusId), focus: focusId,
+      view: activeId(), open: [...openSet], zoom: zoomId,
       scenario: sc ? { id: sc.id, step: sc.step, steps: session.stepCount(), ...(note ? { note } : {}) } : null,
       states, selected: selected?.id ?? null, playing,
     };
@@ -189,8 +200,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     };
     step();
   };
-  const fit = (animate: boolean) => { zoomed = false; tween(fitView(layerSize(active()), screen(), frame), animate); };
-  const zoomTo = (id: string, type: EntityType) => { const el = elOf(id, type); if (el) { zoomed = true; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), true); } };
+  const fit = (animate: boolean) => { zoomed = false; zoomId = null; tween(fitView(layerSize(active()), screen(), frame), animate); };
+  const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomed = true; zoomId = id; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), animate); return true; };
 
   /* ---- selection: the entities of the active layer, in outline order (components first, then groups and what they hold) ---- */
   const order: { id: string; type: EntityType }[] = [];
@@ -229,7 +240,9 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       session.replaceOverrides(sc.set);
       session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
       sceneNote = sc.note;
-      if ((sc.focus ?? null) !== focusId) focus(sc.focus ?? null, true, true); else apply();
+      const target = canonical(activeId(), sc.open ?? []) ?? [];
+      const zoomThen = () => { if (sc.zoom) zoomTo(sc.zoom, typeOf(sc.zoom)); else fit(true); apply(); };
+      if (target.join(" ") !== openSet.join(" ")) openTo(target, zoomThen, true); else zoomThen();
       sceneTimer = setTimeout(() => scene((k + 1) % tour.scenes.length), sc.seconds * 1000);
     };
     scene(0);
@@ -250,27 +263,29 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const setState = (id: string, state: string) => { stop(); session.set(id, state); apply(); };
   const cycle = (id: string, by = 1) => { stop(); session.cycle(id, by); apply(); };
   const setScenario = (id: string | null, step = 1, byPlayer = false) => { if (!byPlayer) stop(); session.setScenario(id, step); apply(); };
-  const reset = () => { stop(); session.reset(); select(null); if (focusId) { history.length = 0; focus(null); } else { apply(); fit(true); } };
+  const reset = () => { stop(); session.reset(); select(null); if (openSet.length) openTo([], () => { fit(true); apply(); }); else { apply(); fit(true); } };
 
-  /** Drill-down (R11): the focused group and the groups above it are open; the layer with that set of open groups shows, by a morph, and the camera closes on the focus. */
-  const focus = (groupId: string | null, animate = true, byPlayer = false) => {
+  /** Opening and closing (R11): the layer with exactly that set of open groups shows, by a morph; the camera keeps its zoom if the target is still drawn, else fits. */
+  const openTo = (target: string[], after: () => void, byPlayer = false) => {
     if (!byPlayer) stop();
-    focusId = groupId;
-    const target = layerKey(activeId(), openFor(activeId(), groupId).join(" "));
-    const settle = () => { if (groupId) zoomTo(groupId, "group"); else fit(animate); apply(); };
-    if (target === activeKey || !layers.has(target)) settle(); else morphTo(target, settle);
+    const key = layerKey(activeId(), target.join(" "));
+    if (!layers.has(key)) return;
+    openSet = target;
+    if (key === activeKey) after(); else morphTo(key, after);
   };
-  const back = (): boolean => {
-    if (history.length) { const to = history.pop()!; focus(to || null); return true; }
-    if (focusId) { focus(null); return true; }
-    return false;
-  };
-  const drillInto = (groupId: string): boolean => {
-    if (!active().querySelector(`[data-group="${groupId}"][data-collapsed]`)) return false;
-    history.push(focusId ?? "");
-    focus(groupId);
+  const open = (ids: readonly string[]): boolean => {
+    const target = canonical(activeId(), ids);
+    if (!target) return false;
+    openTo(target, () => { if (!(zoomId && zoomTo(zoomId, typeOf(zoomId)))) fit(true); apply(); });
     return true;
   };
+  const zoom = (id: string | null) => { stop(); if (id === null) fit(true); else zoomTo(id, typeOf(id)); emit(); };
+  const back = (): boolean => {
+    if (zoomId) { zoom(null); return true; }
+    if (openSet.length) { const innermost = openSet[openSet.length - 1]!; open(openSet.filter((g) => g !== innermost && !isInside(g, innermost))); return true; }
+    return false;
+  };
+  const isInside = (id: string, groupId: string) => { for (let cur = parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (cur === groupId) return true; return false; };
 
   /* ---- switching layers with a morph: shared components slide, frames resize, the rest fades ---- */
   const morphTo = (key: string, after: () => void) => {
@@ -323,7 +338,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     const key = layerKey(id, "");
     if (!layers.has(key) || key === activeKey) return;
     if (!byPlayer) stop();
-    focusId = null; history.length = 0;
+    openSet = []; zoomId = null;
     morphTo(key, () => { fit(true); apply(); if (!byPlayer) playScenario(); });
   };
 
@@ -333,10 +348,17 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     if (!g) return;
     stop();
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
-    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey && focusId !== id && drillInto(id)) return;
+    // A click on a closed box opens it; the whole picture stays in view. Enter or double-click zooms to the selection.
+    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey) { open([...openSet, id]); return; }
     select(id, g.hasAttribute("data-node") ? "node" : "group");
     // A click walks the author's states in order; shift+click walks back.
     cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);
+  });
+  on(scene, "dblclick", (ev) => {
+    const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
+    if (!g) return;
+    ev.preventDefault();
+    zoom(g.getAttribute("data-node") ?? g.getAttribute("data-group")!);
   });
   on(scene, "mouseover", (ev) => {
     const g = (ev.target as Element).closest?.("[data-node]") as SVGGElement | null;
@@ -362,7 +384,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       const i = selected ? order.findIndex((o) => o.id === selected!.id) : -1;
       const n = order[Math.min(order.length - 1, Math.max(0, i + (k === "ArrowDown" ? 1 : -1)))];
       if (n) { select(n.id, n.type); emit(); }
-    } else if (k === "Enter" && selected) { stop(); zoomTo(selected.id, selected.type); }
+    } else if (k === "Enter" && selected) zoom(selected.id);
     else if (k === "f" && selected) cycle(selected.id);
     else if (k === "Escape") { stop(); if (!back()) { select(null); fit(true); emit(); } }
     else if (k === "s" && model.scenarios.length) { // the next scenario, from the first, none after the last
@@ -382,17 +404,17 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     views: viewIds.map((id) => ({ id, title: layers.get(layerKey(id, ""))?.getAttribute("data-title") ?? id })),
     scenarios: model.scenarios.map((s) => ({ id: s.id, label: s.label, steps: s.steps.length })),
     states: Object.values(model.states.define).map((d) => ({ name: d.name, ...(d.description !== undefined ? { description: d.description } : {}) })),
-    groups: () => model.groups.filter((g) => active().querySelector(`[data-group="${g.id}"]`)).map((g) => ({ id: g.id, label: g.label, closed: active().querySelector(`[data-group="${g.id}"][data-collapsed]`) !== null })),
+    groups: () => model.groups.filter((g) => active().querySelector(`[data-group="${g.id}"]`)).map((g) => ({ id: g.id, label: g.label, closable: collapseOf(activeId()).includes(g.id), open: openSet.includes(g.id) })),
     showView: (id) => showView(id),
-    focus: (g) => { if (g && g !== focusId) history.push(focusId ?? ""); focus(g); },
+    open, zoom,
     back: () => { stop(); return back(); },
     setScenario: (id, step) => setScenario(id, step),
     next: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step + 1); },
     prev: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step - 1); },
     setState, cycle, reset,
     select: (id) => { select(id, id ? typeOf(id) : "node"); emit(); },
-    zoomTo: (id) => zoomTo(id, typeOf(id)),
-    fit: () => fit(true),
+    zoomTo: (id) => zoom(id),
+    fit: () => zoom(null),
     play, stop,
     on: (_event, fn) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
     snapshot,

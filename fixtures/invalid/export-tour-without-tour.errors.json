@@ -4,7 +4,7 @@
     "message": "the model has no tour"
   },
   {
-    "pointer": "/exports/0/focus",
+    "pointer": "/exports/0/open",
     "message": "a tour export takes no other field"
   }
 ]

@@ -2,6 +2,10 @@
   "groups": [
     {
       "id": "g"
+    },
+    {
+      "id": "h",
+      "parent": "g"
     }
   ],
   "components": [
@@ -11,6 +15,10 @@
     {
       "id": "p",
       "group": "g"
+    },
+    {
+      "id": "q",
+      "group": "h"
     }
   ],
   "connections": [
@@ -23,7 +31,8 @@
     {
       "id": "v",
       "collapse": [
-        "g"
+        "g",
+        "h"
       ]
     },
     {
@@ -46,11 +55,43 @@
     {
       "id": "x",
       "view": "open",
-      "focus": "g"
+      "open": [
+        "g"
+      ]
     },
     {
       "id": "y",
-      "focus": "p"
+      "open": [
+        "p"
+      ]
+    },
+    {
+      "id": "z",
+      "open": [
+        "h"
+      ]
+    },
+    {
+      "id": "w",
+      "open": [
+        "g"
+      ],
+      "zoom": "q"
     }
-  ]
+  ],
+  "tour": {
+    "seconds": 3,
+    "scenes": [
+      {
+        "view": "v"
+      },
+      {
+        "view": "v",
+        "open": [
+          "h"
+        ],
+        "zoom": "g"
+      }
+    ]
+  }
 }

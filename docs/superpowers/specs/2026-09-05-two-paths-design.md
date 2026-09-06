@@ -115,3 +115,13 @@ above. The `foreignObject` panel, its CSS and `buildPanel` are deleted.
 
 A `:target` no-script fallback (views and steps without JavaScript). Worth a separate design if strict content
 security policies turn out to matter.
+
+## Amendment, 2026-09-06: open and zoom are separate
+
+`focus` is replaced everywhere by two declared actions. `open` is the list of closed groups drawn open, each with
+its closed ancestors listed too; `zoom` is the entity the camera closes on (a scene) or the picture is cropped to
+(an export). A scene can open two groups and stay zoomed out, open one then another, zoom in on one, zoom out. The
+engine's interface has `open(ids)`, `zoom(id | null)` and `back()` (zoom out, then close the innermost); the
+snapshot carries `open` and `zoom`. Inside the diagram a click opens a closed box, Enter or double-click zooms,
+Escape zooms out then closes. The interactive file carries a layer per way the view's closed groups can be open
+(S17, R11, R12 in MODEL.md).

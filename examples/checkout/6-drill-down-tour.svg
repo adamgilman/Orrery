@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420.2 577.5" width="420.2" height="577.5" data-orrery="1">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 491.2 985.5" width="491.2" height="985.5" data-orrery="1">
 <title>Checkout: drill down</title>
 <style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
@@ -40,94 +40,102 @@
 .st-off .group-box{stroke-dasharray:4 4}
 .st-off{opacity:0.45}
 @keyframes orrery-show-data{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-size-data{0%{width:380.2px;height:194px}21.5%{animation-timing-function:ease-in-out;width:380.2px;height:194px}26%{width:351.2px;height:330px}41.5%{animation-timing-function:ease-in-out;width:351.2px;height:330px}46%{width:451.2px;height:466px}81.5%{animation-timing-function:ease-in-out;width:451.2px;height:466px}86%{width:380.2px;height:194px}100%{width:380.2px;height:194px}}
+@keyframes orrery-size-data{0%{width:380.2px;height:194px}15.36%{animation-timing-function:ease-in-out;width:380.2px;height:194px}18.57%{width:351.2px;height:330px}29.64%{animation-timing-function:ease-in-out;width:351.2px;height:330px}32.86%{width:451.2px;height:602px}86.79%{animation-timing-function:ease-in-out;width:451.2px;height:602px}90%{width:380.2px;height:194px}100%{width:380.2px;height:194px}}
 @keyframes orrery-open-data{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-closed-data{0%{opacity:0}100%{opacity:0}}
-@keyframes orrery-mark-data{0%{transform:translate(358.2px, 8px)}21.5%{animation-timing-function:ease-in-out;transform:translate(358.2px, 8px)}26%{transform:translate(329.2px, 8px)}41.5%{animation-timing-function:ease-in-out;transform:translate(329.2px, 8px)}46%{transform:translate(429.2px, 8px)}81.5%{animation-timing-function:ease-in-out;transform:translate(429.2px, 8px)}86%{transform:translate(358.2px, 8px)}100%{transform:translate(358.2px, 8px)}}
-@keyframes orrery-centre-data{0%{transform:translate(178.1px, 97px)}21.5%{animation-timing-function:ease-in-out;transform:translate(178.1px, 97px)}26%{transform:translate(163.6px, 165px)}41.5%{animation-timing-function:ease-in-out;transform:translate(163.6px, 165px)}46%{transform:translate(213.6px, 233px)}81.5%{animation-timing-function:ease-in-out;transform:translate(213.6px, 233px)}86%{transform:translate(178.1px, 97px)}100%{transform:translate(178.1px, 97px)}}
+@keyframes orrery-mark-data{0%{transform:translate(358.2px, 8px)}15.36%{animation-timing-function:ease-in-out;transform:translate(358.2px, 8px)}18.57%{transform:translate(329.2px, 8px)}29.64%{animation-timing-function:ease-in-out;transform:translate(329.2px, 8px)}32.86%{transform:translate(429.2px, 8px)}86.79%{animation-timing-function:ease-in-out;transform:translate(429.2px, 8px)}90%{transform:translate(358.2px, 8px)}100%{transform:translate(358.2px, 8px)}}
+@keyframes orrery-centre-data{0%{transform:translate(178.1px, 97px)}15.36%{animation-timing-function:ease-in-out;transform:translate(178.1px, 97px)}18.57%{transform:translate(163.6px, 165px)}29.64%{animation-timing-function:ease-in-out;transform:translate(163.6px, 165px)}32.86%{transform:translate(213.6px, 301px)}86.79%{animation-timing-function:ease-in-out;transform:translate(213.6px, 301px)}90%{transform:translate(178.1px, 97px)}100%{transform:translate(178.1px, 97px)}}
 @keyframes orrery-var-data-on{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-data{0%{transform:translate(20px, 289.5px)}100%{transform:translate(20px, 289.5px)}}
 @keyframes orrery-show-sessions{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-size-sessions{0%{width:155px;height:48px}21.5%{animation-timing-function:ease-in-out;width:155px;height:48px}26%{width:126px;height:184px}41.5%{animation-timing-function:ease-in-out;width:126px;height:184px}46%{width:226px;height:320px}81.5%{animation-timing-function:ease-in-out;width:226px;height:320px}86%{width:155px;height:48px}100%{width:155px;height:48px}}
-@keyframes orrery-open-sessions{0%{opacity:0}26%{opacity:0}27.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-closed-sessions{0%{opacity:1}20%{opacity:1}21.5%{opacity:0}86%{opacity:0}87.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-mark-sessions{0%{transform:translate(133px, 8px)}21.5%{animation-timing-function:ease-in-out;transform:translate(133px, 8px)}26%{transform:translate(104px, 8px)}41.5%{animation-timing-function:ease-in-out;transform:translate(104px, 8px)}46%{transform:translate(204px, 8px)}81.5%{animation-timing-function:ease-in-out;transform:translate(204px, 8px)}86%{transform:translate(133px, 8px)}100%{transform:translate(133px, 8px)}}
-@keyframes orrery-centre-sessions{0%{transform:translate(65.5px, 24px)}21.5%{animation-timing-function:ease-in-out;transform:translate(65.5px, 24px)}26%{transform:translate(51px, 92px)}41.5%{animation-timing-function:ease-in-out;transform:translate(51px, 92px)}46%{transform:translate(101px, 160px)}81.5%{animation-timing-function:ease-in-out;transform:translate(101px, 160px)}86%{transform:translate(65.5px, 24px)}100%{transform:translate(65.5px, 24px)}}
-@keyframes orrery-var-sessions-on{0%{opacity:1}60%{opacity:1}67.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-var-sessions-degraded{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-sessions{0%{width:155px;height:48px}15.36%{animation-timing-function:ease-in-out;width:155px;height:48px}18.57%{width:126px;height:184px}29.64%{animation-timing-function:ease-in-out;width:126px;height:184px}32.86%{width:226px;height:456px}86.79%{animation-timing-function:ease-in-out;width:226px;height:456px}90%{width:155px;height:48px}100%{width:155px;height:48px}}
+@keyframes orrery-open-sessions{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-closed-sessions{0%{opacity:1}14.29%{opacity:1}15.36%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
+@keyframes orrery-mark-sessions{0%{transform:translate(133px, 8px)}15.36%{animation-timing-function:ease-in-out;transform:translate(133px, 8px)}18.57%{transform:translate(104px, 8px)}29.64%{animation-timing-function:ease-in-out;transform:translate(104px, 8px)}32.86%{transform:translate(204px, 8px)}86.79%{animation-timing-function:ease-in-out;transform:translate(204px, 8px)}90%{transform:translate(133px, 8px)}100%{transform:translate(133px, 8px)}}
+@keyframes orrery-centre-sessions{0%{transform:translate(65.5px, 24px)}15.36%{animation-timing-function:ease-in-out;transform:translate(65.5px, 24px)}18.57%{transform:translate(51px, 92px)}29.64%{animation-timing-function:ease-in-out;transform:translate(51px, 92px)}32.86%{transform:translate(101px, 228px)}86.79%{animation-timing-function:ease-in-out;transform:translate(101px, 228px)}90%{transform:translate(65.5px, 24px)}100%{transform:translate(65.5px, 24px)}}
+@keyframes orrery-var-sessions-on{0%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-sessions-degraded{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-sessions{0%{transform:translate(32px, 325.5px)}100%{transform:translate(32px, 325.5px)}}
-@keyframes orrery-show-cache-a{0%{opacity:0}26%{opacity:0}27.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-size-cache-a{0%{width:102px;height:48px}41.5%{animation-timing-function:ease-in-out;width:102px;height:48px}46%{width:202px;height:184px}100%{width:202px;height:184px}}
-@keyframes orrery-open-cache-a{0%{opacity:0}46%{opacity:0}47.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-closed-cache-a{0%{opacity:1}40%{opacity:1}41.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-mark-cache-a{0%{transform:translate(80px, 8px)}41.5%{animation-timing-function:ease-in-out;transform:translate(80px, 8px)}46%{transform:translate(180px, 8px)}100%{transform:translate(180px, 8px)}}
-@keyframes orrery-centre-cache-a{0%{transform:translate(39px, 24px)}41.5%{animation-timing-function:ease-in-out;transform:translate(39px, 24px)}46%{transform:translate(89px, 92px)}100%{transform:translate(89px, 92px)}}
-@keyframes orrery-var-cache-a-on{0%{opacity:1}60%{opacity:1}67.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-var-cache-a-failed{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-show-cache-a{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-size-cache-a{0%{width:102px;height:48px}29.64%{animation-timing-function:ease-in-out;width:102px;height:48px}32.86%{width:202px;height:184px}100%{width:202px;height:184px}}
+@keyframes orrery-open-cache-a{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-cache-a{0%{opacity:1}28.57%{opacity:1}29.64%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-cache-a{0%{transform:translate(80px, 8px)}29.64%{animation-timing-function:ease-in-out;transform:translate(80px, 8px)}32.86%{transform:translate(180px, 8px)}100%{transform:translate(180px, 8px)}}
+@keyframes orrery-centre-cache-a{0%{transform:translate(39px, 24px)}29.64%{animation-timing-function:ease-in-out;transform:translate(39px, 24px)}32.86%{transform:translate(89px, 92px)}100%{transform:translate(89px, 92px)}}
+@keyframes orrery-var-cache-a-on{0%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-cache-a-failed{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-cache-a{0%{transform:translate(44px, 361.5px)}100%{transform:translate(44px, 361.5px)}}
-@keyframes orrery-show-cache-b{0%{opacity:0}26%{opacity:0}27.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-size-cache-b{0%{width:102px;height:48px}100%{width:102px;height:48px}}
-@keyframes orrery-open-cache-b{0%{opacity:0}100%{opacity:0}}
-@keyframes orrery-closed-cache-b{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-mark-cache-b{0%{transform:translate(80px, 8px)}100%{transform:translate(80px, 8px)}}
-@keyframes orrery-centre-cache-b{0%{transform:translate(39px, 24px)}100%{transform:translate(39px, 24px)}}
+@keyframes orrery-show-cache-b{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-size-cache-b{0%{width:102px;height:48px}29.64%{animation-timing-function:ease-in-out;width:102px;height:48px}32.86%{width:202px;height:184px}100%{width:202px;height:184px}}
+@keyframes orrery-open-cache-b{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-cache-b{0%{opacity:1}28.57%{opacity:1}29.64%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-cache-b{0%{transform:translate(80px, 8px)}29.64%{animation-timing-function:ease-in-out;transform:translate(80px, 8px)}32.86%{transform:translate(180px, 8px)}100%{transform:translate(180px, 8px)}}
+@keyframes orrery-centre-cache-b{0%{transform:translate(39px, 24px)}29.64%{animation-timing-function:ease-in-out;transform:translate(39px, 24px)}32.86%{transform:translate(89px, 92px)}100%{transform:translate(89px, 92px)}}
 @keyframes orrery-var-cache-b-on{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-pos-cache-b{0%{transform:translate(44px, 449.5px)}41.5%{animation-timing-function:ease-in-out;transform:translate(44px, 449.5px)}46%{transform:translate(94px, 585.5px)}100%{transform:translate(94px, 585.5px)}}
+@keyframes orrery-pos-cache-b{0%{transform:translate(44px, 449.5px)}29.64%{animation-timing-function:ease-in-out;transform:translate(44px, 449.5px)}32.86%{transform:translate(44px, 585.5px)}100%{transform:translate(44px, 585.5px)}}
 @keyframes orrery-show-web{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-var-web-on{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-pos-web{0%{transform:translate(178.5px, 20px)}21.5%{animation-timing-function:ease-in-out;transform:translate(178.5px, 20px)}26%{transform:translate(149.5px, 20px)}41.5%{animation-timing-function:ease-in-out;transform:translate(149.5px, 20px)}46%{transform:translate(249.5px, 20px)}81.5%{animation-timing-function:ease-in-out;transform:translate(249.5px, 20px)}86%{transform:translate(178.5px, 20px)}100%{transform:translate(178.5px, 20px)}}
+@keyframes orrery-pos-web{0%{transform:translate(178.5px, 20px)}15.36%{animation-timing-function:ease-in-out;transform:translate(178.5px, 20px)}18.57%{transform:translate(149.5px, 20px)}29.64%{animation-timing-function:ease-in-out;transform:translate(149.5px, 20px)}32.86%{transform:translate(249.5px, 20px)}86.79%{animation-timing-function:ease-in-out;transform:translate(249.5px, 20px)}90%{transform:translate(178.5px, 20px)}100%{transform:translate(178.5px, 20px)}}
 @keyframes orrery-show-api{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-var-api-on{0%{opacity:1}60%{opacity:1}67.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-var-api-degraded{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-pos-api{0%{transform:translate(182.5px, 108px)}21.5%{animation-timing-function:ease-in-out;transform:translate(182.5px, 108px)}26%{transform:translate(153.5px, 108px)}41.5%{animation-timing-function:ease-in-out;transform:translate(153.5px, 108px)}46%{transform:translate(253.5px, 108px)}81.5%{animation-timing-function:ease-in-out;transform:translate(253.5px, 108px)}86%{transform:translate(182.5px, 108px)}100%{transform:translate(182.5px, 108px)}}
+@keyframes orrery-var-api-on{0%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-api-degraded{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-api{0%{transform:translate(182.5px, 108px)}15.36%{animation-timing-function:ease-in-out;transform:translate(182.5px, 108px)}18.57%{transform:translate(153.5px, 108px)}29.64%{animation-timing-function:ease-in-out;transform:translate(153.5px, 108px)}32.86%{transform:translate(253.5px, 108px)}86.79%{animation-timing-function:ease-in-out;transform:translate(253.5px, 108px)}90%{transform:translate(182.5px, 108px)}100%{transform:translate(182.5px, 108px)}}
 @keyframes orrery-show-db{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-var-db-on{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-pos-db{0%{transform:translate(227px, 325.5px)}21.5%{animation-timing-function:ease-in-out;transform:translate(227px, 325.5px)}26%{transform:translate(198px, 393.5px)}41.5%{animation-timing-function:ease-in-out;transform:translate(198px, 393.5px)}46%{transform:translate(298px, 461.5px)}81.5%{animation-timing-function:ease-in-out;transform:translate(298px, 461.5px)}86%{transform:translate(227px, 325.5px)}100%{transform:translate(227px, 325.5px)}}
+@keyframes orrery-pos-db{0%{transform:translate(227px, 325.5px)}15.36%{animation-timing-function:ease-in-out;transform:translate(227px, 325.5px)}18.57%{transform:translate(198px, 393.5px)}29.64%{animation-timing-function:ease-in-out;transform:translate(198px, 393.5px)}32.86%{transform:translate(298px, 529.5px)}86.79%{animation-timing-function:ease-in-out;transform:translate(298px, 529.5px)}90%{transform:translate(227px, 325.5px)}100%{transform:translate(227px, 325.5px)}}
 @keyframes orrery-show-replica{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-var-replica-on{0%{opacity:1}100%{opacity:1}}
-@keyframes orrery-pos-replica{0%{transform:translate(240.2px, 423.5px)}21.5%{animation-timing-function:ease-in-out;transform:translate(240.2px, 423.5px)}26%{transform:translate(211.2px, 559.5px)}41.5%{animation-timing-function:ease-in-out;transform:translate(211.2px, 559.5px)}46%{transform:translate(311.2px, 695.5px)}81.5%{animation-timing-function:ease-in-out;transform:translate(311.2px, 695.5px)}86%{transform:translate(240.2px, 423.5px)}100%{transform:translate(240.2px, 423.5px)}}
-@keyframes orrery-show-redis-a{0%{opacity:0}46%{opacity:0}47.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-var-redis-a-on{0%{opacity:1}60%{opacity:1}67.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-var-redis-a-failed{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-replica{0%{transform:translate(240.2px, 423.5px)}15.36%{animation-timing-function:ease-in-out;transform:translate(240.2px, 423.5px)}18.57%{transform:translate(211.2px, 559.5px)}29.64%{animation-timing-function:ease-in-out;transform:translate(211.2px, 559.5px)}32.86%{transform:translate(311.2px, 831.5px)}86.79%{animation-timing-function:ease-in-out;transform:translate(311.2px, 831.5px)}90%{transform:translate(240.2px, 423.5px)}100%{transform:translate(240.2px, 423.5px)}}
+@keyframes orrery-show-redis-a{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-redis-a-on{0%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-redis-a-failed{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-redis-a{0%{transform:translate(98px, 397.5px)}100%{transform:translate(98px, 397.5px)}}
-@keyframes orrery-show-aof-a{0%{opacity:0}46%{opacity:0}47.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-show-aof-a{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
 @keyframes orrery-var-aof-a-on{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-aof-a{0%{transform:translate(56px, 485.5px)}100%{transform:translate(56px, 485.5px)}}
-@keyframes orrery-edges-0{0%{opacity:1}20%{opacity:1}21.5%{opacity:0}86%{opacity:0}87.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-edges-1{0%{opacity:0}26%{opacity:0}27.5%{opacity:1}40%{opacity:1}41.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-edges-2{0%{opacity:0}46%{opacity:0}47.5%{opacity:1}60%{opacity:1}67.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-edges-3{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-legend-0{0%{opacity:0}60%{opacity:0}67.5%{opacity:1}80%{opacity:1}87.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-legend-1{0%{opacity:0}80%{opacity:0}87.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-caption-0{0%{opacity:1}20%{opacity:1}21.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-1{0%{opacity:0}26%{opacity:0}27.5%{opacity:1}40%{opacity:1}41.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-2{0%{opacity:0}46%{opacity:0}47.5%{opacity:1}60%{opacity:1}61.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-3{0%{opacity:0}66%{opacity:0}67.5%{opacity:1}80%{opacity:1}81.5%{opacity:0}100%{opacity:0}}
-@keyframes orrery-caption-4{0%{opacity:0}86%{opacity:0}87.5%{opacity:1}100%{opacity:1}}
-@keyframes orrery-camera{0%{transform:translate(210.08px, 251.75px) scale(1) translate(-210.08px, -251.75px)}21.5%{animation-timing-function:ease-in-out;transform:translate(210.08px, 251.75px) scale(1) translate(-210.08px, -251.75px)}26%{transform:translate(210.08px, 251.75px) scale(2.1703) translate(-95px, -417.5px)}41.5%{animation-timing-function:ease-in-out;transform:translate(210.08px, 251.75px) scale(2.1703) translate(-95px, -417.5px)}46%{transform:translate(210.08px, 251.75px) scale(1.6807) translate(-145px, -453.5px)}81.5%{animation-timing-function:ease-in-out;transform:translate(210.08px, 251.75px) scale(1.6807) translate(-145px, -453.5px)}86%{transform:translate(210.08px, 251.75px) scale(1) translate(-210.08px, -251.75px)}100%{transform:translate(210.08px, 251.75px) scale(1) translate(-210.08px, -251.75px)}}</style>
+@keyframes orrery-show-redis-b{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-redis-b-on{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-redis-b{0%{transform:translate(98px, 621.5px)}100%{transform:translate(98px, 621.5px)}}
+@keyframes orrery-show-aof-b{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-aof-b-on{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-aof-b{0%{transform:translate(56px, 709.5px)}100%{transform:translate(56px, 709.5px)}}
+@keyframes orrery-edges-0{0%{opacity:1}14.29%{opacity:1}15.36%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
+@keyframes orrery-edges-1{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}28.57%{opacity:1}29.64%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-2{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-3{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-0{0%{opacity:0}57.14%{opacity:0}62.5%{opacity:1}85.71%{opacity:1}91.07%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-1{0%{opacity:0}85.71%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
+@keyframes orrery-caption-0{0%{opacity:1}14.29%{opacity:1}15.36%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-1{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}28.57%{opacity:1}29.64%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-2{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}42.86%{opacity:1}43.93%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-3{0%{opacity:0}47.14%{opacity:0}48.21%{opacity:1}57.14%{opacity:1}58.21%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-4{0%{opacity:0}61.43%{opacity:0}62.5%{opacity:1}71.43%{opacity:1}72.5%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-5{0%{opacity:0}75.71%{opacity:0}76.79%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-6{0%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
+@keyframes orrery-camera{0%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}15.36%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}18.57%{transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}29.64%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}32.86%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}43.93%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}47.14%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}72.5%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}75.71%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}86.79%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}90%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}100%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
-<g class="view" data-view="overview" data-open="" data-title="Checkout: drill down" data-size="420.2 577.5">
-<clipPath id="orrery-stage-overview"><rect width="420.2" height="503.5"/></clipPath>
+<g class="view" data-view="overview" data-open="" data-title="Checkout: drill down" data-size="491.2 985.5">
+<clipPath id="orrery-stage-overview"><rect width="491.2" height="911.5"/></clipPath>
 <g class="stage" clip-path="url(#orrery-stage-overview)">
-<g class="camera" data-stage="420.2 503.5" transform="translate(210.08 251.75) scale(1) translate(-210.08 -251.75)" style="animation:orrery-camera 20s linear infinite">
+<g class="camera" data-stage="491.2 911.5" transform="translate(245.58 455.75) scale(1.169) translate(-210.08 -251.75)" style="animation:orrery-camera 28s linear infinite">
 <g class="groups">
-<g class="entity" data-t0="1" style="animation:orrery-show-data 20s linear infinite"><g class="group gk-tier" data-group="data" data-bbox="20 289.5 380.2 194" transform="translate(20 289.5)" style="animation:orrery-pos-data 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-data-on 20s linear infinite"><rect class="group-box" width="380.2" height="194" rx="10" style="animation:orrery-size-data 20s linear infinite"/></g>
-<g class="detail" data-t0="1" style="animation:orrery-open-data 20s linear infinite"><text class="group-label" x="12" y="16">Data</text></g>
-<g class="lod-summary" data-t0="0" style="animation:orrery-closed-data 20s linear infinite"><g transform="translate(178.1 97)" style="animation:orrery-centre-data 20s linear infinite"><text class="summary-label">Data</text></g><g class="summary-open" transform="translate(358.2 8)" style="animation:orrery-mark-data 20s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
-<g class="entity" data-t0="1" style="animation:orrery-show-sessions 20s linear infinite"><g class="group gk-cluster" data-group="sessions" data-collapsed="4" data-bbox="32 325.5 155 48" transform="translate(32 325.5)" style="animation:orrery-pos-sessions 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-sessions-on 20s linear infinite"><rect class="group-box" width="155" height="48" rx="10" style="animation:orrery-size-sessions 20s linear infinite"/></g>
-<g class="variant st-degraded" data-state="degraded" data-t0="0" style="animation:orrery-var-sessions-degraded 20s linear infinite"><rect class="group-box" width="155" height="48" rx="10" style="animation:orrery-size-sessions 20s linear infinite"/><title>one node left</title></g>
-<g class="detail" data-t0="0" style="animation:orrery-open-sessions 20s linear infinite"><text class="group-label" x="12" y="16">Session cache</text></g>
-<g class="lod-summary" data-t0="1" style="animation:orrery-closed-sessions 20s linear infinite"><g transform="translate(65.5 24)" style="animation:orrery-centre-sessions 20s linear infinite"><text class="summary-label">Session cache</text></g><g class="summary-open" transform="translate(133 8)" style="animation:orrery-mark-sessions 20s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
-<g class="entity" data-t0="0" style="animation:orrery-show-cache-a 20s linear infinite"><g class="group gk-cluster" data-group="cache-a" data-collapsed="2" data-bbox="44 361.5 102 48" transform="translate(44 361.5)" style="animation:orrery-pos-cache-a 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-cache-a-on 20s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-a 20s linear infinite"/></g>
-<g class="variant st-failed" data-state="failed" data-t0="0" style="animation:orrery-var-cache-a-failed 20s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-a 20s linear infinite"/><title>its process is down</title></g>
-<g class="detail" data-t0="0" style="animation:orrery-open-cache-a 20s linear infinite"><text class="group-label" x="12" y="16">Node A</text></g>
-<g class="lod-summary" data-t0="1" style="animation:orrery-closed-cache-a 20s linear infinite"><g transform="translate(39 24)" style="animation:orrery-centre-cache-a 20s linear infinite"><text class="summary-label">Node A</text></g><g class="summary-open" transform="translate(80 8)" style="animation:orrery-mark-cache-a 20s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
-<g class="entity" data-t0="0" style="animation:orrery-show-cache-b 20s linear infinite"><g class="group gk-cluster" data-group="cache-b" data-collapsed="2" data-bbox="44 449.5 102 48" transform="translate(44 449.5)" style="animation:orrery-pos-cache-b 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-cache-b-on 20s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-b 20s linear infinite"/></g>
-<g class="detail" data-t0="0" style="animation:orrery-open-cache-b 20s linear infinite"><text class="group-label" x="12" y="16">Node B</text></g>
-<g class="lod-summary" data-t0="1" style="animation:orrery-closed-cache-b 20s linear infinite"><g transform="translate(39 24)" style="animation:orrery-centre-cache-b 20s linear infinite"><text class="summary-label">Node B</text></g><g class="summary-open" transform="translate(80 8)" style="animation:orrery-mark-cache-b 20s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-data 28s linear infinite"><g class="group gk-tier" data-group="data" data-bbox="20 289.5 380.2 194" transform="translate(20 289.5)" style="animation:orrery-pos-data 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-data-on 28s linear infinite"><rect class="group-box" width="380.2" height="194" rx="10" style="animation:orrery-size-data 28s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-data 28s linear infinite"><text class="group-label" x="12" y="16">Data</text></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-data 28s linear infinite"><g transform="translate(178.1 97)" style="animation:orrery-centre-data 28s linear infinite"><text class="summary-label">Data</text></g><g class="summary-open" transform="translate(358.2 8)" style="animation:orrery-mark-data 28s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-sessions 28s linear infinite"><g class="group gk-cluster" data-group="sessions" data-collapsed="4" data-bbox="32 325.5 155 48" transform="translate(32 325.5)" style="animation:orrery-pos-sessions 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-sessions-on 28s linear infinite"><rect class="group-box" width="155" height="48" rx="10" style="animation:orrery-size-sessions 28s linear infinite"/></g>
+<g class="variant st-degraded" data-state="degraded" data-t0="0" style="animation:orrery-var-sessions-degraded 28s linear infinite"><rect class="group-box" width="155" height="48" rx="10" style="animation:orrery-size-sessions 28s linear infinite"/><title>one node left</title></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-sessions 28s linear infinite"><text class="group-label" x="12" y="16">Session cache</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-sessions 28s linear infinite"><g transform="translate(65.5 24)" style="animation:orrery-centre-sessions 28s linear infinite"><text class="summary-label">Session cache</text></g><g class="summary-open" transform="translate(133 8)" style="animation:orrery-mark-sessions 28s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-cache-a 28s linear infinite"><g class="group gk-cluster" data-group="cache-a" data-collapsed="2" data-bbox="44 361.5 102 48" transform="translate(44 361.5)" style="animation:orrery-pos-cache-a 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-cache-a-on 28s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-a 28s linear infinite"/></g>
+<g class="variant st-failed" data-state="failed" data-t0="0" style="animation:orrery-var-cache-a-failed 28s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-a 28s linear infinite"/><title>its process is down</title></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-cache-a 28s linear infinite"><text class="group-label" x="12" y="16">Node A</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-cache-a 28s linear infinite"><g transform="translate(39 24)" style="animation:orrery-centre-cache-a 28s linear infinite"><text class="summary-label">Node A</text></g><g class="summary-open" transform="translate(80 8)" style="animation:orrery-mark-cache-a 28s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-cache-b 28s linear infinite"><g class="group gk-cluster" data-group="cache-b" data-collapsed="2" data-bbox="44 449.5 102 48" transform="translate(44 449.5)" style="animation:orrery-pos-cache-b 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-cache-b-on 28s linear infinite"><rect class="group-box" width="102" height="48" rx="10" style="animation:orrery-size-cache-b 28s linear infinite"/></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-cache-b 28s linear infinite"><text class="group-label" x="12" y="16">Node B</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-cache-b 28s linear infinite"><g transform="translate(39 24)" style="animation:orrery-centre-cache-b 28s linear infinite"><text class="summary-label">Node B</text></g><g class="summary-open" transform="translate(80 8)" style="animation:orrery-mark-cache-b 28s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
 </g>
-<g class="edges" data-edges="0" data-t0="1" style="animation:orrery-edges-0 20s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M244.5 68 L244.5 108" marker-end="url(#arrow)"/>
+<g class="edges" data-edges="0" data-t0="1" style="animation:orrery-edges-0 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M244.5 68 L244.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M244.5 68 L244.5 96" style="stroke-width:3.9;animation-duration:1s"/>
 <path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M244.5 156 L244.5 191 L289.5 191 L289.5 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->db" data-load="0.6" d="M244.5 156 L244.5 191 L289.5 191 L289.5 313.5" style="stroke-width:3.3;animation-duration:1.5s"/>
@@ -138,7 +146,7 @@
 <path class="flow" data-flow="db->replica" data-load="0.2" d="M289.5 373.5 L289.5 411.5" style="stroke-width:2.1;animation-duration:2.5s"/>
 <path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M213.5 156 L213.5 257 L109.5 257 L109.5 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M213.5 156 L213.5 257 L109.5 257 L109.5 313.5" style="stroke-width:3;animation-duration:1.8s"/></g>
-<g class="edges" data-edges="1" data-t0="0" style="animation:orrery-edges-1 20s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M215.5 68 L215.5 108" marker-end="url(#arrow)"/>
+<g class="edges" data-edges="1" data-t0="0" style="animation:orrery-edges-1 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M215.5 68 L215.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M215.5 68 L215.5 96" style="stroke-width:3.9;animation-duration:1s"/>
 <path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M215.5 156 L215.5 191 L260.5 191 L260.5 393.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->db" data-load="0.6" d="M215.5 156 L215.5 191 L260.5 191 L260.5 381.5" style="stroke-width:3.3;animation-duration:1.5s"/>
@@ -151,74 +159,86 @@
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M184.5 156 L184.5 257 L95 257 L95 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 <path class="edge edge-replication" data-edge="cache-a->cache-b" data-kind="replication" d="M95 409.5 L95 449.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M95 409.5 L95 437.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
-<g class="edges" data-edges="2" data-t0="0" style="animation:orrery-edges-2 20s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M315.5 68 L315.5 108" marker-end="url(#arrow)"/>
+<g class="edges" data-edges="2" data-t0="0" style="animation:orrery-edges-2 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M315.5 68 L315.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M315.5 68 L315.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M315.5 156 L315.5 191 L360.5 191 L360.5 461.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M315.5 156 L315.5 191 L360.5 191 L360.5 449.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M315.5 156 L315.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.6" d="M315.5 156 L315.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="334.5" y="224">writes</text>
-<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 695.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="failover" data-load="0" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 683.5" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M360.5 509.5 L360.5 695.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="db->replica" data-load="0.2" d="M360.5 509.5 L360.5 683.5" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 831.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="failover" data-load="0" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 819.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M360.5 577.5 L360.5 831.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M360.5 577.5 L360.5 819.5" style="stroke-width:2.1;animation-duration:2.5s"/>
 <path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M284.5 156 L284.5 257 L145 257 L145 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M284.5 156 L284.5 257 L145 257 L145 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 <path class="edge edge-dataflow" data-edge="redis-a->aof-a" data-kind="dataflow" d="M145 445.5 L145 485.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="redis-a->aof-a" data-load="0.3" d="M145 445.5 L145 473.5" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="redis-b->aof-b" data-kind="dataflow" d="M145 669.5 L145 709.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="redis-b->aof-b" data-load="0.3" d="M145 669.5 L145 697.5" style="stroke-width:2.4;animation-duration:2.3s"/>
 <path class="edge edge-replication" data-edge="cache-a->cache-b" data-kind="replication" d="M145 545.5 L145 585.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M145 545.5 L145 573.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
-<g class="edges" data-edges="3" data-t0="0" style="animation:orrery-edges-3 20s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M315.5 68 L315.5 108" marker-end="url(#arrow)"/>
+<g class="edges" data-edges="3" data-t0="0" style="animation:orrery-edges-3 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M315.5 68 L315.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M315.5 68 L315.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M315.5 156 L315.5 191 L360.5 191 L360.5 461.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M315.5 156 L315.5 191 L360.5 191 L360.5 449.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M315.5 156 L315.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="api->db" data-load="0.6" d="M315.5 156 L315.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="334.5" y="224">writes</text>
-<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 695.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="failover" data-load="0" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 683.5" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M360.5 509.5 L360.5 695.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="db->replica" data-load="0.2" d="M360.5 509.5 L360.5 683.5" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 831.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="failover" data-load="0" d="M346.5 156 L346.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 819.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-replication" data-edge="db->replica" data-kind="replication" d="M360.5 577.5 L360.5 831.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="db->replica" data-load="0.2" d="M360.5 577.5 L360.5 819.5" style="stroke-width:2.1;animation-duration:2.5s"/>
 <path class="edge edge-sync" data-edge="api->sessions" data-kind="sync" d="M284.5 156 L284.5 257 L145 257 L145 325.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M284.5 156 L284.5 257 L145 257 L145 313.5" style="stroke-width:3;animation-duration:1.8s"/>
 <path class="edge edge-dataflow" data-edge="redis-a->aof-a" data-kind="dataflow" d="M145 445.5 L145 485.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="redis-a->aof-a" data-load="0" d="M145 445.5 L145 473.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-dataflow" data-edge="redis-b->aof-b" data-kind="dataflow" d="M145 669.5 L145 709.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="redis-b->aof-b" data-load="0.3" d="M145 669.5 L145 697.5" style="stroke-width:2.4;animation-duration:2.3s"/>
 <path class="edge edge-replication" data-edge="cache-a->cache-b" data-kind="replication" d="M145 545.5 L145 585.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="cache-a->cache-b" data-load="0" d="M145 545.5 L145 573.5" style="stroke-width:1.5;animation:none;opacity:0"/></g>
 <g class="nodes">
-<g class="entity" data-t0="1" style="animation:orrery-show-web 20s linear infinite"><g class="node kind-client" data-node="web" data-kind="client" data-bbox="178.5 20 132 48" transform="translate(178.5 20)" style="animation:orrery-pos-web 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-web-on 20s linear infinite"><rect class="node-box" width="132" height="48" rx="8"/>
+<g class="entity" data-t0="1" style="animation:orrery-show-web 28s linear infinite"><g class="node kind-client" data-node="web" data-kind="client" data-bbox="178.5 20 132 48" transform="translate(178.5 20)" style="animation:orrery-pos-web 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-web-on 28s linear infinite"><rect class="node-box" width="132" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
 <text class="node-label" x="84" y="24">Storefront</text></g></g></g>
-<g class="entity" data-t0="1" style="animation:orrery-show-api 20s linear infinite"><g class="node kind-service" data-node="api" data-kind="service" data-bbox="182.5 108 124 48" transform="translate(182.5 108)" style="animation:orrery-pos-api 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-api-on 20s linear infinite"><rect class="node-box" width="124" height="48" rx="8"/>
+<g class="entity" data-t0="1" style="animation:orrery-show-api 28s linear infinite"><g class="node kind-service" data-node="api" data-kind="service" data-bbox="182.5 108 124 48" transform="translate(182.5 108)" style="animation:orrery-pos-api 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-api-on 28s linear infinite"><rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text></g>
-<g class="variant st-degraded" data-state="degraded" data-t0="0" style="animation:orrery-var-api-degraded 20s linear infinite"><title>sessions load slowly</title><rect class="node-box" width="124" height="48" rx="8"/>
+<g class="variant st-degraded" data-state="degraded" data-t0="0" style="animation:orrery-var-api-degraded 28s linear infinite"><title>sessions load slowly</title><rect class="node-box" width="124" height="48" rx="8"/>
 <text class="node-label" x="62" y="24">Checkout API</text></g></g></g>
-<g class="entity" data-t0="1" style="animation:orrery-show-db 20s linear infinite"><g class="node kind-database" data-node="db" data-kind="database" data-bbox="227 325.5 125 48" transform="translate(227 325.5)" style="animation:orrery-pos-db 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-db-on 20s linear infinite"><rect class="node-box" width="125" height="48" rx="8"/>
+<g class="entity" data-t0="1" style="animation:orrery-show-db 28s linear infinite"><g class="node kind-database" data-node="db" data-kind="database" data-bbox="227 325.5 125 48" transform="translate(227 325.5)" style="animation:orrery-pos-db 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-db-on 28s linear infinite"><rect class="node-box" width="125" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="80.5" y="24">Orders DB</text></g></g></g>
-<g class="entity" data-t0="1" style="animation:orrery-show-replica 20s linear infinite"><g class="node kind-database" data-node="replica" data-kind="database" data-bbox="240.2 423.5 148 48" transform="translate(240.2 423.5)" style="animation:orrery-pos-replica 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-replica-on 20s linear infinite"><rect class="node-box" width="148" height="48" rx="8"/>
+<g class="entity" data-t0="1" style="animation:orrery-show-replica 28s linear infinite"><g class="node kind-database" data-node="replica" data-kind="database" data-bbox="240.2 423.5 148 48" transform="translate(240.2 423.5)" style="animation:orrery-pos-replica 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-replica-on 28s linear infinite"><rect class="node-box" width="148" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v8c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V4"/></g>
 <text class="node-label" x="92" y="24">Read replica</text></g></g></g>
-<g class="entity" data-t0="0" style="animation:orrery-show-redis-a 20s linear infinite"><g class="node kind-cache" data-node="redis-a" data-kind="cache" data-bbox="98 397.5 94 48" transform="translate(98 397.5)" style="animation:orrery-pos-redis-a 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-redis-a-on 20s linear infinite"><rect class="node-box" width="94" height="48" rx="8"/>
+<g class="entity" data-t0="0" style="animation:orrery-show-redis-a 28s linear infinite"><g class="node kind-cache" data-node="redis-a" data-kind="cache" data-bbox="98 397.5 94 48" transform="translate(98 397.5)" style="animation:orrery-pos-redis-a 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-redis-a-on 28s linear infinite"><rect class="node-box" width="94" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
 <text class="node-label" x="65" y="24">Redis</text></g>
-<g class="variant st-failed" data-state="failed" data-t0="0" style="animation:orrery-var-redis-a-failed 20s linear infinite"><title>out of memory</title><rect class="node-box" width="94" height="48" rx="8"/>
+<g class="variant st-failed" data-state="failed" data-t0="0" style="animation:orrery-var-redis-a-failed 28s linear infinite"><title>out of memory</title><rect class="node-box" width="94" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
 <text class="node-label" x="65" y="24">Redis</text></g></g></g>
-<g class="entity" data-t0="0" style="animation:orrery-show-aof-a 20s linear infinite"><g class="node kind-storage" data-node="aof-a" data-kind="storage" data-bbox="56 485.5 178 48" transform="translate(56 485.5)" style="animation:orrery-pos-aof-a 20s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-aof-a-on 20s linear infinite"><rect class="node-box" width="178" height="48" rx="8"/>
+<g class="entity" data-t0="0" style="animation:orrery-show-aof-a 28s linear infinite"><g class="node kind-storage" data-node="aof-a" data-kind="storage" data-bbox="56 485.5 178 48" transform="translate(56 485.5)" style="animation:orrery-pos-aof-a 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-aof-a-on 28s linear infinite"><rect class="node-box" width="178" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
+<text class="node-label" x="107" y="24">Append-only file</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-redis-b 28s linear infinite"><g class="node kind-cache" data-node="redis-b" data-kind="cache" data-bbox="98 621.5 94 48" transform="translate(98 621.5)" style="animation:orrery-pos-redis-b 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-redis-b-on 28s linear infinite"><rect class="node-box" width="94" height="48" rx="8"/>
+<g class="glyph" transform="translate(12 16)"><path d="M9 1.5L3 9h4.5l-1 5.5L13 7H8.5z"/></g>
+<text class="node-label" x="65" y="24">Redis</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-aof-b 28s linear infinite"><g class="node kind-storage" data-node="aof-b" data-kind="storage" data-bbox="56 709.5 178 48" transform="translate(56 709.5)" style="animation:orrery-pos-aof-b 28s linear infinite"><g class="variant st-on" data-state="on" data-t0="1" style="animation:orrery-var-aof-b-on 28s linear infinite"><rect class="node-box" width="178" height="48" rx="8"/>
 <g class="glyph" transform="translate(12 16)"><path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/></g>
 <text class="node-label" x="107" y="24">Append-only file</text></g></g></g>
 </g>
 </g>
 </g>
-<g class="legend-variant" data-t0="0" style="animation:orrery-legend-0 20s linear infinite"><g class="legend" transform="translate(20 511.5)">
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-0 28s linear infinite"><g class="legend" transform="translate(20 919.5)">
 <g transform="translate(0 0)"><rect width="14" height="14" rx="3" style="fill:#fffbeb;stroke:#d97706;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">degraded</tspan>: Working with reduced redundancy or capacity</text></g>
 <g transform="translate(0 20)"><rect width="14" height="14" rx="3" style="fill:#fef2f2;stroke:#dc2626;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">failed</tspan>: Broken</text></g>
 </g></g>
-<g class="legend-variant" data-t0="0" style="animation:orrery-legend-1 20s linear infinite"><g class="legend" transform="translate(20 511.5)">
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-1 28s linear infinite"><g class="legend" transform="translate(20 919.5)">
 <g transform="translate(0 0)"><rect width="14" height="14" rx="3" style="fill:#fffbeb;stroke:#d97706;stroke-width:1.5"/><text x="22" y="7"><tspan class="legend-name">degraded</tspan>: Working with reduced redundancy or capacity</text></g>
 </g></g>
-<text class="step-note" x="20" y="565.5" data-t0="1" style="animation:orrery-caption-0 20s linear infinite">The whole system. The session cache is one box.</text>
-<text class="step-note" x="20" y="565.5" data-t0="0" style="animation:orrery-caption-1 20s linear infinite">Inside the session cache: two nodes, still closed.</text>
-<text class="step-note" x="20" y="565.5" data-t0="0" style="animation:orrery-caption-2 20s linear infinite">Inside node A: a Redis process and its append-only file.</text>
-<text class="step-note" x="20" y="565.5" data-t0="0" style="animation:orrery-caption-3 20s linear infinite">Redis dies. The step marks the node failed and the cluster and API degraded.</text>
-<text class="step-note" x="20" y="565.5" data-t0="0" style="animation:orrery-caption-4 20s linear infinite">Back out: the closed boxes carry the state.</text>
+<text class="step-note" x="20" y="973.5" data-t0="1" style="animation:orrery-caption-0 28s linear infinite">The whole system. The session cache is one box.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-1 28s linear infinite">Open the session cache. The picture reflows; you still see everything.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-2 28s linear infinite">Open both nodes too. Still the whole system.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-3 28s linear infinite">Zoom in on node A: a Redis process and its append-only file.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-4 28s linear infinite">Redis dies. The step marks the node failed and the cluster and API degraded.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-5 28s linear infinite">Zoom out. Everything is still open; the states are where they were put.</text>
+<text class="step-note" x="20" y="973.5" data-t0="0" style="animation:orrery-caption-6 28s linear infinite">Close it all. The closed boxes carry the state.</text>
 </g>
 </g>
 </svg>

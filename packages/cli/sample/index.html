@@ -14,6 +14,7 @@
   aside select, aside button { font: inherit; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; }
   aside select { width: 100%; }
   aside button { cursor: pointer; margin: 2px 4px 2px 0; }
+  #groups div { margin: 2px 0; }
   aside button:disabled { opacity: .4; cursor: default; }
   aside button.is-on { border-color: #2563eb; color: #2563eb; }
   aside p { margin: 6px 0 0; color: #334155; min-height: 1.4em; }
@@ -33,9 +34,9 @@
   <h2>Selected</h2>
   <p id="selected">Click a component in the diagram.</p>
   <div id="states"></div>
-  <h2>Drill down</h2>
+  <h2>Open and zoom</h2>
   <div id="groups"></div>
-  <button id="back">Back out</button>
+  <button id="fit">Fit</button> <button id="back">Back</button>
   <h2>Play</h2>
   <button id="play">Play</button> <button id="stop">Stop</button> <button id="reset">Reset</button>
 </aside>

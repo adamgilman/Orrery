@@ -64,12 +64,19 @@
       },
       {
         "view": "overview",
-        "focus": "outer",
+        "open": [
+          "outer"
+        ],
+        "zoom": "outer",
         "note": "Inside Outer: Y, and Inner still closed."
       },
       {
         "view": "overview",
-        "focus": "inner",
+        "open": [
+          "outer",
+          "inner"
+        ],
+        "zoom": "inner",
         "note": "Inside Inner: X."
       },
       {
@@ -84,12 +91,18 @@
     },
     {
       "id": "inside-outer",
-      "focus": "outer"
+      "open": [
+        "outer"
+      ]
     },
     {
       "id": "inside-inner",
       "view": "overview",
-      "focus": "inner"
+      "open": [
+        "outer",
+        "inner"
+      ],
+      "zoom": "inner"
     },
     {
       "id": "story",

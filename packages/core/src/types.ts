@@ -121,11 +121,17 @@ export interface Model {
   exports: Export[];
 }
 
-/** One file the model produces (4.9): a view at a moment, a scenario playing, the inside of a group, or the tour. */
-export interface Export { id: string; view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true }
+/**
+ * One file the model produces (4.9): a view at a moment, a scenario playing, or the tour. `open` lists the closed
+ * groups drawn open (in declaration order); `zoom` is the entity the picture is cropped to.
+ */
+export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true }
 
-/** One moment of a tour: a view, optionally at a point in a scenario, with states set for the scene, a caption and its own duration. */
-export interface Scene { view: string; focus?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }
+/**
+ * One moment of a tour: a view, the closed groups drawn open, what the camera closes on, optionally a point in a
+ * scenario, states set for the scene, a caption and its own duration. Opening and zooming are separate actions.
+ */
+export interface Scene { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }
 export interface Tour { seconds: number; scenes: Scene[] }
 
 /** Anything with an id and a state: a component or a group. */

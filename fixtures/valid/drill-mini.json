@@ -116,15 +116,21 @@
       },
       {
         "view": "overview",
-        "focus": "orders",
-        "note": "Inside Orders."
+        "note": "Inside Orders.",
+        "open": [
+          "orders"
+        ],
+        "zoom": "orders"
       },
       {
         "view": "overview",
-        "focus": "orders",
         "scenario": "db-fails",
         "step": 1,
-        "note": "The database fails; the API fails with it."
+        "note": "The database fails; the API fails with it.",
+        "open": [
+          "orders"
+        ],
+        "zoom": "orders"
       },
       {
         "view": "overview",

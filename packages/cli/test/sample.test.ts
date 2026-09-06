@@ -33,7 +33,7 @@ describe("the embed's sample page", () => {
     expect([...doc.querySelectorAll<HTMLOptionElement>("#view option")].map((o) => o.value)).toEqual(["overview", "payments", "identity"]);
     expect([...doc.querySelectorAll<HTMLOptionElement>("#scenario option")].map((o) => o.value)).toEqual(["", "ledger-fails"]);
     expect([...doc.querySelectorAll<HTMLButtonElement>("#states button")].map((b) => b.textContent)).toEqual(["on", "degraded", "failed", "off"]);
-    expect([...doc.querySelectorAll<HTMLButtonElement>("#groups button")].map((b) => b.textContent)).toEqual(["Payments", "Identity"]); // the closed groups of the current view
+    expect([...doc.querySelectorAll<HTMLButtonElement>("#groups button")].map((b) => b.textContent)).toEqual(["Zoom Storefront", "Open Payments", "Zoom Payments", "Open Identity", "Zoom Identity"]); // open and zoom apart, per drawn group
     // the tour plays on mount; the sample shows that
     expect((doc.querySelector("#play") as HTMLButtonElement).disabled).toBe(true);
     (doc.querySelector("#stop") as HTMLButtonElement).click();
@@ -49,13 +49,20 @@ describe("the embed's sample page", () => {
     expect(doc.querySelector("#selected")!.textContent).toMatch(/^web: degraded/);
     (doc.querySelector('#states button[data-state="off"]') as HTMLButtonElement).click();
     expect(doc.querySelector('#diagram [data-node="web"]')!.getAttribute("data-state")).toBe("off");
-    // drill down from the groups list, then back out
-    (doc.querySelector("#groups button") as HTMLButtonElement).click();
+    // open from the groups list, zoom from it, then back out twice
+    const button = (text: string) => [...doc.querySelectorAll<HTMLButtonElement>("#groups button")].find((b) => b.textContent === text)!;
+    button("Open Payments").click();
     await settled(600);
     const shown = () => [...doc.querySelectorAll<SVGGElement>("#diagram .view")].find((g) => g.style.display !== "none")!;
     expect(shown().getAttribute("data-open")).toBe("payments");
-    expect((doc.querySelector("#back") as HTMLButtonElement).disabled).toBe(false);
-    (doc.querySelector("#back") as HTMLButtonElement).click();
+    expect(button("Close Payments")).toBeDefined();
+    button("Zoom Payments").click();
+    await settled(400);
+    expect((doc.querySelector("#fit") as HTMLButtonElement).disabled).toBe(false);
+    (doc.querySelector("#back") as HTMLButtonElement).click(); // zoom out
+    await settled(400);
+    expect((doc.querySelector("#fit") as HTMLButtonElement).disabled).toBe(true);
+    (doc.querySelector("#back") as HTMLButtonElement).click(); // close
     await settled(600);
     expect(shown().getAttribute("data-open")).toBe("");
   });

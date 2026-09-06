@@ -183,14 +183,19 @@ describe("renderSvg: closed groups (R11)", () => {
 });
 
 describe("render: focus and exports", () => {
-  it("focus renders the layout with that group and the groups above it open, as a still", async () => {
+  it("open renders the layout with exactly those groups open, as a still; zoom crops the picture to one entity", async () => {
     const n = fixture("nested-drill");
-    const svg = await render(n, new FakeLayoutEngine(), { focus: "inner" });
-    expect(svg).toMatch(/<g class="view" data-view="overview" data-open="outer inner"/);
+    const svg = await render(n, new FakeLayoutEngine(), { open: ["inner", "outer"] });
+    expect(svg).toMatch(/<g class="view" data-view="overview" data-open="outer inner"/); // declaration order, whatever was given
     expect(svg).toContain('data-node="x"');
     expect(svg).not.toContain('class="camera"');
     expect(svg).not.toContain("<script");
-    await expect(render(n, new FakeLayoutEngine(), { focus: "app" })).rejects.toThrow(/"app" is not a closed group in view "overview"/);
+    expect(svg).toMatch(/viewBox="0 0 [\d.]+ [\d.]+"/);
+    const zoomed = await render(n, new FakeLayoutEngine(), { open: ["outer", "inner"], zoom: "inner" });
+    const [bx, by, bw, bh] = zoomed.match(/data-group="inner" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
+    expect(zoomed).toContain(`viewBox="${Math.max(0, bx - 24)} ${Math.max(0, by - 24)} ${bw + 48} ${bh + 48}"`);
+    await expect(render(n, new FakeLayoutEngine(), { open: ["app"] })).rejects.toThrow(/"app" is not a closed group in view "overview"/);
+    await expect(render(n, new FakeLayoutEngine(), { zoom: "x" })).rejects.toThrow(/"x" is not drawn in view "overview" with everything closed/);
   });
   it("renderExport maps every kind of export onto render", async () => {
     const a = fixture("alternatives");
@@ -203,7 +208,11 @@ describe("render: focus and exports", () => {
     expect(whatIf).toContain("<title>no fraud scoring</title>");
     const n = fixture("nested-drill");
     expect(await renderExport(n, new FakeLayoutEngine(), n.exports[3]!)).toContain('class="camera"');
-    expect(await renderExport(n, new FakeLayoutEngine(), n.exports[2]!)).toMatch(/data-open="outer inner"/);
+    const inner = await renderExport(n, new FakeLayoutEngine(), n.exports[2]!);
+    expect(inner).toMatch(/data-open="outer inner"/);
+    const whole = await render(n, new FakeLayoutEngine(), { open: ["outer", "inner"] });
+    const width = (svg: string) => Number(svg.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) /)![1]);
+    expect(width(inner)).toBeLessThan(width(whole)); // zoomed to inner
   });
 });
 
@@ -250,7 +259,7 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(svg).toMatch(/<g class="legend-variant" data-t0="0" style="animation:orrery-legend-\d 16s linear infinite"><g class="legend"/);
     expect(svg.indexOf('class="legend-variant"')).toBeGreaterThan(svg.indexOf("</g>\n</g>\n<g class=\"legend-variant\"") > 0 ? 0 : svg.indexOf('<g class="camera"'));
   });
-  it("a closed group inside a closed group: focusing the inner one opens both, each layout is its own (R11, R12)", async () => {
+  it("a closed group inside a closed group: a scene opens both and zooms on the inner one; each layout is its own (R11, R12)", async () => {
     const svg = await render(fixture("nested-drill"), new FakeLayoutEngine(), { tour: true });
     // y (in outer) is in scenes 2 and 3; x (in inner) only in scene 3
     expect(svg).toMatch(/@keyframes orrery-show-y\{0%\{opacity:0\}32\.5%\{opacity:0\}34\.38%\{opacity:1\}75%\{opacity:1\}76\.88%\{opacity:0\}100%\{opacity:0\}\}/);

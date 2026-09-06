@@ -67,11 +67,13 @@ drawn as a ghost at the edge, so nothing is dropped silently. The data tier, on 
 **6. Drill down.** One diagram, every level of detail. Start high: the session cache is one small box. Open it and
 it grows into a frame, the picture reflows around it, and you are looking at the two nodes it is made of. Open a node
 and you are inside that: a Redis process and its append-only file. Close them and everything slides back. The detail
-is in the model, folded away until the reader wants it, as many levels deep as the model goes. This image plays that as
-a five-scene `tour`: the whole system, inside the cache, inside node A, Redis dies, back out. In the interactive file,
-click any closed group to open it and press Escape to step back out.
+is in the model, folded away until the reader wants it, as many levels deep as the model goes. Opening and zooming are
+separate: a scene, a still or a page can open two groups and stay zoomed out, or zoom in on one. This image plays that
+as a seven-scene `tour`: the whole system; the cache opened; both nodes opened, still the whole picture; zoom in on
+node A; Redis dies; zoom out with everything open; close it all. In the interactive file, click a closed box to open
+it, double-click or Enter to zoom, Escape to zoom out and then to close.
 
-![The whole system, inside the cache, inside a node, Redis dies, back out](examples/checkout/6-drill-down-tour.svg)
+![Open, open, zoom in, Redis dies, zoom out, close](examples/checkout/6-drill-down-tour.svg)
 
 **7. Your vocabulary.** States and kinds are yours to name: bind them to looks, and the legend teaches the reader
 your words. The same checkout in one company's words, healthy, impaired, brownout, outage and drained. Drain the
@@ -102,7 +104,7 @@ orrery embed examples/checkout.orrery.json --out site/checkout
 ```js
 const orrery = Orrery.mount(document.querySelector("svg"));
 orrery.views; orrery.scenarios; orrery.states; orrery.groups();   // what the model offers
-orrery.showView(id); orrery.focus(group); orrery.back();
+orrery.showView(id); orrery.open([...groups]); orrery.zoom(id); orrery.back();
 orrery.setScenario(id, step); orrery.next(); orrery.prev();
 orrery.setState(id, state); orrery.cycle(id); orrery.reset();
 orrery.play(); orrery.stop();

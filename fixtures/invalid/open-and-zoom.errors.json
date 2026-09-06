@@ -1,0 +1,22 @@
+[
+  {
+    "pointer": "/exports/0/open/0",
+    "message": "is not closed in view \"open\""
+  },
+  {
+    "pointer": "/exports/1/open/0",
+    "message": "is not a group"
+  },
+  {
+    "pointer": "/exports/2/open/0",
+    "message": "is inside \"g\", which is closed; open \"g\" too"
+  },
+  {
+    "pointer": "/exports/3/zoom",
+    "message": "\"q\" is inside \"h\", which is closed here"
+  },
+  {
+    "pointer": "/tour/scenes/1/open/0",
+    "message": "is inside \"g\", which is closed; open \"g\" too"
+  }
+]

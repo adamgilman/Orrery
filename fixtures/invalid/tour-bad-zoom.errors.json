@@ -1,0 +1,14 @@
+[
+  {
+    "pointer": "/tour/scenes/1/open/0",
+    "message": "\"b\" is not a group"
+  },
+  {
+    "pointer": "/tour/scenes/2/open/0",
+    "message": "unknown group \"zzz\""
+  },
+  {
+    "pointer": "/tour/scenes/2/zoom",
+    "message": "unknown entity \"zzz\""
+  }
+]

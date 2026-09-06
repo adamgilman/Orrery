@@ -270,12 +270,15 @@ describe("orrery export", () => {
     expect(run("export", join(fixtures, "valid/nested-drill.json"), "--view", "overview").code).toBe(2);
     expect(run("validate", join(fixtures, "valid/nested-drill.json")).out).toContain(", 4 exports");
   });
-  it("render --focus is the same still as an export with a focus", () => {
-    const r = run("render", join(fixtures, "valid/nested-drill.json"), "--focus", "outer");
+  it("render --open and --zoom are the same still as an export with them", () => {
+    const r = run("render", join(fixtures, "valid/nested-drill.json"), "--open", "outer,inner", "--zoom", "inner");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/data-open="outer"/);
+    expect(r.out).toMatch(/data-open="outer inner"/);
+    const whole = run("render", join(fixtures, "valid/nested-drill.json"), "--open", "outer,inner");
+    const width = (svg: string) => Number(svg.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+) /)![1]);
+    expect(width(r.out)).toBeLessThan(width(whole.out)); // cropped to inner
     expect(r.out).not.toMatch(/<script/);
-    const bad = run("render", join(fixtures, "valid/nested-drill.json"), "--focus", "app");
+    const bad = run("render", join(fixtures, "valid/nested-drill.json"), "--open", "app");
     expect(bad.code).toBe(1);
     expect(bad.err).toContain("is not a closed group");
   });

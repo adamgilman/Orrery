@@ -23,6 +23,7 @@
   $("prev").addEventListener("click", () => orrery.prev());
   $("next").addEventListener("click", () => orrery.next());
   $("back").addEventListener("click", () => orrery.back());
+  $("fit").addEventListener("click", () => orrery.zoom(null));
   $("play").addEventListener("click", () => orrery.play());
   $("stop").addEventListener("click", () => orrery.stop());
   $("reset").addEventListener("click", () => orrery.reset());
@@ -38,8 +39,21 @@
     const sel = s.selected ? s.states[s.selected] : null;
     $("selected").textContent = s.selected ? `${s.selected}: ${sel.state}${sel.reason ? ` (${sel.reason})` : ""}` : "Click a component in the diagram.";
     for (const b of $("states").querySelectorAll("button")) b.classList.toggle("is-on", !!sel && b.dataset.state === sel.state);
-    $("groups").replaceChildren(...orrery.groups().filter((g) => g.closed).map((g) => { const b = el("button", g.label); b.addEventListener("click", () => orrery.focus(g.id)); return b; }));
-    $("back").disabled = !s.focus;
+    // Opening and zooming are separate: a toggle per closable group, and a zoom per drawn group.
+    $("groups").replaceChildren(...orrery.groups().flatMap((g) => {
+      const row = el("div", "");
+      if (g.closable) {
+        const t = el("button", g.open ? `Close ${g.label}` : `Open ${g.label}`);
+        t.addEventListener("click", () => orrery.open(g.open ? s.open.filter((id) => id !== g.id) : [...s.open, g.id]));
+        row.appendChild(t);
+      }
+      const z = el("button", `Zoom ${g.label}`); z.classList.toggle("is-on", s.zoom === g.id);
+      z.addEventListener("click", () => orrery.zoom(g.id));
+      row.appendChild(z);
+      return [row];
+    }));
+    $("fit").disabled = !s.zoom;
+    $("back").disabled = !s.zoom && !s.open.length;
     $("play").disabled = s.playing; $("stop").disabled = !s.playing;
   };
   orrery.on("change", render);

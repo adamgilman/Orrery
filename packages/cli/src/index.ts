@@ -15,8 +15,9 @@ export const USAGE = `Usage:
                  [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
                  [--play <id>]           --static; --step <n> (1-based) stops after step n (default: last).
                  [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
-                 [--tour [<ids>]]        (repeatable; applied after the scenario). --focus draws a closed
-                 [--focus <group>]       group open, a still of the inside (implies --static).
+                 [--tour [<ids>]]        (repeatable; applied after the scenario). --open draws closed groups
+                 [--open <ids>]          open (comma-separated, with their closed ancestors); --zoom crops the
+                 [--zoom <id>]           picture to one entity. Both imply --static.
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
                                          the file, so they play inside <img>. --every: seconds per step or view.
@@ -38,7 +39,7 @@ export class CliError extends Error {
 }
 interface Io { stdout(s: string): void; stderr(s: string): void }
 
-const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--focus", "--out"]);
+const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--open", "--zoom", "--out"]);
 /** Flags whose value may be omitted (then the model's own declaration is used). */
 const OPTIONAL_VALUE_FLAGS = new Set(["--tour"]);
 const BOOL_FLAGS = new Set(["--static"]);
@@ -146,7 +147,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
       }
       return 0;
     }
-    const out = one(args, "-o"), view = one(args, "--view"), scenario = one(args, "--scenario"), stepRaw = one(args, "--step"), focus = one(args, "--focus");
+    const out = one(args, "-o"), view = one(args, "--view"), scenario = one(args, "--scenario"), stepRaw = one(args, "--step"), zoom = one(args, "--zoom");
+    const open = one(args, "--open")?.split(",").map((x) => x.trim()).filter(Boolean);
     if (args.values.has("--out")) throw new CliError("--out is for export; render writes one file with -o", 2);
     if (stepRaw !== undefined && scenario === undefined) throw new CliError("--step requires --scenario", 2);
     const step = stepRaw !== undefined ? Number(stepRaw) : undefined;
@@ -161,13 +163,13 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const play = playId !== undefined ? { scenario: playId, ...(every !== undefined ? { seconds: every } : {}) } : undefined;
     const tour = tourIds !== undefined ? { views: tourIds.split(",").map((x) => x.trim()).filter(Boolean), ...(every !== undefined ? { seconds: every } : {}) } : tourOwn ? (true as const) : undefined;
     if (tour === true && every !== undefined) throw new CliError("--every with --tour needs an explicit list of views", 2);
-    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined || focus !== undefined;
+    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined || open !== undefined || zoom !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
       const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}) };
       svg = isStatic
-        ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}), ...(focus !== undefined ? { focus } : {}) })
+        ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}), ...(open ? { open } : {}), ...(zoom !== undefined ? { zoom } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });
     } catch (e) {
       if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`);
