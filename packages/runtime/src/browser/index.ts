@@ -159,6 +159,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     const entities = new Map<string, { state: string; reason?: string }>([...d.components.map((c) => [c.id, c] as const), ...d.groups.map((g) => [g.id, g] as const)]);
     const conns = new Map(d.connections.map((c) => [c.key, c]));
     for (const layer of layers.values()) {
+      // The current step's callouts show; every other step's stay hidden (R16).
+      for (const g of layer.querySelectorAll<SVGGElement>(".callouts-step")) g.style.display = session.scenario && g.getAttribute("data-scenario") === session.scenario.id && Number(g.getAttribute("data-step")) === session.scenario.step ? "" : "none";
       for (const g of layer.querySelectorAll<SVGGElement>("[data-node],[data-group]")) {
         const e = entities.get(g.getAttribute("data-node") ?? g.getAttribute("data-group")!);
         if (!e) continue;

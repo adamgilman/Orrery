@@ -101,3 +101,14 @@ describe("declare: pure (B1)", () => {
     expect(stopFlows(declare(m, { scenario: "orders-failover", step: 3 }).model)).toEqual(a);
   });
 });
+
+describe("declare: callouts (R16)", () => {
+  const m = (() => { const r = validate({ components: [{ id: "a" }, { id: "b" }], callouts: [{ at: "a", text: "standing" }], scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "b", text: "step one" }] }, { restore: "a", callouts: [{ at: "a", text: "step two" }] }, { set: { degraded: "b" } }] }] }); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; })();
+  it("shows the standing callouts plus the current step's, never an earlier step's, then a what-if's", () => {
+    expect(declare(m).model.callouts.map((c) => c.text)).toEqual(["standing"]);
+    expect(declare(m, { scenario: "s", step: 1 }).model.callouts.map((c) => c.text)).toEqual(["standing", "step one"]);
+    expect(declare(m, { scenario: "s", step: 2 }).model.callouts.map((c) => c.text)).toEqual(["standing", "step two"]);
+    expect(declare(m, { scenario: "s", step: 3 }).model.callouts.map((c) => c.text)).toEqual(["standing"]);
+    expect(declare(m, { scenario: "s", step: 1, callouts: [{ at: "a", text: "what if" }] }).model.callouts.map((c) => c.text)).toEqual(["standing", "step one", "what if"]);
+  });
+});

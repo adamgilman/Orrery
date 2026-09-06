@@ -6,7 +6,7 @@ import { scalePath } from "./shapes.js";
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
-import type { Component, Connection, Export, Glyph, Group, GroupKindDef, HeadingAlign, Model, Play, ShapeDef, Tour, View } from "./types.js";
+import type { Callout, CalloutSide, Component, Connection, Export, Glyph, Group, GroupKindDef, HeadingAlign, Model, Play, ShapeDef, Tour, View } from "./types.js";
 import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -145,6 +145,9 @@ const BASE_STYLE = `
 .edge-label{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
 .legend text{font:12px ${FONT};fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
 .step-note{font:500 13px ${FONT};fill:#334155;dominant-baseline:central}
+.callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
+.callout-text{font:12px ${FONT};fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
 .heading-title{font:600 16px ${FONT};fill:#0f172a}
 .heading-text{font:12px ${FONT};fill:#64748b}
@@ -252,6 +255,59 @@ const edgesMarkup = (model: Model, layout: LayoutResult) => model.connections.ma
 
 /** The legend sits LEGEND_GAP below the picture, one row per state on a LEGEND_ROW pitch; a caption strip is CAPTION_STRIP tall. */
 const LEGEND_ROW = 22, LEGEND_GAP = 16, CAPTION_STRIP = 28;
+/* ---------------- callouts (R16) ---------------- */
+const CALLOUT_MAX_WIDTH = 200, CALLOUT_PAD = 10, CALLOUT_LINE = 17, CALLOUT_GAP = 28, CALLOUT_MARGIN = 12;
+const SIDES: CalloutSide[] = ["right", "bottom", "left", "top"];
+interface Rect { x: number; y: number; width: number; height: number }
+const overlap = (a: Rect, b: Rect) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+/**
+ * The model's callouts as notes with leaders (R16). A note goes on the side of its target with the least overlap
+ * with nodes, closed boxes, lines and earlier notes (right, bottom, left, top in that order on a tie), never above or left
+ * of the canvas, unless the author pins a side. `right` and `bottom` say how far the notes reach, so the canvas grows.
+ */
+interface Notes { markup: string; right: number; bottom: number; left: number; top: number; /** each note's box and what it points at */ boxes: { at: string; box: Rect }[] }
+function calloutsMarkup(model: Model, layout: LayoutResult): Notes {
+  if (!model.callouts.length) return { markup: "", right: 0, bottom: 0, left: 0, top: 0, boxes: [] };
+  const boxes: { at: string; box: Rect }[] = [];
+  // Nodes, closed boxes and the lines between them are in the way; open frames are not.
+  const obstacles: Rect[] = [...Object.values(layout.nodes), ...model.groups.filter((g) => g.collapsed !== undefined).map((g) => layout.groups[g.id]!)];
+  for (const r of Object.values(layout.edges)) r.points.slice(1).forEach((p, i) => { const q = r.points[i]!; obstacles.push({ x: Math.min(p.x, q.x) - 2, y: Math.min(p.y, q.y) - 2, width: Math.abs(p.x - q.x) + 4, height: Math.abs(p.y - q.y) + 4 }); });
+  const parts: string[] = [];
+  let right = 0, bottom = 0, left = 0, top = 0;
+  for (const c of model.callouts) {
+    let target: Rect | undefined = layout.nodes[c.at] ?? layout.groups[c.at];
+    if (!target) { const r = layout.edges[c.at]; if (!r) continue; const p = r.labelAt ?? midpoint(r.points); target = { x: p.x, y: p.y, width: 0, height: 0 }; }
+    const lines = wrap(c.text, 12, CALLOUT_MAX_WIDTH - 2 * CALLOUT_PAD);
+    const w = Math.ceil(Math.max(...lines.map((l) => textWidth(l.length, 12))) + 2 * CALLOUT_PAD), h = lines.length * CALLOUT_LINE + 2 * CALLOUT_PAD - 2;
+    const cx = target.x + target.width / 2, cy = target.y + target.height / 2;
+    const candidate: Record<CalloutSide, Rect> = {
+      right: { x: target.x + target.width + CALLOUT_GAP, y: cy - h / 2, width: w, height: h },
+      bottom: { x: cx - w / 2, y: target.y + target.height + CALLOUT_GAP, width: w, height: h },
+      left: { x: target.x - CALLOUT_GAP - w, y: cy - h / 2, width: w, height: h },
+      top: { x: cx - w / 2, y: target.y - CALLOUT_GAP - h, width: w, height: h },
+    };
+    const score = (r: Rect) => obstacles.reduce((s, o) => s + overlap(r, o), 0) + (r.x < 0 || r.y < 0 ? 1e9 : 0);
+    const side = c.side ?? SIDES.reduce((best, s) => (score(candidate[s]) < score(candidate[best]) ? s : best));
+    const box = candidate[side];
+    obstacles.push(box); boxes.push({ at: c.at, box });
+    const from = side === "right" ? { x: box.x, y: box.y + h / 2 } : side === "left" ? { x: box.x + w, y: box.y + h / 2 } : side === "bottom" ? { x: box.x + w / 2, y: box.y } : { x: box.x + w / 2, y: box.y + h };
+    const to = side === "right" ? { x: target.x + target.width, y: cy } : side === "left" ? { x: target.x, y: cy } : side === "bottom" ? { x: cx, y: target.y + target.height } : { x: cx, y: target.y };
+    const text = lines.map((l, i) => `<tspan x="${num(box.x + CALLOUT_PAD)}" dy="${i === 0 ? 0 : CALLOUT_LINE}">${esc(l)}</tspan>`).join("");
+    parts.push(`<g class="callout" data-callout="${escAttr(c.at)}"><path class="callout-leader" d="M${num(from.x)} ${num(from.y)} L${num(to.x)} ${num(to.y)}" marker-end="url(#arrow)"/><rect class="callout-box" x="${num(box.x)}" y="${num(box.y)}" width="${num(w)}" height="${num(h)}" rx="4"/><text class="callout-text" x="${num(box.x + CALLOUT_PAD)}" y="${num(box.y + CALLOUT_PAD + 7)}">${text}</text></g>`);
+    right = Math.max(right, box.x + w); bottom = Math.max(bottom, box.y + h); left = Math.min(left, box.x); top = Math.min(top, box.y);
+  }
+  return { markup: `<g class="callouts">\n${parts.join("\n")}\n</g>`, right, bottom, left, top, boxes };
+}
+/** A zoom takes the notes about its target along: the target's box grown to hold every note pointing at it or at something inside it (R16). */
+function withNotes(box: Rect, target: string, model: Model, notes: Notes): Rect {
+  const parentOf = new Map(model.groups.map((g) => [g.id, g.parent] as const));
+  const groupOf = new Map(model.components.map((c) => [c.id, c.group] as const));
+  const inside = (id: string) => { for (let cur = parentOf.has(id) ? parentOf.get(id) : groupOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (cur === target) return true; return false; };
+  let { x, y } = box, x1 = box.x + box.width, y1 = box.y + box.height;
+  for (const n of notes.boxes) if (n.at === target || inside(n.at)) { x = Math.min(x, n.box.x); y = Math.min(y, n.box.y); x1 = Math.max(x1, n.box.x + n.box.width); y1 = Math.max(y1, n.box.y + n.box.height); }
+  return { x, y, width: x1 - x, height: y1 - y };
+}
+
 /** Legend rows for every non-default state used in this (scoped, declared) model (R9). Empty when none. */
 function legendMarkup(model: Model, y: number): { markup: string; height: number; width: number } {
   const used = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
@@ -268,14 +324,19 @@ function legendMarkup(model: Model, y: number): { markup: string; height: number
 }
 
 /** One view's drawing (groups, connections, components) and its legend, apart, with the size both need together. */
-export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number } {
-  const legend = legendMarkup(model, layout.height + LEGEND_GAP);
+export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number; layout: LayoutResult } {
+  let notes = calloutsMarkup(model, layout);
+  // a note pinned past the top or left edge moves the whole picture over to make room
+  if (notes.left < 0 || notes.top < 0) { layout = shiftLayout(layout, Math.max(0, CALLOUT_MARGIN - notes.left), Math.max(0, CALLOUT_MARGIN - notes.top)); notes = calloutsMarkup(model, layout); }
+  const bottom = Math.max(layout.height, notes.bottom + CALLOUT_MARGIN);
+  const legend = legendMarkup(model, bottom + LEGEND_GAP);
   const picture = [
     `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout)).join("\n")}\n</g>`,
     `<g class="edges">\n${edgesMarkup(model, layout)}\n</g>`,
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout)).join("\n")}\n</g>`,
+    ...(notes.markup ? [notes.markup] : []),
   ].join("\n");
-  return { picture, legend: legend.markup, width: Math.max(layout.width, legend.width), height: layout.height + legend.height };
+  return { picture, legend: legend.markup, width: Math.max(layout.width, notes.right + CALLOUT_MARGIN, legend.width), height: bottom + legend.height, layout };
 }
 const withLegend = (v: { picture: string; legend: string }) => (v.legend ? `${v.picture}\n${v.legend}` : v.picture);
 
@@ -330,7 +391,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const scenes = tour.scenes.map((scene) => {
     const view = selectView(model, scene.view);
     const merged = { ...(set ?? {}), ...(scene.set ?? {}) };
-    const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}), ...(scene.reasons ? { reasons: scene.reasons } : {}) });
+    const d = declare(model, { ...(scene.scenario !== undefined ? { scenario: scene.scenario } : {}), ...(scene.step !== undefined ? { step: scene.step } : {}), ...(Object.keys(merged).length ? { set: merged } : {}), ...(scene.reasons ? { reasons: scene.reasons } : {}), ...(scene.callouts ? { callouts: scene.callouts } : {}) });
     const title = view.title ?? model.title ?? view.id;
     const stateKey = JSON.stringify([scene.scenario ?? null, scene.step ?? null, merged]);
     const open = scene.open ?? [];
@@ -377,11 +438,14 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     for (const s of scenes) if (!layouts.has(s.configKey)) layouts.set(s.configKey, await engine.layout(toLayoutGraph(scopeModel(stopFlows(s.declared), anchor, s.open))));
     const models = scenes.map((s) => scopeModel(stopFlows(s.declared), anchor, s.open));
     const layoutAt = (k: number) => layouts.get(scenes[k]!.configKey)!;
-    const legends = models.map((m, k) => legendMarkup(m, layoutAt(k).height + LEGEND_GAP));
+    const notesAt = models.map((m, k) => calloutsMarkup(m, layoutAt(k)));
+    // A scene's extent is its layout plus the notes it places past the edge.
+    const extent = (k: number) => ({ width: Math.max(layoutAt(k).width, notesAt[k]!.right + CALLOUT_MARGIN), height: Math.max(layoutAt(k).height, notesAt[k]!.bottom + CALLOUT_MARGIN) });
+    const legends = models.map((m, k) => legendMarkup(m, extent(k).height + LEGEND_GAP));
     // The stage is the size of the whole pictures (the scenes without a zoom); a zoomed scene fits its target into
     // it, and an unzoomed scene fits its whole layout, so larger layouts never enlarge the image.
-    const wide = scenes.filter((s) => s.scene.zoom === undefined).map((_, i, all) => layoutAt(scenes.indexOf(all[i]!)));
-    const stageOf = wide.length ? wide : [layoutAt(0)];
+    const wide = scenes.map((s, k) => (s.scene.zoom === undefined ? k : -1)).filter((k) => k >= 0);
+    const stageOf = (wide.length ? wide : [0]).map(extent);
     const stageW = Math.max(...stageOf.map((l) => l.width)), stageH = Math.max(...stageOf.map((l) => l.height));
     const width = Math.max(stageW, ...legends.map((l) => l.width));
     const height = stageH + Math.max(...legends.map((l) => l.height)) + CAPTION_STRIP;
@@ -455,6 +519,13 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     });
     // Edges: one set per distinct drawing (layout and loads), swapped in the staged phases when the layout changes,
     // crossfaded when only the loads do.
+    // Callouts: one set per scene's distinct notes, arriving and leaving in the staged phases like captions.
+    const calloutKeys = [...new Set(notesAt.map((n) => n.markup))].filter(Boolean);
+    const calloutsAll = calloutKeys.map((markup, i) => {
+      const isOn = (k: number) => notesAt[k]!.markup === markup;
+      css.push(`@keyframes orrery-callouts-${i}{${track(isOn, opacity, staged)}}`);
+      return shown(`orrery-callouts-${i}`, isOn, markup, "callouts", ` data-callouts="${i}"`);
+    });
     const edgeSets = models.map((m, k) => edgesMarkup(m, layoutAt(k)));
     const edgeKeys = [...new Set(edgeSets)];
     const edgesPhase: Phase = (k, on) => (scenes[k]!.configKey !== scenes[k - 1]!.configKey ? staged(k, on) : whole(k, on));
@@ -475,7 +546,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       return `<text class="step-note" x="20" y="${num(height - CAPTION_STRIP / 2)}" data-t0="${k === 0 ? 1 : 0}" style="${anim(`orrery-caption-${k}`)}">${esc(sc.caption)}</text>`;
     });
     // The camera closes on the scene's zoom in its layout, or fits the whole layout when there is none.
-    const cameraBox = (k: number) => { const z = scenes[k]!.scene.zoom; const l = layoutAt(k); return (z ? l.groups[z] ?? l.nodes[z] : undefined) ?? { x: 0, y: 0, width: l.width, height: l.height }; };
+    const cameraBox = (k: number) => { const z = scenes[k]!.scene.zoom; const l = layoutAt(k); const b = z ? l.groups[z] ?? l.nodes[z] : undefined; return b && z ? withNotes(b, z, models[k]!, notesAt[k]!) : { x: 0, y: 0, ...extent(k) }; };
     const cameraAt = (k: number) => cameraFor(cameraBox(k), stage, scenes[k]!.scene.zoom ? 24 : 0);
     css.push(`@keyframes orrery-camera{${track(cameraAt, (v) => `transform:${v}`, move, ease)}}`);
     parts.push(
@@ -485,6 +556,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       `<g class="groups">\n${groupsMarkup.join("\n")}\n</g>`,
       ...edgesMarkupAll,
       `<g class="nodes">\n${nodesMarkup.join("\n")}\n</g>`,
+      ...calloutsAll,
       `</g>`,
       `</g>`,
       ...legendsMarkup,
@@ -528,7 +600,7 @@ async function layerFor(declared: Model, view: View, engine: LayoutEngine, play:
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   if (play) return { view, title, open, layout, ...playingLayer(declared, view, play, layout) };
   const v = renderView(base, layout);
-  return { view, title, open, layout, width: v.width, height: v.height, markup: withLegend(v) };
+  return { view, title, open, layout: v.layout, width: v.width, height: v.height, markup: withLegend(v) };
 }
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. `data-open` lists the closed groups this layer opens. */
 const viewLayer = (l: ViewLayer, visible: boolean) =>
@@ -601,6 +673,8 @@ export interface RenderOptions {
   tour?: true | { views: string[]; seconds?: number };
   /** Closed groups drawn open, each with its closed ancestors listed too: a still of the inside (R11). */
   open?: string[];
+  /** Callouts for this moment, drawn with the model's standing ones and a scenario step's (R16). */
+  callouts?: Callout[];
   /** Draw the title and description block above the picture (R15): the view's own, else the model's. `true` centres the text; `"left"` sets it at the edge. */
   heading?: boolean | HeadingAlign;
   /** The entity the picture is cropped to, with a little air around it. */
@@ -629,7 +703,7 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
   const open = openOrder(model.groups, options.open ?? []);
   for (const g of open) if (!(view.collapse ?? []).includes(g)) throw new ModelError(`"${g}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
-  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}) });
+  const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}), ...(options.callouts ? { callouts: options.callouts } : {}) });
   let title = view.title ?? model.title;
   if (options.scenario !== undefined) {
     const label = model.scenarios.find((x) => x.id === options.scenario)!.label;
@@ -638,8 +712,10 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   const layer = await layerFor(d.model, view, engine, play, title ?? view.id, undefined, open);
   let viewBox: { x: number; y: number; width: number; height: number } | undefined;
   if (options.zoom !== undefined) {
-    const b = layer.layout!.groups[options.zoom] ?? layer.layout!.nodes[options.zoom];
-    if (!b) throw new ModelError(`"${options.zoom}" is not drawn in view "${view.id}" with ${open.length ? `${open.join(", ")} open` : "everything closed"}`);
+    const target = layer.layout!.groups[options.zoom] ?? layer.layout!.nodes[options.zoom];
+    if (!target) throw new ModelError(`"${options.zoom}" is not drawn in view "${view.id}" with ${open.length ? `${open.join(", ")} open` : "everything closed"}`);
+    const scoped = scopeModel(stopFlows(d.model), view, open);
+    const b = withNotes(target, options.zoom, scoped, calloutsMarkup(scoped, layer.layout!));
     const pad = 24;
     viewBox = { x: Math.max(0, b.x - pad), y: Math.max(0, b.y - pad), width: Math.min(layer.width, b.width + 2 * pad), height: Math.min(layer.height, b.height + 2 * pad) };
   }
@@ -652,6 +728,7 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   return render(model, engine, {
     view: x.view,
     ...(x.heading ? { heading: x.heading } : {}),
+    ...(x.callouts ? { callouts: x.callouts } : {}),
     ...(x.open ? { open: x.open } : {}),
     ...(x.zoom !== undefined ? { zoom: x.zoom } : {}),
     ...(x.scenario !== undefined ? { scenario: x.scenario } : {}),
@@ -682,6 +759,19 @@ function usedVocabulary(model: Model): Model {
   return { ...model, kinds: { components, groups, connections }, shapes };
 }
 
+/** Every scenario step's own callouts for a layer, hidden, so the runtime can show the current step's (R16). Same layout: states never move anything. */
+function stepCallouts(declared: Model, view: View, open: readonly string[], layout: LayoutResult): string {
+  const parts: string[] = [];
+  for (const sc of declared.scenarios) sc.steps.forEach((st, i) => {
+    if (!st.callouts.length) return;
+    const moment = declare(declared, { scenario: sc.id, step: i + 1 }).model;
+    const scoped = scopeModel(stopFlows({ ...moment, callouts: st.callouts }), view, open);
+    const notes = calloutsMarkup(scoped, layout).markup;
+    if (notes) parts.push(`<g class="callouts-step" data-scenario="${escAttr(sc.id)}" data-step="${i + 1}" style="display:none">\n${notes}\n</g>`);
+  });
+  return parts.join("\n");
+}
+
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
   // The declared model with the what-if applied is what the runtime starts from.
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
@@ -690,8 +780,9 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
     const play = view === first ? playOf(view, options) : view.play;
     if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
-    layers.push(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id));
-    for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open));
+    const withSteps = (layer: ViewLayer, open: readonly string[]) => (layer.css === undefined ? { ...layer, markup: [layer.markup, stepCallouts(declared, view, open, layer.layout!)].filter(Boolean).join("\n") } : layer);
+    layers.push(withSteps(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id), []));
+    for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(withSteps(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open), open));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");

@@ -1,4 +1,4 @@
-import type { Model } from "./types.js";
+import type { Callout, Model } from "./types.js";
 
 /** A request the model cannot satisfy: unknown view, scenario, state, entity, or step. Callers report it, not a stack. */
 export class ModelError extends Error {}
@@ -38,6 +38,8 @@ export interface Declaration {
   set?: Record<string, string[]>;
   reasons?: Record<string, string>;
   loads?: Record<string, number>;
+  /** Callouts for this moment, after the step's (R16). */
+  callouts?: Callout[];
 }
 
 /**
@@ -50,6 +52,7 @@ export function declare(model: Model, d: Declaration = {}): { model: Model; step
   const reasons = new Map<string, string>();
   const loads = new Map<string, number>(Object.entries(d.loads ?? {}));
   let step: number | undefined, steps: number | undefined, note: string | undefined;
+  const callouts: Callout[] = [...model.callouts];
   if (d.scenario !== undefined) {
     const sc = model.scenarios.find((s) => s.id === d.scenario);
     if (!sc) throw new ModelError(`unknown scenario "${d.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
@@ -64,12 +67,14 @@ export function declare(model: Model, d: Declaration = {}): { model: Model; step
       for (const [k, v] of Object.entries(st.load)) loads.set(k, v);
     }
     note = sc.steps[step - 1]!.note;
+    callouts.push(...sc.steps[step - 1]!.callouts);
   }
   for (const [s, ids] of Object.entries(d.set ?? {})) for (const id of ids) { states.set(id, s); reasons.delete(id); }
   for (const [id, why] of Object.entries(d.reasons ?? {})) reasons.set(id, why);
   const set: Record<string, string[]> = Object.create(null);
   for (const [id, s] of states) set[s] = [...(set[s] ?? []), id];
-  return { model: applySet(model, set, Object.fromEntries(loads), Object.fromEntries(reasons)), ...(step !== undefined && steps !== undefined ? { step, steps } : {}), ...(note !== undefined ? { note } : {}) };
+  callouts.push(...(d.callouts ?? []));
+  return { model: { ...applySet(model, set, Object.fromEntries(loads), Object.fromEntries(reasons)), callouts }, ...(step !== undefined && steps !== undefined ? { step, steps } : {}), ...(note !== undefined ? { note } : {}) };
 }
 
 /**

@@ -64,6 +64,7 @@ describe("validate: normalisation (S12, defaults)", () => {
       set: { failed: ["orders"], degraded: ["api", "web"] },
       reasons: { api: "reads from the replica", web: "checkout is slower" },
       restore: [], load: { "api->replica": 0.6 },
+      callouts: [],
     });
     expect(s.steps[3]!.restore).toEqual(["orders", "fraud", "replica", "api", "web"]);
     expect(s.steps[3]!.reasons).toEqual({});
@@ -161,5 +162,27 @@ describe("validate: descriptions and headings (R15)", () => {
     expect(r.model.description).toBe("About the system");
     expect(r.model.views[0]!.description).toBe("About this view");
     expect(r.model.exports.map((x) => x.heading)).toEqual([true, "left"]);
+  });
+});
+
+describe("validate: callouts (R16)", () => {
+  const base = { components: [{ id: "a" }, { id: "b" }], connections: [{ id: "ab", from: "a", to: "b" }], groups: [{ id: "g" }], scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "b", text: "B takes over" }, { at: "ab", text: "the line", side: "top" }] }] }], views: [{ id: "v" }] };
+  it("keeps callouts on the model, a step, a scene and an export, normalised with their side", () => {
+    const r = validate({ ...base, callouts: [{ at: "g", text: "standing" }], tour: { seconds: 2, scenes: [{ view: "v", callouts: [{ at: "a", text: "scene" }] }, { view: "v" }] }, exports: [{ id: "x", set: { failed: "a" }, callouts: [{ at: "a", text: "what-if", side: "left" }] }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    expect(r.model.callouts).toEqual([{ at: "g", text: "standing" }]);
+    expect(r.model.scenarios[0]!.steps[0]!.callouts).toEqual([{ at: "b", text: "B takes over" }, { at: "ab", text: "the line", side: "top" }]);
+    expect(r.model.tour!.scenes[0]!.callouts).toEqual([{ at: "a", text: "scene" }]);
+    expect(r.model.tour!.scenes[1]!.callouts).toBeUndefined();
+    expect(r.model.exports[0]!.callouts).toEqual([{ at: "a", text: "what-if", side: "left" }]);
+    expect(validate({ components: [{ id: "a" }] }).ok && (validate({ components: [{ id: "a" }] }) as { model: Model }).model.callouts).toEqual([]);
+  });
+  it("rejects a callout at nothing it can point to, and a bad side", () => {
+    const r = validate({ ...base, callouts: [{ at: "zzz", text: "?" }], scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "nope", text: "?" }] }] }] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.map((e) => e.toString()).sort()).toEqual(['/callouts/0/at: unknown entity or connection id "zzz"', '/scenarios/0/steps/0/callouts/0/at: unknown entity or connection id "nope"']);
+    const s = validate({ ...base, callouts: [{ at: "a", text: "x", side: "middle" }] });
+    expect(s.ok).toBe(false);
+    if (!s.ok) expect(s.errors[0]!.pointer).toBe("/callouts/0/side");
   });
 });

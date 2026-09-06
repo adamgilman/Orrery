@@ -103,3 +103,13 @@ describe("scopeModel: collapsed groups (R11)", () => {
   });
 });
 
+
+describe("scopeModel: callouts (R16)", () => {
+  it("re-points a callout inside a closed group at the box, and drops one whose target is not drawn", () => {
+    const r = validate({ groups: [{ id: "g" }, { id: "h" }], components: [{ id: "a", group: "g" }, { id: "b", group: "h" }, { id: "c" }], connections: [{ id: "ab", from: "a", to: "b" }, { id: "aa", from: "a", to: "c" }], callouts: [{ at: "a", text: "inside" }, { at: "b", text: "outside" }, { at: "ab", text: "line" }, { at: "c", text: "plain" }], views: [{ id: "v", only: ["g", "c"], collapse: ["g"] }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const scoped = scopeModel(r.model, r.model.views[0]!);
+    expect(scoped.callouts).toEqual([{ at: "g", text: "inside" }, { at: "ab", text: "line" }, { at: "c", text: "plain" }]); // the line survives, to a ghost
+    expect(scopeModel(r.model, r.model.views[0]!, ["g"]).callouts.map((c) => c.at)).toEqual(["a", "ab", "c"]);
+  });
+});

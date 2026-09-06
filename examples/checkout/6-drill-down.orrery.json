@@ -147,6 +147,12 @@
               "id": "failover",
               "load": 0.6
             }
+          ],
+          "callouts": [
+            {
+              "at": "replica",
+              "text": "Reads move to the replica; writes queue until the primary is back"
+            }
           ]
         }
       ]
@@ -172,6 +178,12 @@
               "from": "cache-a",
               "to": "cache-b",
               "load": 0
+            }
+          ],
+          "callouts": [
+            {
+              "at": "cache-a",
+              "text": "One node left; sessions load slowly until it is back"
             }
           ]
         }

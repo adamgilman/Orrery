@@ -75,7 +75,12 @@ restores others to the base model, and moves loads. Nothing is inferred: the sto
 ```
 
 Step 1: the primary fails, the failover line carries the reads, flow into the failed box stops. Every reason is a
-tooltip; the legend lists the states in use.
+tooltip; the legend lists the states in use. The step's `callouts` say what is happening, on the picture: a note
+pointing at what it names, placed where there is room (or on the `side` you say), shown at this step only.
+
+```jsonc
+"callouts": [{ "at": "replica", "text": "Reads move to the replica; writes queue until the primary is back" }]
+```
 
 ![Step 1](step-1.svg)
 

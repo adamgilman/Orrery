@@ -127,6 +127,7 @@ interface LayoutEngine {
 | Moving parts | examples/moving-parts/README.md draws every way a model moves, views, open and zoom, cumulative scenario steps, what-ifs, play and the tour, from a model derived from the checkout master by `tools/moving-parts.mjs`. |
 | Type pass | One scale on the 48px box (14 labels, 12 secondary, 11 eyebrow, 13 captions), Inter-first stack matching the frame tooling, closed-group names as peers of labels, legend and caption strips with air, tabular numerals. |
 | Heading block | `description` on the model and on a view; `heading: true` on an export or `render --heading` draws title and description above the picture, centred or `left`, still or interactive (the runtime's camera works below it). |
+| Callouts | `callouts` on a scenario step, a tour scene, an export and the model: a note with a leader pointing at an entity or connection, placed where there is room or on a declared side, drawn per moment in stills, play, tours and the interactive file (every step's carried hidden, the current step's shown). |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 

@@ -46,7 +46,8 @@ cluster's frame; the failover line to the read replica carries no load yet.
 
 ![Connected](examples/checkout/3-connections.svg)
 
-**4. Scenarios.** Say what happens, in your words. A scenario is a list of steps; each step puts entities in
+**4. Scenarios.** Say what happens, in your words, and point at it: a step's `callouts` are notes drawn on the
+picture for that step. A scenario is a list of steps; each step puts entities in
 states, with a reason if you like, and sets the loads that move. Here the primary fails, the API is degraded because
 it reads from the replica, the storefront is degraded because checkout is slower, and the failover line carries the
 reads. Nothing is worked out for you: every state in the picture is one you wrote, and a failed box stops its flows.

@@ -383,3 +383,75 @@ describe("render: heading (R15)", () => {
     expect(tour).toMatch(/<text class="heading-title centred" x="[\d.]+" y="30">Checkout on AWS<\/text>/);
   });
 });
+
+describe("render: callouts (R16)", () => {
+  const cm = (extra: object) => inline({ direction: "right", components: [{ id: "a", label: "Left" }, { id: "b", label: "Middle" }, { id: "c", label: "Right" }], connections: [{ id: "ab", from: "a", to: "b" }, { from: "b", to: "c" }], ...extra });
+  it("draws a note with wrapped text and a leader with an arrowhead to the target's nearest edge, on the side with room", async () => {
+    const m = cm({ callouts: [{ at: "b", text: "The middle box is where the interesting thing happens, in the end." }] });
+    const l = await laidOut(m); const svg = renderSvg(m, l);
+    const note = between(svg, '<g class="callout" data-callout="b"');
+    expect(note).toMatch(/<path class="callout-leader" d="M[\d.]+ [\d.]+ L[\d.]+ [\d.]+" marker-end="url\(#arrow\)"\/>/);
+    expect(note).toMatch(/<rect class="callout-box" x="[\d.]+" y="[\d.]+" width="[\d.]+" height="[\d.]+" rx="4"\/>/);
+    expect((note.match(/<tspan/g) ?? []).length).toBeGreaterThan(1);
+    // a is on b's left and c on its right, so the note goes below
+    const b = l.nodes.b!;
+    const [, nx, ny] = note.match(/<rect class="callout-box" x="([\d.]+)" y="([\d.]+)"/)!;
+    expect(Number(ny)).toBeGreaterThan(b.y + b.height);
+    expect(note).toContain(`L${Math.round((b.x + b.width / 2) * 10) / 10} ${Math.round((b.y + b.height) * 10) / 10}"`); // the leader ends on b's bottom edge
+    expect(Number(nx)).toBeGreaterThanOrEqual(0);
+    // the canvas grows to hold it
+    expect(Number(svg.match(/viewBox="0 0 [\d.]+ ([\d.]+)"/)![1])).toBeGreaterThan(l.height);
+  });
+  it("obeys side, and points at a connection's label point", async () => {
+    const m = cm({ callouts: [{ at: "c", text: "Pinned on top", side: "top" }, { at: "ab", text: "On the line" }] });
+    const l = await laidOut(m); const svg = renderSvg(m, l);
+    const top = between(svg, '<g class="callout" data-callout="c"');
+    const [, , ny, , nh] = top.match(/<rect class="callout-box" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/)!;
+    // the row sits at the top of the layout, so the picture moved down to make room for a note pinned above it
+    const cy = Number(svg.match(/data-node="c"[^>]*data-bbox="\S+ (\S+) /)![1]);
+    expect(cy).toBeGreaterThan(l.nodes.c!.y);
+    expect(Number(ny)).toBeGreaterThanOrEqual(0);
+    expect(Number(ny) + Number(nh)).toBeLessThan(cy);
+    const line = between(svg, '<g class="callout" data-callout="ab"');
+    const [, x0, x1] = svg.match(/data-edge="ab"[^>]*d="M([\d.]+) [\d.]+ L([\d.]+) /)!;
+    const mx = (Number(x0) + Number(x1)) / 2;
+    expect(line).toMatch(new RegExp(`L${Math.round(mx * 10) / 10} [\\d.]+"`));
+  });
+  it("a still of a scenario step carries that step's callouts and the play layers each carry their own", async () => {
+    const m = cm({ scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "a", text: "one" }] }, { restore: "a", callouts: [{ at: "b", text: "two" }] }] }] });
+    const one = await render(m, new FakeLayoutEngine(), { scenario: "s", step: 1 });
+    expect(one).toContain('data-callout="a"'); expect(one).not.toContain('data-callout="b"');
+    const play = await render(m, new FakeLayoutEngine(), { play: { scenario: "s" } });
+    expect(play.match(/data-callout="a"/g)).toHaveLength(1); expect(play.match(/data-callout="b"/g)).toHaveLength(1);
+  });
+  it("in a one-drawing tour the callouts are one set per scene, staged like captions", async () => {
+    const m = cm({ views: [{ id: "v" }], tour: { seconds: 2, scenes: [{ view: "v", callouts: [{ at: "a", text: "first" }] }, { view: "v", callouts: [{ at: "c", text: "second" }] }, { view: "v" }] } });
+    const svg = await render(m, new FakeLayoutEngine(), { tour: true });
+    expect(svg).toMatch(/<g class="callouts" data-callouts="0" data-t0="1" style="animation:orrery-callouts-0 /);
+    expect(svg).toMatch(/<g class="callouts" data-callouts="1" data-t0="0" style="animation:orrery-callouts-1 /);
+    expect(svg).toMatch(/@keyframes orrery-callouts-0\{0%\{opacity:1\}/);
+    expect(between(svg, 'data-callouts="0"')).toContain('data-callout="a"');
+  });
+});
+
+describe("render: callouts follow a zoom (R16)", () => {
+  const m = inline({ direction: "right", groups: [{ id: "g" }], components: [{ id: "a", label: "A", group: "g" }, { id: "b", label: "B", group: "g" }, { id: "c", label: "C" }], connections: [{ from: "a", to: "b" }, { from: "b", to: "c" }], views: [{ id: "v" }], callouts: [{ at: "a", text: "About A, which is inside the zoomed group" }, { at: "c", text: "About C, outside it" }], tour: { seconds: 2, scenes: [{ view: "v" }, { view: "v", zoom: "g" }] } });
+  it("a still cropped to an entity keeps the notes about it or what is inside it, not the others", async () => {
+    const svg = await render(m, new FakeLayoutEngine(), { zoom: "g" });
+    const [, vx, , vw] = svg.match(/viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/)!;
+    const noteA = Number(between(svg, 'data-callout="a"').match(/<rect class="callout-box" x="([\d.]+)"/)![1]);
+    const wA = Number(between(svg, 'data-callout="a"').match(/width="([\d.]+)"/)![1]);
+    expect(noteA + wA).toBeLessThanOrEqual(Number(vx) + Number(vw) + 0.1);
+    const noteC = Number(between(svg, 'data-callout="c"').match(/<rect class="callout-box" x="([\d.]+)"/)![1]);
+    const wC = Number(between(svg, 'data-callout="c"').match(/width="([\d.]+)"/)![1]);
+    expect(noteC + wC <= Number(vx) || noteC >= Number(vx) + Number(vw)).toBe(true); // C's note is not what the crop is about
+  });
+  it("a tour's camera closes on the zoom target together with the notes about it", async () => {
+    const svg = await render(m, new FakeLayoutEngine(), { tour: true });
+    const cam = svg.match(/@keyframes orrery-camera\{[^}]*\}[^}]*\}([^}]*)\}/)![1]!; // the second scene's transform
+    const scale = Number(cam.match(/scale\(([\d.]+)\)/)![1]);
+    const plain = await render({ ...m, callouts: [] }, new FakeLayoutEngine(), { tour: true });
+    const plainScale = Number(plain.match(/@keyframes orrery-camera\{[^}]*\}[^}]*\}([^}]*)\}/)![1]!.match(/scale\(([\d.]+)\)/)![1]);
+    expect(scale).toBeLessThan(plainScale); // wider, to hold the note
+  });
+});

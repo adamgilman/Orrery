@@ -147,6 +147,12 @@
               "id": "failover",
               "load": 0.6
             }
+          ],
+          "callouts": [
+            {
+              "at": "replica",
+              "text": "Reads move to the replica; writes queue until the primary is back"
+            }
           ]
         }
       ]

@@ -824,12 +824,82 @@
                       }
                     }
                   }
+                },
+                "callouts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "at",
+                      "text"
+                    ],
+                    "description": "A short text pointing at one thing: the author's visible explanation of a moment.",
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The entity id, or the id of a connection, the note points at."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "What to say. Wrapped to a small note."
+                      },
+                      "side": {
+                        "type": "string",
+                        "enum": [
+                          "top",
+                          "right",
+                          "bottom",
+                          "left"
+                        ],
+                        "description": "Pin the note to this side of its target. Omit and it goes where there is room."
+                      }
+                    }
+                  },
+                  "description": "Callouts for this step: shown at this step, not carried to the next."
                 }
               }
             }
           }
         }
       }
+    },
+    "callouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "at",
+          "text"
+        ],
+        "description": "A short text pointing at one thing: the author's visible explanation of a moment.",
+        "properties": {
+          "at": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The entity id, or the id of a connection, the note points at."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What to say. Wrapped to a small note."
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "top",
+              "right",
+              "bottom",
+              "left"
+            ],
+            "description": "Pin the note to this side of its target. Omit and it goes where there is room."
+          }
+        }
+      },
+      "description": "Standing callouts, drawn on every picture. A scenario step, a tour scene or an export adds its own for that moment."
     },
     "tour": {
       "type": "object",
@@ -934,6 +1004,41 @@
               "zoom": {
                 "type": "string",
                 "description": "The entity the camera closes on: a component, an open group's frame or a closed group's box, as long as it is not inside a closed group. Omit for the whole picture. Opening and zooming are separate: a scene can open two groups and stay zoomed out, or zoom in on one of them."
+              },
+              "callouts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "at",
+                    "text"
+                  ],
+                  "description": "A short text pointing at one thing: the author's visible explanation of a moment.",
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The entity id, or the id of a connection, the note points at."
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "What to say. Wrapped to a small note."
+                    },
+                    "side": {
+                      "type": "string",
+                      "enum": [
+                        "top",
+                        "right",
+                        "bottom",
+                        "left"
+                      ],
+                      "description": "Pin the note to this side of its target. Omit and it goes where there is room."
+                    }
+                  }
+                },
+                "description": "Callouts for this scene."
               }
             }
           }
@@ -1047,6 +1152,41 @@
               }
             ],
             "description": "Draw the title and description block above the picture (the view's own, else the model's): true for centred text, or 'centre' / 'left'. Allowed with tour."
+          },
+          "callouts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "text"
+              ],
+              "description": "A short text pointing at one thing: the author's visible explanation of a moment.",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The entity id, or the id of a connection, the note points at."
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "What to say. Wrapped to a small note."
+                },
+                "side": {
+                  "type": "string",
+                  "enum": [
+                    "top",
+                    "right",
+                    "bottom",
+                    "left"
+                  ],
+                  "description": "Pin the note to this side of its target. Omit and it goes where there is room."
+                }
+              }
+            },
+            "description": "Callouts for this picture, with the what-if."
           }
         }
       }

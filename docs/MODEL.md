@@ -69,6 +69,7 @@ has a bug.
 | **view** | One drawing of the model: a scope, a subset, a direction. | A second model |
 | **scenario** | An ordered, cumulative sequence of what-ifs: set states with reasons, restore them, set loads. | A test, a simulation |
 | **load** | Relative traffic on a connection, 0 to 1. Drives animation only. | Requests per second |
+| **callout** | A short text pointing at an entity or a connection: the author's visible explanation of a moment (4.6). | A reason (a tooltip), a caption |
 
 ## 4. Entities
 
@@ -91,8 +92,9 @@ the id.
 | `groups` | array | `[]` | See 4.4. |
 | `views` | array | one view of everything | See 4.5. |
 | `scenarios` | array | `[]` | See 4.6. |
+| `callouts` | array of callout | `[]` | Standing annotations, drawn on every picture (4.6). |
 | `exports` | array of export | `[]` | The files to write from this model, one picture or animation each: `orrery export` renders them all (4.9). |
-| `tour` | `{ seconds, scenes }` or `{ seconds, views }` | | A story told on a timer. Each scene is a view at a moment: `{ view, open?, zoom?, scenario?, step?, set?, note?, seconds? }`. `open` lists the closed groups drawn open and `zoom` names what the camera closes on; they are separate actions, so a scene can open two groups and stay zoomed out, or zoom in on one. `views` is shorthand for one scene per view. When every scene shares one view, the file is one drawing that moves between layouts in CSS, so it plays inside an image tag; the runtime does the same until the reader interacts (R12). |
+| `tour` | `{ seconds, scenes }` or `{ seconds, views }` | | A story told on a timer. Each scene is a view at a moment: `{ view, open?, zoom?, scenario?, step?, set?, callouts?, note?, seconds? }`. `open` lists the closed groups drawn open and `zoom` names what the camera closes on; they are separate actions, so a scene can open two groups and stay zoomed out, or zoom in on one. `views` is shorthand for one scene per view. When every scene shares one view, the file is one drawing that moves between layouts in CSS, so it plays inside an image tag; the runtime does the same until the reader interacts (R12). |
 
 ### 4.2 Component
 
@@ -169,6 +171,7 @@ Step:
 | `note` | string | What happens, shown during step-through. |
 | `set` | object: state name → entity id, array of ids, or object of id → reason | Put those entities in that state. `"set": { "failed": "db", "degraded": { "api": "reads from the replica" } }`. A reason is the author's explanation, shown as a tooltip. On a group, the state applies to the group's frame only. |
 | `restore` | entity id or array | Return those entities to their base-model state and drop their reasons. |
+| `callouts` | array of `{ at, text, side? }` | Notes drawn at this step only: `at` is an entity id or a connection id, `text` the explanation, `side` (`top`, `right`, `bottom`, `left`) pins the note; without it the note goes where there is room. The next step says its own thing (R16). |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Set a connection's load. This is how traffic moves in a story: off one path, onto another. |
 
 A step must change at least one thing and may name an entity only once across `set` and `restore` (S8).
@@ -287,6 +290,7 @@ inside an image tag anywhere.
 | `set` | A what-if, as a scenario step's `set`. |
 | `play` | Scenario id to play on a loop, as a view's `play`; `seconds` per step (default 3). |
 | `tour` | `true`: the model's tour, as one drawing that moves. Exclusive with every field but `id` and `heading`. |
+| `callouts` | Notes for this picture, with the what-if, as a scenario step's (R16). |
 | `heading` | `true`: draw the title and description block above the picture (R15): the view's own, else the model's, with the text centred; `"left"` sets it at the left edge. `render --heading [left]` does the same from the command line, for a still or the interactive file. Off by default: a document introduces its pictures in its own prose. |
 
 `play` and `scenario` are exclusive (S16).
@@ -367,6 +371,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R13 | A pack is data merged into the model before validation continues: kinds under the pack's prefix, states as they are. Defaults, then packs in order, then the author's own definitions; a states pack stands in for the default states. An icon glyph is drawn as a nested `<svg>` in the glyph slot, in its own colours, and a kind's colon is escaped in the stylesheet. Nothing in the renderer knows a provider. The interactive file embeds only the kinds and shapes the model's entities use, never a pack whole. | packs.test; render.test "icon glyphs and namespaced kinds (R13)"; cli.test "orrery packs"; invalid fixture `unknown-pack`; document.test "only the kinds and shapes the model uses" |
 | R14 | A component, and a group's frame open or closed, is drawn with its kind's shape, or `box`: a `corner` shape as a rounded rect, a `path` shape as its path data scaled from the unit box to the measured size, coordinate by coordinate; the outline carries the `node-box` class so every state, kind and ghost rule applies to it; replica stacks are copies of the outline; the shape's pad is added to the measured size and moves the glyph, label, title and expand mark in; a group's pad is extra frame inset for the layout. A shaped frame carries its unit path, and resizing it (the tour's size track, the runtime's morph) rescales the path. Connections end at the bounding box. | shapes.test; render.test "shapes (R14)", "group shapes (R14)"; layoutContract "pad"; freeze.test "path data"; boot.test "shaped frames"; fixture `shapes` |
 | R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, centred unless the export or command line says `left`, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
+| R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 
 ## 7. Non-goals (v1)
 
@@ -396,6 +401,10 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   cascade rule that then needs tie-breaking.
 - **Vocabulary is the author's.** Fixed system states (and the word "down") were removed from the engine. Defaults
   reproduce the old behaviour exactly.
+- **Callouts are per moment (2026-09-06).** A step's callouts show at that step and not the next, unlike states,
+  which persist: a callout explains what is happening now. They are declared, never derived from reasons, and
+  placed automatically with a declared override, the same shape as everything else. Rejected: cumulative callouts;
+  a free-floating note (that is the caption or the heading); a numbered marker with the text in a list.
 - **A heading is opt-in (2026-09-06).** A model and a view may carry a `description`; a picture draws title and
   description as a block above the scene only when an export or the command line asks. A README introduces its
   pictures in its own prose, so a heading on every one would repeat it. Placed above rather than in the caption

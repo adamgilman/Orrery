@@ -97,8 +97,14 @@ export interface View {
   collapse?: string[];
 }
 
+/** A short text pointing at an entity or a connection (R16): the author's visible explanation of a moment. */
+export type CalloutSide = "top" | "right" | "bottom" | "left";
+export interface Callout { at: string; text: string; side?: CalloutSide }
+
 export interface ScenarioStep {
   note?: string;
+  /** Shown at this step only, with the model's standing callouts. */
+  callouts: Callout[];
   /** state name → entity ids */
   set: Record<string, string[]>;
   /** entity id → the author's reason for its state at this step */
@@ -121,6 +127,8 @@ export interface Model {
   components: Component[];
   connections: Connection[];
   groups: Group[];
+  /** Standing callouts, drawn on every picture; a moment adds its own (R16). */
+  callouts: Callout[];
   /** Never empty: a default topology view is synthesised when the file has none. */
   views: View[];
   scenarios: Scenario[];
@@ -136,12 +144,12 @@ export interface Model {
  */
 /** Where a heading's text sits: centred (the default) or at the left edge. */
 export type HeadingAlign = "centre" | "left";
-export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true; /** Draw the title and description block above the picture (R15): `true` centred, or an alignment. */ heading?: true | HeadingAlign }
+export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; callouts?: Callout[]; play?: Play; tour?: true; /** Draw the title and description block above the picture (R15): `true` centred, or an alignment. */ heading?: true | HeadingAlign }
 
 /**
  * One moment of a tour: a view, the closed groups drawn open, what the camera closes on, optionally a point in a
  * scenario, states set for the scene, a caption and its own duration. Opening and zooming are separate actions.
  */
-export interface Scene { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }
+export interface Scene { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; callouts?: Callout[]; note?: string; seconds: number }
 export interface Tour { seconds: number; scenes: Scene[] }
 

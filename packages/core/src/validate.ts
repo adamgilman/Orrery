@@ -6,7 +6,7 @@ import { CSS_COLOR } from "./looks.js";
 import { loadPack, packNames, type Pack } from "./packs.js";
 import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
 import { configurationsOf, openOrder } from "./view.js";
-import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
+import type { Callout, Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -62,6 +62,7 @@ const reasonsOf = (v: SetEntry): Record<string, string> => (typeof v === "object
 interface RawStateDef { look?: LookPreset | LookStyle; flows?: "keep" | "stop"; description?: string }
 interface Raw {
   title?: string; description?: string; direction: Direction;
+  callouts?: Callout[];
   states?: { default?: string; replace?: boolean; use?: string | string[]; define?: Record<string, RawStateDef> };
   shapes?: { replace?: boolean; define?: Record<string, Omit<ShapeDef, "name" | "pad"> & { pad?: { x: number; y: number } }> };
   kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
@@ -69,9 +70,9 @@ interface Raw {
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; description?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
-  scenarios: { id: string; label?: string; steps: { note?: string; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
-  tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number }[] };
-  exports?: { id: string; heading?: boolean | HeadingAlign; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
+  scenarios: { id: string; label?: string; steps: { note?: string; callouts?: Callout[]; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
+  tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; callouts?: Callout[]; note?: string; seconds?: number }[] };
+  exports?: { id: string; heading?: boolean | HeadingAlign; callouts?: Callout[]; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
 }
 
 /* ---------- vocabulary ---------- */
@@ -189,6 +190,8 @@ export function validate(input: unknown): ValidationResult {
     componentIds.add(c.id);
   });
   const isEntity = (id: string) => componentIds.has(id) || groupIds.has(id);
+  /** Callouts point at an entity or a connection by id (R16); each is kept as written. */
+  const checkCallouts = (base: string, list: Callout[] | undefined): Callout[] => (list ?? []).map((c, k) => { if (!isEntity(c.at) && !connectionKeys.has(c.at)) err(`${base}/callouts/${k}/at`, `unknown entity or connection id "${c.at}"`); return { at: c.at, text: c.text, ...opt("side", c.side) }; });
   const parentOf = new Map(raw.groups.map((g) => [g.id, g.parent] as const));
   const groupOfComponent = new Map(raw.components.map((c) => [c.id, c.group] as const));
   const ancestors = (id: string): string[] => {
@@ -305,7 +308,7 @@ export function validate(input: unknown): ValidationResult {
         if (key !== undefined) load[key] = l.load;
       });
       if (Object.keys(set).length + restore.length + (st.load ?? []).length === 0) err(base, "step changes nothing");
-      return { ...opt("note", st.note), set, reasons, restore, load };
+      return { ...opt("note", st.note), set, reasons, restore, load, callouts: checkCallouts(base, st.callouts) };
     });
     return { id: sc.id, label: sc.label ?? sc.id, steps };
   });
@@ -335,12 +338,13 @@ export function validate(input: unknown): ValidationResult {
   };
 
   /* tour: a plain list of views, or scenes */
+  const callouts = checkCallouts("", raw.callouts);
   let tour: Tour | undefined;
   if (raw.tour) {
     const t = raw.tour;
     if (!t.views && !t.scenes) err("/tour", "give views or scenes");
     t.views?.forEach((id, k) => { if (!viewIds.has(id)) err(`/tour/views/${k}`, `unknown view "${id}"`); });
-    type RawScene = { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; note?: string; seconds?: number };
+    type RawScene = { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; callouts?: Callout[]; note?: string; seconds?: number };
     const rawScenes: RawScene[] = t.scenes ?? (t.views ?? []).map((view) => ({ view }));
     const scenes: Scene[] = rawScenes.map((sc, k) => {
       const base = t.scenes ? `/tour/scenes/${k}` : `/tour/views/${k}`;
@@ -358,7 +362,7 @@ export function validate(input: unknown): ValidationResult {
         Object.assign(reasons, reasonsOf(entry));
         for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
       }
-      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...(open ? { open } : {}), ...opt("zoom", sc.zoom), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...opt("note", sc.note) };
+      return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...(open ? { open } : {}), ...opt("zoom", sc.zoom), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(sc.callouts ? { callouts: checkCallouts(base, sc.callouts) } : {}), ...opt("note", sc.note) };
     });
     tour = { seconds: t.seconds, scenes };
   }
@@ -393,13 +397,13 @@ export function validate(input: unknown): ValidationResult {
       Object.assign(reasons, reasonsOf(entry));
       for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
     }
-    return { id: x.id, view: viewId, ...(x.heading ? { heading: x.heading === true ? (true as const) : x.heading } : {}), ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
+    return { id: x.id, view: viewId, ...(x.heading ? { heading: x.heading === true ? (true as const) : x.heading } : {}), ...(x.callouts ? { callouts: checkCallouts(base, x.callouts) } : {}), ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
   });
 
   // W2: the interactive file carries one layer per way the closed groups of a view can be open; warn when that is many.
   views.forEach((v, i) => { const n = configurationsOf(raw.groups, v.collapse ?? []).length; if (n > 32) warnings.push(new ValidationWarning(`/views/${i}/collapse`, `${n} combinations of open groups; the interactive file will carry a layer for each`)); });
 
   if (errors.length) return { ok: false, errors: dedupe(errors) };
-  const model: Model = { ...opt("title", raw.title), ...opt("description", raw.description), direction: raw.direction, states, kinds, shapes, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
+  const model: Model = { ...opt("title", raw.title), ...opt("description", raw.description), direction: raw.direction, states, kinds, shapes, components, connections, groups, callouts, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
 }

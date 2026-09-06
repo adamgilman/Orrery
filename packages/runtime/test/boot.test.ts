@@ -437,3 +437,31 @@ describe("heading (R15)", () => {
     expect(root.querySelector(".heading")).not.toBeNull();
   });
 });
+
+describe("callouts (R16)", () => {
+  let rt: Orrery;
+  afterEach(() => { rt?.destroy(); });
+  it("shows the current step's callouts and hides the rest", async () => {
+    const r = validate({ components: [{ id: "a", label: "A" }, { id: "b", label: "B" }], callouts: [{ at: "a", text: "standing" }], scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "b", text: "one" }] }, { restore: "a", callouts: [{ at: "a", text: "two" }] }] }], views: [{ id: "v" }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "" });
+    const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
+    const walker = parsed.createTreeWalker(parsed, 8);
+    const cdata: Node[] = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) cdata.push(n);
+    for (const n of cdata) n.parentNode!.replaceChild(parsed.createTextNode(n.textContent ?? ""), n);
+    const root = document.importNode(parsed.documentElement, true) as unknown as SVGSVGElement;
+    document.body.innerHTML = ""; document.body.appendChild(root);
+    rt = mount(root, SIZE);
+    rt.stop();
+    const stepSets = () => [...root.querySelectorAll<SVGGElement>(".callouts-step")].filter((g) => g.style.display !== "none").map((g) => g.getAttribute("data-step"));
+    expect(root.querySelector('.callouts [data-callout="a"]')).not.toBeNull(); // standing, always
+    expect(stepSets()).toEqual([]);
+    rt.setScenario("s", 1);
+    expect(stepSets()).toEqual(["1"]);
+    rt.next();
+    expect(stepSets()).toEqual(["2"]);
+    rt.reset();
+    expect(stepSets()).toEqual([]);
+  });
+});

@@ -19,6 +19,9 @@
 .edge-label{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
 .legend text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
 .step-note{font:500 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
+.callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
@@ -114,6 +117,8 @@
 @keyframes orrery-show-aof-b{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
 @keyframes orrery-var-aof-b-on{0%{opacity:1}100%{opacity:1}}
 @keyframes orrery-pos-aof-b{0%{transform:translate(56px, 709.5px)}100%{transform:translate(56px, 709.5px)}}
+@keyframes orrery-callouts-0{0%{opacity:0}61.43%{opacity:0}62.5%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
+@keyframes orrery-callouts-1{0%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
 @keyframes orrery-edges-0{0%{opacity:1}14.29%{opacity:1}15.36%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
 @keyframes orrery-edges-1{0%{opacity:0}18.57%{opacity:0}19.64%{opacity:1}28.57%{opacity:1}29.64%{opacity:0}100%{opacity:0}}
 @keyframes orrery-edges-2{0%{opacity:0}32.86%{opacity:0}33.93%{opacity:1}57.14%{opacity:1}62.5%{opacity:0}100%{opacity:0}}
@@ -127,7 +132,7 @@
 @keyframes orrery-caption-4{0%{opacity:0}61.43%{opacity:0}62.5%{opacity:1}71.43%{opacity:1}72.5%{opacity:0}100%{opacity:0}}
 @keyframes orrery-caption-5{0%{opacity:0}75.71%{opacity:0}76.79%{opacity:1}85.71%{opacity:1}86.79%{opacity:0}100%{opacity:0}}
 @keyframes orrery-caption-6{0%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
-@keyframes orrery-camera{0%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}15.36%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}18.57%{transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}29.64%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}32.86%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}43.93%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}47.14%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}72.5%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}75.71%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}86.79%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}90%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}100%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}}</style>
+@keyframes orrery-camera{0%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}15.36%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}18.57%{transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}29.64%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.2556) translate(-195.58px, -319.75px)}32.86%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}43.93%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}47.14%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}58.21%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}61.43%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -405px)}72.5%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -405px)}75.71%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}86.79%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}90%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}100%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="scene">
 <g class="view" data-view="overview" data-open="" data-title="Checkout: the moving parts" data-size="491.2 999.5">
@@ -240,6 +245,12 @@
 <svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 64 64"><g fill="none" fill-rule="evenodd"><path fill="#7aa116" d="M0 0h64v64H0z"/><path fill="#fff" d="m47.759 33.948.234-1.817c2.173 1.254 2.849 1.99 3.044 2.293-.324.061-1.205.085-3.278-.476M30.499 21c-10.374 0-17.117-2.512-17.5-4.304v-.185c.35-1.119 6.14-4.51 17.5-4.51 11.34 0 17.133 3.38 17.5 4.504v.111C47.725 18.446 40.962 21 30.5 21m15.319 12.362c-4.765-1.565-10.906-4.383-13.224-5.474a2.09 2.09 0 0 0-2.082-1.982A2.097 2.097 0 0 0 28.418 28c0 1.154.94 2.094 2.094 2.094.457 0 .877-.152 1.22-.4 2.4 1.128 8.887 4.104 13.826 5.686l-1.721 13.344C43.583 50.352 38.919 52 30.497 52c-8.425 0-13.092-1.648-13.342-3.249l-3.72-28.937C16.945 21.915 23.749 23 30.5 23c6.75 0 13.554-1.085 17.065-3.185zM50 16.5c0-3.069-8.34-6.5-19.5-6.5S11 13.431 11 16.5v.543l4.174 31.99C15.874 53.516 26.123 54 30.497 54c4.372 0 14.616-.484 15.32-4.993l1.684-13.06c1.277.332 2.31.51 3.115.508.99 0 1.657-.252 2.08-.758.35-.416.489-.94.389-1.476-.228-1.22-1.682-2.509-4.715-4.177l-.1-.055L50 17.044z"/></g></svg>
 <text class="node-label" x="107" y="24">Append-only file</text></g></g></g>
 </g>
+<g class="callouts" data-callouts="0" data-t0="0" style="animation:orrery-callouts-0 28s linear infinite"><g class="callouts">
+<g class="callout" data-callout="cache-a"><path class="callout-leader" d="M145 333.5 L145 361.5" marker-end="url(#arrow)"/><rect class="callout-box" x="60" y="264.5" width="170" height="69" rx="4"/><text class="callout-text" x="70" y="281.5"><tspan x="70" dy="0">One node left; sessions</tspan><tspan x="70" dy="17">load slowly until it is</tspan><tspan x="70" dy="17">back</tspan></text></g>
+</g></g>
+<g class="callouts" data-callouts="1" data-t0="0" style="animation:orrery-callouts-1 28s linear infinite"><g class="callouts">
+<g class="callout" data-callout="sessions"><path class="callout-leader" d="M109.5 401.5 L109.5 373.5" marker-end="url(#arrow)"/><rect class="callout-box" x="24.5" y="401.5" width="170" height="69" rx="4"/><text class="callout-text" x="34.5" y="418.5"><tspan x="34.5" dy="0">One node left; sessions</tspan><tspan x="34.5" dy="17">load slowly until it is</tspan><tspan x="34.5" dy="17">back</tspan></text></g>
+</g></g>
 </g>
 </g>
 <g class="legend-variant" data-t0="0" style="animation:orrery-legend-0 28s linear infinite"><g class="legend" transform="translate(20 919.5)">

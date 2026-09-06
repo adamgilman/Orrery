@@ -60,7 +60,12 @@ export function scopeModel(model: Model, view: View, open: readonly string[] = [
     if (same) { same.load = Math.min(1, Math.round((same.load + c.load) * 100) / 100); continue; }
     connections.push({ ...c, from, to });
   }
-  return { ...base, groups, components: [...components, ...ghosts.values()], connections };
+  // Callouts (R16) follow their target: at the closed box standing for it, or dropped with it.
+  const callouts = model.callouts.flatMap((c) => {
+    if (shown.has(c.at)) return [{ ...c, at: representative(c.at) }];
+    return connections.some((x) => x.key === c.at) ? [c] : [];
+  });
+  return { ...base, groups, components: [...components, ...ghosts.values()], connections, callouts };
 }
 
 /** Pick a view by id, or the first one. Throws with the available ids on a miss. */

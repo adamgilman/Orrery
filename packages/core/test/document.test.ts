@@ -52,3 +52,14 @@ describe("renderDocument: heading (R15)", () => {
     expect(await renderDocument(fixture("cloud"), engine(), { runtime: "" })).not.toContain("data-heading");
   });
 });
+
+describe("renderDocument: callouts (R16)", () => {
+  it("carries every step's callouts in each layer, hidden, for the runtime to show", async () => {
+    const r = validate({ components: [{ id: "a" }, { id: "b" }], callouts: [{ at: "a", text: "standing" }], scenarios: [{ id: "s", steps: [{ set: { failed: "a" }, callouts: [{ at: "b", text: "one" }] }, { restore: "a" }] }], views: [{ id: "v" }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await renderDocument(r.model, engine(), { runtime: "" });
+    expect(svg).toMatch(/<g class="callouts">\n<g class="callout" data-callout="a"/);
+    expect(svg).toMatch(/<g class="callouts-step" data-scenario="s" data-step="1" style="display:none">[\s\S]*data-callout="b"/);
+    expect(svg).not.toMatch(/data-scenario="s" data-step="2"/); // nothing to show at step 2
+  });
+});
