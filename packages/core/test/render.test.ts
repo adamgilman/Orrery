@@ -281,3 +281,16 @@ describe("render: a tour is one drawing with a camera (R12)", () => {
     expect(svg).not.toContain("orrery-camera");
   });
 });
+
+describe("renderSvg: icon glyphs and namespaced kinds (R13)", () => {
+  it("draws an icon glyph as a nested svg in the glyph slot and escapes the kind's colon in the stylesheet", async () => {
+    const svg = await draw(inline({ kinds: { use: ["aws"], components: { "aws:s3": { box: { fill: "#fff7ed" } } } }, components: [{ id: "a", label: "Assets", kind: "aws:s3" }, { id: "b", label: "API", kind: "service" }] }));
+    const node = between(svg, 'data-node="a"');
+    expect(svg).toContain('class="node kind-aws:s3 st-on" data-node="a"');
+    expect(node).toMatch(/<svg class="icon" x="10" y="\d+(\.\d+)?" width="20" height="20" viewBox="0 0 64 64">/);
+    expect(node).toContain('fill="#7aa116"');
+    expect(node).not.toContain('class="glyph"');
+    expect(svg).toContain(".kind-aws\\:s3 .node-box{fill:#fff7ed}");
+    expect(between(svg, 'data-node="b"')).not.toContain("<svg");
+  });
+});

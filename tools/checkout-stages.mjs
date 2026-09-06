@@ -39,6 +39,13 @@ const stages = {
       set: { drained: ["sessions", "cache-a", "cache-b", "redis-a", "aof-a", "redis-b", "aof-b"], brownout: { api: "guest checkout only: no saved carts" }, impaired: { web: "signed-in customers check out as guests" } },
     }] }],
   },
+  // The same checkout on AWS: kinds from the aws pack, so the boxes carry the provider's own icons.
+  "8-cloud": {
+    title: "Checkout on AWS", direction, kinds: { use: ["aws"] },
+    groups: groups.map((g) => (g.id === "data" ? { ...g, kind: "aws:private-subnet" } : g)),
+    components: components.map((c) => ({ ...c, kind: { api: "aws:fargate", db: "aws:rds", replica: "aws:rds", "redis-a": "aws:elasticache", "redis-b": "aws:elasticache", "aof-a": "aws:s3", "aof-b": "aws:s3" }[c.id] ?? c.kind })),
+    connections, views: [closedViews[0]], exports: [{ id: "8-cloud" }],
+  },
 };
 for (const [name, stage] of Object.entries(stages)) writeFileSync(`examples/checkout/${name}.orrery.json`, JSON.stringify({ $schema, ...stage }, null, 2) + "\n");
 console.log(`${Object.keys(stages).length} stages written to examples/checkout/`);

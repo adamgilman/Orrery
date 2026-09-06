@@ -43,6 +43,22 @@
           "default": false,
           "description": "true: only the states in 'define' exist; 'default' must then name one of them."
         },
+        "use": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "One pack name."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Pack names; later packs win over earlier ones."
+            }
+          ],
+          "description": "A states vocabulary shipped with the tool, merged before 'define': sre (healthy, impaired, brownout, outage, drained)."
+        },
         "define": {
           "type": "object",
           "description": "State definitions by name.",
@@ -128,18 +144,34 @@
     "kinds": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Your kind vocabulary for components, groups and connections, bound to a glyph, a frame or a line style. Omit for the defaults. Define an existing name to override it, a new name to extend, or set replace to start from nothing.",
+      "description": "Your kind vocabulary for components, groups and connections, bound to a glyph, a frame or a line style. Omit for the defaults. 'use' pulls in a pack shipped with the tool. Define an existing name to override it, a new name to extend, or set replace to start from nothing.",
       "properties": {
         "replace": {
           "type": "boolean",
           "default": false,
           "description": "true: only the kinds defined here exist."
         },
+        "use": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "One pack name."
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Pack names; later packs win over earlier ones."
+            }
+          ],
+          "description": "Vocabulary packs shipped with the tool, merged before your own definitions: aws, azure, gcp (the providers' icons as kinds named aws:s3, gcp:cloud-run, azure:sql-database). `orrery packs <name>` lists a pack's kinds."
+        },
         "components": {
           "type": "object",
           "propertyNames": {
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$"
           },
           "description": "Component kinds by name.",
           "additionalProperties": {
@@ -147,8 +179,33 @@
             "additionalProperties": false,
             "properties": {
               "glyph": {
-                "type": "string",
-                "description": "A preset glyph name (service, database, queue, cache, gateway, client, storage, function, external) or SVG path data drawn in a 16\u00d716 box."
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "A preset glyph name (database, queue, cache, gateway, client, storage, function) or SVG path data drawn with the theme's stroke in a 16×16 box."
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "viewBox",
+                      "svg"
+                    ],
+                    "description": "An icon in its own colours: SVG markup drawn in the box's glyph slot. Packs use this form.",
+                    "properties": {
+                      "viewBox": {
+                        "type": "string",
+                        "description": "The icon's coordinate box, four numbers like \"0 0 64 64\"."
+                      },
+                      "svg": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "The icon's SVG markup: shapes, gradients, groups. No script, foreignObject, image, style or event handlers."
+                      }
+                    }
+                  }
+                ],
+                "description": "How the kind is drawn inside its box: a preset name, path data, or an icon object."
               },
               "box": {
                 "type": "object",
@@ -183,7 +240,7 @@
           "type": "object",
           "propertyNames": {
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$"
           },
           "description": "Group kinds by name.",
           "additionalProperties": {
@@ -248,7 +305,7 @@
           "type": "object",
           "description": "Connection kinds by name. Defaults: sync (solid), async (dashed), replication (dotted), dataflow (heavy).",
           "propertyNames": {
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$"
           },
           "additionalProperties": {
             "type": "object",
@@ -328,7 +385,7 @@
           },
           "kind": {
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$",
             "default": "service",
             "description": "What the component is, from 'kinds' (defaults: service, database, queue, cache, gateway, client, storage, function, external). Picks the glyph and box style; no mechanics. 'client' covers people and devices; 'external' is a system outside your control."
           },
@@ -393,7 +450,7 @@
             "type": "string",
             "default": "sync",
             "description": "How it is drawn: a name from 'kinds.connections' (defaults: sync solid, async dashed, replication dotted, dataflow heavy).",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$"
           },
           "label": {
             "type": "string",
@@ -442,7 +499,7 @@
           },
           "kind": {
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$",
             "default": "tier",
             "description": "What the container represents, from 'kinds' (defaults: tier, region, zone, cluster, boundary). Picks the frame style; no mechanics."
           },

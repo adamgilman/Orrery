@@ -812,6 +812,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws-icons@npm:3.3.0":
+  version: 3.3.0
+  resolution: "aws-icons@npm:3.3.0"
+  checksum: 10c0/a40da79795bb60fe57f24554e7ff1a6591fdf7086b394b04efd086047b2d5fbc7abf11b78c8586e6d34fdab8dffc2c958498d599ceaeed4bec7c65853b9845ed
+  languageName: node
+  linkType: hard
+
 "cac@npm:^6.7.14":
   version: 6.7.14
   resolution: "cac@npm:6.7.14"
@@ -1333,6 +1340,7 @@ __metadata:
   resolution: "orrery-monorepo@workspace:."
   dependencies:
     "@types/node": "npm:^22"
+    aws-icons: "npm:3.3.0"
     playwright: "npm:1.55"
     typescript: "npm:^5.6"
     vitest: "npm:^3"

@@ -138,3 +138,18 @@ describe("validate: exports (S16)", () => {
     expect(model("minimal").exports).toEqual([]);
   });
 });
+
+describe("validate: namespaced kinds and glyph objects", () => {
+  it("accepts a namespaced kind name and an icon glyph object", () => {
+    const r = validate({ kinds: { components: { "acme:bucket": { glyph: { viewBox: "0 0 64 64", svg: '<path fill="#7aa116" d="M0 0h64v64H0z"/>' } } } }, components: [{ id: "a", kind: "acme:bucket" }] });
+    expect(r.ok, JSON.stringify(r)).toBe(true);
+    if (r.ok) expect(r.model.kinds.components["acme:bucket"]!.glyph).toEqual({ viewBox: "0 0 64 64", svg: '<path fill="#7aa116" d="M0 0h64v64H0z"/>' });
+  });
+  it("rejects a glyph object with a bad viewBox or unsafe markup", () => {
+    const bad = (glyph: unknown) => { const r = validate({ kinds: { components: { k: { glyph } } }, components: [{ id: "a" }] }); return r.ok ? [] : r.errors.map((e) => e.toString()); };
+    expect(bad({ viewBox: "big", svg: "<path/>" })).toEqual(['/kinds/components/k/glyph/viewBox: must be four numbers, like "0 0 64 64"']);
+    expect(bad({ viewBox: "0 0 64 64", svg: '<path onclick="x()"/>' })).toEqual(["/kinds/components/k/glyph/svg: must be plain SVG markup: no script, foreignObject, image, style or event handlers"]);
+    expect(bad({ viewBox: "0 0 64 64", svg: "<script>1</script>" })).toHaveLength(1);
+    expect(bad({ viewBox: "0 0 64 64" })).toEqual(['/kinds/components/k/glyph: missing required property "svg"']);
+  });
+});

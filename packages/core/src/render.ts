@@ -5,7 +5,7 @@ import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, hasGlyph, textWidth, toLayoutGraph } fr
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
-import type { Component, Connection, Export, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
+import type { Component, Connection, Export, Glyph, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
 import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -52,7 +52,13 @@ const GLYPHS: Record<string, string> = {
   storage: `<path d="M2 3.5h12l-1.5 10.5h-9z"/><path d="M2 3.5c0 1.2 2.7 2 6 2s6-.8 6-2"/>`,
   function: `<text class="glyph-text" x="8" y="8.5">λ</text>`,
 };
-const glyphMarkup = (glyph: string) => GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`;
+/** A stroke glyph in its 16×16 slot, or an icon (R13) as a nested svg 20×20, outside `.glyph` so its own colours apply. */
+const glyphMarkup = (glyph: string | Glyph, height: number) =>
+  typeof glyph === "string"
+    ? `<g class="glyph" transform="translate(12 ${num(height / 2 - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
+    : `<svg class="icon" x="10" y="${num(height / 2 - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
+/** A kind name as a CSS class selector: the pack prefix's colon needs escaping. */
+const cls = (name: string) => name.replace(/:/g, "\\:");
 const DASH = "4 4";
 
 const FRAME_PRESETS: Record<string, { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }> = {
@@ -77,7 +83,7 @@ function vocabularyCss(model: Model): string {
     if (b.dash) props.push("stroke-dasharray:5 4");
     if (b.fill) props.push(`fill:${css(b.fill)}`);
     if (b.stroke) props.push(`stroke:${css(b.stroke)}`);
-    if (props.length) rules.push(`.kind-${name} .node-box{${props.join(";")}}`);
+    if (props.length) rules.push(`.kind-${cls(name)} .node-box{${props.join(";")}}`);
   }
   for (const [name, k] of Object.entries(model.kinds.groups)) {
     const f = frameOf(k);
@@ -87,7 +93,7 @@ function vocabularyCss(model: Model): string {
     if (f.fillOpacity !== undefined) props.push(`fill-opacity:${f.fillOpacity}`);
     if (f.dash) props.push("stroke-dasharray:8 6");
     if (f.dotted) props.push("stroke-dasharray:3 5");
-    if (props.length) rules.push(`.gk-${name} .group-box{${props.join(";")}}`);
+    if (props.length) rules.push(`.gk-${cls(name)} .group-box{${props.join(";")}}`);
   }
   for (const [name, k] of Object.entries(model.kinds.connections)) {
     const l = lineOf(k);
@@ -95,7 +101,7 @@ function vocabularyCss(model: Model): string {
     if (l.stroke) props.push(`stroke:${css(l.stroke)}`);
     if (l.width !== undefined) props.push(`stroke-width:${num(l.width)}`);
     if (l.dash) props.push(`stroke-dasharray:${css(l.dash)}`);
-    if (props.length) rules.push(`.edge-${name}{${props.join(";")}}`);
+    if (props.length) rules.push(`.edge-${cls(name)}{${props.join(";")}}`);
   }
   for (const def of Object.values(model.states.define)) {
     const look = lookOf(def);
@@ -150,14 +156,14 @@ const pulses = (model: Model, state: string) => !!lookOf(model.states.define[sta
 
 /** Box, glyph, label: the drawing of a component inside its own `<g class="node">`, at (0,0). Reused by the tour's state variants. */
 function componentBody(c: Component, model: Model, b: { width: number; height: number }): string {
-  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!) : undefined;
+  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!, b.height) : undefined;
   const inset = glyph ? 12 + GLYPH_WIDTH : 0;
   const badge = c.replicas > 1;
   const labelY = c.tech !== undefined ? b.height / 2 - 8 : b.height / 2;
   return [
     ...(badge ? [`<g class="replicas"><rect x="6" y="-6" width="${num(b.width)}" height="${num(b.height)}" rx="8"/><rect x="3" y="-3" width="${num(b.width)}" height="${num(b.height)}" rx="8"/></g>`] : []),
     `<rect class="node-box" width="${num(b.width)}" height="${num(b.height)}" rx="8"/>`,
-    ...(glyph ? [`<g class="glyph" transform="translate(12 ${num(b.height / 2 - 8)})">${glyph}</g>`] : []),
+    ...(glyph ? [glyph] : []),
     `<text class="node-label" x="${num((inset + b.width - (badge ? 20 : 0)) / 2)}" y="${num(labelY)}">${esc(c.label)}</text>`,
     ...(c.tech !== undefined ? [`<text class="node-tech" x="${num((inset + b.width - (badge ? 20 : 0)) / 2)}" y="${num(b.height / 2 + 10)}">${esc(c.tech)}</text>`] : []),
     ...(badge ? [`<text class="badge" x="${num(b.width - 8)}" y="12">×${c.replicas}</text>`] : []),

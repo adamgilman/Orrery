@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
+import { loadPack, packNames } from "./packs.js";
 import { configurationsOf, openOrder } from "./view.js";
 import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
 
@@ -60,8 +61,8 @@ const reasonsOf = (v: SetEntry): Record<string, string> => (typeof v === "object
 interface RawStateDef { look?: LookPreset | LookStyle; flows?: "keep" | "stop"; description?: string }
 interface Raw {
   title?: string; direction: Direction;
-  states?: { default?: string; replace?: boolean; define?: Record<string, RawStateDef> };
-  kinds?: { replace?: boolean; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
+  states?: { default?: string; replace?: boolean; use?: string | string[]; define?: Record<string, RawStateDef> };
+  kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
@@ -72,16 +73,31 @@ interface Raw {
 }
 
 /* ---------- vocabulary ---------- */
+/** The packs a `use` names, in order; an unknown name is an error at its own pointer. */
+function packsOf(use: string | string[] | undefined, pointer: string, err: (p: string, m: string) => void) {
+  return list(use).flatMap((name, i) => {
+    const pack = loadPack(name);
+    if (!pack) err(Array.isArray(use) ? `${pointer}/${i}` : pointer, `unknown pack "${name}"; known: ${packNames().join(", ")}`);
+    return pack ? [pack] : [];
+  });
+}
 function buildStates(raw: Raw["states"], given: Raw["states"], err: (p: string, m: string) => void): States {
   const define: Record<string, StateDef> = Object.create(null);
-  if (!raw?.replace) for (const [name, d] of Object.entries(DEFAULT_STATES)) define[name] = { name, ...d };
+  // a states pack is a whole vocabulary: like `replace`, it stands in for the defaults
+  const packs = packsOf(raw?.use, "/states/use", err);
+  if (!raw?.replace && !packs.length) for (const [name, d] of Object.entries(DEFAULT_STATES)) define[name] = { name, ...d };
+  let packDefault: string | undefined;
+  for (const pack of packs) {
+    for (const [name, d] of Object.entries(pack.states?.define ?? {})) define[name] = { name, ...NEW_STATE_DEFAULTS, ...d };
+    packDefault = pack.states?.default ?? packDefault;
+  }
   for (const [name, user] of Object.entries(raw?.define ?? {})) {
     const base = define[name] ?? { name, ...NEW_STATE_DEFAULTS };
     define[name] = { ...base, ...user, name };
     const look = user.look;
     if (look && typeof look === "object") for (const k of ["stroke", "fill", "text"] as const) if (look[k] !== undefined && !CSS_COLOR.test(look[k]!)) err(`/states/define/${name}/look/${k}`, `"${look[k]}" is not a CSS colour`);
   }
-  const def = raw?.default ?? DEFAULT_STATE;
+  const def = given?.default ?? packDefault ?? raw?.default ?? DEFAULT_STATE;
   if (!Object.hasOwn(define, def)) err("/states/default", raw?.replace && given?.default === undefined ? `states.replace is true, so states.default must name one of: ${Object.keys(define).join(", ")}` : `unknown state "${def}"; known: ${Object.keys(define).join(", ")}`);
   return { default: def, define };
 }
@@ -91,11 +107,21 @@ function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kin
   const groups: Record<string, GroupKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_GROUP_KINDS);
   const connections: Record<string, ConnectionKindDef> = Object.assign(Object.create(null), raw?.replace ? {} : DEFAULT_CONNECTION_KINDS);
   const colour = (p: string, v: string | undefined) => { if (v !== undefined && !CSS_COLOR.test(v)) err(p, `"${v}" is not a CSS colour`); };
+  for (const pack of packsOf(raw?.use, "/kinds/use", err)) {
+    for (const [name, k] of Object.entries(pack.kinds?.components ?? {})) components[`${pack.name}:${name}`] = k;
+    for (const [name, k] of Object.entries(pack.kinds?.groups ?? {})) groups[`${pack.name}:${name}`] = k;
+    for (const [name, k] of Object.entries(pack.kinds?.connections ?? {})) connections[`${pack.name}:${name}`] = k;
+  }
   for (const [name, k] of Object.entries(raw?.components ?? {})) {
     components[name] = { ...(components[name] ?? {}), ...k };
     colour(`/kinds/components/${name}/box/fill`, k.box?.fill); colour(`/kinds/components/${name}/box/stroke`, k.box?.stroke);
-    if (k.glyph !== undefined && !(GLYPH_PRESETS as readonly string[]).includes(k.glyph) && !/^[Mm][\d\s.,+a-zA-Z-]+$/.test(k.glyph))
+    const g = k.glyph;
+    if (typeof g === "string" && !(GLYPH_PRESETS as readonly string[]).includes(g) && !/^[Mm][\d\s.,+a-zA-Z-]+$/.test(g))
       err(`/kinds/components/${name}/glyph`, `must be a preset glyph (${GLYPH_PRESETS.join(", ")}) or SVG path data starting with M`);
+    if (typeof g === "object") {
+      if (!/^-?[\d.]+( -?[\d.]+){3}$/.test(g.viewBox)) err(`/kinds/components/${name}/glyph/viewBox`, 'must be four numbers, like "0 0 64 64"');
+      if (!SAFE_SVG(g.svg)) err(`/kinds/components/${name}/glyph/svg`, "must be plain SVG markup: no script, foreignObject, image, style or event handlers");
+    }
   }
   for (const [name, k] of Object.entries(raw?.groups ?? {})) {
     groups[name] = { ...(groups[name] ?? { frame: "tier" }), ...k };
@@ -109,6 +135,9 @@ function buildKinds(raw: Raw["kinds"], err: (p: string, m: string) => void): Kin
   }
   return { components, groups, connections };
 }
+
+/** Icon markup is drawn as written, so it must be pictures only. */
+export const SAFE_SVG = (svg: string) => !/<\s*(script|foreignObject|image|style|iframe|use)\b|\bon[a-z]+\s*=|javascript:/i.test(svg);
 
 /* ---------- main ---------- */
 export function validate(input: unknown): ValidationResult {

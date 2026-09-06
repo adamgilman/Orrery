@@ -23,7 +23,9 @@ export interface States {
   define: Record<string, StateDef>;
 }
 
-export interface ComponentKindDef { glyph?: string; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
+/** An icon in its own colours, drawn as a nested `<svg>` in the glyph slot. */
+export interface Glyph { viewBox: string; svg: string }
+export interface ComponentKindDef { glyph?: string | Glyph; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
 export interface GroupKindDef { frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
 export type LinePreset = "solid" | "dashed" | "dotted" | "heavy";
 /** How a connection kind is drawn: line colour and width, an SVG dash pattern, and the colour of the animated traffic. */

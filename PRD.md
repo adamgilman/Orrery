@@ -57,8 +57,8 @@ Three tests every release must pass:
   from the frame tooling (M4).
 - **Agent surface**: MODEL.md, JSON Schema with a description on every property, `validate` with pointer errors
   and warnings, `render`, `export`, `embed`, later `explain`.
-- **Vocabulary packs**: shippable `states`/`kinds` presets (e.g. an SRE pack, cloud provider kind packs) that a
-  file can import, so organisations share a vocabulary without copying blocks (roadmap: packs).
+- **Vocabulary packs**: `"kinds": { "use": ["aws"] }` / `"states": { "use": "sre" }` pull in vocabularies shipped
+  with the tool: the AWS, Google Cloud and Azure icon sets as kinds (`aws:s3`), and an SRE states set (docs/PACKS.md).
 
 ### Non-goals (v1)
 - A GUI editor. Agents author; humans navigate.
@@ -95,7 +95,7 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 | `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
 | `@orrery/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
 | `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
-| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`), `export`, `embed` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
+| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`), `export`, `embed`, `packs` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
 Layout boundary, so we can swap engines or write our own:
 
@@ -121,6 +121,7 @@ interface LayoutEngine {
 | Drill-down and tours | Closed groups drawn as node-sized boxes; opening one lays the view out again and the picture moves between layouts, to any depth, in the file's tour and in the runtime; frame tooling in resvg and real Chromium to debug transitions frame by frame. |
 | Declared model | Propagation removed: no needs, rank, availability, cascade or load shifting. Every state, reason and load in a picture is one the author wrote in a scenario step or what-if. Connection kinds became author-defined line styles. |
 | Two paths out | `exports` in the model and `orrery export` write every picture as an enclosed file in one run; `orrery embed` writes the diagram, the engine (`window.Orrery.mount`, an interface with change events and snapshots) and a sample page that builds controls from it. The panel is gone: the standalone file is purely the diagram. Spec: docs/superpowers/specs/2026-09-05-two-paths-design.md. |
+| Vocabulary packs | `kinds.use` / `states.use` merge a pack shipped with the tool before the author's own definitions. `aws`, `azure` and `gcp` turn the providers' official icon sets into kinds (every icon, derived names plus aliases, a few provider-coloured group frames), built by `tools/packs/build.mjs` and committed; `sre` is a states vocabulary. Glyphs gained an icon object form drawn as a nested `<svg>`; kind names may carry a namespace colon. `orrery packs` lists them. Provider terms in docs/PACKS.md. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
@@ -130,7 +131,6 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 |---|---|---|
 | N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). Standalone file confirmed in Safari on 2026-09-06: tour, morphs, drill-down, clicks and keys all good. Still to look at: the embed's sample page, Chrome, a phone. | The user reports the interactive file works on desktop Safari/Chrome |
 | N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
-| N3 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
 | M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |
 | M4 | **GIF/PNG export** from the frame tooling; `render --png/--gif`. | Confluence fallback documented with a real GIF; agents can look at their own output |
 | M5 | **Launch**: docs site built from MODEL.md, examples gallery, MCP server exposing validate/render/explain/check, agent eval harness with retry counts, tags and neighbourhood views if the backlog still wants them. | Public |

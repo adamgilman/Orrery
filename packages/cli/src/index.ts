@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { ModelError, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery/core";
+import { ModelError, loadPack, packNames, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery/core";
 import { ElkLayoutEngine } from "@orrery/layout-elk";
 import { RUNTIME_SOURCE } from "@orrery/runtime";
 
@@ -28,6 +28,10 @@ export const USAGE = `Usage:
                                          drill-down, the model, the engine), orrery.js (the engine, defining
                                          window.Orrery), and a sample index.html and app.js that build controls
                                          from the engine's interface. Replace the sample with your own page.
+  orrery packs [<name>]                  List the vocabulary packs shipped with the tool (aws, azure, gcp: the
+                                         providers' icons as kinds; sre: states), or one pack's names with their
+                                         descriptions. A model pulls a pack in with "kinds": { "use": ["aws"] }
+                                         or "states": { "use": "sre" } and then names kinds like aws:s3.
   orrery --help
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
@@ -96,11 +100,26 @@ function loadModel(file: string, io: Io) {
   return result.model;
 }
 
+/** `packs`: every pack on a line; `packs <name>`: every name the pack defines, qualified as a model would write it, with its description. */
+function listPacks(rest: string[]): string {
+  if (rest.length > 1 || rest[0]?.startsWith("-")) throw new CliError("packs takes one optional pack name and no options", 2);
+  const table = (rows: [string, string][]) => { const w = Math.max(...rows.map(([k]) => k.length)); return rows.map(([k, v]) => `${k.padEnd(w)}  ${v}`).join("\n") + "\n"; };
+  const name = rest[0];
+  if (name === undefined) return table(packNames().map((n) => { const p = loadPack(n)!; return [n, `${p.title} (${p.version})`]; }));
+  const pack = loadPack(name);
+  if (!pack) throw new CliError(`unknown pack "${name}"; known: ${packNames().join(", ")}`);
+  const rows: [string, string][] = [];
+  const sections: [string, [string, string][]][] = [["states", Object.entries(pack.states?.define ?? {}).map(([k, d]) => [k, d.description ?? ""])]];
+  for (const section of ["components", "groups", "connections"] as const) sections.push([`kinds.${section}`, Object.entries(pack.kinds?.[section] ?? {}).map(([k, d]) => [`${name}:${k}`, d.description ?? ""])]);
+  return `${pack.title} (${pack.version}), ${pack.source}\n${pack.terms}\n` + sections.filter(([, rows]) => rows.length).map(([title, rows]) => `\n${title}\n${table(rows)}`).join("");
+}
+
 /** Run the CLI. Returns the process exit code; never calls process.exit itself so it stays testable. */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.includes("--help") || rest.includes("-h") || command === "--help" || command === "-h" || command === "help") { io.stdout(USAGE + "\n"); return 0; }
   try {
+    if (command === "packs") { io.stdout(listPacks(rest)); return 0; }
     if (command !== "validate" && command !== "render" && command !== "export" && command !== "embed") throw new CliError(USAGE, 2);
     const args = parseArgs(rest);
     const [file, ...extra] = args.positionals;

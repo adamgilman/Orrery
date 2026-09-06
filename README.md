@@ -83,6 +83,14 @@ width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
+**8. On a cloud.** Kinds can come from a pack. `"kinds": { "use": ["aws"] }` and the same checkout is drawn with
+the provider's own icons: `aws:fargate`, `aws:rds`, `aws:elasticache`, and `aws:private-subnet` as a frame. Three
+packs ship, `aws`, `gcp` and `azure`, every service in each provider's official icon set under the names people say
+(`aws:s3`, `gcp:run`, `azure:aks`), and `sre`, a states vocabulary. `orrery packs aws` lists the names. The icons
+belong to the providers; [docs/PACKS.md](docs/PACKS.md) carries their terms.
+
+![Checkout on AWS](examples/checkout/8-cloud.svg)
+
 ## Two ways out
 
 **Scenes, for documents.** A model lists the pictures it produces, and one command writes them all as enclosed
@@ -187,7 +195,8 @@ orrery render app.json --set failed=db
 
 The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A `states` block binds your own
 names to looks (preset or custom style) and to whether flow stops; a `kinds` block does the same for component
-glyphs, group frames and connection lines. Nothing in the tool reads a name.
+glyphs, group frames and connection lines. Nothing in the tool reads a name. `"use"` in either block pulls in a
+pack shipped with the tool: `aws`, `gcp`, `azure` (kinds named `aws:s3`) and `sre` (states).
 
 Rules an agent needs to know:
 

@@ -1,0 +1,1 @@
+{ "kinds": { "components": { "k": { "glyph": { "viewBox": "0 0 16 16", "svg": "<image href=\"x.png\"/>" } } } }, "components": [{ "id": "a", "kind": "k" }] }
