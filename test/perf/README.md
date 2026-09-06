@@ -20,7 +20,8 @@ with `node tools/bench-model.mjs`, delete `baseline.json` so CI measures afresh,
 - **The `perf-ignore` label** accepts every metric, for a pull request whose performance is not its point: the
   table is still measured and posted, nothing blocks, and the baseline resets to what was measured on merge.
   Dependabot's pull requests carry it, so a dependency that costs bytes lands and the next change is judged from
-  there rather than blocked on someone else's regression.
+  there rather than blocked on someone else's regression. A push to main is judged by what the pull request it
+  merged accepted, so the ratchet job runs after it and resets those metrics.
 
 Locally, `yarn perf` prints the same table with looser slack, since a laptop is not the runner. It runs alone,
 after the suite, in `yarn check` and in the CI test job: timings measured beside other test workers are not timings
