@@ -786,7 +786,7 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
-  const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
+  const extra = [`<!-- ${"padding ".repeat(2000)} -->`, `<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`]; // deliberate: 16 KB in every interactive file, for the ratchet to block
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
   return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width)), options.heading) : undefined);
 }
