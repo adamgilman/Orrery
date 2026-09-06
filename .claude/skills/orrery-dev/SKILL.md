@@ -39,7 +39,9 @@ anywhere, or deriving one entity's state from another's, stop: that is invariant
    It writes `.orrery-inspect/<name>/`: `static.png` (t=0), `frame-NN.png`, `sheet.png` (all frames tiled), `report.json`, `rendered.svg`, and exits 1 on any problem. Open `sheet.png` with the Read tool and actually look: overlaps, labels on lines, arrowheads hidden, dashes not advancing between tiles.
 4. Turn anything you saw into an assertion. Geometry goes in `packages/core/test/layoutContract.ts` (runs against every engine). Pixel facts go in `packages/raster/test`.
 5. Rebuild the examples page when a render changes: `yarn examples && node site/build.mjs`. `yarn examples` also
-   regenerates examples/kitchen-sink/, every variant of the vocabulary drawn (its README is the visual reference).
+   regenerates examples/kitchen-sink/ (every variant of the vocabulary drawn) and examples/moving-parts/ (views,
+   drill-down, scenarios, play, tour; derived from the checkout master by tools/moving-parts.mjs). Their READMEs are
+   the visual reference.
 
 ## How the animation check works
 

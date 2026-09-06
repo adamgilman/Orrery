@@ -13,6 +13,7 @@ const sources = [
   ...readdirSync(join(root, "examples")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples", f)),
   ...readdirSync(join(root, "examples/checkout")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/checkout", f)),
   ...readdirSync(join(root, "examples/kitchen-sink")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/kitchen-sink", f)),
+  ...readdirSync(join(root, "examples/moving-parts")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/moving-parts", f)),
   ...readdirSync(join(root, "fixtures/valid")).filter((f) => !readdirSync(join(root, "examples")).includes(f.replace(/\.json$/, ".orrery.json"))).map((f) => join(root, "fixtures/valid", f)),
 ];
 

@@ -1,0 +1,379 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout: the moving parts",
+  "direction": "down",
+  "kinds": {
+    "use": [
+      "aws"
+    ]
+  },
+  "groups": [
+    {
+      "id": "data",
+      "label": "Data",
+      "kind": "tier"
+    },
+    {
+      "id": "sessions",
+      "label": "Session cache",
+      "kind": "cluster",
+      "parent": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cluster",
+      "parent": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cluster",
+      "parent": "sessions"
+    }
+  ],
+  "components": [
+    {
+      "id": "web",
+      "label": "Storefront",
+      "kind": "client"
+    },
+    {
+      "id": "api",
+      "label": "Checkout API",
+      "kind": "aws:fargate"
+    },
+    {
+      "id": "db",
+      "label": "Orders DB",
+      "kind": "aws:rds",
+      "group": "data"
+    },
+    {
+      "id": "replica",
+      "label": "Read replica",
+      "kind": "aws:rds",
+      "group": "data"
+    },
+    {
+      "id": "redis-a",
+      "label": "Redis",
+      "kind": "aws:elasticache",
+      "group": "cache-a"
+    },
+    {
+      "id": "aof-a",
+      "label": "Append-only file",
+      "kind": "aws:s3",
+      "group": "cache-a"
+    },
+    {
+      "id": "redis-b",
+      "label": "Redis",
+      "kind": "aws:elasticache",
+      "group": "cache-b"
+    },
+    {
+      "id": "aof-b",
+      "label": "Append-only file",
+      "kind": "aws:s3",
+      "group": "cache-b"
+    }
+  ],
+  "connections": [
+    {
+      "from": "web",
+      "to": "api",
+      "load": 0.8
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "load": 0.6,
+      "label": "writes"
+    },
+    {
+      "id": "failover",
+      "from": "api",
+      "to": "replica",
+      "load": 0
+    },
+    {
+      "from": "db",
+      "to": "replica",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "api",
+      "to": "sessions",
+      "load": 0.5
+    },
+    {
+      "from": "redis-a",
+      "to": "aof-a",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "redis-b",
+      "to": "aof-b",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "cache-a",
+      "to": "cache-b",
+      "kind": "replication",
+      "load": 0.2
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions",
+        "cache-a",
+        "cache-b"
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data tier",
+      "scope": "data",
+      "direction": "down",
+      "collapse": [
+        "sessions"
+      ]
+    },
+    {
+      "id": "front",
+      "title": "The front door",
+      "only": [
+        "web",
+        "api"
+      ]
+    },
+    {
+      "id": "all",
+      "title": "Everything open",
+      "direction": "down"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "db-fails",
+      "label": "Primary fails",
+      "steps": [
+        {
+          "note": "Orders DB goes down",
+          "set": {
+            "failed": "db",
+            "degraded": {
+              "api": "reads from the replica; writes are queued",
+              "web": "checkout is slower"
+            }
+          },
+          "load": [
+            {
+              "id": "failover",
+              "load": 0.6
+            }
+          ]
+        },
+        {
+          "note": "The primary is back; queued writes replay",
+          "restore": [
+            "db",
+            "web"
+          ],
+          "set": {
+            "degraded": {
+              "api": "replaying queued writes"
+            }
+          },
+          "load": [
+            {
+              "id": "failover",
+              "load": 0
+            }
+          ]
+        },
+        {
+          "note": "Recovered",
+          "restore": [
+            "api"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "redis-fails",
+      "label": "A cache process dies",
+      "steps": [
+        {
+          "note": "Redis on node A dies",
+          "set": {
+            "failed": {
+              "redis-a": "out of memory",
+              "cache-a": "its process is down"
+            },
+            "degraded": {
+              "sessions": "one node left",
+              "api": "sessions load slowly"
+            }
+          },
+          "load": [
+            {
+              "from": "cache-a",
+              "to": "cache-b",
+              "load": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tour": {
+    "seconds": 4,
+    "scenes": [
+      {
+        "view": "overview",
+        "note": "The whole system. The session cache is one box."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions"
+        ],
+        "note": "Open the session cache. The picture reflows; you still see everything."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "note": "Open both nodes too. Still the whole system."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "zoom": "cache-a",
+        "note": "Zoom in on node A: a Redis process and its append-only file."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "zoom": "cache-a",
+        "scenario": "redis-fails",
+        "step": 1,
+        "note": "Redis dies. The step marks the node failed and the cluster and API degraded."
+      },
+      {
+        "view": "overview",
+        "open": [
+          "sessions",
+          "cache-a",
+          "cache-b"
+        ],
+        "scenario": "redis-fails",
+        "step": 1,
+        "note": "Zoom out. Everything is still open; the states are where they were put."
+      },
+      {
+        "view": "overview",
+        "scenario": "redis-fails",
+        "step": 1,
+        "note": "Close it all. The closed boxes carry the state."
+      }
+    ]
+  },
+  "exports": [
+    {
+      "id": "view-overview",
+      "view": "overview"
+    },
+    {
+      "id": "view-data",
+      "view": "data"
+    },
+    {
+      "id": "view-only",
+      "view": "front"
+    },
+    {
+      "id": "view-all",
+      "view": "all"
+    },
+    {
+      "id": "open-sessions",
+      "open": [
+        "sessions"
+      ]
+    },
+    {
+      "id": "open-deep",
+      "open": [
+        "sessions",
+        "cache-a"
+      ]
+    },
+    {
+      "id": "zoom-db",
+      "zoom": "db"
+    },
+    {
+      "id": "open-and-zoom",
+      "open": [
+        "sessions"
+      ],
+      "zoom": "sessions"
+    },
+    {
+      "id": "step-1",
+      "scenario": "db-fails",
+      "step": 1
+    },
+    {
+      "id": "step-2",
+      "scenario": "db-fails",
+      "step": 2
+    },
+    {
+      "id": "step-3",
+      "scenario": "db-fails",
+      "step": 3
+    },
+    {
+      "id": "what-if",
+      "set": {
+        "off": {
+          "replica": "out for maintenance"
+        },
+        "degraded": {
+          "api": "no failover while the replica is out"
+        }
+      }
+    },
+    {
+      "id": "play",
+      "play": "db-fails",
+      "seconds": 3
+    },
+    {
+      "id": "tour",
+      "tour": true
+    }
+  ]
+}

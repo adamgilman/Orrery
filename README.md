@@ -15,8 +15,9 @@ Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Mo
 Every other diagram in this README is the same small system, a checkout, built up one stage at a time. The stages are
 in [examples/checkout](examples/checkout), each a plain SVG in an image tag, small enough to read on a phone, and each
 derived from one master file, [examples/checkout.orrery.json](examples/checkout.orrery.json). Every variant the
-vocabulary offers, states, looks, kinds, frames, lines, shapes and packs, is drawn on one page:
-[the kitchen sink](examples/kitchen-sink/README.md).
+vocabulary offers, states, looks, kinds, frames, lines, shapes and packs, is drawn on one page,
+[the kitchen sink](examples/kitchen-sink/README.md), and every way a model moves, views, drill-down, scenarios,
+play and the tour, on another, [the moving parts](examples/moving-parts/README.md).
 
 ## Building a model, one stage at a time
 
