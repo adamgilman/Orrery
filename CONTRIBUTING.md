@@ -56,7 +56,7 @@ architecture diagrams.
 Every package shares one version. To release: `yarn workspaces foreach -A version <x.y.z>`, a line in
 CHANGELOG.md, commit, `git tag v<x.y.z>`, push the tag. The release workflow runs the full check and publishes
 every package to npm with provenance; npm's trusted publishing ties each package to this repository's workflow, so
-there is no token anywhere.
+the workflow uses the NPM_TOKEN repository secret if one is set, else trusted publishing.
 
 ## Conduct
 

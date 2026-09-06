@@ -1,6 +1,7 @@
-# Publishes every package to npm when a v* tag is pushed, after the full check, with provenance through npm's
-# trusted publishing (no token: each package on npmjs.com names this repository and this workflow as its trusted
-# publisher). The tag must equal the version in the package.json files: bump with
+# Publishes every package to npm when a v* tag is pushed, after the full check, with provenance. Auth is an
+# NPM_TOKEN repository secret when one is set (a granular token with publish rights on the orrery-diagrams org),
+# otherwise npm's trusted publishing (each package on npmjs.com naming this repository and this workflow).
+# The tag must equal the version in the package.json files: bump with
 #   yarn workspaces foreach -A version <x.y.z>
 # then commit, `git tag v<x.y.z>` and push the tag.
 name: release
@@ -21,7 +22,6 @@ jobs:
         with:
           node-version: 22
           cache: yarn
-          registry-url: https://registry.npmjs.org
       - run: npm install -g npm@latest
       - run: yarn install --immutable
       - run: yarn check
@@ -33,8 +33,11 @@ jobs:
             [ "$v" = "$tag" ] || { echo "$f is $v, tag is $tag"; exit 1; }
           done
       - name: Pack and publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -e
+          if [ -n "$NPM_TOKEN" ]; then npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"; fi
           mkdir -p /tmp/tarballs
           for w in core layout-elk runtime raster cli; do
             (cd packages/$w && yarn pack -o /tmp/tarballs/$w.tgz)
