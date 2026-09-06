@@ -19,8 +19,8 @@
     "@orrery/core": "workspace:*"
   },
   "devDependencies": {
-    "@types/jsdom": "^21",
+    "@types/jsdom": "^30",
     "esbuild": "^0.28",
-    "jsdom": "^26"
+    "jsdom": "^30"
   }
 }

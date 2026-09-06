@@ -22,7 +22,7 @@
     "@orrery/runtime": "workspace:*"
   },
   "devDependencies": {
-    "@types/jsdom": "^21",
-    "jsdom": "^26"
+    "@types/jsdom": "^30",
+    "jsdom": "^30"
   }
 }
