@@ -25,7 +25,7 @@ jobs:
       - run: yarn install --immutable
       - run: yarn test
       - run: yarn site
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist
   deploy:
