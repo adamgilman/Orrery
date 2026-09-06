@@ -147,15 +147,28 @@ views, GIF export, and an MCP server. See the [PRD](PRD.md).
 
 ## Quick start
 
+Install the `orrery` command (Node 22 or newer):
+
 ```sh
-npx orrery-diagrams validate app.orrery.json
-npx orrery-diagrams render app.orrery.json -o app.svg            # interactive when opened directly
-npx orrery-diagrams render app.orrery.json --static -o app.svg   # one view, no runtime
-npx orrery-diagrams export app.orrery.json --out docs/           # every picture the model lists
+npm install -g orrery-diagrams
+yarn global add orrery-diagrams
+pnpm add -g orrery-diagrams
+bun add -g orrery-diagrams
 ```
 
-Or install it: `npm install -g orrery-diagrams` puts the `orrery` command on your path. The libraries are
-`@orrery-diagrams/core`, `layout-elk`, `runtime` and `raster` for anyone building on the model directly.
+Or run it without installing: `npx orrery-diagrams …`, `pnpm dlx orrery-diagrams …`, `bunx orrery-diagrams …`.
+
+```sh
+orrery validate app.orrery.json
+orrery render app.orrery.json -o app.svg            # interactive when opened directly
+orrery render app.orrery.json --static -o app.svg   # one view, no runtime
+orrery export app.orrery.json --out docs/           # every picture the model lists
+```
+
+In a project, add it as a dev dependency so the docs build renders the diagrams: `npm install -D orrery-diagrams`,
+`yarn add -D orrery-diagrams`, `pnpm add -D orrery-diagrams` or `bun add -d orrery-diagrams`, then `orrery export`
+from a script. The libraries are `@orrery-diagrams/core`, `layout-elk`, `runtime` and `raster` for anyone building
+on the model directly.
 
 From a checkout:
 
