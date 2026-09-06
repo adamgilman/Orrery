@@ -324,7 +324,8 @@ describe("renderSvg: group shapes (R14)", () => {
     const own = between(svg, 'data-group="own"');
     expect(own).toMatch(/<path class="group-box" data-shape="M20 100A20 20 0 0 1 10 62[^"]*" d="M[\d.]+ [\d.]+A/);
     expect(own).not.toContain("<rect");
-    expect(own).toContain('<text class="group-label" x="28" y="28">Your own</text>');
+    expect(own).toMatch(/<text class="group-label centred" x="[\d.]+" y="28">Your own<\/text>/); // centred on a path frame
+    expect(between(svg, 'data-group="presets"')).toContain('<text class="group-label centred" x="'); // card is a path too
     expect(between(svg, 'data-group="presets"')).toMatch(/<path class="group-box" data-shape="M12 0H100V100H0V12Z" d="M[\d.]+ 0H/);
     const closed = await draw(scopeModel(m, m.views[1]!));
     const box = between(closed, 'data-group="own"');

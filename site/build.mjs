@@ -12,6 +12,7 @@ mkdirSync(join(out, "svg"), { recursive: true });
 const sources = [
   ...readdirSync(join(root, "examples")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples", f)),
   ...readdirSync(join(root, "examples/checkout")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/checkout", f)),
+  ...readdirSync(join(root, "examples/kitchen-sink")).filter((f) => f.endsWith(".orrery.json")).map((f) => join(root, "examples/kitchen-sink", f)),
   ...readdirSync(join(root, "fixtures/valid")).filter((f) => !readdirSync(join(root, "examples")).includes(f.replace(/\.json$/, ".orrery.json"))).map((f) => join(root, "fixtures/valid", f)),
 ];
 
@@ -19,7 +20,7 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 const cards = sources.map((file) => {
   const name = basename(file).replace(/\.orrery\.json$|\.json$/, "");
   const json = readFileSync(file, "utf8");
-  const svg = execFileSync("node", [cli, "render", file], { encoding: "utf8" });
+  const svg = execFileSync("node", [cli, "render", file], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   writeFileSync(join(out, "svg", `${name}.svg`), svg);
   const d = JSON.parse(json);
   return `

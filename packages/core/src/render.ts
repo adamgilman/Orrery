@@ -126,6 +126,7 @@ function vocabularyCss(model: Model): string {
 const BASE_STYLE = `
 .group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:600 11px ${FONT};fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
+.group-label.centred{text-anchor:middle}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
@@ -189,9 +190,14 @@ function groupBody(g: Group, model: Model, b: { width: number; height: number })
     outline(shape, b, "group-box"),
     closed
       ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
-      : `<text class="group-label" x="${num(12 + shape.pad.x)}" y="${num(16 + shape.pad.y)}">${esc(g.label)}</text>`,
+      : groupTitle(g.label, shape, b.width),
   ].join("\n");
 }
+/** A frame's title: in the band at the top left; centred on a path-shaped frame, whose corners are not where a box's are. */
+const groupTitle = (label: string, shape: ShapeDef, width: number, extra = "") =>
+  shape.path !== undefined
+    ? `<text class="group-label centred" x="${num(width / 2)}" y="${num(16 + shape.pad.y)}"${extra}>${esc(label)}</text>`
+    : `<text class="group-label" x="${num(12 + shape.pad.x)}" y="${num(16 + shape.pad.y)}"${extra}>${esc(label)}</text>`;
 
 const entityAttrs = (e: Component | Group, model: Model) => `data-state="${escAttr(e.state)}"${pulses(model, e.state) ? ' data-pulse="1"' : ""}`;
 const bboxAttr = (b: { x: number; y: number; width: number; height: number }) => `data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}"`;
@@ -423,7 +429,9 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       css.push(`@keyframes orrery-centre-${id}{${track((k) => { const [w, h] = size(id)(k).split(" "); return `${num((Number(w) - EXPAND_MARK_WIDTH) / 2)} ${num(Number(h) / 2)}`; }, translate, move, ease)}}`);
       const b0 = held(0, id, (j) => boxAt(j, id));
       const frames = variants(id, (k) => groupAt(k, id), (g) => `${outline(shape, b0, "group-box", ` style="${anim(`orrery-size-${id}`)}"`)}${g.reason !== undefined ? `<title>${esc(g.reason)}</title>` : ""}`);
-      const title = shown(`orrery-open-${id}`, isOpen, `<text class="group-label" x="${num(12 + shape.pad.x)}" y="${num(16 + shape.pad.y)}">${esc(g0.label)}</text>`, "detail");
+      // a centred title follows the frame's width through the tour
+      if (shape.path !== undefined) css.push(`@keyframes orrery-title-${id}{${track((k) => { const [w] = size(id)(k).split(" "); return `${num(Number(w) / 2)} ${num(16 + shape.pad.y)}`; }, translate, move, ease)}}`);
+      const title = shown(`orrery-open-${id}`, isOpen, shape.path !== undefined ? `<g transform="translate(${num(b0.width / 2)} ${num(16 + shape.pad.y)})" style="${anim(`orrery-title-${id}`)}"><text class="group-label centred">${esc(g0.label)}</text></g>` : groupTitle(g0.label, shape, b0.width), "detail");
       const summary = shown(`orrery-closed-${id}`, (k) => !isOpen(k),
         `<g transform="translate(${num((b0.width - EXPAND_MARK_WIDTH) / 2)} ${num(b0.height / 2)})" style="${anim(`orrery-centre-${id}`)}"><text class="summary-label">${esc(g0.label)}</text></g>` +
         `<g class="expand-mark" transform="translate(${num(b0.width - 22 - shape.pad.x)} ${num(8 + shape.pad.y)})" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
@@ -621,6 +629,16 @@ export interface DocumentOptions { runtime: string; view?: string; set?: Record<
  * view with closed groups also carries one layer per way they can be open, so opening and closing is a morph between
  * layouts the runtime never has to compute.
  */
+/** The model with only the kinds and shapes its entities use: a pack is hundreds of icons, and the file should carry the few it draws. */
+function usedVocabulary(model: Model): Model {
+  const pick = <T>(all: Record<string, T>, names: Iterable<string>): Record<string, T> => Object.fromEntries([...new Set(names)].filter((n) => n in all).sort().map((n) => [n, all[n]!]));
+  const components = pick(model.kinds.components, model.components.map((c) => c.kind));
+  const groups = pick(model.kinds.groups, model.groups.map((g) => g.kind));
+  const connections = pick(model.kinds.connections, model.connections.map((c) => c.kind));
+  const shapes = pick(model.shapes, ["box", ...Object.values(components).map((k) => k.shape), ...Object.values(groups).map((k) => k.shape)].filter((s): s is string => s !== undefined));
+  return { ...model, kinds: { components, groups, connections }, shapes };
+}
+
 export async function renderDocument(model: Model, engine: LayoutEngine, options: DocumentOptions): Promise<string> {
   // The declared model with the what-if applied is what the runtime starts from.
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
@@ -633,7 +651,7 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
     for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
-  const json = JSON.stringify(declared).replace(/]]>/g, "]]\\u003e");
+  const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
   const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
   return wrapDocument(model, model.title, layers, extra);

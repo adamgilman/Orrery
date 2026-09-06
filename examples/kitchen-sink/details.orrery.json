@@ -1,0 +1,19 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "Replicas, tech lines, labels and ghosts",
+  "direction": "right",
+  "groups": [{ "id": "data", "label": "Data", "kind": "tier" }],
+  "components": [
+    { "id": "web", "label": "Storefront", "kind": "client", "tech": "Next.js" },
+    { "id": "api", "label": "Checkout API", "tech": "Node 22", "replicas": 3 },
+    { "id": "db", "label": "Orders DB", "kind": "database", "tech": "PostgreSQL 16", "group": "data" },
+    { "id": "cache", "label": "Sessions", "kind": "cache", "replicas": 2, "group": "data" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.8, "label": "HTTPS" },
+    { "from": "api", "to": "db", "load": 0.6, "label": "writes" },
+    { "from": "api", "to": "cache", "load": 0.5, "bidirectional": true, "label": "sessions" }
+  ],
+  "views": [{ "id": "all" }, { "id": "data", "scope": "data", "direction": "down" }],
+  "exports": [{ "id": "details", "view": "all" }, { "id": "details-scoped", "view": "data" }]
+}

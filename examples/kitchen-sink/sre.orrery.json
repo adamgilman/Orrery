@@ -1,0 +1,11 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The sre states pack",
+  "direction": "down",
+  "states": { "use": "sre" },
+  "components": [
+    { "id": "a", "label": "healthy" }, { "id": "b", "label": "impaired", "state": "impaired" }, { "id": "c", "label": "brownout", "state": "brownout" },
+    { "id": "d", "label": "outage", "state": "outage" }, { "id": "e", "label": "drained", "state": "drained" }
+  ],
+  "exports": [{ "id": "sre" }]
+}

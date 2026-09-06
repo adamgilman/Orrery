@@ -1,0 +1,15 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The default group kinds",
+  "direction": "down",
+  "groups": [
+    { "id": "tier", "label": "tier", "kind": "tier" }, { "id": "region", "label": "region", "kind": "region" }, { "id": "zone", "label": "zone", "kind": "zone" },
+    { "id": "cluster", "label": "cluster", "kind": "cluster" }, { "id": "boundary", "label": "boundary", "kind": "boundary" }
+  ],
+  "components": [
+    { "id": "a", "label": "Service", "group": "tier" }, { "id": "b", "label": "Service", "group": "region" }, { "id": "c", "label": "Service", "group": "zone" },
+    { "id": "d", "label": "Service", "group": "cluster" }, { "id": "e", "label": "Service", "group": "boundary" }
+  ],
+  "views": [{ "id": "open" }, { "id": "closed", "collapse": ["tier", "region", "zone", "cluster", "boundary"] }],
+  "exports": [{ "id": "groups-open", "view": "open" }, { "id": "groups-closed", "view": "closed" }]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The default component kinds",
+  "direction": "down",
+  "components": [
+    { "id": "service", "label": "service" }, { "id": "database", "label": "database", "kind": "database" }, { "id": "queue", "label": "queue", "kind": "queue" },
+    { "id": "cache", "label": "cache", "kind": "cache" }, { "id": "gateway", "label": "gateway", "kind": "gateway" },
+    { "id": "client", "label": "client", "kind": "client" }, { "id": "storage", "label": "storage", "kind": "storage" }, { "id": "function", "label": "function", "kind": "function" },
+    { "id": "external", "label": "external", "kind": "external" }
+  ],
+  "views": [{ "id": "a", "only": ["service", "database", "queue", "cache", "gateway"] }, { "id": "b", "only": ["client", "storage", "function", "external"] }],
+  "exports": [{ "id": "kinds-1", "view": "a" }, { "id": "kinds-2", "view": "b" }]
+}

@@ -12,6 +12,10 @@ run("render", "examples/checkout.orrery.json", "-o", "examples/checkout.svg"); /
 for (const f of ["examples/checkout.orrery.json", ...readdirSync("examples/checkout").filter((f) => f.endsWith(".orrery.json")).map((f) => `examples/checkout/${f}`)]) {
   for (const line of run("export", f, "--out", "examples/checkout").trim().split("\n")) console.log(line);
 }
+// the kitchen sink: every variant of the vocabulary, one file per block (examples/kitchen-sink/README.md)
+for (const f of readdirSync("examples/kitchen-sink").filter((f) => f.endsWith(".orrery.json"))) {
+  for (const line of run("export", `examples/kitchen-sink/${f}`, "--out", "examples/kitchen-sink").trim().split("\n")) console.log(line);
+}
 // the landing page inlines these
 run("render", "examples/solar-system.orrery.json", "--static", "-o", "site/landing/solar.svg");
 for (const [from, to] of [["4-scenarios-play", "failover-play"], ["7-vocabulary-play", "vocabulary-play"], ["5-views-data", "data-view"], ["6-drill-down-tour", "drill-down-tour"]]) copyFileSync(`examples/checkout/${from}.svg`, `site/landing/${to}.svg`);

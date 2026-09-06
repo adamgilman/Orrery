@@ -1,0 +1,30 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "Every shape",
+  "direction": "down",
+  "shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A stage in a pipeline" } } },
+  "kinds": {
+    "components": {
+      "box": { "shape": "box" }, "sharp": { "shape": "sharp" }, "pill": { "shape": "pill" }, "ellipse": { "shape": "ellipse" }, "cylinder": { "shape": "cylinder" },
+      "hexagon": { "shape": "hexagon" }, "diamond": { "shape": "diamond" }, "parallelogram": { "shape": "parallelogram" }, "document": { "shape": "document" }, "card": { "shape": "card" }, "cloud": { "shape": "cloud" },
+      "stage": { "shape": "chevron", "description": "A pipeline stage" }
+    },
+    "groups": { "pipeline": { "shape": "cloud", "frame": { "stroke": "#0891b2" }, "description": "A pipeline, framed as a cloud" } }
+  },
+  "groups": [{ "id": "own", "label": "Your own", "kind": "pipeline" }],
+  "components": [
+    { "id": "box", "label": "box", "kind": "box" }, { "id": "sharp", "label": "sharp", "kind": "sharp" }, { "id": "pill", "label": "pill", "kind": "pill" },
+    { "id": "ellipse", "label": "ellipse", "kind": "ellipse" }, { "id": "cylinder", "label": "cylinder", "kind": "cylinder" }, { "id": "hexagon", "label": "hexagon", "kind": "hexagon" },
+    { "id": "diamond", "label": "diamond", "kind": "diamond" }, { "id": "parallelogram", "label": "parallelogram", "kind": "parallelogram" }, { "id": "document", "label": "document", "kind": "document" },
+    { "id": "card", "label": "card", "kind": "card" }, { "id": "cloud", "label": "cloud", "kind": "cloud" },
+    { "id": "ingest", "label": "Ingest", "kind": "stage", "group": "own" }, { "id": "enrich", "label": "Enrich", "kind": "stage", "group": "own" }, { "id": "publish", "label": "Publish", "kind": "stage", "group": "own" }
+  ],
+  "connections": [{ "from": "ingest", "to": "enrich" }, { "from": "enrich", "to": "publish" }],
+  "views": [
+    { "id": "a", "only": ["box", "sharp", "pill", "ellipse", "cylinder", "hexagon"] },
+    { "id": "b", "only": ["diamond", "parallelogram", "document", "card", "cloud"] },
+    { "id": "own", "only": ["own"], "direction": "right" },
+    { "id": "own-closed", "only": ["own"], "collapse": ["own"] }
+  ],
+  "exports": [{ "id": "shapes-1", "view": "a" }, { "id": "shapes-2", "view": "b" }, { "id": "shapes-own", "view": "own" }, { "id": "shapes-own-closed", "view": "own-closed" }]
+}

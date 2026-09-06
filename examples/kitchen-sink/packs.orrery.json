@@ -1,0 +1,21 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The cloud packs",
+  "direction": "right",
+  "kinds": { "use": ["aws", "gcp", "azure"] },
+  "groups": [
+    { "id": "aws", "label": "AWS", "kind": "aws:vpc" }, { "id": "gcp", "label": "Google Cloud", "kind": "gcp:project" }, { "id": "azure", "label": "Azure", "kind": "azure:resource-group" }
+  ],
+  "components": [
+    { "id": "a1", "label": "Checkout", "kind": "aws:lambda", "group": "aws" }, { "id": "a2", "label": "Orders", "kind": "aws:rds", "group": "aws" }, { "id": "a3", "label": "Events", "kind": "aws:sqs", "group": "aws" }, { "id": "a4", "label": "Assets", "kind": "aws:s3", "group": "aws" }, { "id": "a5", "label": "Sessions", "kind": "aws:dynamodb", "group": "aws" },
+    { "id": "g1", "label": "Checkout", "kind": "gcp:run", "group": "gcp" }, { "id": "g2", "label": "Orders", "kind": "gcp:cloudsql", "group": "gcp" }, { "id": "g3", "label": "Events", "kind": "gcp:pubsub", "group": "gcp" }, { "id": "g4", "label": "Assets", "kind": "gcp:storage", "group": "gcp" }, { "id": "g5", "label": "Warehouse", "kind": "gcp:bigquery", "group": "gcp" },
+    { "id": "z1", "label": "Checkout", "kind": "azure:aks", "group": "azure" }, { "id": "z2", "label": "Orders", "kind": "azure:sql", "group": "azure" }, { "id": "z3", "label": "Events", "kind": "azure:service-bus", "group": "azure" }, { "id": "z4", "label": "Assets", "kind": "azure:blob", "group": "azure" }, { "id": "z5", "label": "Secrets", "kind": "azure:key-vault", "group": "azure" }
+  ],
+  "connections": [
+    { "from": "a1", "to": "a2" }, { "from": "a1", "to": "a3", "kind": "async" }, { "from": "a1", "to": "a4" }, { "from": "a1", "to": "a5" },
+    { "from": "g1", "to": "g2" }, { "from": "g1", "to": "g3", "kind": "async" }, { "from": "g1", "to": "g4" }, { "from": "g3", "to": "g5", "kind": "dataflow" },
+    { "from": "z1", "to": "z2" }, { "from": "z1", "to": "z3", "kind": "async" }, { "from": "z1", "to": "z4" }, { "from": "z1", "to": "z5" }
+  ],
+  "views": [{ "id": "aws", "scope": "aws" }, { "id": "gcp", "scope": "gcp" }, { "id": "azure", "scope": "azure" }],
+  "exports": [{ "id": "packs-aws", "view": "aws" }, { "id": "packs-gcp", "view": "gcp" }, { "id": "packs-azure", "view": "azure" }]
+}

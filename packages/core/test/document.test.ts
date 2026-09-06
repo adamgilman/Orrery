@@ -25,6 +25,16 @@ describe("renderDocument", () => {
     expect(model.scenarios[0].steps[0].reasons).toEqual({ edge: "running on cell B alone" });
     expect(svg).toMatch(/<script><!\[CDATA\[console\.log\(1\)\]\]><\/script>\s*<\/svg>/);
   });
+  it("embeds only the kinds and shapes the model uses, so a pack does not travel whole (R13)", async () => {
+    const svg = await renderDocument(fixture("cloud"), engine(), { runtime: "" });
+    const json = svg.match(/<script type="application\/json" id="orrery-model"><!\[CDATA\[([\s\S]*?)\]\]><\/script>/)![1]!;
+    const model = JSON.parse(json);
+    expect(Object.keys(model.kinds.components).sort()).toEqual(["aws:cloudfront", "aws:lambda", "aws:rds", "aws:s3", "client"]);
+    expect(Object.keys(model.kinds.groups)).toEqual(["aws:vpc"]);
+    expect(Object.keys(model.kinds.connections)).toEqual(["sync"]);
+    expect(Object.keys(model.shapes)).toEqual(["box", "pill"]);
+    expect(json.length).toBeLessThan(20000);
+  });
   it("is deterministic and gives nodes and groups a data-bbox", async () => {
     const a = await renderDocument(fixture("grouped"), engine(), { runtime: "x" });
     expect(a).toBe(await renderDocument(fixture("grouped"), engine(), { runtime: "x" }));

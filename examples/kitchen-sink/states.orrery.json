@@ -1,0 +1,13 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The default states",
+  "direction": "right",
+  "components": [
+    { "id": "src", "label": "Caller", "kind": "client" },
+    { "id": "on", "label": "on" }, { "id": "degraded", "label": "degraded" }, { "id": "failed", "label": "failed" }, { "id": "off", "label": "off" }
+  ],
+  "connections": [
+    { "from": "src", "to": "on", "load": 0.6 }, { "from": "src", "to": "degraded", "load": 0.6 }, { "from": "src", "to": "failed", "load": 0.6 }, { "from": "src", "to": "off", "load": 0.6 }
+  ],
+  "exports": [{ "id": "states", "set": { "degraded": { "degraded": "one replica short" }, "failed": { "failed": "the reason is the tooltip" }, "off": "off" } }]
+}

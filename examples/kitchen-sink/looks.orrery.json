@@ -1,0 +1,18 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The looks a state can wear",
+  "direction": "down",
+  "states": { "define": {
+    "normal": { "look": "normal", "description": "The preset normal look" },
+    "warn": { "look": "warn", "description": "The preset warn look" },
+    "alert": { "look": "alert", "description": "The preset alert look, pulsing" },
+    "muted": { "look": "muted", "description": "The preset muted look" },
+    "highlight": { "look": "highlight", "description": "The preset highlight look" },
+    "brownout": { "look": { "stroke": "#7c3aed", "fill": "#f5f3ff", "text": "#5b21b6", "dash": true, "pulse": true }, "description": "Your own style object" }
+  } },
+  "components": [
+    { "id": "a", "label": "normal", "state": "normal" }, { "id": "b", "label": "warn", "state": "warn" }, { "id": "c", "label": "alert", "state": "alert" },
+    { "id": "d", "label": "muted", "state": "muted" }, { "id": "e", "label": "highlight", "state": "highlight" }, { "id": "f", "label": "your own", "state": "brownout" }
+  ],
+  "exports": [{ "id": "looks" }]
+}

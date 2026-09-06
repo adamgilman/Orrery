@@ -1,0 +1,21 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The connection kinds and their loads",
+  "direction": "right",
+  "kinds": { "connections": { "gossip": { "line": { "stroke": "#0891b2", "dash": "2 3", "width": 2, "flow": "#0891b2" }, "description": "Your own line style" } } },
+  "components": [
+    { "id": "src", "label": "Source" },
+    { "id": "sync", "label": "sync, load 1" }, { "id": "async", "label": "async, load 0.6" }, { "id": "replication", "label": "replication, load 0.3" },
+    { "id": "dataflow", "label": "dataflow, load 0.8" }, { "id": "gossip", "label": "your own, load 0.5" }, { "id": "idle", "label": "load 0" }, { "id": "both", "label": "bidirectional" }
+  ],
+  "connections": [
+    { "from": "src", "to": "sync", "kind": "sync", "load": 1, "label": "sync" },
+    { "from": "src", "to": "async", "kind": "async", "load": 0.6, "label": "async" },
+    { "from": "src", "to": "replication", "kind": "replication", "load": 0.3, "label": "replication" },
+    { "from": "src", "to": "dataflow", "kind": "dataflow", "load": 0.8, "label": "dataflow" },
+    { "from": "src", "to": "gossip", "kind": "gossip", "load": 0.5, "label": "gossip" },
+    { "from": "src", "to": "idle", "load": 0, "label": "no load" },
+    { "from": "src", "to": "both", "load": 0.4, "bidirectional": true, "label": "both ways" }
+  ],
+  "exports": [{ "id": "connections" }]
+}

@@ -144,3 +144,6 @@ URL), and the Microsoft 365, Entra, Fabric and Power Platform sets.
 - **The README runs on the pack (user, 2026-09-06).** Rather than a separate stage 8, the master checkout model
   declares `"kinds": { "use": ["aws"] }`, so every stage picture and the landing page carry the AWS icons from the
   first picture on; stage 1's text introduces packs.
+- **The embedded model is pruned (2026-09-06).** The interactive file carried the whole merged `kinds` block, so a
+  checkout on the aws pack grew from 62 KB to 611 KB and three packs broke the site build. `renderDocument` now
+  embeds only the kinds and shapes the entities use.
