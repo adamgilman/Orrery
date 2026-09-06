@@ -47,6 +47,10 @@ and what its description says.
 
 ## Pictures
 Every picture the change adds or alters, embedded from the branch. One line of caption each: what to look at.
+Name the kind of drawing in the caption: the **topology** (the classic Orrery drawing: entities and the
+connections between them, groups as frames) or a **sequence** (one interaction's messages on lifelines). When a
+change touches a sequence, show the topology of the same model beside it, so the reader sees that both are
+drawings of one file.
 
 ## Tests
 Which suites gained what: the unit test that came first, the fixture, the place in the diagram of Orrery

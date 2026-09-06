@@ -96,8 +96,9 @@ width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
-**8. One request, as a sequence.** A sequence view lists the messages of one interaction, in order, between the
-entities the model already has, over the connections it already declares: a message with no connection under it
+**8. One request, as a sequence.** Every picture so far is a topology: the entities, the connections between them,
+groups as frames. A sequence view is the other drawing of the same model: the messages of one interaction, in order,
+between the entities the model already has, over the connections it already declares: a message with no connection under it
 is an error. Each participant is its own box, in its state, on a lifeline; a reply is the dashed return and closes
 the activation its call opened. The same model, another drawing of it; a scenario step colours the participants
 the same way it colours the topology.

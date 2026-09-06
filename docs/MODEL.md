@@ -66,7 +66,7 @@ has a bug.
 | **look** | A visual treatment for a state: a preset (`normal`, `warn`, `alert`, `muted`, `highlight`) or an author-defined style. | A state |
 | **kind** | A vocabulary word for what a component, group or connection is, bound to a glyph, a shape, a frame or a line style (4.8). | A behaviour |
 | **shape** | The outline a component is drawn with: a preset (`box`, `cylinder`, `hexagon`, …) or an author-defined path (4.8). Named by a kind. | A layout hint |
-| **view** | One drawing of the model: a scope, a subset, a direction; or a sequence of messages. | A second model |
+| **view** | One drawing of the model. A **topology** (the classic Orrery drawing: entities, their connections, groups as frames; a scope, a subset, a direction) or a **sequence** (one interaction's messages on lifelines). | A second model |
 | **message** | One step of an interaction in a sequence view: from one entity to another over a connection the model declares, with a label; a reply is the dashed return (4.5). | A connection |
 | **scenario** | An ordered, cumulative sequence of what-ifs: set states with reasons, restore them, set loads. | A test, a simulation |
 | **load** | Relative traffic on a connection, 0 to 1. Drives animation only. | Requests per second |
