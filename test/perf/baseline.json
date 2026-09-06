@@ -1,0 +1,54 @@
+{
+  "validate.ms": {
+    "value": 0.98,
+    "unit": "ms"
+  },
+  "layout.ms": {
+    "value": 93.88,
+    "unit": "ms"
+  },
+  "render.ms": {
+    "value": 0.67,
+    "unit": "ms"
+  },
+  "overview.bytes": {
+    "value": 32100,
+    "unit": "bytes"
+  },
+  "document.ms": {
+    "value": 827.59,
+    "unit": "ms"
+  },
+  "document.bytes": {
+    "value": 383154,
+    "unit": "bytes"
+  },
+  "document.layers": {
+    "value": 10,
+    "unit": "count"
+  },
+  "document.layouts": {
+    "value": 10,
+    "unit": "count"
+  },
+  "tour.ms": {
+    "value": 198.6,
+    "unit": "ms"
+  },
+  "tour.bytes": {
+    "value": 139625,
+    "unit": "bytes"
+  },
+  "play.bytes": {
+    "value": 117111,
+    "unit": "bytes"
+  },
+  "freeze.ms": {
+    "value": 2.92,
+    "unit": "ms"
+  },
+  "runtime.bytes": {
+    "value": 17166,
+    "unit": "bytes"
+  }
+}

@@ -277,6 +277,19 @@ ORRERY_SKIP_BUILD=1 yarn vitest run packages/core   # source-only suites without
 Layout runs through the `LayoutEngine` interface. The Eclipse Layout Kernel adapter in `packages/layout-elk`
 is the only package allowed to import elkjs; a test enforces that so the engine can be replaced.
 
+## Claude Code plugin
+
+A plugin teaches Claude Code to write, check and render these models, with the schema as its reference and every
+variant worked as an example:
+
+```sh
+claude plugin marketplace add adamgilman/Orrery
+claude plugin install orrery@orrery
+```
+
+Then ask for an architecture diagram. The skill lives in [plugins/orrery](plugins/orrery); a test keeps every
+example in it valid against the schema and every schema property shown.
+
 ## Contributing
 
 Pull requests are welcome: a failing test first, the model documented in MODEL.md, the pictures looked at.

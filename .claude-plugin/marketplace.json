@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "orrery",
+  "description": "Orrery: animated, navigable architecture diagrams written as a JSON model. The plugin teaches Claude to author, check and render them.",
+  "owner": { "name": "Adam Gilman", "url": "https://github.com/adamgilman" },
+  "plugins": [
+    {
+      "name": "orrery",
+      "description": "Author Orrery architecture diagrams: the .orrery.json model with states, kinds, shapes, packs, views, scenarios, callouts and tours; validate with pointer errors; render and export.",
+      "author": { "name": "Adam Gilman" },
+      "category": "development",
+      "keywords": ["architecture", "diagram", "svg", "documentation", "c4", "orrery"],
+      "source": "./plugins/orrery"
+    }
+  ]
+}
