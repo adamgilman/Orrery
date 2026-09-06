@@ -8,9 +8,9 @@
 // frame N: changed pixels red, everything else faded), diffs.png (diffs tiled), report.json, rendered.svg
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { render, validate } from "@orrery/core";
-import { ElkLayoutEngine } from "@orrery/layout-elk";
-import { activeView, contactSheet, decodePng, diffFrames, encodePng, inspect, rasterize, renderFrames } from "@orrery/raster";
+import { render, validate } from "@orrery-diagrams/core";
+import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
+import { activeView, contactSheet, decodePng, diffFrames, encodePng, inspect, rasterize, renderFrames } from "@orrery-diagrams/raster";
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith("--"));

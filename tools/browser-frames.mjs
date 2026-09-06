@@ -5,7 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { chromium } from "playwright";
-import { contactSheet } from "@orrery/raster";
+import { contactSheet } from "@orrery-diagrams/raster";
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith("--"));
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? Number(args[i + 1]) : d; };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, PULSE_PERIOD, render, validate } from "@orrery/core";
+import { FakeLayoutEngine, PULSE_PERIOD, render, validate } from "@orrery-diagrams/core";
 import { decodePng, diffFrames, freezeFrame, inspect, pulseRegions, rasterize } from "../src/index.js";
 
 const failing = async () => {

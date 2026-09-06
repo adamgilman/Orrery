@@ -1,6 +1,29 @@
 {
-  "name": "@orrery/layout-elk",
-  "version": "0.0.0",
+  "name": "@orrery-diagrams/layout-elk",
+  "version": "0.1.0",
+  "description": "Orrery's layout engine backed by the Eclipse Layout Kernel (elkjs).",
+  "keywords": [
+    "orrery",
+    "layout",
+    "elk"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamgilman/Orrery.git"
+  },
+  "homepage": "https://github.com/adamgilman/Orrery#readme",
+  "bugs": {
+    "url": "https://github.com/adamgilman/Orrery/issues"
+  },
+  "license": "MIT",
+  "author": "Adam Gilman",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -15,7 +38,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@orrery/core": "workspace:*",
+    "@orrery-diagrams/core": "workspace:*",
     "elkjs": "^0.9"
   }
 }

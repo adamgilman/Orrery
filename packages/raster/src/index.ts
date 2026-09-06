@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import { XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
-import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery/core";
+import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery-diagrams/core";
 import { freezeTracks } from "./keyframes.js";
 export { freezeTracks, parseKeyframes, valuesAt } from "./keyframes.js";
 

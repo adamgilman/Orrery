@@ -1,0 +1,44 @@
+# Publishes every package to npm when a v* tag is pushed, after the full check, with provenance through npm's
+# trusted publishing (no token: each package on npmjs.com names this repository and this workflow as its trusted
+# publisher). The tag must equal the version in the package.json files: bump with
+#   yarn workspaces foreach -A version <x.y.z>
+# then commit, `git tag v<x.y.z>` and push the tag.
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v7
+      - run: corepack enable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+      - run: yarn install --immutable
+      - run: yarn check
+      - name: Tag matches the package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for f in packages/*/package.json; do
+            v=$(node -p "require('./$f').version")
+            [ "$v" = "$tag" ] || { echo "$f is $v, tag is $tag"; exit 1; }
+          done
+      - name: Pack and publish
+        run: |
+          set -e
+          mkdir -p /tmp/tarballs
+          for w in core layout-elk runtime raster cli; do
+            (cd packages/$w && yarn pack -o /tmp/tarballs/$w.tgz)
+          done
+          for w in core layout-elk runtime raster cli; do
+            npm publish /tmp/tarballs/$w.tgz --access public --provenance
+          done

@@ -4,7 +4,7 @@ import ElkModule, { type ElkExtendedEdge, type ElkNode } from "elkjs/lib/elk.bun
 // while bundlers/vitest unwrap it to the constructor. Accept both shapes.
 type ElkCtor = typeof ElkModule.default;
 const ELK: ElkCtor = (ElkModule as { default?: ElkCtor }).default ?? (ElkModule as unknown as ElkCtor);
-import { EMPTY_GROUP, GROUP_PADDING, emptyGroups, type LayoutEngine, type LayoutGraph, type LayoutResult } from "@orrery/core";
+import { EMPTY_GROUP, GROUP_PADDING, emptyGroups, type LayoutEngine, type LayoutGraph, type LayoutResult } from "@orrery-diagrams/core";
 
 const PADDING = 20;
 

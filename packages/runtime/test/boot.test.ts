@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, renderDocument, validate } from "@orrery/core";
+import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
 import { mount, type Orrery, type Snapshot } from "../src/browser/index.js";
 
 const doc = async (name: string) => {

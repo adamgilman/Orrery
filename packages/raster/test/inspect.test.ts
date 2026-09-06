@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, render, validate } from "@orrery/core";
+import { FakeLayoutEngine, render, validate } from "@orrery-diagrams/core";
 import { inspect } from "../src/index.js";
 
 const fixture = async (name: string) => {

@@ -148,10 +148,20 @@ views, GIF export, and an MCP server. See the [PRD](PRD.md).
 ## Quick start
 
 ```sh
+npx orrery-diagrams validate app.orrery.json
+npx orrery-diagrams render app.orrery.json -o app.svg            # interactive when opened directly
+npx orrery-diagrams render app.orrery.json --static -o app.svg   # one view, no runtime
+npx orrery-diagrams export app.orrery.json --out docs/           # every picture the model lists
+```
+
+Or install it: `npm install -g orrery-diagrams` puts the `orrery` command on your path. The libraries are
+`@orrery-diagrams/core`, `layout-elk`, `runtime` and `raster` for anyone building on the model directly.
+
+From a checkout:
+
+```sh
 yarn install && yarn build
 yarn orrery validate examples/checkout.orrery.json
-yarn orrery render examples/checkout.orrery.json -o out.svg            # interactive when opened directly
-yarn orrery render examples/checkout.orrery.json --static -o out.svg   # one view, no runtime
 ```
 
 `yarn orrery` runs the CLI from the checkout; the commands below write `orrery` for short.

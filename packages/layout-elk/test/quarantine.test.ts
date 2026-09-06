@@ -10,7 +10,7 @@ const walk = (dir: string): string[] =>
   });
 
 describe("ELK quarantine", () => {
-  it("only @orrery/layout-elk imports elkjs", () => {
+  it("only @orrery-diagrams/layout-elk imports elkjs", () => {
     const offenders = readdirSync(join(root, "packages"))
       .filter((p) => p !== "layout-elk")
       .flatMap((p) => walk(join(root, "packages", p, "src")))

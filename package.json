@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b && yarn workspace @orrery/runtime run bundle",
+    "build": "tsc -b && yarn workspace @orrery-diagrams/runtime run bundle",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",

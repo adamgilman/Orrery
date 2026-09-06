@@ -1,6 +1,30 @@
 {
-  "name": "@orrery/runtime",
-  "version": "0.0.0",
+  "name": "@orrery-diagrams/runtime",
+  "version": "0.1.0",
+  "description": "The engine inlined into every Orrery SVG: camera, states, scenarios, drill-down, tours; window.Orrery.mount for pages.",
+  "keywords": [
+    "orrery",
+    "svg",
+    "runtime",
+    "interactive"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamgilman/Orrery.git"
+  },
+  "homepage": "https://github.com/adamgilman/Orrery#readme",
+  "bugs": {
+    "url": "https://github.com/adamgilman/Orrery/issues"
+  },
+  "license": "MIT",
+  "author": "Adam Gilman",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -16,7 +40,7 @@
     "bundle": "node bundle.mjs"
   },
   "dependencies": {
-    "@orrery/core": "workspace:*"
+    "@orrery-diagrams/core": "workspace:*"
   },
   "devDependencies": {
     "@types/jsdom": "^30",

@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { ModelError, loadPack, packNames, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery/core";
-import { ElkLayoutEngine } from "@orrery/layout-elk";
-import { RUNTIME_SOURCE } from "@orrery/runtime";
+import { ModelError, loadPack, packNames, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery-diagrams/core";
+import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
+import { RUNTIME_SOURCE } from "@orrery-diagrams/runtime";
 
 export const USAGE = `Usage:
   orrery validate <file>                 Check a model file. Prints "OK: N components, M connections, ...", plus any

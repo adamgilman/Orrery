@@ -1,6 +1,30 @@
 {
-  "name": "@orrery/core",
-  "version": "0.0.0",
+  "name": "@orrery-diagrams/core",
+  "version": "0.1.0",
+  "description": "The Orrery model: schema, validator, declaration, view scoping, packs, shapes and the SVG renderer.",
+  "keywords": [
+    "architecture",
+    "diagram",
+    "svg",
+    "model"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamgilman/Orrery.git"
+  },
+  "homepage": "https://github.com/adamgilman/Orrery#readme",
+  "bugs": {
+    "url": "https://github.com/adamgilman/Orrery/issues"
+  },
+  "license": "MIT",
+  "author": "Adam Gilman",
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "exports": {
     ".": {

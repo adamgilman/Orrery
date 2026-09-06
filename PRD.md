@@ -91,10 +91,10 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 
 | Package | Responsibility | Replaceability note |
 |---|---|---|
-| `@orrery/core` | JSON Schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
-| `@orrery/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
-| `@orrery/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
-| `@orrery/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
+| `@orrery-diagrams/core` | JSON Schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
+| `@orrery-diagrams/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
+| `@orrery-diagrams/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
+| `@orrery-diagrams/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
 | `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`), `export`, `embed`, `packs` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
 Layout boundary, so we can swap engines or write our own:
@@ -151,7 +151,7 @@ numbered invariant in MODEL.md with a test, and it must never compute a state (B
 - **Test layers**: (1) validator tests driven by fixture files under `fixtures/valid` and `fixtures/invalid` with expected error pointers; (2) `core` tests use a `FakeLayoutEngine` that places nodes on a grid, so render tests never touch ELK; (3) `layout-elk` has a contract test asserting determinism and that every node/edge gets a position/route; (4) SVG snapshot tests; (5) CLI e2e via child process on the fixture files.
 - **Determinism is tested**, not assumed: render twice, compare bytes.
 - **Layout hints**: `direction` and declaration order are the only ones. More only if a real diagram cannot be fixed otherwise. No coordinates in the schema, ever.
-- **ELK quarantine**: `elkjs` is imported by `@orrery/layout-elk` only. A test enforces it.
+- **ELK quarantine**: `elkjs` is imported by `@orrery-diagrams/layout-elk` only. A test enforces it.
 - **Specification first**: a change to what the file can say starts in `docs/MODEL.md` as an invariant with a test
   name, then the test, then the code. Nothing computes a state (B3); the renderer reads looks only (R8).
 - **Vocabulary boundary**: user-facing text (schema descriptions, errors, CLI, README, legend) says components,
@@ -185,7 +185,7 @@ kept here so the model grows from evidence rather than guesswork:
 ## 11. Open questions
 1. **Resolved: CSS keyframes, not SMIL** (2026-09-04). Both play inside `<img>`; nothing outside browsers plays either. CSS wins on control: the Web Animations API gives the runtime one timeline (pause, scrub, playback rate) over every animation. Rule that follows: animation stays a pure function of (model, t); when load changes at runtime, continue from the current phase, never restart.
 2. Icon licensing per provider. Verify AWS/GCP/Azure architecture icon terms before bundling.
-3. Schema hosting domain (`orrery.dev`?) and package scope (`@orrery/*` availability on npm).
+3. **Package names resolved (2026-09-06):** `orrery` and the `@orrery` scope were taken on npm, so the CLI is `orrery-diagrams` (bin `orrery`) and the libraries `@orrery-diagrams/*`; releases go out on a `v*` tag through trusted publishing. Schema hosting domain (`orrery.dev`?) still open; the schema URL points at GitHub raw.
 
 ## 12. Language decision
 

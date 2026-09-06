@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FLOW_PERIOD, flowDuration } from "@orrery/core";
+import { FLOW_PERIOD, flowDuration } from "@orrery-diagrams/core";
 import { freezeFrame, freezeTracks } from "../src/index.js";
 
 const flow = (key: string, style: string, load = 0.5) => `<path class="flow" data-flow="${key}" data-load="${load}" d="M0 0 L100 0" style="${style}"/>`;

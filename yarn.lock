@@ -474,28 +474,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@orrery/core@workspace:*, @orrery/core@workspace:packages/core":
+"@orrery-diagrams/core@workspace:*, @orrery-diagrams/core@workspace:packages/core":
   version: 0.0.0-use.local
-  resolution: "@orrery/core@workspace:packages/core"
+  resolution: "@orrery-diagrams/core@workspace:packages/core"
   dependencies:
     ajv: "npm:^8.17"
   languageName: unknown
   linkType: soft
 
-"@orrery/layout-elk@workspace:*, @orrery/layout-elk@workspace:packages/layout-elk":
+"@orrery-diagrams/layout-elk@workspace:*, @orrery-diagrams/layout-elk@workspace:packages/layout-elk":
   version: 0.0.0-use.local
-  resolution: "@orrery/layout-elk@workspace:packages/layout-elk"
+  resolution: "@orrery-diagrams/layout-elk@workspace:packages/layout-elk"
   dependencies:
-    "@orrery/core": "workspace:*"
+    "@orrery-diagrams/core": "workspace:*"
     elkjs: "npm:^0.9"
   languageName: unknown
   linkType: soft
 
-"@orrery/raster@workspace:packages/raster":
+"@orrery-diagrams/raster@workspace:packages/raster":
   version: 0.0.0-use.local
-  resolution: "@orrery/raster@workspace:packages/raster"
+  resolution: "@orrery-diagrams/raster@workspace:packages/raster"
   dependencies:
-    "@orrery/core": "workspace:*"
+    "@orrery-diagrams/core": "workspace:*"
     "@resvg/resvg-js": "npm:^2.6"
     "@types/pngjs": "npm:^6"
     fast-xml-parser: "npm:^5"
@@ -503,11 +503,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orrery/runtime@workspace:*, @orrery/runtime@workspace:packages/runtime":
+"@orrery-diagrams/runtime@workspace:*, @orrery-diagrams/runtime@workspace:packages/runtime":
   version: 0.0.0-use.local
-  resolution: "@orrery/runtime@workspace:packages/runtime"
+  resolution: "@orrery-diagrams/runtime@workspace:packages/runtime"
   dependencies:
-    "@orrery/core": "workspace:*"
+    "@orrery-diagrams/core": "workspace:*"
     "@types/jsdom": "npm:^30"
     esbuild: "npm:^0.28"
     jsdom: "npm:^30"
@@ -2102,6 +2102,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"orrery-diagrams@workspace:packages/cli":
+  version: 0.0.0-use.local
+  resolution: "orrery-diagrams@workspace:packages/cli"
+  dependencies:
+    "@orrery-diagrams/core": "workspace:*"
+    "@orrery-diagrams/layout-elk": "workspace:*"
+    "@orrery-diagrams/runtime": "workspace:*"
+    "@types/jsdom": "npm:^30"
+    jsdom: "npm:^30"
+  bin:
+    orrery: ./dist/main.js
+  languageName: unknown
+  linkType: soft
+
 "orrery-monorepo@workspace:.":
   version: 0.0.0-use.local
   resolution: "orrery-monorepo@workspace:."
@@ -2115,20 +2129,6 @@ __metadata:
     typescript: "npm:^5.6"
     typescript-eslint: "npm:^8.69.0"
     vitest: "npm:^4"
-  languageName: unknown
-  linkType: soft
-
-"orrery@workspace:packages/cli":
-  version: 0.0.0-use.local
-  resolution: "orrery@workspace:packages/cli"
-  dependencies:
-    "@orrery/core": "workspace:*"
-    "@orrery/layout-elk": "workspace:*"
-    "@orrery/runtime": "workspace:*"
-    "@types/jsdom": "npm:^30"
-    jsdom: "npm:^30"
-  bin:
-    orrery: ./dist/main.js
   languageName: unknown
   linkType: soft
 
@@ -2233,13 +2233,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.5.26":
-  version: 8.5.27
-  resolution: "postcss@npm:8.5.27"
+  version: 8.5.28
+  resolution: "postcss@npm:8.5.28"
   dependencies:
     nanoid: "npm:^3.3.18"
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
-  checksum: 10c0/3d269bd1a2990370771176740d9a331cbbe0df516539400547f51d656c2f778cbef974d6a63020f28b298d3c374e9055013a3ee3c48159c862e3c5b960796b63
+  checksum: 10c0/9fe44215a6628d89c8a75184b92f5b2f77e16f9e5b13b39b9009bb7e8e6eccddf82c8854bae922db1f17ace6ef3445073fe38abff513caeb03e5285b1b55620a
   languageName: node
   linkType: hard
 
@@ -2550,9 +2550,9 @@ __metadata:
   linkType: hard
 
 "undici-types@npm:^8.9.0":
-  version: 8.10.1
-  resolution: "undici-types@npm:8.10.1"
-  checksum: 10c0/e75b7a6f966cd9fdb2c059dd242e7745c19ceb9852e1a6d3b51edc35b4a0aad51ea28111b3d839fa881992e25c453107872973b74e54879f556c388bd17b83f2
+  version: 8.10.2
+  resolution: "undici-types@npm:8.10.2"
+  checksum: 10c0/085cb27e72784bac40ef903cc662ab4207f6e6acc123d1fa607ca4817d794be3d6935b270f81c62f578942097f5412a0c26db1bec29df47080d139ad33690452
   languageName: node
   linkType: hard
 
@@ -2563,10 +2563,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^8.4.1, undici@npm:^8.9.0":
+"undici@npm:^8.4.1":
   version: 8.10.1
   resolution: "undici@npm:8.10.1"
   checksum: 10c0/90ac5636aa9d22fb710a261ef05e136df6b4bd7a0122201796bd2eb59ccab6661cdf4f635e543ca04420379eafe3f4d214031bbc7623214287988881c24dad55
+  languageName: node
+  linkType: hard
+
+"undici@npm:^8.9.0":
+  version: 8.10.2
+  resolution: "undici@npm:8.10.2"
+  checksum: 10c0/66d7fc69149207cab570d6abbc9e965b6afe1ae889a7d46945b431165c973d6a56f3dd8b70a856e7ae1e550b6366a1cde6f06e68640587f0dadca38de72995ee
   languageName: node
   linkType: hard
 

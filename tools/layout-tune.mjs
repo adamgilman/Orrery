@@ -1,7 +1,7 @@
 // ELK option sweep over the compound examples, scored by tools/layout-score.mjs. Usage: node tools/layout-tune.mjs
 import { readFileSync } from "node:fs";
-import { validate, toLayoutGraph, scopeModel, selectView } from "@orrery/core";
-import { ElkLayoutEngine } from "@orrery/layout-elk";
+import { validate, toLayoutGraph, scopeModel, selectView } from "@orrery-diagrams/core";
+import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
 import { score } from "./layout-score.mjs";
 const files = ["examples/checkout.orrery.json", "fixtures/valid/drill-down.json", "fixtures/valid/three-tier.json"];
 const graphs = files.map((f) => { const r = validate(JSON.parse(readFileSync(f, "utf8"))); if (!r.ok) throw new Error(`${f}: ${r.errors.join("; ")}`); return toLayoutGraph(scopeModel(r.model, selectView(r.model))); });

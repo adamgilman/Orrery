@@ -1,5 +1,5 @@
-import { declare, stopFlows } from "@orrery/core/declare";
-import type { Model } from "@orrery/core/types";
+import { declare, stopFlows } from "@orrery-diagrams/core/declare";
+import type { Model } from "@orrery-diagrams/core/types";
 
 /**
  * What the viewer has done to the model: a scenario position plus per-entity states they set. Pure state; the
