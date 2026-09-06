@@ -128,7 +128,7 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 
 | # | Deliverable | Done when |
 |---|---|---|
-| N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). | The user reports the interactive file works on desktop Safari/Chrome |
+| N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). Standalone file confirmed in Safari on 2026-09-06: tour, morphs, drill-down, clicks and keys all good. Still to look at: the embed's sample page, Chrome, a phone. | The user reports the interactive file works on desktop Safari/Chrome |
 | N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
 | N3 | **Vocabulary packs**: `"states": { "use": "sre" }` / `"kinds": { "use": ["aws"] }` pulling presets shipped with the tool (licence-checked cloud glyphs), overridable as today. | A file with a pack renders cloud glyphs; replacing one entry works |
 | M3b | **Interactions and views of them**: `interactions` (ordered messages over connections); `walkthrough` view (a token moving along the topology) and `sequence` view (lifelines from entities). Both play through the runtime's step-through with the morph. | A click on a component swaps to its sequence view; the same interaction animates on the topology |
