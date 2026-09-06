@@ -1,0 +1,17 @@
+name: Feature request
+description: Something the model cannot say yet.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: What you want to express
+      description: In your own words, and if you can, how you imagine writing it in the model.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The diagram you are trying to draw, or the story you are trying to tell.

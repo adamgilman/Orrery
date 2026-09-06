@@ -1,3 +1,4 @@
+/* global Orrery */
 // A sample page for an Orrery embed: fetch the diagram, mount the engine, build controls from what it reports, and
 // keep them in step with the engine's change events. Written to be thrown away and rewired your own way.
 (async () => {

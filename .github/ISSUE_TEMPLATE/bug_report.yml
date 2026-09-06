@@ -1,0 +1,24 @@
+name: Bug report
+description: Something renders, validates or moves wrongly.
+labels: [bug]
+body:
+  - type: textarea
+    id: model
+    attributes:
+      label: The model
+      description: The smallest `.orrery.json` that shows it, or a link to one.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: The command you ran, its output, and a screenshot if it is a picture.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The commit or release, and Node version.

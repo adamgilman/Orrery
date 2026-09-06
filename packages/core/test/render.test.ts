@@ -77,7 +77,6 @@ describe("renderSvg: looks and kinds (R8)", () => {
     expect(gossip).toContain(".edge-gossip{stroke:#0891b2;stroke-dasharray:2 3}");
     expect(gossip).toMatch(/<path class="edge edge-gossip" data-edge="seq-1->seq-2" data-kind="gossip"/);
     expect(gossip).toMatch(/<path class="flow" data-flow="seq-1->seq-2" data-load="[\d.]+" d="[^"]+" style="[^"]*;stroke:#0891b2"/);
-    const m = fixture("alternatives");
     const api = between(svg, 'data-node="api"');
     expect(api).toContain('class="replicas"');
     expect(api).toContain(">×3<");

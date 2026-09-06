@@ -110,7 +110,6 @@ function listPacks(rest: string[]): string {
   if (name === undefined) return table(packNames().map((n) => { const p = loadPack(n)!; return [n, `${p.title} (${p.version})`]; }));
   const pack = loadPack(name);
   if (!pack) throw new CliError(`unknown pack "${name}"; known: ${packNames().join(", ")}`);
-  const rows: [string, string][] = [];
   const sections: [string, [string, string][]][] = [["states", Object.entries(pack.states?.define ?? {}).map(([k, d]) => [k, d.description ?? ""])]];
   for (const section of ["components", "groups", "connections"] as const) sections.push([`kinds.${section}`, Object.entries(pack.kinds?.[section] ?? {}).map(([k, d]) => [`${name}:${k}`, d.description ?? ""])]);
   return `${pack.title} (${pack.version}), ${pack.source}\n${pack.terms}\n` + sections.filter(([, rows]) => rows.length).map(([title, rows]) => `\n${title}\n${table(rows)}`).join("");

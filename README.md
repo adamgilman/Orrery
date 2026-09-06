@@ -1,5 +1,7 @@
 # Orrery
 
+[![ci](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > An orrery is a mechanical model of the solar system. You crank it and watch the parts move.
 
 **Orrery makes architecture diagrams that are models, not pictures.** Written as JSON by AI agents,
@@ -228,6 +230,7 @@ The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).
 Test-driven, no exceptions. Every behaviour lands as a failing test first.
 
 ```sh
+yarn check                                  # typecheck, lint and test: what a pull request must pass
 yarn test                                   # builds, then runs unit, contract, snapshot, pixel and CLI e2e tests
 yarn inspect examples/checkout.orrery.json  # renders, freezes animation frames to PNG, checks them, writes a contact sheet
 ORRERY_SKIP_BUILD=1 yarn vitest run packages/core   # source-only suites without the build step
@@ -235,6 +238,13 @@ ORRERY_SKIP_BUILD=1 yarn vitest run packages/core   # source-only suites without
 
 Layout runs through the `LayoutEngine` interface. The Eclipse Layout Kernel adapter in `packages/layout-elk`
 is the only package allowed to import elkjs; a test enforces that so the engine can be replaced.
+
+## Contributing
+
+Pull requests are welcome: a failing test first, the model documented in MODEL.md, the pictures looked at.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the habits, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) the conduct, and
+[SECURITY.md](SECURITY.md) how to report a vulnerability. CI runs typecheck, lint and the full suite on every pull
+request, and main requires them to pass.
 
 ## License
 

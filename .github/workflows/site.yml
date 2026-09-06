@@ -1,10 +1,9 @@
-# Tests every push and pull request; publishes the site (landing page, examples page, rendered examples) to GitHub
-# Pages on every push to main. Pages must be set to deploy from GitHub Actions (configure-pages enables it).
+# Publishes the site (landing page, examples page, rendered examples) to GitHub Pages on every push to main,
+# after the tests pass. Pull requests are checked by ci.yml.
 name: site
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn test
@@ -29,7 +29,6 @@ jobs:
         with:
           path: site/dist
   deploy:
-    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

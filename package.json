@@ -10,17 +10,27 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "yarn typecheck && yarn lint && yarn test",
     "orrery": "node packages/cli/dist/main.js",
     "examples": "yarn build && node tools/examples.mjs",
     "inspect": "node tools/inspect.mjs",
     "site": "node site/build.mjs && node site/landing/build.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22",
     "aws-icons": "3.3.0",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
     "playwright": "1.55",
     "typescript": "^5.6",
+    "typescript-eslint": "^8.69.0",
     "vitest": "^3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  }
 }
