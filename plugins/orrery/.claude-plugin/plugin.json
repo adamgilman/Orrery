@@ -1,0 +1,10 @@
+{
+  "name": "orrery",
+  "version": "0.1.0",
+  "description": "Author Orrery architecture diagrams: write the .orrery.json model, validate it, render and export the pictures.",
+  "author": { "name": "Adam Gilman", "url": "https://github.com/adamgilman" },
+  "homepage": "https://adamgilman.github.io/Orrery/",
+  "repository": "https://github.com/adamgilman/Orrery",
+  "license": "MIT",
+  "keywords": ["architecture", "diagram", "svg", "documentation", "orrery"]
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "My system",
+  "description": "What this system is, in a sentence. Drawn above the picture when an export asks for a heading.",
+  "direction": "right",
+  "groups": [{ "id": "data", "label": "Data", "kind": "tier" }],
+  "components": [
+    { "id": "web", "label": "Web app", "kind": "client" },
+    { "id": "api", "label": "API", "kind": "service", "tech": "Node 22" },
+    { "id": "db", "label": "Database", "kind": "database", "group": "data", "tech": "PostgreSQL 16" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.7, "label": "HTTPS" },
+    { "from": "api", "to": "db", "load": 0.5 }
+  ],
+  "scenarios": [
+    { "id": "db-fails", "label": "Database fails", "steps": [
+      { "note": "The database goes down", "set": { "failed": "db", "degraded": { "api": "requests queue up" } },
+        "callouts": [{ "at": "api", "text": "Writes wait; reads are served from cache" }] },
+      { "note": "Recovered", "restore": ["db", "api"] }
+    ] }
+  ],
+  "views": [{ "id": "overview", "title": "Overview" }],
+  "exports": [
+    { "id": "overview" },
+    { "id": "db-fails", "scenario": "db-fails", "step": 1 },
+    { "id": "db-fails-play", "play": "db-fails", "seconds": 3 }
+  ]
+}

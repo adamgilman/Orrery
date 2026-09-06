@@ -130,7 +130,8 @@ interface LayoutEngine {
 | Callouts | `callouts` on a scenario step, a tour scene, an export and the model: a note with a leader pointing at an entity or connection, placed where there is room or on a declared side, drawn per moment in stills, play, tours and the interactive file (every step's carried hidden, the current step's shown). |
 | Landing and Pages | The landing page covers callouts, kinds/shapes/packs and headings and links the reference pages; `.github/workflows/site.yml` tests every push and pull request and publishes site/dist to GitHub Pages on every push to main, at https://adamgilman.github.io/Orrery/. |
 | Orrery drawn in Orrery | `examples/orrery.orrery.json` models the tool with every feature; `test/orrery` is the regression (schema walked against the file), smoke (the built CLI) and integration (every export, the frame tooling, the runtime in a DOM) suite around it. |
-| Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against `baseline.json` on the `perf-baseline` branch, which CI tightens itself on every push to main; deterministic metrics exact, timings with slack; pull requests may only be no worse. |
+| Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against `test/perf/baseline.json`, which CI tightens and commits back on every push to main; deterministic metrics exact, timings with slack; pull requests may only be no worse. |
+| Claude Code plugin | `plugins/orrery`, installable from this repository as a marketplace: the `orrery-diagrams` skill with the schema as reference, every variant worked as an example, the checkout stages, the validator's messages, a starter and a check script; `test/orrery/skill.test.ts` keeps every example valid and every schema property shown. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
