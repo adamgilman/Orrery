@@ -129,6 +129,7 @@ interface LayoutEngine {
 | Heading block | `description` on the model and on a view; `heading: true` on an export or `render --heading` draws title and description above the picture, centred or `left`, still or interactive (the runtime's camera works below it). |
 | Callouts | `callouts` on a scenario step, a tour scene, an export and the model: a note with a leader pointing at an entity or connection, placed where there is room or on a declared side, drawn per moment in stills, play, tours and the interactive file (every step's carried hidden, the current step's shown). |
 | Landing and Pages | The landing page covers callouts, kinds/shapes/packs and headings and links the reference pages; `.github/workflows/site.yml` tests every push and pull request and publishes site/dist to GitHub Pages on every push to main. |
+| Orrery drawn in Orrery | `examples/orrery.orrery.json` models the tool with every feature; `test/orrery` is the regression (schema walked against the file), smoke (the built CLI) and integration (every export, the frame tooling, the runtime in a DOM) suite around it. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 

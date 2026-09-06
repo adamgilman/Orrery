@@ -19,6 +19,8 @@ for (const f of readdirSync("examples/kitchen-sink").filter((f) => f.endsWith(".
 // the moving parts: views, drill-down, scenarios, play and the tour, derived from the checkout master (examples/moving-parts/README.md)
 execFileSync("node", ["tools/moving-parts.mjs"], { stdio: "inherit" });
 for (const line of run("export", "examples/moving-parts/moving-parts.orrery.json", "--out", "examples/moving-parts").trim().split("\n")) console.log(line);
+// Orrery drawn in Orrery: the model behind the regression suite (test/orrery), every picture it lists
+for (const line of run("export", "examples/orrery.orrery.json", "--out", "examples/orrery").trim().split("\n")) console.log(line);
 // the landing page inlines these
 run("render", "examples/solar-system.orrery.json", "--static", "-o", "site/landing/solar.svg");
 for (const [from, to] of [["4-scenarios-play", "failover-play"], ["7-vocabulary-play", "vocabulary-play"], ["5-views-data", "data-view"], ["6-drill-down-tour", "drill-down-tour"]]) copyFileSync(`examples/checkout/${from}.svg`, `site/landing/${to}.svg`);

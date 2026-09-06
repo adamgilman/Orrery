@@ -316,7 +316,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.expand-mark").forEach((t) => (t.style.opacity = "0")); }
       else g.style.opacity = "0";
     }
-    from.querySelectorAll<SVGElement>(".edges, .legend").forEach((e) => (e.style.opacity = "0"));
+    from.querySelectorAll<SVGElement>(".edges, .legend, .callouts, .callouts-step").forEach((e) => (e.style.opacity = "0")); // what belongs to the old layout fades with it
     const start = Date.now(), dur = 350;
     let handle: ReturnType<typeof setTimeout> | undefined;
     const finish = () => {

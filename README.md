@@ -107,6 +107,21 @@ Every variant and every movement, drawn from the same checkout, regenerated with
   zoom as separate actions; a scenario stepping through failure and recovery; a what-if; play; the tour; and the
   keys and clicks of the interactive file.
 
+## Orrery, drawn in Orrery
+
+[examples/orrery.orrery.json](examples/orrery.orrery.json) is a model of how Orrery works: an agent writes one
+file, the command line validates it, core folds the declared states in, scopes a view and renders it through a
+layout engine behind one interface, and pictures come out for a README, a browser and a page. It uses every
+feature the model offers, on purpose: the regression suite walks the schema against this file and fails when a
+property has no place in it, so a feature cannot be added without drawing it here.
+
+![How Orrery works](examples/orrery/overview.svg)
+
+![A mistake in the file: the validator answers, nothing renders](examples/orrery/invalid-1.svg)
+
+The [tour](examples/orrery/tour.svg) opens the vocabulary two levels down, zooms into the runtime, plays the
+mistake and its fix, and ends on what comes next. Every export is in [examples/orrery](examples/orrery).
+
 ## Two ways out
 
 **Scenes, for documents.** A model lists the pictures it produces, and one command writes them all as enclosed

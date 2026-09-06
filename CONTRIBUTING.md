@@ -32,6 +32,18 @@ at what you changed. `yarn examples` regenerates every picture in the README and
 Pull requests run typecheck, lint and the full test suite; main requires them to pass. One reviewer, usually the
 maintainer, merges. Small pull requests merge fastest.
 
+## The test suites and what each is for
+
+| Suite | Where | Purpose |
+|---|---|---|
+| Unit and contract | `packages/*/test` | Each package's behaviour, invariant by invariant; the layout contract runs against every engine. |
+| Regression | `test/orrery/regression.test.ts` | The diagram of Orrery, `examples/orrery.orrery.json`, must use every property the schema offers and every feature by name. A new feature without a place in that diagram fails here. |
+| Smoke | `test/orrery/smoke.test.ts` | The built `orrery` command on that diagram, as a user runs it: validate, render, export, embed, packs. |
+| Integration | `test/orrery/integration.test.ts` | That diagram through the whole pipeline in code: every export parses and carries what its kind of picture must, the frame tooling freezes it, the interactive file mounts and the engine drives it. |
+
+When you add a feature: a unit test first, then a place for it in the diagram of Orrery, then look at the
+regenerated pictures.
+
 ## Where things are
 
 | Path | What |

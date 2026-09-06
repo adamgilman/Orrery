@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1001 604.5" width="1001" height="604.5" data-orrery="1">
+<title>The author's side</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-label{font:700 11px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;letter-spacing:.1em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:3px;stroke-linejoin:round}
+.group-label.centred{text-anchor:middle}
+.group[data-collapsed] .group-box{fill-opacity:.7}
+.summary-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.badge{font:600 12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.legend text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
+.callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.heading-back{fill:#ffffff}
+.heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
+.heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
+.kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.kind-command .node-box{fill:#f8fafc;stroke:#475569}
+.kind-word .node-box{stroke-dasharray:5 4}
+.gk-region .group-box{stroke-dasharray:8 6}
+.gk-zone .group-box{stroke-dasharray:3 5}
+.gk-cluster .group-box{stroke:#94a3b8}
+.gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.gk-aws\:cloud .group-box{stroke:#232f3e}
+.gk-aws\:account .group-box{stroke:#e7157b}
+.gk-aws\:region .group-box{stroke:#00a4a6;stroke-dasharray:8 6}
+.gk-aws\:availability-zone .group-box{stroke:#00a4a6;stroke-dasharray:3 5}
+.gk-aws\:vpc .group-box{stroke:#8c4fff;stroke-dasharray:8 6}
+.gk-aws\:public-subnet .group-box{stroke:#7aa116;fill:#f2f6e8}
+.gk-aws\:private-subnet .group-box{stroke:#00a4a6;fill:#e6f6f7}
+.gk-aws\:security-group .group-box{stroke:#dd344c;stroke-dasharray:8 6}
+.gk-aws\:auto-scaling-group .group-box{stroke:#ed7100;stroke-dasharray:8 6}
+.gk-aws\:on-premises .group-box{stroke:#5a6b86;stroke-dasharray:8 6}
+.gk-gcp\:project .group-box{stroke:#4285f4}
+.gk-gcp\:region .group-box{stroke:#4285f4;stroke-dasharray:8 6}
+.gk-gcp\:zone .group-box{stroke:#4285f4;stroke-dasharray:3 5}
+.gk-gcp\:vpc .group-box{stroke:#34a853;stroke-dasharray:8 6}
+.gk-gcp\:subnet .group-box{stroke:#34a853;fill:#e6f4ea}
+.gk-gcp\:cluster .group-box{stroke:#4285f4;fill:#e8f0fe}
+.gk-gcp\:on-premises .group-box{stroke:#5f6368;stroke-dasharray:8 6}
+.gk-azure\:subscription .group-box{stroke:#0078d4}
+.gk-azure\:resource-group .group-box{stroke:#0078d4;stroke-dasharray:8 6}
+.gk-azure\:region .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:availability-zone .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:vnet .group-box{stroke:#008272;stroke-dasharray:8 6}
+.gk-azure\:subnet .group-box{stroke:#008272;fill:#e5f4f2}
+.gk-azure\:on-premises .group-box{stroke:#5c5c5c;stroke-dasharray:8 6}
+.gk-documents .group-box{stroke:#94a3b8;fill:#f1f5f9;fill-opacity:0.6;stroke-dasharray:8 6}
+.gk-sets .group-box{stroke:#94a3b8;stroke-dasharray:3 5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.edge-reads{stroke:#0891b2;stroke-dasharray:2 3}
+.edge-inlined{stroke:#7c3aed;stroke-width:2.5}
+.edge-builds{stroke-dasharray:2 4}
+.st-impaired .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .node-label{fill:#92400e}
+.st-impaired .group-label{fill:#92400e}
+.st-brownout .node-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .group-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .node-label{fill:#5b21b6}
+.st-brownout .group-label{fill:#5b21b6}
+.st-outage .node-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .group-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .node-label{fill:#991b1b}
+.st-outage .group-label{fill:#991b1b}
+.st-drained .node-box{stroke-dasharray:4 4}
+.st-drained .group-box{stroke-dasharray:4 4}
+.st-drained{opacity:0.45}
+.st-planned .node-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .group-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .node-label{fill:#64748b}
+.st-planned .group-label{fill:#64748b}
+.st-planned{opacity:0.7}
+.st-retired .node-box{stroke-dasharray:4 4}
+.st-retired .group-box{stroke-dasharray:4 4}
+.st-retired{opacity:0.45}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="author" data-open="" data-title="The author's side" data-size="1001 604.5">
+<g class="groups">
+<g class="group gk-package st-healthy" data-group="cli" data-bbox="567.5 68.5 211 360" data-state="healthy" transform="translate(567.5 68.5)">
+<rect class="group-box" width="211" height="360" rx="8"/>
+<text class="group-label" x="12" y="16">orrery-diagrams</text>
+</g>
+</g>
+<g class="edges">
+<path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M192 148 L330 148" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0.8" d="M192 148 L318 148" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="266" y="137">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M192 168.7 L217 168.7 L217 507.5 L603 507.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M192 168.7 L217 168.7 L217 507.5 L591 507.5" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="266" y="518.5">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M500 128.5 L602.5 128.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0.5" d="M500 128.5 L590.5 128.5" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M500 148 L535 148 L535 216.5 L610 216.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0.7" d="M500 148 L535 148 L535 216.5 L598 216.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M500 167.5 L525 167.5 L525 304.5 L579.5 304.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0.6" d="M500 167.5 L525 167.5 L525 304.5 L567.5 304.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M743.5 128.5 L856 128.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M743.5 128.5 L844 128.5" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M736 216.5 L811 216.5 L811 138.1 L856 138.1" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M736 216.5 L811 216.5 L811 138.1 L844 138.1" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M766.5 304.5 L821 304.5 L821 147.7 L856 147.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M766.5 304.5 L821 304.5 L821 147.7 L844 147.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M743 507.5 L831 507.5 L831 157.3 L856 157.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M743 507.5 L831 507.5 L831 157.3 L844 157.3" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+</g>
+<g class="nodes">
+<g class="node kind-client st-healthy" data-node="agent" data-kind="client" data-state="healthy" data-bbox="32 127.3 160 62" transform="translate(32 127.3)">
+<rect class="node-box" width="160" height="62" rx="31"/>
+<g class="glyph" transform="translate(18 23)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="98" y="23">Coding agent</text>
+<text class="node-tech" x="98" y="41">or a person</text>
+</g>
+<g class="node kind-file st-healthy" data-node="model" data-kind="file" data-state="healthy" data-bbox="330 109 170 78" transform="translate(330 109)">
+<path class="node-box" d="M0 0H170V65.5Q127.5 54.6 85 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="103" y="31">app.orrery.json</text>
+<text class="node-tech" x="103" y="49">one file</text>
+</g>
+<g class="node kind-file st-healthy" data-node="schema" data-kind="file" data-state="healthy" data-bbox="603 468.5 140 78" transform="translate(603 468.5)">
+<path class="node-box" d="M0 0H140V65.5Q105 54.6 70 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="88" y="31">JSON Schema</text>
+<text class="node-tech" x="88" y="49">v1.json</text>
+</g>
+<g class="node kind-command st-healthy" data-node="validate" data-kind="command" data-state="healthy" data-bbox="602.5 104.5 141 48" transform="translate(602.5 104.5)">
+<path class="node-box" d="M0 0H115.6L141 24 115.6 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="88.5" y="24">validate</text>
+</g>
+<g class="node kind-command st-healthy" data-node="render" data-kind="command" data-state="healthy" data-bbox="610 192.5 126 48" transform="translate(610 192.5)">
+<path class="node-box" d="M0 0H103.3L126 24 103.3 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="81" y="24">render</text>
+</g>
+<g class="node kind-command st-healthy" data-node="export" data-kind="command" data-state="healthy" data-bbox="579.5 280.5 187 48" transform="translate(579.5 280.5)">
+<path class="node-box" d="M0 0H153.3L187 24 153.3 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="111.5" y="24">export / embed</text>
+</g>
+<g class="node kind-command st-planned" data-node="explain" data-kind="command" data-state="planned" data-bbox="606 368.5 134 48" transform="translate(606 368.5)">
+<path class="node-box" d="M0 0H109.9L134 24 109.9 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="85" y="24">explain</text>
+</g>
+<g class="node st-healthy" data-node="validator" data-kind="stage" data-state="healthy" data-ghost="1" data-bbox="856 118.9 125 48" transform="translate(856 118.9)">
+<path class="node-box" d="M0 0H106.3L125 24 106.3 48H0L18.8 24Z"/>
+<text class="node-label" x="62.5" y="24">Validate</text>
+</g>
+</g>
+<g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M415 81 L415 109" marker-end="url(#arrow)"/><rect class="callout-box" x="320.5" y="12" width="189" height="69" rx="4"/><text class="callout-text" x="330.5" y="29"><tspan x="330.5" dy="0">One file: the model, its</tspan><tspan x="330.5" dy="17">views, scenarios, tour and</tspan><tspan x="330.5" dy="17">exports</tspan></text></g>
+</g>
+<g class="legend" transform="translate(20 582.5)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g>
+</g>
+</g>
+</svg>

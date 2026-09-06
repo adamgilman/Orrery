@@ -2121,10 +2121,12 @@ __metadata:
   resolution: "orrery-monorepo@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.1"
+    "@types/jsdom": "npm:^30"
     "@types/node": "npm:^26"
     aws-icons: "npm:3.3.0"
     eslint: "npm:^10.10.0"
     globals: "npm:^17.12.0"
+    jsdom: "npm:^30"
     playwright: "npm:1.62"
     typescript: "npm:^5.6"
     typescript-eslint: "npm:^8.69.0"

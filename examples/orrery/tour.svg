@@ -1,0 +1,795 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3150 994" width="3150" height="994" data-orrery="1">
+<title>How Orrery works</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-label{font:700 11px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;letter-spacing:.1em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:3px;stroke-linejoin:round}
+.group-label.centred{text-anchor:middle}
+.group[data-collapsed] .group-box{fill-opacity:.7}
+.summary-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.badge{font:600 12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.legend text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
+.callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.heading-back{fill:#ffffff}
+.heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
+.heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
+.kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.kind-command .node-box{fill:#f8fafc;stroke:#475569}
+.kind-word .node-box{stroke-dasharray:5 4}
+.gk-region .group-box{stroke-dasharray:8 6}
+.gk-zone .group-box{stroke-dasharray:3 5}
+.gk-cluster .group-box{stroke:#94a3b8}
+.gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.gk-aws\:cloud .group-box{stroke:#232f3e}
+.gk-aws\:account .group-box{stroke:#e7157b}
+.gk-aws\:region .group-box{stroke:#00a4a6;stroke-dasharray:8 6}
+.gk-aws\:availability-zone .group-box{stroke:#00a4a6;stroke-dasharray:3 5}
+.gk-aws\:vpc .group-box{stroke:#8c4fff;stroke-dasharray:8 6}
+.gk-aws\:public-subnet .group-box{stroke:#7aa116;fill:#f2f6e8}
+.gk-aws\:private-subnet .group-box{stroke:#00a4a6;fill:#e6f6f7}
+.gk-aws\:security-group .group-box{stroke:#dd344c;stroke-dasharray:8 6}
+.gk-aws\:auto-scaling-group .group-box{stroke:#ed7100;stroke-dasharray:8 6}
+.gk-aws\:on-premises .group-box{stroke:#5a6b86;stroke-dasharray:8 6}
+.gk-gcp\:project .group-box{stroke:#4285f4}
+.gk-gcp\:region .group-box{stroke:#4285f4;stroke-dasharray:8 6}
+.gk-gcp\:zone .group-box{stroke:#4285f4;stroke-dasharray:3 5}
+.gk-gcp\:vpc .group-box{stroke:#34a853;stroke-dasharray:8 6}
+.gk-gcp\:subnet .group-box{stroke:#34a853;fill:#e6f4ea}
+.gk-gcp\:cluster .group-box{stroke:#4285f4;fill:#e8f0fe}
+.gk-gcp\:on-premises .group-box{stroke:#5f6368;stroke-dasharray:8 6}
+.gk-azure\:subscription .group-box{stroke:#0078d4}
+.gk-azure\:resource-group .group-box{stroke:#0078d4;stroke-dasharray:8 6}
+.gk-azure\:region .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:availability-zone .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:vnet .group-box{stroke:#008272;stroke-dasharray:8 6}
+.gk-azure\:subnet .group-box{stroke:#008272;fill:#e5f4f2}
+.gk-azure\:on-premises .group-box{stroke:#5c5c5c;stroke-dasharray:8 6}
+.gk-documents .group-box{stroke:#94a3b8;fill:#f1f5f9;fill-opacity:0.6;stroke-dasharray:8 6}
+.gk-sets .group-box{stroke:#94a3b8;stroke-dasharray:3 5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.edge-reads{stroke:#0891b2;stroke-dasharray:2 3}
+.edge-inlined{stroke:#7c3aed;stroke-width:2.5}
+.edge-builds{stroke-dasharray:2 4}
+.st-impaired .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .node-label{fill:#92400e}
+.st-impaired .group-label{fill:#92400e}
+.st-brownout .node-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .group-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .node-label{fill:#5b21b6}
+.st-brownout .group-label{fill:#5b21b6}
+.st-outage .node-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .group-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .node-label{fill:#991b1b}
+.st-outage .group-label{fill:#991b1b}
+.st-drained .node-box{stroke-dasharray:4 4}
+.st-drained .group-box{stroke-dasharray:4 4}
+.st-drained{opacity:0.45}
+.st-planned .node-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .group-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .node-label{fill:#64748b}
+.st-planned .group-label{fill:#64748b}
+.st-planned{opacity:0.7}
+.st-retired .node-box{stroke-dasharray:4 4}
+.st-retired .group-box{stroke-dasharray:4 4}
+.st-retired{opacity:0.45}
+@keyframes orrery-show-cli{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-cli{0%{width:211px;height:360px}100%{width:211px;height:360px}}
+@keyframes orrery-open-cli{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-cli{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-cli{0%{transform:translate(189px, 8px)}100%{transform:translate(189px, 8px)}}
+@keyframes orrery-centre-cli{0%{transform:translate(93.5px, 180px)}100%{transform:translate(93.5px, 180px)}}
+@keyframes orrery-var-cli-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-cli{0%{transform:translate(596px, 20px)}100%{transform:translate(596px, 20px)}}
+@keyframes orrery-show-icon-sets{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-icon-sets{0%{width:239px;height:48px}100%{width:239px;height:48px}}
+@keyframes orrery-open-icon-sets{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-closed-icon-sets{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-mark-icon-sets{0%{transform:translate(217px, 8px)}100%{transform:translate(217px, 8px)}}
+@keyframes orrery-centre-icon-sets{0%{transform:translate(107.5px, 24px)}100%{transform:translate(107.5px, 24px)}}
+@keyframes orrery-var-icon-sets-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-icon-sets{0%{transform:translate(608.5px, 420px)}100%{transform:translate(608.5px, 420px)}}
+@keyframes orrery-show-core{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-core{0%{width:1334px;height:180px}14.33%{animation-timing-function:ease-in-out;width:1334px;height:180px}17.33%{width:1347.5px;height:492px}27.67%{animation-timing-function:ease-in-out;width:1347.5px;height:492px}30.67%{width:1359px;height:804px}41%{animation-timing-function:ease-in-out;width:1359px;height:804px}44%{width:1347.5px;height:492px}54.33%{animation-timing-function:ease-in-out;width:1347.5px;height:492px}57.33%{width:1334px;height:180px}100%{width:1334px;height:180px}}
+@keyframes orrery-open-core{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-core{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-core{0%{transform:translate(1312px, 8px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1312px, 8px)}17.33%{transform:translate(1325.5px, 8px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1325.5px, 8px)}30.67%{transform:translate(1337px, 8px)}41%{animation-timing-function:ease-in-out;transform:translate(1337px, 8px)}44%{transform:translate(1325.5px, 8px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1325.5px, 8px)}57.33%{transform:translate(1312px, 8px)}100%{transform:translate(1312px, 8px)}}
+@keyframes orrery-centre-core{0%{transform:translate(655px, 90px)}14.33%{animation-timing-function:ease-in-out;transform:translate(655px, 90px)}17.33%{transform:translate(661.8px, 246px)}27.67%{animation-timing-function:ease-in-out;transform:translate(661.8px, 246px)}30.67%{transform:translate(667.5px, 402px)}41%{animation-timing-function:ease-in-out;transform:translate(667.5px, 402px)}44%{transform:translate(661.8px, 246px)}54.33%{animation-timing-function:ease-in-out;transform:translate(661.8px, 246px)}57.33%{transform:translate(655px, 90px)}100%{transform:translate(655px, 90px)}}
+@keyframes orrery-var-core-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-core{0%{transform:translate(942.5px, 44px)}14.33%{animation-timing-function:ease-in-out;transform:translate(942.5px, 44px)}17.33%{transform:translate(932.5px, 44px)}27.67%{animation-timing-function:ease-in-out;transform:translate(932.5px, 44px)}30.67%{transform:translate(922.5px, 188px)}41%{animation-timing-function:ease-in-out;transform:translate(922.5px, 188px)}44%{transform:translate(932.5px, 44px)}54.33%{animation-timing-function:ease-in-out;transform:translate(932.5px, 44px)}57.33%{transform:translate(942.5px, 44px)}100%{transform:translate(942.5px, 44px)}}
+@keyframes orrery-show-vocabulary{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-vocabulary{0%{width:132px;height:48px}14.33%{animation-timing-function:ease-in-out;width:132px;height:48px}17.33%{width:138px;height:360px}27.67%{animation-timing-function:ease-in-out;width:138px;height:360px}30.67%{width:149.5px;height:672px}41%{animation-timing-function:ease-in-out;width:149.5px;height:672px}44%{width:138px;height:360px}54.33%{animation-timing-function:ease-in-out;width:138px;height:360px}57.33%{width:132px;height:48px}100%{width:132px;height:48px}}
+@keyframes orrery-open-vocabulary{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-closed-vocabulary{0%{opacity:1}13.33%{opacity:1}14.33%{opacity:0}57.33%{opacity:0}58.33%{opacity:1}100%{opacity:1}}
+@keyframes orrery-mark-vocabulary{0%{transform:translate(110px, 8px)}14.33%{animation-timing-function:ease-in-out;transform:translate(110px, 8px)}17.33%{transform:translate(116px, 8px)}27.67%{animation-timing-function:ease-in-out;transform:translate(116px, 8px)}30.67%{transform:translate(127.5px, 8px)}41%{animation-timing-function:ease-in-out;transform:translate(127.5px, 8px)}44%{transform:translate(116px, 8px)}54.33%{animation-timing-function:ease-in-out;transform:translate(116px, 8px)}57.33%{transform:translate(110px, 8px)}100%{transform:translate(110px, 8px)}}
+@keyframes orrery-centre-vocabulary{0%{transform:translate(54px, 24px)}14.33%{animation-timing-function:ease-in-out;transform:translate(54px, 24px)}17.33%{transform:translate(57px, 180px)}27.67%{animation-timing-function:ease-in-out;transform:translate(57px, 180px)}30.67%{transform:translate(62.8px, 336px)}41%{animation-timing-function:ease-in-out;transform:translate(62.8px, 336px)}44%{transform:translate(57px, 180px)}54.33%{animation-timing-function:ease-in-out;transform:translate(57px, 180px)}57.33%{transform:translate(54px, 24px)}100%{transform:translate(54px, 24px)}}
+@keyframes orrery-var-vocabulary-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-vocabulary{0%{transform:translate(954.5px, 138px)}14.33%{animation-timing-function:ease-in-out;transform:translate(954.5px, 138px)}17.33%{transform:translate(952px, 138px)}27.67%{animation-timing-function:ease-in-out;transform:translate(952px, 138px)}30.67%{transform:translate(942px, 282px)}41%{animation-timing-function:ease-in-out;transform:translate(942px, 282px)}44%{transform:translate(952px, 138px)}54.33%{animation-timing-function:ease-in-out;transform:translate(952px, 138px)}57.33%{transform:translate(954.5px, 138px)}100%{transform:translate(954.5px, 138px)}}
+@keyframes orrery-show-packs{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-size-packs{0%{width:94px;height:48px}27.67%{animation-timing-function:ease-in-out;width:94px;height:48px}30.67%{width:118px;height:360px}41%{animation-timing-function:ease-in-out;width:118px;height:360px}44%{width:94px;height:48px}100%{width:94px;height:48px}}
+@keyframes orrery-open-packs{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-closed-packs{0%{opacity:1}26.67%{opacity:1}27.67%{opacity:0}44%{opacity:0}45%{opacity:1}100%{opacity:1}}
+@keyframes orrery-mark-packs{0%{transform:translate(72px, 8px)}27.67%{animation-timing-function:ease-in-out;transform:translate(72px, 8px)}30.67%{transform:translate(96px, 8px)}41%{animation-timing-function:ease-in-out;transform:translate(96px, 8px)}44%{transform:translate(72px, 8px)}100%{transform:translate(72px, 8px)}}
+@keyframes orrery-centre-packs{0%{transform:translate(35px, 24px)}27.67%{animation-timing-function:ease-in-out;transform:translate(35px, 24px)}30.67%{transform:translate(47px, 180px)}41%{animation-timing-function:ease-in-out;transform:translate(47px, 180px)}44%{transform:translate(35px, 24px)}100%{transform:translate(35px, 24px)}}
+@keyframes orrery-var-packs-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-packs{0%{transform:translate(964px, 174px)}27.67%{animation-timing-function:ease-in-out;transform:translate(964px, 174px)}30.67%{transform:translate(961.5px, 318px)}41%{animation-timing-function:ease-in-out;transform:translate(961.5px, 318px)}44%{transform:translate(964px, 174px)}100%{transform:translate(964px, 174px)}}
+@keyframes orrery-show-layout{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-layout{0%{width:196px;height:212px}100%{width:196px;height:212px}}
+@keyframes orrery-open-layout{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-layout{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-layout{0%{transform:translate(174px, 8px)}100%{transform:translate(174px, 8px)}}
+@keyframes orrery-centre-layout{0%{transform:translate(86px, 106px)}100%{transform:translate(86px, 106px)}}
+@keyframes orrery-var-layout-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-layout{0%{transform:translate(2727.5px, 29.5px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2727.5px, 29.5px)}17.33%{transform:translate(2731px, 29.5px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2731px, 29.5px)}30.67%{transform:translate(2732.5px, 87.5px)}41%{animation-timing-function:ease-in-out;transform:translate(2732.5px, 87.5px)}44%{transform:translate(2731px, 29.5px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2731px, 29.5px)}57.33%{transform:translate(2727.5px, 29.5px)}100%{transform:translate(2727.5px, 29.5px)}}
+@keyframes orrery-show-runtime{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-runtime{0%{width:239px;height:48px}41%{animation-timing-function:ease-in-out;width:239px;height:48px}44%{width:184px;height:286px}54.33%{animation-timing-function:ease-in-out;width:184px;height:286px}57.33%{width:239px;height:48px}100%{width:239px;height:48px}}
+@keyframes orrery-open-runtime{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-closed-runtime{0%{opacity:1}40%{opacity:1}41%{opacity:0}57.33%{opacity:0}58.33%{opacity:1}100%{opacity:1}}
+@keyframes orrery-mark-runtime{0%{transform:translate(217px, 8px)}41%{animation-timing-function:ease-in-out;transform:translate(217px, 8px)}44%{transform:translate(162px, 8px)}54.33%{animation-timing-function:ease-in-out;transform:translate(162px, 8px)}57.33%{transform:translate(217px, 8px)}100%{transform:translate(217px, 8px)}}
+@keyframes orrery-centre-runtime{0%{transform:translate(107.5px, 24px)}41%{animation-timing-function:ease-in-out;transform:translate(107.5px, 24px)}44%{transform:translate(80px, 143px)}54.33%{animation-timing-function:ease-in-out;transform:translate(80px, 143px)}57.33%{transform:translate(107.5px, 24px)}100%{transform:translate(107.5px, 24px)}}
+@keyframes orrery-var-runtime-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-runtime{0%{transform:translate(1490px, 579px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1490px, 579px)}17.33%{transform:translate(1486.8px, 579px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1486.8px, 579px)}30.67%{transform:translate(1482.5px, 1065px)}41%{animation-timing-function:ease-in-out;transform:translate(1482.5px, 1065px)}44%{transform:translate(1514.3px, 576px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1514.3px, 576px)}57.33%{transform:translate(1490px, 579px)}100%{transform:translate(1490px, 579px)}}
+@keyframes orrery-show-outputs{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-outputs{0%{d:path("M62.2 356A62.2 71.2 0 0 1 31.1 220.7A68.4 78.3 0 0 1 118.2 92.6A77.8 89 0 0 1 223.9 78.3A62.2 71.2 0 0 1 292.3 199.4A56 64.1 0 0 1 261.2 356Z")}100%{d:path("M62.2 356A62.2 71.2 0 0 1 31.1 220.7A68.4 78.3 0 0 1 118.2 92.6A77.8 89 0 0 1 223.9 78.3A62.2 71.2 0 0 1 292.3 199.4A56 64.1 0 0 1 261.2 356Z")}}
+@keyframes orrery-open-outputs{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-outputs{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-outputs{0%{transform:translate(273px, 20px)}100%{transform:translate(273px, 20px)}}
+@keyframes orrery-centre-outputs{0%{transform:translate(143.5px, 178px)}100%{transform:translate(143.5px, 178px)}}
+@keyframes orrery-var-outputs-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-title-outputs{0%{transform:translate(155.5px, 28px)}100%{transform:translate(155.5px, 28px)}}
+@keyframes orrery-pos-outputs{0%{transform:translate(2351.5px, 395.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2351.5px, 395.7px)}17.33%{transform:translate(2355px, 395.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2355px, 395.7px)}30.67%{transform:translate(2356.5px, 881.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2356.5px, 881.7px)}44%{transform:translate(2355px, 404.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2355px, 404.7px)}57.33%{transform:translate(2351.5px, 395.7px)}100%{transform:translate(2351.5px, 395.7px)}}
+@keyframes orrery-show-raster{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-size-raster{0%{width:292px;height:134px}100%{width:292px;height:134px}}
+@keyframes orrery-open-raster{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-closed-raster{0%{opacity:0}100%{opacity:0}}
+@keyframes orrery-mark-raster{0%{transform:translate(270px, 8px)}100%{transform:translate(270px, 8px)}}
+@keyframes orrery-centre-raster{0%{transform:translate(134px, 67px)}100%{transform:translate(134px, 67px)}}
+@keyframes orrery-var-raster-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-raster{0%{transform:translate(555.5px, 663px)}27.67%{animation-timing-function:ease-in-out;transform:translate(555.5px, 663px)}30.67%{transform:translate(555.5px, 1149px)}41%{animation-timing-function:ease-in-out;transform:translate(555.5px, 1149px)}44%{transform:translate(555.5px, 808px)}54.33%{animation-timing-function:ease-in-out;transform:translate(555.5px, 808px)}57.33%{transform:translate(555.5px, 663px)}100%{transform:translate(555.5px, 663px)}}
+@keyframes orrery-show-agent{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-agent-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-agent{0%{transform:translate(20px, 78.8px)}27.67%{animation-timing-function:ease-in-out;transform:translate(20px, 78.8px)}30.67%{transform:translate(20px, 215.8px)}41%{animation-timing-function:ease-in-out;transform:translate(20px, 215.8px)}44%{transform:translate(20px, 78.8px)}100%{transform:translate(20px, 78.8px)}}
+@keyframes orrery-show-model{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-model-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-model-outage{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-model{0%{transform:translate(318px, 60.5px)}27.67%{animation-timing-function:ease-in-out;transform:translate(318px, 60.5px)}30.67%{transform:translate(318px, 197.5px)}41%{animation-timing-function:ease-in-out;transform:translate(318px, 197.5px)}44%{transform:translate(318px, 60.5px)}100%{transform:translate(318px, 60.5px)}}
+@keyframes orrery-show-schema{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-schema-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-schema{0%{transform:translate(333px, 454px)}27.67%{animation-timing-function:ease-in-out;transform:translate(333px, 454px)}30.67%{transform:translate(333px, 940px)}41%{animation-timing-function:ease-in-out;transform:translate(333px, 940px)}44%{transform:translate(333px, 454px)}100%{transform:translate(333px, 454px)}}
+@keyframes orrery-show-validate{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-validate-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-validate-impaired{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-validate{0%{transform:translate(631px, 56px)}100%{transform:translate(631px, 56px)}}
+@keyframes orrery-show-render{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-render-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-render{0%{transform:translate(638.5px, 144px)}100%{transform:translate(638.5px, 144px)}}
+@keyframes orrery-show-export{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-export-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-export{0%{transform:translate(608px, 232px)}100%{transform:translate(608px, 232px)}}
+@keyframes orrery-show-explain{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-explain-planned{0%{opacity:1}80%{opacity:1}85%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-explain-brownout{0%{opacity:0}80%{opacity:0}85%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-explain{0%{transform:translate(634.5px, 320px)}100%{transform:translate(634.5px, 320px)}}
+@keyframes orrery-show-validator{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-validator-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-validator{0%{transform:translate(1320.5px, 81px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1320.5px, 81px)}17.33%{transform:translate(1324px, 81px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1324px, 81px)}30.67%{transform:translate(1325.5px, 225px)}41%{animation-timing-function:ease-in-out;transform:translate(1325.5px, 225px)}44%{transform:translate(1324px, 81px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1324px, 81px)}57.33%{transform:translate(1320.5px, 81px)}100%{transform:translate(1320.5px, 81px)}}
+@keyframes orrery-show-declare{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-declare-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-declare-drained{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-declare{0%{transform:translate(1538.5px, 81px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1538.5px, 81px)}17.33%{transform:translate(1542px, 81px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1542px, 81px)}30.67%{transform:translate(1543.5px, 225px)}41%{animation-timing-function:ease-in-out;transform:translate(1543.5px, 225px)}44%{transform:translate(1542px, 81px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1542px, 81px)}57.33%{transform:translate(1538.5px, 81px)}100%{transform:translate(1538.5px, 81px)}}
+@keyframes orrery-show-scope{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-scope-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-scope-drained{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-scope{0%{transform:translate(1790.5px, 81px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1790.5px, 81px)}17.33%{transform:translate(1794px, 81px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1794px, 81px)}30.67%{transform:translate(1795.5px, 225px)}41%{animation-timing-function:ease-in-out;transform:translate(1795.5px, 225px)}44%{transform:translate(1794px, 81px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1794px, 81px)}57.33%{transform:translate(1790.5px, 81px)}100%{transform:translate(1790.5px, 81px)}}
+@keyframes orrery-show-elk{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-elk-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-elk-drained{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-elk{0%{transform:translate(2739.5px, 65.5px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2739.5px, 65.5px)}17.33%{transform:translate(2743px, 65.5px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2743px, 65.5px)}30.67%{transform:translate(2744.5px, 123.5px)}41%{animation-timing-function:ease-in-out;transform:translate(2744.5px, 123.5px)}44%{transform:translate(2743px, 65.5px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2743px, 65.5px)}57.33%{transform:translate(2739.5px, 65.5px)}100%{transform:translate(2739.5px, 65.5px)}}
+@keyframes orrery-show-fake{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-fake-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-fake{0%{transform:translate(2739.5px, 167.5px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2739.5px, 167.5px)}17.33%{transform:translate(2743px, 167.5px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2743px, 167.5px)}30.67%{transform:translate(2744.5px, 225.5px)}41%{animation-timing-function:ease-in-out;transform:translate(2744.5px, 225.5px)}44%{transform:translate(2743px, 167.5px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2743px, 167.5px)}57.33%{transform:translate(2739.5px, 167.5px)}100%{transform:translate(2739.5px, 167.5px)}}
+@keyframes orrery-show-renderer{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-renderer-healthy{0%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-renderer-drained{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-pos-renderer{0%{transform:translate(2139.5px, 138.5px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2139.5px, 138.5px)}17.33%{transform:translate(2143px, 138.5px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2143px, 138.5px)}30.67%{transform:translate(2144.5px, 282.5px)}41%{animation-timing-function:ease-in-out;transform:translate(2144.5px, 282.5px)}44%{transform:translate(2143px, 138.5px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2143px, 138.5px)}57.33%{transform:translate(2139.5px, 138.5px)}100%{transform:translate(2139.5px, 138.5px)}}
+@keyframes orrery-show-page{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-page-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-page{0%{transform:translate(339px, 572px)}27.67%{animation-timing-function:ease-in-out;transform:translate(339px, 572px)}30.67%{transform:translate(339px, 1058px)}41%{animation-timing-function:ease-in-out;transform:translate(339px, 1058px)}44%{transform:translate(339px, 700px)}54.33%{animation-timing-function:ease-in-out;transform:translate(339px, 700px)}57.33%{transform:translate(339px, 572px)}100%{transform:translate(339px, 572px)}}
+@keyframes orrery-show-scene{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-scene-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-scene{0%{transform:translate(2379.5px, 443.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2379.5px, 443.7px)}17.33%{transform:translate(2383px, 443.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2383px, 443.7px)}30.67%{transform:translate(2384.5px, 929.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2384.5px, 929.7px)}44%{transform:translate(2383px, 452.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2383px, 452.7px)}57.33%{transform:translate(2379.5px, 443.7px)}100%{transform:translate(2379.5px, 443.7px)}}
+@keyframes orrery-show-interactive{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-interactive-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-interactive{0%{transform:translate(2382.2px, 561.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2382.2px, 561.7px)}17.33%{transform:translate(2385.7px, 561.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2385.7px, 561.7px)}30.67%{transform:translate(2387.2px, 1047.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2387.2px, 1047.7px)}44%{transform:translate(2385.7px, 570.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2385.7px, 570.7px)}57.33%{transform:translate(2382.2px, 561.7px)}100%{transform:translate(2382.2px, 561.7px)}}
+@keyframes orrery-show-readme{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-readme-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-readme{0%{transform:translate(2963.5px, 426.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2963.5px, 426.7px)}17.33%{transform:translate(2967px, 426.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2967px, 426.7px)}30.67%{transform:translate(2968.5px, 912.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2968.5px, 912.7px)}44%{transform:translate(2967px, 435.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2967px, 435.7px)}57.33%{transform:translate(2963.5px, 426.7px)}100%{transform:translate(2963.5px, 426.7px)}}
+@keyframes orrery-show-browser{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-browser-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-browser{0%{transform:translate(2963.5px, 568.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2963.5px, 568.7px)}17.33%{transform:translate(2967px, 568.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2967px, 568.7px)}30.67%{transform:translate(2968.5px, 1054.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2968.5px, 1054.7px)}44%{transform:translate(2967px, 577.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2967px, 577.7px)}57.33%{transform:translate(2963.5px, 568.7px)}100%{transform:translate(2963.5px, 568.7px)}}
+@keyframes orrery-show-freeze{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-freeze-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-freeze{0%{transform:translate(567.5px, 718px)}27.67%{animation-timing-function:ease-in-out;transform:translate(567.5px, 718px)}30.67%{transform:translate(567.5px, 1204px)}41%{animation-timing-function:ease-in-out;transform:translate(567.5px, 1204px)}44%{transform:translate(567.5px, 863px)}54.33%{animation-timing-function:ease-in-out;transform:translate(567.5px, 863px)}57.33%{transform:translate(567.5px, 718px)}100%{transform:translate(567.5px, 718px)}}
+@keyframes orrery-show-resvg{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-resvg-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-resvg{0%{transform:translate(723.5px, 699px)}27.67%{animation-timing-function:ease-in-out;transform:translate(723.5px, 699px)}30.67%{transform:translate(723.5px, 1185px)}41%{animation-timing-function:ease-in-out;transform:translate(723.5px, 1185px)}44%{transform:translate(723.5px, 844px)}54.33%{animation-timing-function:ease-in-out;transform:translate(723.5px, 844px)}57.33%{transform:translate(723.5px, 699px)}100%{transform:translate(723.5px, 699px)}}
+@keyframes orrery-show-png{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-var-png-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-png{0%{transform:translate(2379.5px, 663.7px)}14.33%{animation-timing-function:ease-in-out;transform:translate(2379.5px, 663.7px)}17.33%{transform:translate(2383px, 663.7px)}27.67%{animation-timing-function:ease-in-out;transform:translate(2383px, 663.7px)}30.67%{transform:translate(2384.5px, 1149.7px)}41%{animation-timing-function:ease-in-out;transform:translate(2384.5px, 1149.7px)}44%{transform:translate(2383px, 672.7px)}54.33%{animation-timing-function:ease-in-out;transform:translate(2383px, 672.7px)}57.33%{transform:translate(2379.5px, 663.7px)}100%{transform:translate(2379.5px, 663.7px)}}
+@keyframes orrery-show-states{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-states-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-states{0%{transform:translate(964px, 262px)}27.67%{animation-timing-function:ease-in-out;transform:translate(964px, 262px)}30.67%{transform:translate(959.8px, 718px)}41%{animation-timing-function:ease-in-out;transform:translate(959.8px, 718px)}44%{transform:translate(964px, 262px)}100%{transform:translate(964px, 262px)}}
+@keyframes orrery-show-kinds{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-kinds-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-kinds{0%{transform:translate(968px, 350px)}27.67%{animation-timing-function:ease-in-out;transform:translate(968px, 350px)}30.67%{transform:translate(963.8px, 806px)}41%{animation-timing-function:ease-in-out;transform:translate(963.8px, 806px)}44%{transform:translate(968px, 350px)}100%{transform:translate(968px, 350px)}}
+@keyframes orrery-show-shapes{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-shapes-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-shapes{0%{transform:translate(964px, 438px)}27.67%{animation-timing-function:ease-in-out;transform:translate(964px, 438px)}30.67%{transform:translate(959.8px, 894px)}41%{animation-timing-function:ease-in-out;transform:translate(959.8px, 894px)}44%{transform:translate(964px, 438px)}100%{transform:translate(964px, 438px)}}
+@keyframes orrery-show-aws-pack{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-aws-pack-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-aws-pack{0%{transform:translate(973.5px, 354px)}100%{transform:translate(973.5px, 354px)}}
+@keyframes orrery-show-gcp-pack{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-gcp-pack-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-gcp-pack{0%{transform:translate(973.5px, 442px)}100%{transform:translate(973.5px, 442px)}}
+@keyframes orrery-show-azure-pack{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-azure-pack-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-azure-pack{0%{transform:translate(973.5px, 530px)}100%{transform:translate(973.5px, 530px)}}
+@keyframes orrery-show-sre-pack{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-sre-pack-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-sre-pack{0%{transform:translate(974.5px, 618px)}100%{transform:translate(974.5px, 618px)}}
+@keyframes orrery-show-camera{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-camera-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-camera{0%{transform:translate(1566.3px, 612px)}100%{transform:translate(1566.3px, 612px)}}
+@keyframes orrery-show-session{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-session-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-session{0%{transform:translate(1526.3px, 700px)}100%{transform:translate(1526.3px, 700px)}}
+@keyframes orrery-show-morph{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-var-morph-healthy{0%{opacity:1}100%{opacity:1}}
+@keyframes orrery-pos-morph{0%{transform:translate(1566.3px, 802px)}100%{transform:translate(1566.3px, 802px)}}
+@keyframes orrery-callouts-0{0%{opacity:1}26.67%{opacity:1}27.67%{opacity:0}84%{opacity:0}85%{opacity:1}100%{opacity:1}}
+@keyframes orrery-callouts-1{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-callouts-2{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-callouts-3{0%{opacity:0}57.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}67.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-callouts-4{0%{opacity:0}70.67%{opacity:0}71.67%{opacity:1}80%{opacity:1}81%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-0{0%{opacity:1}13.33%{opacity:1}14.33%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}100%{opacity:1}}
+@keyframes orrery-edges-1{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}26.67%{opacity:1}27.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-2{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-3{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-edges-4{0%{opacity:0}57.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-0{0%{opacity:1}26.67%{opacity:1}31.67%{opacity:0}66.67%{opacity:0}71.67%{opacity:1}80%{opacity:1}85%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-1{0%{opacity:0}26.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}45%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-2{0%{opacity:0}40%{opacity:0}45%{opacity:1}53.33%{opacity:1}58.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-3{0%{opacity:0}53.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}71.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-legend-4{0%{opacity:0}80%{opacity:0}85%{opacity:1}100%{opacity:1}}
+@keyframes orrery-caption-0{0%{opacity:1}13.33%{opacity:1}14.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-1{0%{opacity:0}17.33%{opacity:0}18.33%{opacity:1}26.67%{opacity:1}27.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-2{0%{opacity:0}30.67%{opacity:0}31.67%{opacity:1}40%{opacity:1}41%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-3{0%{opacity:0}44%{opacity:0}45%{opacity:1}53.33%{opacity:1}54.33%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-4{0%{opacity:0}57.33%{opacity:0}58.33%{opacity:1}66.67%{opacity:1}67.67%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-5{0%{opacity:0}70.67%{opacity:0}71.67%{opacity:1}80%{opacity:1}81%{opacity:0}100%{opacity:0}}
+@keyframes orrery-caption-6{0%{opacity:0}84%{opacity:0}85%{opacity:1}100%{opacity:1}}
+@keyframes orrery-camera{0%{transform:translate(1575px, 431px) scale(1) translate(-1573.25px, -431px)}14.33%{animation-timing-function:ease-in-out;transform:translate(1575px, 431px) scale(1) translate(-1573.25px, -431px)}17.33%{transform:translate(1575px, 431px) scale(1) translate(-1575px, -431px)}27.67%{animation-timing-function:ease-in-out;transform:translate(1575px, 431px) scale(1) translate(-1575px, -431px)}30.67%{transform:translate(1575px, 431px) scale(2.1127) translate(-1020.5px, -498px)}41%{animation-timing-function:ease-in-out;transform:translate(1575px, 431px) scale(2.1127) translate(-1020.5px, -498px)}44%{transform:translate(1575px, 431px) scale(2.5808) translate(-1688.75px, -719px)}54.33%{animation-timing-function:ease-in-out;transform:translate(1575px, 431px) scale(2.5808) translate(-1688.75px, -719px)}57.33%{transform:translate(1575px, 431px) scale(1) translate(-1573.25px, -431px)}100%{transform:translate(1575px, 431px) scale(1) translate(-1573.25px, -431px)}}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="overview" data-open="" data-title="How Orrery works" data-size="3150 994">
+<clipPath id="orrery-stage-overview"><rect width="3150" height="862"/></clipPath>
+<g class="stage" clip-path="url(#orrery-stage-overview)">
+<g class="camera" data-stage="3150 862" transform="translate(1575 431) scale(1) translate(-1573.25 -431)" style="animation:orrery-camera 30s linear infinite">
+<g class="groups">
+<g class="entity" data-t0="1" style="animation:orrery-show-cli 30s linear infinite"><g class="group gk-package" data-group="cli" data-bbox="596 20 211 360" transform="translate(596 20)" style="animation:orrery-pos-cli 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-cli-healthy 30s linear infinite"><rect class="group-box" width="211" height="360" rx="8" style="animation:orrery-size-cli 30s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-cli 30s linear infinite"><text class="group-label" x="12" y="16">orrery-diagrams</text></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-cli 30s linear infinite"><g transform="translate(93.5 180)" style="animation:orrery-centre-cli 30s linear infinite"><text class="summary-label">orrery-diagrams</text></g><g class="expand-mark" transform="translate(189 8)" style="animation:orrery-mark-cli 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-icon-sets 30s linear infinite"><g class="group gk-sets" data-group="icon-sets" data-collapsed="3" data-bbox="608.5 420 239 48" transform="translate(608.5 420)" style="animation:orrery-pos-icon-sets 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-icon-sets-healthy 30s linear infinite"><rect class="group-box" width="239" height="48" rx="8" style="animation:orrery-size-icon-sets 30s linear infinite"/></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-icon-sets 30s linear infinite"><text class="group-label" x="12" y="16">The providers' icon sets</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-icon-sets 30s linear infinite"><g transform="translate(107.5 24)" style="animation:orrery-centre-icon-sets 30s linear infinite"><text class="summary-label">The providers' icon sets</text></g><g class="expand-mark" transform="translate(217 8)" style="animation:orrery-mark-icon-sets 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-core 30s linear infinite"><g class="group gk-package" data-group="core" data-bbox="942.5 44 1334 180" transform="translate(942.5 44)" style="animation:orrery-pos-core 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-core-healthy 30s linear infinite"><rect class="group-box" width="1334" height="180" rx="8" style="animation:orrery-size-core 30s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-core 30s linear infinite"><text class="group-label" x="12" y="16">@orrery-diagrams/core</text></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-core 30s linear infinite"><g transform="translate(655 90)" style="animation:orrery-centre-core 30s linear infinite"><text class="summary-label">@orrery-diagrams/core</text></g><g class="expand-mark" transform="translate(1312 8)" style="animation:orrery-mark-core 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-vocabulary 30s linear infinite"><g class="group gk-cluster" data-group="vocabulary" data-collapsed="7" data-bbox="954.5 138 132 48" transform="translate(954.5 138)" style="animation:orrery-pos-vocabulary 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-vocabulary-healthy 30s linear infinite"><rect class="group-box" width="132" height="48" rx="8" style="animation:orrery-size-vocabulary 30s linear infinite"/></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-vocabulary 30s linear infinite"><text class="group-label" x="12" y="16">Vocabulary</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-vocabulary 30s linear infinite"><g transform="translate(54 24)" style="animation:orrery-centre-vocabulary 30s linear infinite"><text class="summary-label">Vocabulary</text></g><g class="expand-mark" transform="translate(110 8)" style="animation:orrery-mark-vocabulary 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-packs 30s linear infinite"><g class="group gk-cluster" data-group="packs" data-collapsed="4" data-bbox="964 174 94 48" transform="translate(964 174)" style="animation:orrery-pos-packs 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-packs-healthy 30s linear infinite"><rect class="group-box" width="94" height="48" rx="8" style="animation:orrery-size-packs 30s linear infinite"/></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-packs 30s linear infinite"><text class="group-label" x="12" y="16">Packs</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-packs 30s linear infinite"><g transform="translate(35 24)" style="animation:orrery-centre-packs 30s linear infinite"><text class="summary-label">Packs</text></g><g class="expand-mark" transform="translate(72 8)" style="animation:orrery-mark-packs 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-layout 30s linear infinite"><g class="group gk-package" data-group="layout" data-bbox="2727.5 29.5 196 212" transform="translate(2727.5 29.5)" style="animation:orrery-pos-layout 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-layout-healthy 30s linear infinite"><rect class="group-box" width="196" height="212" rx="8" style="animation:orrery-size-layout 30s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-layout 30s linear infinite"><text class="group-label" x="12" y="16">@orrery-diagrams/layout-elk</text></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-layout 30s linear infinite"><g transform="translate(86 106)" style="animation:orrery-centre-layout 30s linear infinite"><text class="summary-label">@orrery-diagrams/layout-elk</text></g><g class="expand-mark" transform="translate(174 8)" style="animation:orrery-mark-layout 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-runtime 30s linear infinite"><g class="group gk-package" data-group="runtime" data-collapsed="3" data-bbox="1490 579 239 48" transform="translate(1490 579)" style="animation:orrery-pos-runtime 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-runtime-healthy 30s linear infinite"><rect class="group-box" width="239" height="48" rx="8" style="animation:orrery-size-runtime 30s linear infinite"/></g>
+<g class="detail" data-t0="0" style="animation:orrery-open-runtime 30s linear infinite"><text class="group-label" x="12" y="16">@orrery-diagrams/runtime</text></g>
+<g class="lod-summary" data-t0="1" style="animation:orrery-closed-runtime 30s linear infinite"><g transform="translate(107.5 24)" style="animation:orrery-centre-runtime 30s linear infinite"><text class="summary-label">@orrery-diagrams/runtime</text></g><g class="expand-mark" transform="translate(217 8)" style="animation:orrery-mark-runtime 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-outputs 30s linear infinite"><g class="group gk-documents" data-group="outputs" data-bbox="2351.5 395.7 311 356" transform="translate(2351.5 395.7)" style="animation:orrery-pos-outputs 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-outputs-healthy 30s linear infinite"><path class="group-box" data-shape="M20 100A20 20 0 0 1 10 62A22 22 0 0 1 38 26A25 25 0 0 1 72 22A20 20 0 0 1 94 56A18 18 0 0 1 84 100Z" d="M62.2 356A62.2 71.2 0 0 1 31.1 220.7A68.4 78.3 0 0 1 118.2 92.6A77.8 89 0 0 1 223.9 78.3A62.2 71.2 0 0 1 292.3 199.4A56 64.1 0 0 1 261.2 356Z" style="animation:orrery-size-outputs 30s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-outputs 30s linear infinite"><g transform="translate(155.5 28)" style="animation:orrery-title-outputs 30s linear infinite"><text class="group-label centred">What comes out</text></g></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-outputs 30s linear infinite"><g transform="translate(143.5 178)" style="animation:orrery-centre-outputs 30s linear infinite"><text class="summary-label">What comes out</text></g><g class="expand-mark" transform="translate(273 20)" style="animation:orrery-mark-outputs 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-raster 30s linear infinite"><g class="group gk-package" data-group="raster" data-bbox="555.5 663 292 134" transform="translate(555.5 663)" style="animation:orrery-pos-raster 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-raster-healthy 30s linear infinite"><rect class="group-box" width="292" height="134" rx="8" style="animation:orrery-size-raster 30s linear infinite"/></g>
+<g class="detail" data-t0="1" style="animation:orrery-open-raster 30s linear infinite"><text class="group-label" x="12" y="16">@orrery-diagrams/raster</text></g>
+<g class="lod-summary" data-t0="0" style="animation:orrery-closed-raster 30s linear infinite"><g transform="translate(134 67)" style="animation:orrery-centre-raster 30s linear infinite"><text class="summary-label">@orrery-diagrams/raster</text></g><g class="expand-mark" transform="translate(270 8)" style="animation:orrery-mark-raster 30s linear infinite"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g></g></g>
+</g>
+<g class="edges" data-edges="0" data-t0="1" style="animation:orrery-edges-0 30s linear infinite"><path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M180 99.5 L318 99.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0.8" d="M180 99.5 L306 99.5" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="254" y="88.5">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M180 120.2 L205 120.2 L205 493 L333 493" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M180 120.2 L205 120.2 L205 493 L321 493" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="254" y="504">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M488 80 L631 80" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0.5" d="M488 80 L619 80" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M488 99.5 L523 99.5 L523 168 L638.5 168" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0.7" d="M488 99.5 L523 99.5 L523 168 L626.5 168" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M488 119 L513 119 L513 256 L608 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0.6" d="M488 119 L513 119 L513 256 L596 256" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M772 80 L1295.5 80 L1295.5 91.3 L1320.5 91.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M772 80 L1295.5 80 L1295.5 91.3 L1308.5 91.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M764.5 168 L880 168 L880 96 L1285.5 96 L1285.5 101.7 L1320.5 101.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M764.5 168 L880 168 L880 96 L1285.5 96 L1285.5 101.7 L1308.5 101.7" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M795 256 L890 256 L890 112 L1320.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M795 256 L890 256 L890 112 L1308.5 112" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M473 493 L910 493 L910 211 L1295.5 211 L1295.5 132.7 L1320.5 132.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M473 493 L910 493 L910 211 L1295.5 211 L1295.5 132.7 L1308.5 132.7" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+<path class="edge edge-async" data-edge="vocabulary->validator" data-kind="async" d="M1086.5 162 L1285.5 162 L1285.5 122.3 L1320.5 122.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="vocabulary->validator" data-load="0.3" d="M1086.5 162 L1285.5 162 L1285.5 122.3 L1308.5 122.3" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1193.5" y="173">merged before yours</text>
+<path class="edge edge-sync" data-edge="validator->declare" data-kind="sync" d="M1498.5 112 L1538.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validator->declare" data-load="0.7" d="M1498.5 112 L1526.5 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="declare->scope" data-kind="sync" d="M1750.5 112 L1790.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="declare->scope" data-load="0.7" d="M1750.5 112 L1778.5 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-elk" data-kind="sync" d="M1988.5 96.5 L2739.5 96.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-elk" data-load="0.7" d="M2000.5 96.5 L2727.5 96.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2507" y="85.5">layout graph / boxes and routes</text>
+<path class="edge edge-sync" data-edge="to-fake" data-kind="sync" d="M1988.5 112 L2013.5 112 L2013.5 112.5 L2309 112.5 L2309 122.5 L2695 122.5 L2695 198.5 L2739.5 198.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-fake" data-load="0" d="M2000.5 112 L2013.5 112 L2013.5 112.5 L2309 112.5 L2309 122.5 L2695 122.5 L2695 198.5 L2727.5 198.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M1988.5 127.5 L2013.5 127.5 L2013.5 169.5 L2139.5 169.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M1988.5 127.5 L2013.5 127.5 L2013.5 169.5 L2127.5 169.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2069" y="180.5">laid out</text>
+<path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M1729 603 L2382.2 603" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M1729 603 L2370.2 603" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M2264.5 159.2 L2319 159.2 L2319 482.7 L2379.5 482.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M2264.5 159.2 L2319 159.2 L2319 482.7 L2367.5 482.7" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M2264.5 179.8 L2309 179.8 L2309 582.3 L2382.2 582.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M2264.5 179.8 L2309 179.8 L2309 582.3 L2370.2 582.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M2584.5 469.7 L2963.5 469.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->readme" data-load="0.6" d="M2584.5 469.7 L2951.5 469.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="2821.8" y="458.7">img tag</text>
+<path class="edge edge-sync" data-edge="interactive->browser" data-kind="sync" d="M2579.2 592.7 L2963.5 592.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="interactive->browser" data-load="0.5" d="M2579.2 592.7 L2951.5 592.7" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="2821.8" y="603.7">opened directly</text>
+<path class="edge edge-async" data-edge="page->session" data-kind="async" d="M488 603 L1490 603" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="page->session" data-load="0.4" d="M500 603 L1478 603" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="701.5" y="614">mount / change</text>
+<path class="edge edge-sync" data-edge="scene->freeze" data-kind="sync" d="M2584.5 495.7 L2609.5 495.7 L2609.5 602.7 L2695 602.7 L2695 822 L523 822 L523 742 L567.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->freeze" data-load="0.3" d="M2584.5 495.7 L2609.5 495.7 L2609.5 602.7 L2695 602.7 L2695 822 L523 822 L523 742 L555.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1609.5" y="833">frame at t</text>
+<path class="edge edge-sync" data-edge="freeze->resvg" data-kind="sync" d="M683.5 742 L723.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="freeze->resvg" data-load="0.3" d="M683.5 742 L711.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="resvg->png" data-kind="dataflow" d="M835.5 742 L2309 742 L2309 695.7 L2379.5 695.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="resvg->png" data-load="0.3" d="M835.5 742 L2309 742 L2309 695.7 L2367.5 695.7" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-builds" data-edge="aws-set->aws-pack" data-kind="builds" d="M847.5 444 L900 444 L900 162 L954.5 162" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="aws-set->aws-pack" data-load="0.6" d="M847.5 444 L900 444 L900 162 L942.5 162" style="stroke-width:3.3;animation-duration:1.5s"/></g>
+<g class="edges" data-edges="1" data-t0="0" style="animation:orrery-edges-1 30s linear infinite"><path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M180 99.5 L318 99.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0.8" d="M180 99.5 L306 99.5" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="254" y="88.5">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M180 120.2 L205 120.2 L205 493 L333 493" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M180 120.2 L205 120.2 L205 493 L321 493" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="254" y="504">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M488 80 L631 80" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0.5" d="M488 80 L619 80" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M488 99.5 L523 99.5 L523 168 L638.5 168" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0.7" d="M488 99.5 L523 99.5 L523 168 L626.5 168" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M488 119 L513 119 L513 256 L608 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0.6" d="M488 119 L513 119 L513 256 L596 256" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M772 80 L1299 80 L1299 91.3 L1324 91.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M772 80 L1299 80 L1299 91.3 L1312 91.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M764.5 168 L880 168 L880 96 L1289 96 L1289 101.7 L1324 101.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M764.5 168 L880 168 L880 96 L1289 96 L1289 101.7 L1312 101.7" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M795 256 L890 256 L890 112 L1324 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M795 256 L890 256 L890 112 L1312 112" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M473 493 L880 493 L880 523 L1299 523 L1299 132.7 L1324 132.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M473 493 L880 493 L880 523 L1299 523 L1299 132.7 L1312 132.7" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+<path class="edge edge-async" data-edge="vocabulary->validator" data-kind="async" d="M1090 174 L1289 174 L1289 122.3 L1324 122.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="vocabulary->validator" data-load="0.3" d="M1090 174 L1289 174 L1289 122.3 L1312 122.3" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1197" y="185">merged before yours</text>
+<path class="edge edge-sync" data-edge="validator->declare" data-kind="sync" d="M1502 112 L1542 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validator->declare" data-load="0.7" d="M1502 112 L1530 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="declare->scope" data-kind="sync" d="M1754 112 L1794 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="declare->scope" data-load="0.7" d="M1754 112 L1782 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-elk" data-kind="sync" d="M1992 96.5 L2743 96.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-elk" data-load="0.7" d="M2004 96.5 L2731 96.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2510.5" y="85.5">layout graph / boxes and routes</text>
+<path class="edge edge-sync" data-edge="to-fake" data-kind="sync" d="M1992 112 L2017 112 L2017 112.5 L2312.5 112.5 L2312.5 122.5 L2698.5 122.5 L2698.5 198.5 L2743 198.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-fake" data-load="0" d="M2004 112 L2017 112 L2017 112.5 L2312.5 112.5 L2312.5 122.5 L2698.5 122.5 L2698.5 198.5 L2731 198.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M1992 127.5 L2017 127.5 L2017 169.5 L2143 169.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M1992 127.5 L2017 127.5 L2017 169.5 L2131 169.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2072.5" y="180.5">laid out</text>
+<path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M1725.8 603 L2385.7 603" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M1725.8 603 L2373.7 603" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M2268 159.2 L2322.5 159.2 L2322.5 482.7 L2383 482.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M2268 159.2 L2322.5 159.2 L2322.5 482.7 L2371 482.7" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M2268 179.8 L2312.5 179.8 L2312.5 582.3 L2385.7 582.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M2268 179.8 L2312.5 179.8 L2312.5 582.3 L2373.7 582.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M2588 469.7 L2967 469.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->readme" data-load="0.6" d="M2588 469.7 L2955 469.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="2825.3" y="458.7">img tag</text>
+<path class="edge edge-sync" data-edge="interactive->browser" data-kind="sync" d="M2582.7 592.7 L2967 592.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="interactive->browser" data-load="0.5" d="M2582.7 592.7 L2955 592.7" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="2825.3" y="603.7">opened directly</text>
+<path class="edge edge-async" data-edge="page->session" data-kind="async" d="M488 603 L1486.8 603" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="page->session" data-load="0.4" d="M500 603 L1474.8 603" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="701.5" y="614">mount / change</text>
+<path class="edge edge-sync" data-edge="scene->freeze" data-kind="sync" d="M2588 495.7 L2613 495.7 L2613 602.7 L2698.5 602.7 L2698.5 822 L523 822 L523 742 L567.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->freeze" data-load="0.3" d="M2588 495.7 L2613 495.7 L2613 602.7 L2698.5 602.7 L2698.5 822 L523 822 L523 742 L555.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1606.3" y="833">frame at t</text>
+<path class="edge edge-sync" data-edge="freeze->resvg" data-kind="sync" d="M683.5 742 L723.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="freeze->resvg" data-load="0.3" d="M683.5 742 L711.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="resvg->png" data-kind="dataflow" d="M835.5 742 L2312.5 742 L2312.5 695.7 L2383 695.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="resvg->png" data-load="0.3" d="M835.5 742 L2312.5 742 L2312.5 695.7 L2371 695.7" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-builds" data-edge="aws-set->aws-pack" data-kind="builds" d="M847.5 444 L900 444 L900 198 L964 198" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="aws-set->aws-pack" data-load="0.6" d="M847.5 444 L900 444 L900 198 L952 198" style="stroke-width:3.3;animation-duration:1.5s"/></g>
+<g class="edges" data-edges="2" data-t0="0" style="animation:orrery-edges-2 30s linear infinite"><path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M180 236.5 L318 236.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0.8" d="M180 236.5 L306 236.5" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="254" y="225.5">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M180 257.2 L205 257.2 L205 979 L333 979" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M180 257.2 L205 257.2 L205 979 L321 979" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="254" y="990">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M488 217 L513 217 L513 80 L631 80" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0.5" d="M488 217 L513 217 L513 80 L619 80" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M488 236.5 L523 236.5 L523 168 L638.5 168" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0.7" d="M488 236.5 L523 236.5 L523 168 L626.5 168" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M488 256 L608 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0.6" d="M488 256 L596 256" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M772 80 L890 80 L890 224 L1300.5 224 L1300.5 235.3 L1325.5 235.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M772 80 L890 80 L890 224 L1300.5 224 L1300.5 235.3 L1313.5 235.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M764.5 168 L880 168 L880 240 L1290.5 240 L1290.5 245.7 L1325.5 245.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M764.5 168 L880 168 L880 240 L1290.5 240 L1290.5 245.7 L1313.5 245.7" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M795 256 L1325.5 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M795 256 L1313.5 256" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M473 979 L1300.5 979 L1300.5 276.7 L1325.5 276.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M473 979 L1300.5 979 L1300.5 276.7 L1313.5 276.7" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+<path class="edge edge-async" data-edge="vocabulary->validator" data-kind="async" d="M1091.5 456 L1290.5 456 L1290.5 266.3 L1325.5 266.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="vocabulary->validator" data-load="0.3" d="M1091.5 456 L1290.5 456 L1290.5 266.3 L1313.5 266.3" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1198.5" y="467">merged before yours</text>
+<path class="edge edge-sync" data-edge="validator->declare" data-kind="sync" d="M1503.5 256 L1543.5 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validator->declare" data-load="0.7" d="M1503.5 256 L1531.5 256" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="declare->scope" data-kind="sync" d="M1755.5 256 L1795.5 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="declare->scope" data-load="0.7" d="M1755.5 256 L1783.5 256" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-elk" data-kind="sync" d="M1993.5 240.5 L2314 240.5 L2314 154.5 L2744.5 154.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-elk" data-load="0.7" d="M2005.5 240.5 L2314 240.5 L2314 154.5 L2732.5 154.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2512" y="143.5">layout graph / boxes and routes</text>
+<path class="edge edge-sync" data-edge="to-fake" data-kind="sync" d="M1993.5 256 L2018.5 256 L2018.5 256.5 L2744.5 256.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-fake" data-load="0" d="M2005.5 256 L2018.5 256 L2018.5 256.5 L2732.5 256.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M1993.5 271.5 L2018.5 271.5 L2018.5 313.5 L2144.5 313.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M1993.5 271.5 L2018.5 271.5 L2018.5 313.5 L2132.5 313.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2074" y="324.5">laid out</text>
+<path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M1721.5 1089 L2387.2 1089" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M1721.5 1089 L2375.2 1089" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M2269.5 303.2 L2324 303.2 L2324 968.7 L2384.5 968.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M2269.5 303.2 L2324 303.2 L2324 968.7 L2372.5 968.7" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M2269.5 323.8 L2314 323.8 L2314 1068.3 L2387.2 1068.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M2269.5 323.8 L2314 323.8 L2314 1068.3 L2375.2 1068.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M2589.5 955.7 L2968.5 955.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->readme" data-load="0.6" d="M2589.5 955.7 L2956.5 955.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="2826.8" y="944.7">img tag</text>
+<path class="edge edge-sync" data-edge="interactive->browser" data-kind="sync" d="M2584.2 1078.7 L2968.5 1078.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="interactive->browser" data-load="0.5" d="M2584.2 1078.7 L2956.5 1078.7" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="2826.8" y="1089.7">opened directly</text>
+<path class="edge edge-async" data-edge="page->session" data-kind="async" d="M488 1089 L1482.5 1089" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="page->session" data-load="0.4" d="M500 1089 L1470.5 1089" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="701.5" y="1100">mount / change</text>
+<path class="edge edge-sync" data-edge="scene->freeze" data-kind="sync" d="M2589.5 981.7 L2614.5 981.7 L2614.5 1088.7 L2700 1088.7 L2700 1308 L523 1308 L523 1228 L567.5 1228" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->freeze" data-load="0.3" d="M2589.5 981.7 L2614.5 981.7 L2614.5 1088.7 L2700 1088.7 L2700 1308 L523 1308 L523 1228 L555.5 1228" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1602" y="1319">frame at t</text>
+<path class="edge edge-sync" data-edge="freeze->resvg" data-kind="sync" d="M683.5 1228 L723.5 1228" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="freeze->resvg" data-load="0.3" d="M683.5 1228 L711.5 1228" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="resvg->png" data-kind="dataflow" d="M835.5 1228 L2314 1228 L2314 1181.7 L2384.5 1181.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="resvg->png" data-load="0.3" d="M835.5 1228 L2314 1228 L2314 1181.7 L2372.5 1181.7" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-builds" data-edge="aws-set->aws-pack" data-kind="builds" d="M847.5 432 L880 432 L880 378 L973.5 378" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="aws-set->aws-pack" data-load="0.2" d="M847.5 432 L880 432 L880 378 L961.5 378" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-builds" data-edge="gcp-set->gcp-pack" data-kind="builds" d="M847.5 444 L890 444 L890 466 L973.5 466" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="gcp-set->gcp-pack" data-load="0.2" d="M847.5 444 L890 444 L890 466 L961.5 466" style="stroke-width:2.1;animation-duration:2.5s"/>
+<path class="edge edge-replication" data-edge="azure-set->azure-pack" data-kind="replication" d="M847.5 456 L880 456 L880 554 L973.5 554" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="azure-set->azure-pack" data-load="0.2" d="M847.5 456 L880 456 L880 554 L961.5 554" style="stroke-width:2.1;animation-duration:2.5s"/></g>
+<g class="edges" data-edges="3" data-t0="0" style="animation:orrery-edges-3 30s linear infinite"><path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M180 99.5 L318 99.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0.8" d="M180 99.5 L306 99.5" style="stroke-width:3.9;animation-duration:1s"/>
+<text class="edge-label" x="254" y="88.5">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M180 120.2 L205 120.2 L205 493 L333 493" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M180 120.2 L205 120.2 L205 493 L321 493" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="254" y="504">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M488 80 L631 80" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0.5" d="M488 80 L619 80" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M488 99.5 L523 99.5 L523 168 L638.5 168" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0.7" d="M488 99.5 L523 99.5 L523 168 L626.5 168" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M488 119 L513 119 L513 256 L608 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0.6" d="M488 119 L513 119 L513 256 L596 256" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M772 80 L1299 80 L1299 91.3 L1324 91.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M772 80 L1299 80 L1299 91.3 L1312 91.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M764.5 168 L880 168 L880 96 L1289 96 L1289 101.7 L1324 101.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M764.5 168 L880 168 L880 96 L1289 96 L1289 101.7 L1312 101.7" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M795 256 L890 256 L890 112 L1324 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M795 256 L890 256 L890 112 L1312 112" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M473 493 L880 493 L880 523 L1299 523 L1299 132.7 L1324 132.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M473 493 L880 493 L880 523 L1299 523 L1299 132.7 L1312 132.7" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+<path class="edge edge-async" data-edge="vocabulary->validator" data-kind="async" d="M1090 174 L1289 174 L1289 122.3 L1324 122.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="vocabulary->validator" data-load="0.3" d="M1090 174 L1289 174 L1289 122.3 L1312 122.3" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1197" y="185">merged before yours</text>
+<path class="edge edge-sync" data-edge="validator->declare" data-kind="sync" d="M1502 112 L1542 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validator->declare" data-load="0.7" d="M1502 112 L1530 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="declare->scope" data-kind="sync" d="M1754 112 L1794 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="declare->scope" data-load="0.7" d="M1754 112 L1782 112" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-elk" data-kind="sync" d="M1992 96.5 L2743 96.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-elk" data-load="0.7" d="M2004 96.5 L2731 96.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2510.5" y="85.5">layout graph / boxes and routes</text>
+<path class="edge edge-sync" data-edge="to-fake" data-kind="sync" d="M1992 112 L2017 112 L2017 112.5 L2312.5 112.5 L2312.5 122.5 L2698.5 122.5 L2698.5 198.5 L2743 198.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-fake" data-load="0" d="M2004 112 L2017 112 L2017 112.5 L2312.5 112.5 L2312.5 122.5 L2698.5 122.5 L2698.5 198.5 L2731 198.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M1992 127.5 L2017 127.5 L2017 169.5 L2143 169.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M1992 127.5 L2017 127.5 L2017 169.5 L2131 169.5" style="stroke-width:3.6;animation-duration:1.3s"/>
+<text class="edge-label" x="2072.5" y="180.5">laid out</text>
+<path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M1698.3 612 L2385.7 612" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M1698.3 612 L2373.7 612" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M2268 159.2 L2322.5 159.2 L2322.5 491.7 L2383 491.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M2268 159.2 L2322.5 159.2 L2322.5 491.7 L2371 491.7" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M2268 179.8 L2312.5 179.8 L2312.5 591.3 L2385.7 591.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M2268 179.8 L2312.5 179.8 L2312.5 591.3 L2373.7 591.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M2588 478.7 L2967 478.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->readme" data-load="0.6" d="M2588 478.7 L2955 478.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="2825.3" y="467.7">img tag</text>
+<path class="edge edge-sync" data-edge="interactive->browser" data-kind="sync" d="M2582.7 601.7 L2967 601.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="interactive->browser" data-load="0.5" d="M2582.7 601.7 L2955 601.7" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="2825.3" y="612.7">opened directly</text>
+<path class="edge edge-async" data-edge="page->session" data-kind="async" d="M488 731 L1526.3 731" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="page->session" data-load="0.4" d="M500 731 L1514.3 731" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="701.5" y="742">mount / change</text>
+<path class="edge edge-sync" data-edge="scene->freeze" data-kind="sync" d="M2588 504.7 L2613 504.7 L2613 611.7 L2698.5 611.7 L2698.5 967 L523 967 L523 887 L567.5 887" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->freeze" data-load="0.3" d="M2588 504.7 L2613 504.7 L2613 611.7 L2698.5 611.7 L2698.5 967 L523 967 L523 887 L555.5 887" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1606.3" y="978">frame at t</text>
+<path class="edge edge-sync" data-edge="freeze->resvg" data-kind="sync" d="M683.5 887 L723.5 887" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="freeze->resvg" data-load="0.3" d="M683.5 887 L711.5 887" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="resvg->png" data-kind="dataflow" d="M835.5 887 L2312.5 887 L2312.5 704.7 L2383 704.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="resvg->png" data-load="0.3" d="M835.5 887 L2312.5 887 L2312.5 704.7 L2371 704.7" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-builds" data-edge="aws-set->aws-pack" data-kind="builds" d="M847.5 444 L900 444 L900 198 L964 198" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="aws-set->aws-pack" data-load="0.6" d="M847.5 444 L900 444 L900 198 L952 198" style="stroke-width:3.3;animation-duration:1.5s"/></g>
+<g class="edges" data-edges="4" data-t0="0" style="animation:orrery-edges-4 30s linear infinite"><path class="edge edge-sync" data-edge="agent->model" data-kind="sync" d="M180 99.5 L318 99.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->model" data-load="0" d="M180 99.5 L306 99.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="254" y="88.5">writes</text>
+<path class="edge edge-reads" data-edge="agent->schema" data-kind="reads" d="M180 120.2 L205 120.2 L205 493 L333 493" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="agent->schema" data-load="0.3" d="M180 120.2 L205 120.2 L205 493 L321 493" style="stroke-width:2.4;animation-duration:2.3s;stroke:#0891b2"/>
+<text class="edge-label" x="254" y="504">reads</text>
+<path class="edge edge-sync" data-edge="to-validate" data-kind="sync" d="M488 80 L631 80" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-validate" data-load="0" d="M488 80 L619 80" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-render" data-kind="sync" d="M488 99.5 L523 99.5 L523 168 L638.5 168" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-render" data-load="0" d="M488 99.5 L523 99.5 L523 168 L626.5 168" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="model->export" data-kind="sync" d="M488 119 L513 119 L513 256 L608 256" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="model->export" data-load="0" d="M488 119 L513 119 L513 256 L596 256" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="validate->validator" data-kind="sync" d="M772 80 L1295.5 80 L1295.5 91.3 L1320.5 91.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validate->validator" data-load="0.5" d="M772 80 L1295.5 80 L1295.5 91.3 L1308.5 91.3" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-sync" data-edge="render->validator" data-kind="sync" d="M764.5 168 L880 168 L880 96 L1285.5 96 L1285.5 101.7 L1320.5 101.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="render->validator" data-load="0.7" d="M764.5 168 L880 168 L880 96 L1285.5 96 L1285.5 101.7 L1308.5 101.7" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="export->validator" data-kind="sync" d="M795 256 L890 256 L890 112 L1320.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="export->validator" data-load="0.6" d="M795 256 L890 256 L890 112 L1308.5 112" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-reads" data-edge="schema->validator" data-kind="reads" d="M473 493 L910 493 L910 211 L1295.5 211 L1295.5 132.7 L1320.5 132.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="schema->validator" data-load="0.4" d="M473 493 L910 493 L910 211 L1295.5 211 L1295.5 132.7 L1308.5 132.7" style="stroke-width:2.7;animation-duration:2s;stroke:#0891b2"/>
+<path class="edge edge-async" data-edge="vocabulary->validator" data-kind="async" d="M1086.5 162 L1285.5 162 L1285.5 122.3 L1320.5 122.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="vocabulary->validator" data-load="0.3" d="M1086.5 162 L1285.5 162 L1285.5 122.3 L1308.5 122.3" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1193.5" y="173">merged before yours</text>
+<path class="edge edge-sync" data-edge="validator->declare" data-kind="sync" d="M1498.5 112 L1538.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="validator->declare" data-load="0" d="M1498.5 112 L1526.5 112" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="declare->scope" data-kind="sync" d="M1750.5 112 L1790.5 112" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="declare->scope" data-load="0" d="M1750.5 112 L1778.5 112" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-elk" data-kind="sync" d="M1988.5 96.5 L2739.5 96.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-elk" data-load="0" d="M2000.5 96.5 L2727.5 96.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="2507" y="85.5">layout graph / boxes and routes</text>
+<path class="edge edge-sync" data-edge="to-fake" data-kind="sync" d="M1988.5 112 L2013.5 112 L2013.5 112.5 L2309 112.5 L2309 122.5 L2695 122.5 L2695 198.5 L2739.5 198.5" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="to-fake" data-load="0" d="M2000.5 112 L2013.5 112 L2013.5 112.5 L2309 112.5 L2309 122.5 L2695 122.5 L2695 198.5 L2727.5 198.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M1988.5 127.5 L2013.5 127.5 L2013.5 169.5 L2139.5 169.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0" d="M1988.5 127.5 L2013.5 127.5 L2013.5 169.5 L2127.5 169.5" style="stroke-width:1.5;animation:none;opacity:0"/>
+<text class="edge-label" x="2069" y="180.5">laid out</text>
+<path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M1729 603 L2382.2 603" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M1729 603 L2370.2 603" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M2264.5 159.2 L2319 159.2 L2319 482.7 L2379.5 482.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0" d="M2264.5 159.2 L2319 159.2 L2319 482.7 L2367.5 482.7" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M2264.5 179.8 L2309 179.8 L2309 582.3 L2382.2 582.3" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0" d="M2264.5 179.8 L2309 179.8 L2309 582.3 L2370.2 582.3" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M2584.5 469.7 L2963.5 469.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->readme" data-load="0.6" d="M2584.5 469.7 L2951.5 469.7" style="stroke-width:3.3;animation-duration:1.5s"/>
+<text class="edge-label" x="2821.8" y="458.7">img tag</text>
+<path class="edge edge-sync" data-edge="interactive->browser" data-kind="sync" d="M2579.2 592.7 L2963.5 592.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="interactive->browser" data-load="0.5" d="M2579.2 592.7 L2951.5 592.7" style="stroke-width:3;animation-duration:1.8s"/>
+<text class="edge-label" x="2821.8" y="603.7">opened directly</text>
+<path class="edge edge-async" data-edge="page->session" data-kind="async" d="M488 603 L1490 603" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<path class="flow" data-flow="page->session" data-load="0.4" d="M500 603 L1478 603" style="stroke-width:2.7;animation-duration:2s"/>
+<text class="edge-label" x="701.5" y="614">mount / change</text>
+<path class="edge edge-sync" data-edge="scene->freeze" data-kind="sync" d="M2584.5 495.7 L2609.5 495.7 L2609.5 602.7 L2695 602.7 L2695 822 L523 822 L523 742 L567.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="scene->freeze" data-load="0.3" d="M2584.5 495.7 L2609.5 495.7 L2609.5 602.7 L2695 602.7 L2695 822 L523 822 L523 742 L555.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<text class="edge-label" x="1609.5" y="833">frame at t</text>
+<path class="edge edge-sync" data-edge="freeze->resvg" data-kind="sync" d="M683.5 742 L723.5 742" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="freeze->resvg" data-load="0.3" d="M683.5 742 L711.5 742" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-dataflow" data-edge="resvg->png" data-kind="dataflow" d="M835.5 742 L2309 742 L2309 695.7 L2379.5 695.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="resvg->png" data-load="0.3" d="M835.5 742 L2309 742 L2309 695.7 L2367.5 695.7" style="stroke-width:2.4;animation-duration:2.3s"/>
+<path class="edge edge-builds" data-edge="aws-set->aws-pack" data-kind="builds" d="M847.5 444 L900 444 L900 162 L954.5 162" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="aws-set->aws-pack" data-load="0.6" d="M847.5 444 L900 444 L900 162 L942.5 162" style="stroke-width:3.3;animation-duration:1.5s"/></g>
+<g class="nodes">
+<g class="entity" data-t0="1" style="animation:orrery-show-agent 30s linear infinite"><g class="node kind-client" data-node="agent" data-kind="client" data-bbox="20 78.8 160 62" transform="translate(20 78.8)" style="animation:orrery-pos-agent 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-agent-healthy 30s linear infinite"><rect class="node-box" width="160" height="62" rx="31"/>
+<g class="glyph" transform="translate(18 23)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="98" y="23">Coding agent</text>
+<text class="node-tech" x="98" y="41">or a person</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-model 30s linear infinite"><g class="node kind-file" data-node="model" data-kind="file" data-bbox="318 60.5 170 78" transform="translate(318 60.5)" style="animation:orrery-pos-model 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-model-healthy 30s linear infinite"><path class="node-box" d="M0 0H170V65.5Q127.5 54.6 85 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="103" y="31">app.orrery.json</text>
+<text class="node-tech" x="103" y="49">one file</text></g>
+<g class="variant st-outage" data-state="outage" data-t0="0" style="animation:orrery-var-model-outage 30s linear infinite"><title>/connections/7/kind: unknown connection kind &quot;grpc&quot;</title><path class="node-box" d="M0 0H170V65.5Q127.5 54.6 85 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="103" y="31">app.orrery.json</text>
+<text class="node-tech" x="103" y="49">one file</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-schema 30s linear infinite"><g class="node kind-file" data-node="schema" data-kind="file" data-bbox="333 454 140 78" transform="translate(333 454)" style="animation:orrery-pos-schema 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-schema-healthy 30s linear infinite"><path class="node-box" d="M0 0H140V65.5Q105 54.6 70 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="88" y="31">JSON Schema</text>
+<text class="node-tech" x="88" y="49">v1.json</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-validate 30s linear infinite"><g class="node kind-command" data-node="validate" data-kind="command" data-bbox="631 56 141 48" transform="translate(631 56)" style="animation:orrery-pos-validate 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-validate-healthy 30s linear infinite"><path class="node-box" d="M0 0H115.6L141 24 115.6 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="88.5" y="24">validate</text></g>
+<g class="variant st-impaired" data-state="impaired" data-t0="0" style="animation:orrery-var-validate-impaired 30s linear infinite"><title>prints the pointer and the message</title><path class="node-box" d="M0 0H115.6L141 24 115.6 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="88.5" y="24">validate</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-render 30s linear infinite"><g class="node kind-command" data-node="render" data-kind="command" data-bbox="638.5 144 126 48" transform="translate(638.5 144)" style="animation:orrery-pos-render 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-render-healthy 30s linear infinite"><path class="node-box" d="M0 0H103.3L126 24 103.3 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="81" y="24">render</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-export 30s linear infinite"><g class="node kind-command" data-node="export" data-kind="command" data-bbox="608 232 187 48" transform="translate(608 232)" style="animation:orrery-pos-export 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-export-healthy 30s linear infinite"><path class="node-box" d="M0 0H153.3L187 24 153.3 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="111.5" y="24">export / embed</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-explain 30s linear infinite"><g class="node kind-command" data-node="explain" data-kind="command" data-bbox="634.5 320 134 48" transform="translate(634.5 320)" style="animation:orrery-pos-explain 30s linear infinite"><g class="variant st-planned" data-state="planned" data-t0="1" style="animation:orrery-var-explain-planned 30s linear infinite"><path class="node-box" d="M0 0H109.9L134 24 109.9 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="85" y="24">explain</text></g>
+<g class="variant st-brownout" data-state="brownout" data-t0="0" style="animation:orrery-var-explain-brownout 30s linear infinite"><title>coming: the model and a scenario in prose</title><path class="node-box" d="M0 0H109.9L134 24 109.9 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="85" y="24">explain</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-validator 30s linear infinite"><g class="node kind-stage" data-node="validator" data-kind="stage" data-bbox="1320.5 81 178 62" transform="translate(1320.5 81)" style="animation:orrery-pos-validator 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-validator-healthy 30s linear infinite"><path class="node-box" d="M0 0H151.3L178 31 151.3 62H0L26.7 31Z"/>
+<text class="node-label" x="89" y="23">Validate</text>
+<text class="node-tech" x="89" y="41">schema + pointers</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-declare 30s linear infinite"><g class="node kind-stage" data-node="declare" data-kind="stage" data-bbox="1538.5 81 212 62" transform="translate(1538.5 81)" style="animation:orrery-pos-declare 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-declare-healthy 30s linear infinite"><path class="node-box" d="M0 0H180.2L212 31 180.2 62H0L31.8 31Z"/>
+<text class="node-label" x="106" y="23">Declare</text>
+<text class="node-tech" x="106" y="41">states, reasons, loads</text></g>
+<g class="variant st-drained" data-state="drained" data-t0="0" style="animation:orrery-var-declare-drained 30s linear infinite"><path class="node-box" d="M0 0H180.2L212 31 180.2 62H0L31.8 31Z"/>
+<text class="node-label" x="106" y="23">Declare</text>
+<text class="node-tech" x="106" y="41">states, reasons, loads</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-scope 30s linear infinite"><g class="node kind-stage" data-node="scope" data-kind="stage" data-bbox="1790.5 81 198 62" transform="translate(1790.5 81)" style="animation:orrery-pos-scope 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-scope-healthy 30s linear infinite"><path class="node-box" d="M0 0H168.3L198 31 168.3 62H0L29.7 31Z"/>
+<text class="node-label" x="99" y="23">Scope</text>
+<text class="node-tech" x="99" y="41">views, closed groups</text></g>
+<g class="variant st-drained" data-state="drained" data-t0="0" style="animation:orrery-var-scope-drained 30s linear infinite"><path class="node-box" d="M0 0H168.3L198 31 168.3 62H0L29.7 31Z"/>
+<text class="node-label" x="99" y="23">Scope</text>
+<text class="node-tech" x="99" y="41">views, closed groups</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-elk 30s linear infinite"><g class="node kind-engine" data-node="elk" data-kind="engine" data-bbox="2739.5 65.5 149 62" transform="translate(2739.5 65.5)" style="animation:orrery-pos-elk 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-elk-healthy 30s linear infinite"><path class="node-box" d="M22.4 0H126.7L149 31 126.7 62H22.4L0 31Z"/>
+<g class="glyph" transform="translate(28 23)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="92.5" y="23">ELK</text>
+<text class="node-tech" x="92.5" y="41">elkjs 0.9</text></g>
+<g class="variant st-drained" data-state="drained" data-t0="0" style="animation:orrery-var-elk-drained 30s linear infinite"><path class="node-box" d="M22.4 0H126.7L149 31 126.7 62H22.4L0 31Z"/>
+<g class="glyph" transform="translate(28 23)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="92.5" y="23">ELK</text>
+<text class="node-tech" x="92.5" y="41">elkjs 0.9</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-fake 30s linear infinite"><g class="node kind-engine" data-node="fake" data-kind="engine" data-bbox="2739.5 167.5 172 62" transform="translate(2739.5 167.5)" style="animation:orrery-pos-fake 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-fake-healthy 30s linear infinite"><path class="node-box" d="M25.8 0H146.2L172 31 146.2 62H25.8L0 31Z"/>
+<g class="glyph" transform="translate(28 23)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="104" y="23">Fake engine</text>
+<text class="node-tech" x="104" y="41">tests</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-renderer 30s linear infinite"><g class="node kind-stage" data-node="renderer" data-kind="stage" data-bbox="2139.5 138.5 125 62" transform="translate(2139.5 138.5)" style="animation:orrery-pos-renderer 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-renderer-healthy 30s linear infinite"><path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
+<text class="node-label" x="62.5" y="23">Render</text>
+<text class="node-tech" x="62.5" y="41">SVG + CSS</text></g>
+<g class="variant st-drained" data-state="drained" data-t0="0" style="animation:orrery-var-renderer-drained 30s linear infinite"><path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
+<text class="node-label" x="62.5" y="23">Render</text>
+<text class="node-tech" x="62.5" y="41">SVG + CSS</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-page 30s linear infinite"><g class="node kind-client" data-node="page" data-kind="client" data-bbox="339 572 149 62" transform="translate(339 572)" style="animation:orrery-pos-page 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-page-healthy 30s linear infinite"><rect class="node-box" width="149" height="62" rx="31"/>
+<g class="glyph" transform="translate(18 23)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="92.5" y="23">Your page</text>
+<text class="node-tech" x="92.5" y="41">orrery embed</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-scene 30s linear infinite"><g class="node kind-file" data-node="scene" data-kind="file" data-bbox="2379.5 443.7 205 78" transform="translate(2379.5 443.7)" style="animation:orrery-pos-scene 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-scene-healthy 30s linear infinite"><g class="replicas"><g transform="translate(6 -6)"><path class="replica-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/></g><g transform="translate(3 -3)"><path class="replica-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/></g></g>
+<path class="node-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="110.5" y="31">Scene SVGs</text>
+<text class="node-tech" x="110.5" y="49">CSS animation only</text>
+<text class="badge" x="197" y="20">×3</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-interactive 30s linear infinite"><g class="node kind-mark" data-node="interactive" data-kind="mark" data-bbox="2382.2 561.7 197 62" transform="translate(2382.2 561.7)" style="animation:orrery-pos-interactive 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-interactive-healthy 30s linear infinite"><rect class="node-box" width="197" height="62" rx="8"/>
+<svg class="icon" x="10" y="21" width="20" height="20" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#FF7A1A" stroke-width="1.5"/><circle cx="8" cy="8" r="2" fill="#FF7A1A"/><circle cx="13" cy="5" r="1.2" fill="#0f172a"/></svg>
+<text class="node-label" x="116.5" y="23">Interactive SVG</text>
+<text class="node-tech" x="116.5" y="41">model + engine inside</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-readme 30s linear infinite"><g class="node kind-external" data-node="readme" data-kind="external" data-bbox="2963.5 426.7 163 86" transform="translate(2963.5 426.7)" style="animation:orrery-pos-readme 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-readme-healthy 30s linear infinite"><path class="node-box" d="M32.6 86A32.6 17.2 0 0 1 16.3 53.3A35.9 18.9 0 0 1 61.9 22.4A40.8 21.5 0 0 1 117.4 18.9A32.6 17.2 0 0 1 153.2 48.2A29.3 15.5 0 0 1 136.9 86Z"/>
+<text class="node-label" x="81.5" y="35">GitHub README</text>
+<text class="node-tech" x="81.5" y="53">an img tag</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-browser 30s linear infinite"><g class="node kind-client" data-node="browser" data-kind="client" data-bbox="2963.5 568.7 122 48" transform="translate(2963.5 568.7)" style="animation:orrery-pos-browser 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-browser-healthy 30s linear infinite"><rect class="node-box" width="122" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="79" y="24">Browser</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-freeze 30s linear infinite"><g class="node kind-service" data-node="freeze" data-kind="service" data-bbox="567.5 718 116 48" transform="translate(567.5 718)" style="animation:orrery-pos-freeze 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-freeze-healthy 30s linear infinite"><rect class="node-box" width="116" height="48" rx="8"/>
+<text class="node-label" x="58" y="24">Freeze at t</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-resvg 30s linear infinite"><g class="node kind-external" data-node="resvg" data-kind="external" data-bbox="723.5 699 112 86" transform="translate(723.5 699)" style="animation:orrery-pos-resvg 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-resvg-healthy 30s linear infinite"><path class="node-box" d="M22.4 86A22.4 17.2 0 0 1 11.2 53.3A24.6 18.9 0 0 1 42.6 22.4A28 21.5 0 0 1 80.6 18.9A22.4 17.2 0 0 1 105.3 48.2A20.2 15.5 0 0 1 94.1 86Z"/>
+<text class="node-label" x="56" y="35">resvg</text>
+<text class="node-tech" x="56" y="53">native</text></g></g></g>
+<g class="entity" data-t0="1" style="animation:orrery-show-png 30s linear infinite"><g class="node kind-file" data-node="png" data-kind="file" data-bbox="2379.5 663.7 132 64" transform="translate(2379.5 663.7)" style="animation:orrery-pos-png 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-png-healthy 30s linear infinite"><path class="node-box" d="M0 0H132V53.8Q99 44.8 66 53.8T0 53.8Z"/>
+<g class="glyph" transform="translate(12 24)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="84" y="32">PNG frames</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-states 30s linear infinite"><g class="node kind-word" data-node="states" data-kind="word" data-bbox="964 262 114 48" transform="translate(964 262)" style="animation:orrery-pos-states 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-states-healthy 30s linear infinite"><rect class="node-box" width="114" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><path d="M2 4h12M2 8h8M2 12h10"/></g>
+<text class="node-label" x="75" y="24">States</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-kinds 30s linear infinite"><g class="node kind-word" data-node="kinds" data-kind="word" data-bbox="968 350 106 48" transform="translate(968 350)" style="animation:orrery-pos-kinds 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-kinds-healthy 30s linear infinite"><rect class="node-box" width="106" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><path d="M2 4h12M2 8h8M2 12h10"/></g>
+<text class="node-label" x="71" y="24">Kinds</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-shapes 30s linear infinite"><g class="node kind-word" data-node="shapes" data-kind="word" data-bbox="964 438 114 48" transform="translate(964 438)" style="animation:orrery-pos-shapes 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-shapes-healthy 30s linear infinite"><rect class="node-box" width="114" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><path d="M2 4h12M2 8h8M2 12h10"/></g>
+<text class="node-label" x="75" y="24">Shapes</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-aws-pack 30s linear infinite"><g class="node kind-aws:lambda" data-node="aws-pack" data-kind="aws:lambda" data-bbox="973.5 354 80 48" transform="translate(973.5 354)" style="animation:orrery-pos-aws-pack 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-aws-pack-healthy 30s linear infinite"><rect class="node-box" width="80" height="48" rx="8"/>
+<svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 64 64"><g fill="none" fill-rule="evenodd"><path fill="#ed7100" d="M0 0h64v64H0z"/><path fill="#fff" d="M22.68 52h-9.106l10.264-21.59 4.562 9.451zm2.047-24.333a.99.99 0 0 0-.896-.564h-.003a.99.99 0 0 0-.896.569L11.097 52.569c-.147.31-.126.674.057.965.181.29.5.466.842.466H23.31a1 1 0 0 0 .9-.572l6.194-13.144a1 1 0 0 0-.005-.864zM51.008 52h-9.022L26.955 19.578a1 1 0 0 0-.903-.578h-5.924l.007-7h11.68l14.96 32.42c.163.354.516.58.904.58h3.33zm.996-9h-3.69l-14.96-32.42a1 1 0 0 0-.903-.58H19.14a1 1 0 0 0-.996.999l-.008 9A.993.993 0 0 0 19.131 21h6.286l15.03 32.422a1 1 0 0 0 .903.578h10.654c.55 0 .996-.448.996-1v-9c0-.552-.445-1-.996-1"/></g></svg>
+<text class="node-label" x="58" y="24">aws</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-gcp-pack 30s linear infinite"><g class="node kind-gcp:run" data-node="gcp-pack" data-kind="gcp:run" data-bbox="973.5 442 80 48" transform="translate(973.5 442)" style="animation:orrery-pos-gcp-pack 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-gcp-pack-healthy 30s linear infinite"><rect class="node-box" width="80" height="48" rx="8"/>
+<svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 512 512"><g><rect width="512" height="512" style="fill: none"/></g><g><path d="M144.4,272c-6.4,0-12.4-3.8-14.9-10.1L55.4,75.9c-3.3-8.2.7-17.5,8.9-20.8,8.2-3.3,17.5.7,20.8,8.9l74.2,186c3.3,8.2-.7,17.5-8.9,20.8-1.9.8-3.9,1.1-5.9,1.1h-.1Z" style="fill: #fbbc04"/><g><path d="M256,272c-6.4,0-12.4-3.8-14.9-10.1l-74.1-186c-2.6-6.6-.6-14.1,5-18.5s13.4-4.5,19.2-.4l260.1,186c7.2,5.1,8.9,15.1,3.7,22.3s-15.1,8.9-22.3,3.7L216.9,114.7l54,135.3c3.3,8.2-.7,17.5-8.9,20.8-1.9.8-4,1.1-5.9,1.1h-.1Z" style="fill: #ea4335"/></g><path d="M127.2,256l-72,180c-3.3,8.2.7,17.5,8.9,20.8,3.1,1.2,4,1.1,5.9,1.1,6.3,0,12.4-3.8,14.9-10.1l74.4-186c.8-2,1.1-4,1.1-5.9h-33.2Z" style="fill: #34a853"/><path d="M414.5,256l-197.7,141.2,54.1-135.3c.8-2,1.1-4,1.1-5.9h-33.2l-72,180c-2.6,6.6-.6,14.1,5,18.5,2.9,2.3,6.4,3.4,9.9,3.4s6.5-1,9.3-3l260.4-186c4.4-3.1,6.7-8,6.7-13h-43.6Z" style="fill: #4285f4"/></g></svg>
+<text class="node-label" x="58" y="24">gcp</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-azure-pack 30s linear infinite"><g class="node kind-azure:functions" data-node="azure-pack" data-kind="azure:functions" data-bbox="973.5 530 94 48" transform="translate(973.5 530)" style="animation:orrery-pos-azure-pack 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-azure-pack-healthy 30s linear infinite"><rect class="node-box" width="94" height="48" rx="8"/>
+<svg class="icon" x="10" y="14" width="20" height="20" viewBox="0 0 18 18"><defs><linearGradient id="azure-function-apps-b403aca7-f387-4434-96b4-ae157edc835f" x1="-175.993" y1="-343.723" x2="-175.993" y2="-359.232" gradientTransform="translate(212.573 370.548) scale(1.156 1.029)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fea11b" /><stop offset="0.284" stop-color="#fea51a" /><stop offset="0.547" stop-color="#feb018" /><stop offset="0.8" stop-color="#ffc314" /><stop offset="1" stop-color="#ffd70f" /></linearGradient></defs><g><path d="M2.37,7.475H3.2a.267.267,0,0,1,.267.267v6.148a.533.533,0,0,1-.533.533H2.1a0,0,0,0,1,0,0V7.741a.267.267,0,0,1,.267-.267Z" transform="translate(12.507 16.705) rotate(134.919)" fill="#50e6ff" /><path d="M2.325,3.6h.833a.267.267,0,0,1,.267.267v6.583a0,0,0,0,1,0,0H2.591a.533.533,0,0,1-.533-.533V3.865A.267.267,0,0,1,2.325,3.6Z" transform="translate(5.759 0.114) rotate(44.919)" fill="#1490df" /></g><g><path d="M14.53,7.475h.833a.533.533,0,0,1,.533.533v6.148a.267.267,0,0,1-.267.267H14.8a.267.267,0,0,1-.267-.267V7.475a0,0,0,0,1,0,0Z" transform="translate(12.223 -7.555) rotate(45.081)" fill="#50e6ff" /><path d="M15.108,3.6h.833a0,0,0,0,1,0,0v6.583a.267.267,0,0,1-.267.267h-.833a.267.267,0,0,1-.267-.267V4.131a.533.533,0,0,1,.533-.533Z" transform="translate(31.022 1.222) rotate(135.081)" fill="#1490df" /></g><path d="M8.459,9.9H4.87a.193.193,0,0,1-.2-.181.166.166,0,0,1,.018-.075L8.991,1.13a.206.206,0,0,1,.186-.106h4.245a.193.193,0,0,1,.2.181.165.165,0,0,1-.035.1L8.534,7.966h4.928a.193.193,0,0,1,.2.181.176.176,0,0,1-.052.122L5.421,16.788c-.077.046-.624.5-.356-.189h0Z" fill="url(#azure-function-apps-b403aca7-f387-4434-96b4-ae157edc835f)" /></svg>
+<text class="node-label" x="65" y="24">azure</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-sre-pack 30s linear infinite"><g class="node kind-word" data-node="sre-pack" data-kind="word" data-bbox="974.5 618 92 48" transform="translate(974.5 618)" style="animation:orrery-pos-sre-pack 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-sre-pack-healthy 30s linear infinite"><rect class="node-box" width="92" height="48" rx="24"/>
+<g class="glyph" transform="translate(18 16)"><path d="M2 4h12M2 8h8M2 12h10"/></g>
+<text class="node-label" x="64" y="24">sre</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-camera 30s linear infinite"><g class="node kind-service" data-node="camera" data-kind="service" data-bbox="1566.3 612 80 48" transform="translate(1566.3 612)" style="animation:orrery-pos-camera 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-camera-healthy 30s linear infinite"><rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Camera</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-session 30s linear infinite"><g class="node kind-service" data-node="session" data-kind="service" data-bbox="1526.3 700 160 62" transform="translate(1526.3 700)" style="animation:orrery-pos-session 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-session-healthy 30s linear infinite"><rect class="node-box" width="160" height="62" rx="8"/>
+<text class="node-label" x="80" y="23">Session</text>
+<text class="node-tech" x="80" y="41">declare + overrides</text></g></g></g>
+<g class="entity" data-t0="0" style="animation:orrery-show-morph 30s linear infinite"><g class="node kind-service" data-node="morph" data-kind="service" data-bbox="1566.3 802 80 48" transform="translate(1566.3 802)" style="animation:orrery-pos-morph 30s linear infinite"><g class="variant st-healthy" data-state="healthy" data-t0="1" style="animation:orrery-var-morph-healthy 30s linear infinite"><rect class="node-box" width="80" height="48" rx="8"/>
+<text class="node-label" x="40" y="24">Morph</text></g></g></g>
+</g>
+<g class="callouts" data-callouts="0" data-t0="1" style="animation:orrery-callouts-0 30s linear infinite"><g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 32.5 L403 60.5" marker-end="url(#arrow)"/><rect class="callout-box" x="308.5" y="-36.5" width="189" height="69" rx="4"/><text class="callout-text" x="318.5" y="-19.5"><tspan x="318.5" dy="0">One file: the model, its</tspan><tspan x="318.5" dy="17">views, scenarios, tour and</tspan><tspan x="318.5" dy="17">exports</tspan></text></g>
+</g></g>
+<g class="callouts" data-callouts="1" data-t0="0" style="animation:orrery-callouts-1 30s linear infinite"><g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 169.5 L403 197.5" marker-end="url(#arrow)"/><rect class="callout-box" x="308.5" y="100.5" width="189" height="69" rx="4"/><text class="callout-text" x="318.5" y="117.5"><tspan x="318.5" dy="0">One file: the model, its</tspan><tspan x="318.5" dy="17">views, scenarios, tour and</tspan><tspan x="318.5" dy="17">exports</tspan></text></g>
+</g></g>
+<g class="callouts" data-callouts="2" data-t0="0" style="animation:orrery-callouts-2 30s linear infinite"><g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 32.5 L403 60.5" marker-end="url(#arrow)"/><rect class="callout-box" x="308.5" y="-36.5" width="189" height="69" rx="4"/><text class="callout-text" x="318.5" y="-19.5"><tspan x="318.5" dy="0">One file: the model, its</tspan><tspan x="318.5" dy="17">views, scenarios, tour and</tspan><tspan x="318.5" dy="17">exports</tspan></text></g>
+<g class="callout" data-callout="morph"><path class="callout-leader" d="M1674.3 826 L1646.3 826" marker-end="url(#arrow)"/><rect class="callout-box" x="1674.3" y="800" width="189" height="52" rx="4"/><text class="callout-text" x="1684.3" y="817"><tspan x="1684.3" dy="0">Shared boxes slide between</tspan><tspan x="1684.3" dy="17">layouts</tspan></text></g>
+</g></g>
+<g class="callouts" data-callouts="3" data-t0="0" style="animation:orrery-callouts-3 30s linear infinite"><g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 32.5 L403 60.5" marker-end="url(#arrow)"/><rect class="callout-box" x="308.5" y="-36.5" width="189" height="69" rx="4"/><text class="callout-text" x="318.5" y="-19.5"><tspan x="318.5" dy="0">One file: the model, its</tspan><tspan x="318.5" dy="17">views, scenarios, tour and</tspan><tspan x="318.5" dy="17">exports</tspan></text></g>
+<g class="callout" data-callout="validate"><path class="callout-leader" d="M800 80 L772 80" marker-end="url(#arrow)"/><rect class="callout-box" x="800" y="37" width="189" height="86" rx="4"/><text class="callout-text" x="810" y="54"><tspan x="810" dy="0">One line per error: a JSON</tspan><tspan x="810" dy="17">pointer and a sentence.</tspan><tspan x="810" dy="17">Nothing renders until the</tspan><tspan x="810" dy="17">file is right.</tspan></text></g>
+</g></g>
+<g class="callouts" data-callouts="4" data-t0="0" style="animation:orrery-callouts-4 30s linear infinite"><g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 32.5 L403 60.5" marker-end="url(#arrow)"/><rect class="callout-box" x="308.5" y="-36.5" width="189" height="69" rx="4"/><text class="callout-text" x="318.5" y="-19.5"><tspan x="318.5" dy="0">One file: the model, its</tspan><tspan x="318.5" dy="17">views, scenarios, tour and</tspan><tspan x="318.5" dy="17">exports</tspan></text></g>
+<g class="callout" data-callout="model"><path class="callout-leader" d="M403 32.5 L403 60.5" marker-end="url(#arrow)"/><rect class="callout-box" x="315" y="-19.5" width="176" height="52" rx="4"/><text class="callout-text" x="325" y="-2.5"><tspan x="325" dy="0">Fixed at the pointer the</tspan><tspan x="325" dy="17">error named</tspan></text></g>
+</g></g>
+</g>
+</g>
+<g class="legend-variant" data-t0="1" style="animation:orrery-legend-0 30s linear infinite"><g class="legend" transform="translate(20 870)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g></g>
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-1 30s linear infinite"><g class="legend" transform="translate(20 870)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g></g>
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-2 30s linear infinite"><g class="legend" transform="translate(20 870)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g></g>
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-3 30s linear infinite"><g class="legend" transform="translate(20 870)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#fffbeb;stroke:#d97706;stroke-width:1.5"/><text x="20" y="7"><tspan class="legend-name">impaired</tspan>: Serving; redundancy or latency SLO breached</text></g>
+<g transform="translate(0 22)"><rect y="1" width="12" height="12" rx="3" style="fill:#fef2f2;stroke:#dc2626;stroke-width:1.5"/><text x="20" y="7"><tspan class="legend-name">outage</tspan>: Customer-visible failure</text></g>
+<g transform="translate(0 44)"><rect y="1" width="12" height="12" rx="3" style="fill:#ffffff;stroke:#64748b;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.45"/><text x="20" y="7"><tspan class="legend-name">drained</tspan>: Deliberately out of rotation</text></g>
+<g transform="translate(0 66)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g></g>
+<g class="legend-variant" data-t0="0" style="animation:orrery-legend-4 30s linear infinite"><g class="legend" transform="translate(20 870)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f5f3ff;stroke:#7c3aed;stroke-width:1.5"/><text x="20" y="7"><tspan class="legend-name">brownout</tspan>: Working with a feature switched off</text></g>
+</g></g>
+<text class="step-note" x="20" y="980" data-t0="1" style="animation:orrery-caption-0 30s linear infinite">One file in, pictures out. Three groups are folded away.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-1 30s linear infinite">The vocabulary: states, kinds, shapes and packs, merged before the author's own.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-2 30s linear infinite">Packs, two levels down: the providers' icon sets as kinds, sre as states.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-3 30s linear infinite">The runtime, inlined into every interactive file: camera, session, morph.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-4 30s linear infinite">A mistake in the file: the validator answers, nothing renders.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-5 30s linear infinite">Fixed at the pointer. Everything flows again.</text>
+<text class="step-note" x="20" y="980" data-t0="0" style="animation:orrery-caption-6 30s linear infinite">What is next: explain, in the author's words.</text>
+</g>
+</g>
+</svg>
