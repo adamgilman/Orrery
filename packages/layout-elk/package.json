@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@orrery/core": "workspace:*",
-    "elkjs": "^0.9"
+    "elkjs": "^0.12"
   }
 }
