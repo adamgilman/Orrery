@@ -17,6 +17,10 @@ with `node tools/bench-model.mjs`, delete `baseline.json` so CI measures afresh,
 - **Growth a change means** is declared, not smuggled: a line `perf-accept: runtime.bytes, document.bytes` in the pull
   request body, with the reason beside it. Those metrics show as accepted growth instead of failing, and when the
   pull request merges the ratchet resets them to what was measured. Everything else still may only improve.
+- **The `perf-ignore` label** accepts every metric, for a pull request whose performance is not its point: the
+  table is still measured and posted, nothing blocks, and the baseline resets to what was measured on merge.
+  Dependabot's pull requests carry it, so a dependency that costs bytes lands and the next change is judged from
+  there rather than blocked on someone else's regression.
 
 Locally, `yarn perf` prints the same table with looser slack, since a laptop is not the runner. It runs alone,
 after the suite, in `yarn check` and in the CI test job: timings measured beside other test workers are not timings
