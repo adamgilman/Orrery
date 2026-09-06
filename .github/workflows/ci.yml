@@ -41,7 +41,7 @@ jobs:
         if: always()
         env:
           BODY: ${{ github.event.pull_request.body }}
-        run: echo "metrics=$(printf '%s' "$BODY" | grep -oiE 'perf-accept:[^\n]*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
+        run: echo "metrics=$(printf '%s' "$BODY" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
       - run: yarn perf
         if: always()
         env:
@@ -86,7 +86,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           body=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0].body // ""' 2>/dev/null || true)
-          echo "metrics=$(printf '%s' "$body" | grep -oiE 'perf-accept:[^\n]*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
+          echo "metrics=$(printf '%s' "$body" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
       - run: yarn perf
         env:
           ORRERY_SKIP_BUILD: "1"
