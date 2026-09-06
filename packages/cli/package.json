@@ -1,6 +1,6 @@
 {
   "name": "orrery-diagrams",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Animated, navigable architecture diagrams from a JSON model: validate, render, export and embed. The orrery command.",
   "keywords": [
     "architecture",

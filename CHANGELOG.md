@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## 0.1.1
+
+- Published through npm trusted publishing; no token in the release workflow. No code changes.
+
 ## 0.1.0
 
 The first published release: `orrery-diagrams` (the `orrery` command) and `@orrery-diagrams/core`, `layout-elk`,

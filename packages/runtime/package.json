@@ -1,6 +1,6 @@
 {
   "name": "@orrery-diagrams/runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The engine inlined into every Orrery SVG: camera, states, scenarios, drill-down, tours; window.Orrery.mount for pages.",
   "keywords": [
     "orrery",
