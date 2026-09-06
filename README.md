@@ -1,6 +1,6 @@
 # Orrery
 
-[![ci](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![ci](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![site](https://img.shields.io/badge/site-adamgilman.github.io%2FOrrery-FF7A1A)](https://adamgilman.github.io/Orrery/)
 
 > An orrery is a mechanical model of the solar system. You crank it and watch the parts move.
 
