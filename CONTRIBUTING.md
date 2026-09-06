@@ -39,9 +39,10 @@ maintainer, merges. Small pull requests merge fastest.
 | Unit and contract | `packages/*/test` | Each package's behaviour, invariant by invariant; the layout contract runs against every engine. |
 | Regression (`yarn test:regression`) | `test/orrery/regression.test.ts` | The diagram of Orrery, `examples/orrery.orrery.json`, must use every property the schema offers and every feature by name. A new feature without a place in that diagram fails here. |
 | Smoke (`yarn test:smoke`) | `test/orrery/smoke.test.ts` | The built `orrery` command on that diagram, as a user runs it: validate, render, export, embed, packs. |
+| Performance (`yarn perf`) | `test/perf` | A frozen benchmark model through every stage, held against a baseline that may only get better: bytes and counts exactly, timings with slack. `yarn perf:ratchet` locks a gain in; see test/perf/README.md. |
 | Integration (`yarn test:integration`) | `test/orrery/integration.test.ts` | That diagram through the whole pipeline in code: every export parses and carries what its kind of picture must, the frame tooling freezes it, the interactive file mounts and the engine drives it. |
 
-All four run in `yarn test` and in CI on every pull request. When you add a feature: a unit test first, then a place for it in the diagram of Orrery, then look at the
+The first four run in `yarn test`; the ratchet runs alone after them, in `yarn check` and in CI on every pull request. When you add a feature: a unit test first, then a place for it in the diagram of Orrery, then look at the
 regenerated pictures.
 
 ## Where things are

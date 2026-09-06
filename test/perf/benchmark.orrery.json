@@ -1,0 +1,910 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "Benchmark: three regions, three tiers",
+  "description": "A frozen model of fixed size for the performance ratchet. Not a real system.",
+  "direction": "right",
+  "groups": [
+    {
+      "id": "eu",
+      "label": "Region EU",
+      "kind": "region"
+    },
+    {
+      "id": "eu-edge",
+      "label": "edge tier",
+      "kind": "tier",
+      "parent": "eu"
+    },
+    {
+      "id": "eu-app",
+      "label": "app tier",
+      "kind": "tier",
+      "parent": "eu"
+    },
+    {
+      "id": "eu-data",
+      "label": "data tier",
+      "kind": "tier",
+      "parent": "eu"
+    },
+    {
+      "id": "us",
+      "label": "Region US",
+      "kind": "region"
+    },
+    {
+      "id": "us-edge",
+      "label": "edge tier",
+      "kind": "tier",
+      "parent": "us"
+    },
+    {
+      "id": "us-app",
+      "label": "app tier",
+      "kind": "tier",
+      "parent": "us"
+    },
+    {
+      "id": "us-data",
+      "label": "data tier",
+      "kind": "tier",
+      "parent": "us"
+    },
+    {
+      "id": "ap",
+      "label": "Region AP",
+      "kind": "region"
+    },
+    {
+      "id": "ap-edge",
+      "label": "edge tier",
+      "kind": "tier",
+      "parent": "ap"
+    },
+    {
+      "id": "ap-app",
+      "label": "app tier",
+      "kind": "tier",
+      "parent": "ap"
+    },
+    {
+      "id": "ap-data",
+      "label": "data tier",
+      "kind": "tier",
+      "parent": "ap"
+    }
+  ],
+  "components": [
+    {
+      "id": "eu-edge-0",
+      "label": "edge 1",
+      "kind": "gateway",
+      "group": "eu-edge",
+      "tech": "gateway v1",
+      "replicas": 3
+    },
+    {
+      "id": "eu-edge-1",
+      "label": "edge 2",
+      "kind": "service",
+      "group": "eu-edge",
+      "tech": "service v2"
+    },
+    {
+      "id": "eu-edge-2",
+      "label": "edge 3",
+      "kind": "cache",
+      "group": "eu-edge",
+      "tech": "cache v3"
+    },
+    {
+      "id": "eu-app-0",
+      "label": "app 1",
+      "kind": "service",
+      "group": "eu-app",
+      "tech": "service v1",
+      "replicas": 3
+    },
+    {
+      "id": "eu-app-1",
+      "label": "app 2",
+      "kind": "service",
+      "group": "eu-app",
+      "tech": "service v2"
+    },
+    {
+      "id": "eu-app-2",
+      "label": "app 3",
+      "kind": "function",
+      "group": "eu-app",
+      "tech": "function v3"
+    },
+    {
+      "id": "eu-app-3",
+      "label": "app 4",
+      "kind": "queue",
+      "group": "eu-app",
+      "tech": "queue v4"
+    },
+    {
+      "id": "eu-data-0",
+      "label": "data 1",
+      "kind": "database",
+      "group": "eu-data",
+      "tech": "database v1",
+      "replicas": 3
+    },
+    {
+      "id": "eu-data-1",
+      "label": "data 2",
+      "kind": "database",
+      "group": "eu-data",
+      "tech": "database v2"
+    },
+    {
+      "id": "eu-data-2",
+      "label": "data 3",
+      "kind": "storage",
+      "group": "eu-data",
+      "tech": "storage v3"
+    },
+    {
+      "id": "eu-data-3",
+      "label": "data 4",
+      "kind": "cache",
+      "group": "eu-data",
+      "tech": "cache v4"
+    },
+    {
+      "id": "us-edge-0",
+      "label": "edge 1",
+      "kind": "gateway",
+      "group": "us-edge",
+      "tech": "gateway v1",
+      "replicas": 3
+    },
+    {
+      "id": "us-edge-1",
+      "label": "edge 2",
+      "kind": "service",
+      "group": "us-edge",
+      "tech": "service v2"
+    },
+    {
+      "id": "us-edge-2",
+      "label": "edge 3",
+      "kind": "cache",
+      "group": "us-edge",
+      "tech": "cache v3"
+    },
+    {
+      "id": "us-app-0",
+      "label": "app 1",
+      "kind": "service",
+      "group": "us-app",
+      "tech": "service v1",
+      "replicas": 3
+    },
+    {
+      "id": "us-app-1",
+      "label": "app 2",
+      "kind": "service",
+      "group": "us-app",
+      "tech": "service v2"
+    },
+    {
+      "id": "us-app-2",
+      "label": "app 3",
+      "kind": "function",
+      "group": "us-app",
+      "tech": "function v3"
+    },
+    {
+      "id": "us-app-3",
+      "label": "app 4",
+      "kind": "queue",
+      "group": "us-app",
+      "tech": "queue v4"
+    },
+    {
+      "id": "us-data-0",
+      "label": "data 1",
+      "kind": "database",
+      "group": "us-data",
+      "tech": "database v1",
+      "replicas": 3
+    },
+    {
+      "id": "us-data-1",
+      "label": "data 2",
+      "kind": "database",
+      "group": "us-data",
+      "tech": "database v2"
+    },
+    {
+      "id": "us-data-2",
+      "label": "data 3",
+      "kind": "storage",
+      "group": "us-data",
+      "tech": "storage v3"
+    },
+    {
+      "id": "us-data-3",
+      "label": "data 4",
+      "kind": "cache",
+      "group": "us-data",
+      "tech": "cache v4"
+    },
+    {
+      "id": "ap-edge-0",
+      "label": "edge 1",
+      "kind": "gateway",
+      "group": "ap-edge",
+      "tech": "gateway v1",
+      "replicas": 3
+    },
+    {
+      "id": "ap-edge-1",
+      "label": "edge 2",
+      "kind": "service",
+      "group": "ap-edge",
+      "tech": "service v2"
+    },
+    {
+      "id": "ap-edge-2",
+      "label": "edge 3",
+      "kind": "cache",
+      "group": "ap-edge",
+      "tech": "cache v3"
+    },
+    {
+      "id": "ap-app-0",
+      "label": "app 1",
+      "kind": "service",
+      "group": "ap-app",
+      "tech": "service v1",
+      "replicas": 3
+    },
+    {
+      "id": "ap-app-1",
+      "label": "app 2",
+      "kind": "service",
+      "group": "ap-app",
+      "tech": "service v2"
+    },
+    {
+      "id": "ap-app-2",
+      "label": "app 3",
+      "kind": "function",
+      "group": "ap-app",
+      "tech": "function v3"
+    },
+    {
+      "id": "ap-app-3",
+      "label": "app 4",
+      "kind": "queue",
+      "group": "ap-app",
+      "tech": "queue v4"
+    },
+    {
+      "id": "ap-data-0",
+      "label": "data 1",
+      "kind": "database",
+      "group": "ap-data",
+      "tech": "database v1",
+      "replicas": 3
+    },
+    {
+      "id": "ap-data-1",
+      "label": "data 2",
+      "kind": "database",
+      "group": "ap-data",
+      "tech": "database v2"
+    },
+    {
+      "id": "ap-data-2",
+      "label": "data 3",
+      "kind": "storage",
+      "group": "ap-data",
+      "tech": "storage v3"
+    },
+    {
+      "id": "ap-data-3",
+      "label": "data 4",
+      "kind": "cache",
+      "group": "ap-data",
+      "tech": "cache v4"
+    },
+    {
+      "id": "users",
+      "label": "Users",
+      "kind": "client"
+    },
+    {
+      "id": "partner",
+      "label": "Partner API",
+      "kind": "external"
+    }
+  ],
+  "connections": [
+    {
+      "from": "eu-edge-0",
+      "to": "eu-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "eu-edge-0",
+      "to": "eu-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "eu-edge-1",
+      "to": "eu-app-1",
+      "load": 0.4
+    },
+    {
+      "from": "eu-edge-1",
+      "to": "eu-app-3",
+      "load": 0.6000000000000001
+    },
+    {
+      "from": "eu-edge-2",
+      "to": "eu-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "eu-edge-2",
+      "to": "eu-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "eu-app-0",
+      "to": "eu-data-0",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-0",
+      "to": "eu-data-1",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-0",
+      "to": "eu-data-2",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-0",
+      "to": "eu-data-3",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "from": "eu-app-1",
+      "to": "eu-data-0",
+      "load": 0.30000000000000004,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-1",
+      "to": "eu-data-3",
+      "load": 0.30000000000000004,
+      "kind": "async"
+    },
+    {
+      "from": "eu-app-2",
+      "to": "eu-data-0",
+      "load": 0.4,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-2",
+      "to": "eu-data-3",
+      "load": 0.4,
+      "kind": "async"
+    },
+    {
+      "from": "eu-app-3",
+      "to": "eu-data-0",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-3",
+      "to": "eu-data-1",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-3",
+      "to": "eu-data-2",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "eu-app-3",
+      "to": "eu-data-3",
+      "load": 0.5,
+      "kind": "async"
+    },
+    {
+      "id": "eu-repl",
+      "from": "eu-data-0",
+      "to": "eu-data-1",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "eu-data-2",
+      "to": "eu-data-3",
+      "kind": "dataflow",
+      "load": 0.5,
+      "bidirectional": true,
+      "label": "sync"
+    },
+    {
+      "from": "us-edge-0",
+      "to": "us-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "us-edge-0",
+      "to": "us-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "us-edge-1",
+      "to": "us-app-1",
+      "load": 0.4
+    },
+    {
+      "from": "us-edge-1",
+      "to": "us-app-3",
+      "load": 0.6000000000000001
+    },
+    {
+      "from": "us-edge-2",
+      "to": "us-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "us-edge-2",
+      "to": "us-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "us-app-0",
+      "to": "us-data-0",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-0",
+      "to": "us-data-1",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-0",
+      "to": "us-data-2",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-0",
+      "to": "us-data-3",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "from": "us-app-1",
+      "to": "us-data-0",
+      "load": 0.30000000000000004,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-1",
+      "to": "us-data-3",
+      "load": 0.30000000000000004,
+      "kind": "async"
+    },
+    {
+      "from": "us-app-2",
+      "to": "us-data-0",
+      "load": 0.4,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-2",
+      "to": "us-data-3",
+      "load": 0.4,
+      "kind": "async"
+    },
+    {
+      "from": "us-app-3",
+      "to": "us-data-0",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-3",
+      "to": "us-data-1",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-3",
+      "to": "us-data-2",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "us-app-3",
+      "to": "us-data-3",
+      "load": 0.5,
+      "kind": "async"
+    },
+    {
+      "id": "us-repl",
+      "from": "us-data-0",
+      "to": "us-data-1",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "us-data-2",
+      "to": "us-data-3",
+      "kind": "dataflow",
+      "load": 0.5,
+      "bidirectional": true,
+      "label": "sync"
+    },
+    {
+      "from": "ap-edge-0",
+      "to": "ap-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "ap-edge-0",
+      "to": "ap-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "ap-edge-1",
+      "to": "ap-app-1",
+      "load": 0.4
+    },
+    {
+      "from": "ap-edge-1",
+      "to": "ap-app-3",
+      "load": 0.6000000000000001
+    },
+    {
+      "from": "ap-edge-2",
+      "to": "ap-app-0",
+      "load": 0.3,
+      "label": "https"
+    },
+    {
+      "from": "ap-edge-2",
+      "to": "ap-app-2",
+      "load": 0.5
+    },
+    {
+      "from": "ap-app-0",
+      "to": "ap-data-0",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-0",
+      "to": "ap-data-1",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-0",
+      "to": "ap-data-2",
+      "load": 0.2,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-0",
+      "to": "ap-data-3",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "from": "ap-app-1",
+      "to": "ap-data-0",
+      "load": 0.30000000000000004,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-1",
+      "to": "ap-data-3",
+      "load": 0.30000000000000004,
+      "kind": "async"
+    },
+    {
+      "from": "ap-app-2",
+      "to": "ap-data-0",
+      "load": 0.4,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-2",
+      "to": "ap-data-3",
+      "load": 0.4,
+      "kind": "async"
+    },
+    {
+      "from": "ap-app-3",
+      "to": "ap-data-0",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-3",
+      "to": "ap-data-1",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-3",
+      "to": "ap-data-2",
+      "load": 0.5,
+      "kind": "sync"
+    },
+    {
+      "from": "ap-app-3",
+      "to": "ap-data-3",
+      "load": 0.5,
+      "kind": "async"
+    },
+    {
+      "id": "ap-repl",
+      "from": "ap-data-0",
+      "to": "ap-data-1",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "ap-data-2",
+      "to": "ap-data-3",
+      "kind": "dataflow",
+      "load": 0.5,
+      "bidirectional": true,
+      "label": "sync"
+    },
+    {
+      "from": "users",
+      "to": "eu-edge-0",
+      "load": 0.6
+    },
+    {
+      "from": "eu-app-1",
+      "to": "partner",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "from": "users",
+      "to": "us-edge-0",
+      "load": 0.6
+    },
+    {
+      "from": "us-app-1",
+      "to": "partner",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "from": "users",
+      "to": "ap-edge-0",
+      "load": 0.6
+    },
+    {
+      "from": "ap-app-1",
+      "to": "partner",
+      "load": 0.2,
+      "kind": "async"
+    },
+    {
+      "id": "eu-us",
+      "from": "eu-data-0",
+      "to": "us-data-0",
+      "kind": "replication",
+      "load": 0.1,
+      "label": "cross-region"
+    }
+  ],
+  "callouts": [
+    {
+      "at": "eu-us",
+      "text": "Cross-region replication, the slow path"
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "eu-app",
+        "us-app",
+        "ap-app"
+      ]
+    },
+    {
+      "id": "eu",
+      "title": "EU",
+      "scope": "eu",
+      "direction": "down"
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "only": [
+        "eu-data",
+        "us-data",
+        "ap-data"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "eu-down",
+      "label": "EU region fails",
+      "steps": [
+        {
+          "note": "EU primary database fails",
+          "set": {
+            "failed": {
+              "eu-data-0": "disk full"
+            },
+            "degraded": [
+              "eu-app-0",
+              "eu-app-1"
+            ]
+          },
+          "load": [
+            {
+              "id": "eu-repl",
+              "load": 0
+            }
+          ],
+          "callouts": [
+            {
+              "at": "eu-data-0",
+              "text": "Writes fail over to the replica"
+            }
+          ]
+        },
+        {
+          "note": "EU drained; US takes the traffic",
+          "set": {
+            "off": [
+              "eu-edge-0",
+              "eu-edge-1",
+              "eu-edge-2"
+            ],
+            "degraded": [
+              "us-app-0"
+            ]
+          },
+          "load": [
+            {
+              "from": "users",
+              "to": "eu-edge-0",
+              "load": 0
+            },
+            {
+              "from": "users",
+              "to": "us-edge-0",
+              "load": 1
+            }
+          ]
+        },
+        {
+          "note": "Recovered",
+          "restore": [
+            "eu-data-0",
+            "eu-app-0",
+            "eu-app-1",
+            "eu-edge-0",
+            "eu-edge-1",
+            "eu-edge-2",
+            "us-app-0"
+          ],
+          "load": [
+            {
+              "id": "eu-repl",
+              "load": 0.2
+            },
+            {
+              "from": "users",
+              "to": "eu-edge-0",
+              "load": 0.6
+            },
+            {
+              "from": "users",
+              "to": "us-edge-0",
+              "load": 0.6
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tour": {
+    "seconds": 4,
+    "scenes": [
+      {
+        "view": "overview",
+        "note": "Three regions, closed"
+      },
+      {
+        "view": "overview",
+        "open": [
+          "eu-app"
+        ],
+        "note": "Inside the EU app tier"
+      },
+      {
+        "view": "overview",
+        "open": [
+          "eu-app",
+          "us-app"
+        ],
+        "zoom": "us-app",
+        "note": "The US app tier"
+      },
+      {
+        "view": "overview",
+        "scenario": "eu-down",
+        "step": 2,
+        "note": "EU drained"
+      },
+      {
+        "view": "overview",
+        "note": "Recovered"
+      }
+    ]
+  },
+  "exports": [
+    {
+      "id": "overview"
+    },
+    {
+      "id": "eu",
+      "view": "eu"
+    },
+    {
+      "id": "open",
+      "open": [
+        "eu-app",
+        "us-app"
+      ]
+    },
+    {
+      "id": "failed",
+      "scenario": "eu-down",
+      "step": 1
+    },
+    {
+      "id": "play",
+      "play": "eu-down"
+    },
+    {
+      "id": "tour",
+      "tour": true
+    }
+  ]
+}

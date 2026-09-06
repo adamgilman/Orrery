@@ -11,3 +11,4 @@
 - [ ] A failing test came first (see CONTRIBUTING.md); `yarn check` passes.
 - [ ] Model changes: MODEL.md updated, an invariant added or changed with its test, the schema description says the same.
 - [ ] Rendering changes: examples regenerated with `yarn examples` and the pictures looked at.
+- [ ] Made something faster or smaller: `yarn perf:ratchet` run and `test/perf/baseline.json` committed with it.

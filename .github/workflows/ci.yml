@@ -31,3 +31,6 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn test
+      - run: yarn perf
+        env:
+          ORRERY_SKIP_BUILD: "1"
