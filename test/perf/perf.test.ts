@@ -1,9 +1,8 @@
 /**
  * The performance ratchet (test/perf/README.md): the frozen benchmark model through every stage, measured, held
- * against a baseline that may only get better. The baseline is baseline.json on the perf-baseline branch, measured
- * and tightened by CI on every push to main; nobody edits it. Deterministic metrics are exact; timings have slack.
+ * against a baseline that may only get better. The baseline is baseline.json beside this file, measured and
+ * tightened by CI on every push to main and committed back by the ratchet job; nobody edits it by hand. Deterministic metrics are exact; timings have slack.
  */
-import { spawnSync } from "node:child_process";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
@@ -17,20 +16,17 @@ const root = join(dir, "../..");
 const raw = JSON.parse(readFileSync(join(dir, "benchmark.orrery.json"), "utf8"));
 type Metric = { value: number; unit: "ms" | "bytes" | "count" };
 type Baseline = Record<string, Metric>;
-/** check: hold the line (a pull request, a push). ratchet: write the tightened baseline to ratchet.json for CI to store. */
+/** check: hold the line (a pull request, a push). ratchet: tighten baseline.json in place for CI to commit. */
 const MODE = process.env.ORRERY_PERF_MODE === "ratchet" ? "ratchet" : "check";
-/** Metrics a pull request declares it grows on purpose (`perf-accept: a, b` in its body, with the reason): not a regression, and the ratchet resets them to what was measured. */
-const ACCEPT = new Set((process.env.ORRERY_PERF_ACCEPT ?? "").split(/[,\s]+/).filter(Boolean));
-/** The baseline as CI measured it: passed in by the workflow, or fetched from the perf-baseline branch for a local run. */
+const baselineFile = join(dir, "baseline.json");
 function loadBaseline(): Baseline | undefined {
-  const given = process.env.ORRERY_PERF_BASELINE_JSON;
-  if (given !== undefined) return given.trim() ? JSON.parse(given) : undefined;
-  const r = spawnSync("gh", ["api", "-H", "Accept: application/vnd.github.raw", "repos/adamgilman/Orrery/contents/baseline.json?ref=perf-baseline"], { encoding: "utf8" });
-  return r.status === 0 && r.stdout.trim().startsWith("{") ? JSON.parse(r.stdout) : undefined;
+  try { return JSON.parse(readFileSync(baselineFile, "utf8")); } catch { return undefined; }
 }
 // CI measures on one machine class, so it holds timings tighter than a laptop compared against CI's numbers must.
 const TIME_SLACK = process.env.CI ? 1.6 : 2;
 const TIGHTEN = 0.02; // a gain smaller than this is noise, not a gain
+/** Metrics a pull request declares it grows on purpose (`perf-accept: a, b` in its body, with the reason): not a regression, and the ratchet resets them to what was measured. */
+const ACCEPT = new Set((process.env.ORRERY_PERF_ACCEPT ?? "").split(/[,\s]+/).filter(Boolean));
 const TIME_FLOOR_MS = 2; // jitter on a sub-millisecond median is not a regression
 
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]!; };
@@ -89,11 +85,11 @@ describe("performance ratchet", () => {
       // the tightened baseline: every metric at its best ever; a metric the baseline no longer knows is dropped
       const next: Baseline = {};
       for (const [name, cur] of Object.entries(now)) next[name] = baseline?.[name] && !ACCEPT.has(name) ? { ...cur, value: Math.min(cur.value, baseline[name]!.value) } : cur;
-      writeFileSync(join(dir, "ratchet.json"), JSON.stringify(next));
+      writeFileSync(baselineFile, JSON.stringify(next, null, 2) + "\n");
       console.log(`ratchet: ${gains.length ? gains.join("; ") : "nothing tightened"}`);
       return;
     }
-    if (!baseline) { console.log("no baseline yet: CI writes the perf-baseline branch on the next push to main"); return; }
+    if (!baseline) { console.log("no baseline yet: CI commits test/perf/baseline.json on the next push to main"); return; }
     expect(failures, "performance regression against the baseline CI measured").toEqual([]);
   });
 });

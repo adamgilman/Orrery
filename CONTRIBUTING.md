@@ -58,7 +58,8 @@ regenerated pictures.
 | `packages/cli` | `orrery validate`, `render`, `export`, `embed`, `packs` |
 | `docs/MODEL.md` | the specification |
 | `examples/` | the README's checkout, the kitchen sink and the moving parts, all regenerated |
-| `tools/` | the scripts behind `yarn examples`, `yarn inspect` and the packs |
+| `tools/` | the scripts behind `yarn examples`, `yarn inspect`, the packs and the skill's generated references |
+| `plugins/orrery` | the Claude Code plugin: one skill that teaches the model; `node tools/skill-refs.mjs` regenerates its model, examples and errors references, and `test/orrery/skill.test.ts` keeps it valid |
 
 ## Vocabulary packs
 
