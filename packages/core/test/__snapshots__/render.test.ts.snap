@@ -25,6 +25,7 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 .heading-back{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
 .kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}

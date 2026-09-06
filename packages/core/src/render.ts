@@ -6,7 +6,7 @@ import { scalePath } from "./shapes.js";
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
-import type { Component, Connection, Export, Glyph, Group, GroupKindDef, Model, Play, ShapeDef, Tour, View } from "./types.js";
+import type { Component, Connection, Export, Glyph, Group, GroupKindDef, HeadingAlign, Model, Play, ShapeDef, Tour, View } from "./types.js";
 import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
@@ -148,6 +148,7 @@ const BASE_STYLE = `
 .heading-back{fill:#ffffff}
 .heading-title{font:600 16px ${FONT};fill:#0f172a}
 .heading-text{font:12px ${FONT};fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
 @keyframes orrery-flow{to{stroke-dashoffset:-${FLOW_PERIOD}}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:${PULSE_MIN_OPACITY}}100%{stroke-opacity:1}}`.trim();
 
@@ -548,14 +549,15 @@ function wrap(text: string, px: number, maxWidth: number): string[] {
   if (line) lines.push(line);
   return lines;
 }
-function headingBlock(title: string | undefined, description: string | undefined, width: number): Heading | undefined {
+function headingBlock(title: string | undefined, description: string | undefined, width: number, align: HeadingAlign): Heading | undefined {
   if (title === undefined && description === undefined) return undefined;
   const w = Math.max(width, HEADING_MIN_WIDTH);
+  const x = align === "centre" ? num(w / 2) : String(HEADING_PAD), cls = align === "centre" ? " centred" : "";
   const lines = description !== undefined ? wrap(description, 12, w - 2 * HEADING_PAD) : [];
   let y = HEADING_PAD;
   const parts: string[] = [];
-  if (title !== undefined) { y += 10; parts.push(`<text class="heading-title" x="${HEADING_PAD}" y="${y}">${esc(title)}</text>`); y += 14; }
-  if (lines.length) { y += 8; parts.push(`<text class="heading-text" x="${HEADING_PAD}" y="${y}">${lines.map((l, i) => `<tspan x="${HEADING_PAD}" dy="${i === 0 ? 0 : HEADING_LINE}">${esc(l)}</tspan>`).join("")}</text>`); y += (lines.length - 1) * HEADING_LINE + 4; }
+  if (title !== undefined) { y += 10; parts.push(`<text class="heading-title${cls}" x="${x}" y="${y}">${esc(title)}</text>`); y += 14; }
+  if (lines.length) { y += 8; parts.push(`<text class="heading-text${cls}" x="${x}" y="${y}">${lines.map((l, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : HEADING_LINE}">${esc(l)}</tspan>`).join("")}</text>`); y += (lines.length - 1) * HEADING_LINE + 4; }
   const height = y + HEADING_PAD - 4;
   return { markup: `<rect class="heading-back" width="${num(w)}" height="${num(height)}"/>\n${parts.join("\n")}`, height, width: w };
 }
@@ -599,8 +601,8 @@ export interface RenderOptions {
   tour?: true | { views: string[]; seconds?: number };
   /** Closed groups drawn open, each with its closed ancestors listed too: a still of the inside (R11). */
   open?: string[];
-  /** Draw the title and description block above the picture (R15): the view's own, else the model's. */
-  heading?: boolean;
+  /** Draw the title and description block above the picture (R15): the view's own, else the model's. `true` centres the text; `"left"` sets it at the edge. */
+  heading?: boolean | HeadingAlign;
   /** The entity the picture is cropped to, with a little air around it. */
   zoom?: string;
 }
@@ -620,7 +622,7 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
       tour = { seconds, scenes: options.tour.views.map((view) => ({ view, seconds })) };
     }
     const layer = await tourLayer(model, tour, engine, options.set);
-    return wrapDocument(model, model.title, [layer], [], undefined, options.heading ? headingFor(model, undefined, layer.width) : undefined);
+    return wrapDocument(model, model.title, [layer], [], undefined, options.heading ? headingFor(model, undefined, layer.width, options.heading) : undefined);
   }
   const view = selectView(model, options.view);
   const play = playOf(view, options);
@@ -641,15 +643,15 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
     const pad = 24;
     viewBox = { x: Math.max(0, b.x - pad), y: Math.max(0, b.y - pad), width: Math.min(layer.width, b.width + 2 * pad), height: Math.min(layer.height, b.height + 2 * pad) };
   }
-  return wrapDocument(model, title, [layer], [], viewBox, options.heading ? headingFor(model, view, viewBox?.width ?? layer.width) : undefined);
+  return wrapDocument(model, title, [layer], [], viewBox, options.heading ? headingFor(model, view, viewBox?.width ?? layer.width, options.heading) : undefined);
 }
 
 /** Render one of the model's `exports` (MODEL.md 4.9): an enclosed file, CSS animation only. */
 export function renderExport(model: Model, engine: LayoutEngine, x: Export): Promise<string> {
-  if (x.tour) return render(model, engine, { tour: true, ...(x.heading ? { heading: true } : {}) });
+  if (x.tour) return render(model, engine, { tour: true, ...(x.heading ? { heading: x.heading } : {}) });
   return render(model, engine, {
     view: x.view,
-    ...(x.heading ? { heading: true } : {}),
+    ...(x.heading ? { heading: x.heading } : {}),
     ...(x.open ? { open: x.open } : {}),
     ...(x.zoom !== undefined ? { zoom: x.zoom } : {}),
     ...(x.scenario !== undefined ? { scenario: x.scenario } : {}),
@@ -660,9 +662,9 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   });
 }
 
-export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number }; heading?: boolean }
+export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number }; heading?: boolean | HeadingAlign }
 /** The heading a picture of `view` carries: the view's title and description, falling back to the model's, sized to the picture. */
-const headingFor = (model: Model, view: View | undefined, width: number) => headingBlock(view?.title ?? model.title, view?.description ?? model.description, width);
+const headingFor = (model: Model, view: View | undefined, width: number, heading: boolean | HeadingAlign) => headingBlock(view?.title ?? model.title, view?.description ?? model.description, width, heading === "left" ? "left" : "centre");
 
 /**
  * The shippable file: every view pre-laid-out and embedded (first visible), the normalised model as JSON, and the
@@ -695,5 +697,5 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
   const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
-  return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width))) : undefined);
+  return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width)), options.heading) : undefined);
 }

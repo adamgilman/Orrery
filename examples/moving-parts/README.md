@@ -114,7 +114,8 @@ until the reader interacts.
 
 A model and a view may carry a `description`. A picture draws the title and the description above the scene when
 an export sets `heading: true`, or `render --heading` asks for it; the view's own title and description win over
-the model's. Off by default, since a page introduces its pictures in its own words.
+the model's. The text is centred; `"heading": "left"` (or `--heading left`) sets it at the edge. Off by default,
+since a page introduces its pictures in its own words.
 
 ```jsonc
 "description": "One small checkout, the README's own: …",

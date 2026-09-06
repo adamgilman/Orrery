@@ -352,14 +352,17 @@ describe("render: heading (R15)", () => {
     const h = Number(svg.match(/data-heading="([\d.]+)"/)![1]);
     expect(h).toBeGreaterThan(40);
     expect(svg).toContain(`<g class="scene" transform="translate(0 ${h})">`);
-    expect(svg).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS, overview</text>');
-    expect(svg).toMatch(/<text class="heading-text"[^>]*><tspan x="20" dy="0">The overview's own description wins over the model's.<\/tspan><\/text>/);
     const [, w, ph] = plain.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
+    const mid = Number(w) / 2;
+    expect(svg).toContain(`<text class="heading-title centred" x="${mid}" y="30">Checkout on AWS, overview</text>`); // centred by default
+    expect(svg).toMatch(new RegExp(`<text class="heading-text centred"[^>]*><tspan x="${mid}" dy="0">The overview's own description wins over the model's.</tspan></text>`));
+    const left = await render(m, engine(), { view: "overview", heading: "left" });
+    expect(left).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS, overview</text>');
     expect(svg).toContain(`viewBox="0 0 ${w} ${Number(ph) + h}"`);
     expect(svg.indexOf('class="heading"')).toBeLessThan(svg.indexOf('class="scene"'));
   });
   it("falls back to the model's title and description, wrapping long text to the picture's width", async () => {
-    const svg = await render({ ...m, views: [{ ...m.views[0]!, title: undefined as unknown as string, description: undefined }] } as Model, engine(), { heading: true });
+    const svg = await render({ ...m, views: [{ ...m.views[0]!, title: undefined as unknown as string, description: undefined }] } as Model, engine(), { heading: "left" });
     expect(svg).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS</text>');
     const lines = [...svg.matchAll(/<tspan x="20" dy="(\d+)">([^<]*)<\/tspan>/g)];
     expect(lines.length).toBeGreaterThan(1);
@@ -377,6 +380,6 @@ describe("render: heading (R15)", () => {
     const exported = await renderExport(m, engine(), { id: "x", view: "overview", heading: true });
     expect(exported).toContain('class="heading"');
     const tour = await render({ ...m, tour: { seconds: 2, scenes: [{ view: "overview", seconds: 2 }] } }, engine(), { tour: true, heading: true });
-    expect(tour).toContain('<text class="heading-title" x="20" y="30">Checkout on AWS</text>');
+    expect(tour).toMatch(/<text class="heading-title centred" x="[\d.]+" y="30">Checkout on AWS<\/text>/);
   });
 });

@@ -340,7 +340,10 @@ describe("orrery render --heading", () => {
   it("draws the title and description block on a still and on the interactive file", () => {
     const dir = mkdtempSync(join(tmpdir(), "orrery-"));
     expect(run("render", join(fixtures, "valid/cloud.json"), "--static", "--heading", "-o", join(dir, "a.svg")).code).toBe(0);
-    expect(readFileSync(join(dir, "a.svg"), "utf8")).toContain('class="heading-title"');
+    expect(readFileSync(join(dir, "a.svg"), "utf8")).toContain('class="heading-title centred"');
+    expect(run("render", join(fixtures, "valid/cloud.json"), "--static", "--heading", "left", "-o", join(dir, "l.svg")).code).toBe(0);
+    expect(readFileSync(join(dir, "l.svg"), "utf8")).toContain('<text class="heading-title" x="20"');
+    expect(run("render", join(fixtures, "valid/cloud.json"), "--static", "--heading", "middle").code).toBe(2);
     expect(run("render", join(fixtures, "valid/cloud.json"), "--heading", "-o", join(dir, "b.svg")).code).toBe(0);
     expect(readFileSync(join(dir, "b.svg"), "utf8")).toMatch(/data-heading="[\d.]+"/);
     expect(readFileSync(join(dir, "b.svg"), "utf8")).toContain("orrery-model");

@@ -1032,8 +1032,21 @@
             "description": "The entity the picture is cropped to, with a little air around it: a component or a group not inside a closed group. Omit for the whole picture."
           },
           "heading": {
-            "type": "boolean",
-            "description": "true: draw the title and description block above the picture (the view's own, else the model's). Allowed with tour."
+            "oneOf": [
+              {
+                "type": "boolean",
+                "description": "true: draw the heading, centred."
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "centre",
+                  "left"
+                ],
+                "description": "Draw the heading with its text centred or at the left edge."
+              }
+            ],
+            "description": "Draw the title and description block above the picture (the view's own, else the model's): true for centred text, or 'centre' / 'left'. Allowed with tour."
           }
         }
       }

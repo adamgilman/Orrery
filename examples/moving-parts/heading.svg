@@ -22,6 +22,7 @@
 .heading-back{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
 @keyframes orrery-flow{to{stroke-dashoffset:-16}}
 @keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
 .kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
@@ -56,8 +57,8 @@
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
 <g class="heading" transform="translate(0 0)">
 <rect class="heading-back" width="420.2" height="140"/>
-<text class="heading-title" x="20" y="30">Overview</text>
-<text class="heading-text" x="20" y="52"><tspan x="20" dy="0">One small checkout, the README's own: a storefront, an</tspan><tspan x="20" dy="17">API, an orders database with a read replica, and a session</tspan><tspan x="20" dy="17">cache of two Redis nodes. Every picture on the moving</tspan><tspan x="20" dy="17">parts page is a view, a moment or a story drawn from this</tspan><tspan x="20" dy="17">one model.</tspan></text>
+<text class="heading-title centred" x="210.1" y="30">Overview</text>
+<text class="heading-text centred" x="210.1" y="52"><tspan x="210.1" dy="0">One small checkout, the README's own: a storefront, an</tspan><tspan x="210.1" dy="17">API, an orders database with a read replica, and a session</tspan><tspan x="210.1" dy="17">cache of two Redis nodes. Every picture on the moving</tspan><tspan x="210.1" dy="17">parts page is a view, a moment or a story drawn from this</tspan><tspan x="210.1" dy="17">one model.</tspan></text>
 </g>
 <g class="scene" transform="translate(0 140)">
 <g class="view" data-view="overview" data-open="" data-title="Overview" data-size="420.2 503.5">

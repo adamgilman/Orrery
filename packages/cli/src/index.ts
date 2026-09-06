@@ -18,8 +18,8 @@ export const USAGE = `Usage:
                  [--tour [<ids>]]        (repeatable; applied after the scenario). --open draws closed groups
                  [--open <ids>]          open (comma-separated, with their closed ancestors); --zoom crops the
                  [--zoom <id>]           picture to one entity. Both imply --static. --heading draws the
-                 [--heading]             title and description block above the picture (a view's own, else
-                                         the model's), still or interactive.
+                 [--heading [left]]      title and description block above the picture (a view's own, else
+                                         the model's), centred, or at the left edge; still or interactive.
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
                                          the file, so they play inside <img>. --every: seconds per step or view.
@@ -47,8 +47,8 @@ interface Io { stdout(s: string): void; stderr(s: string): void }
 
 const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--open", "--zoom", "--out"]);
 /** Flags whose value may be omitted (then the model's own declaration is used). */
-const OPTIONAL_VALUE_FLAGS = new Set(["--tour"]);
-const BOOL_FLAGS = new Set(["--static", "--heading"]);
+const OPTIONAL_VALUE_FLAGS = new Set(["--tour", "--heading"]);
+const BOOL_FLAGS = new Set(["--static"]);
 
 interface Args { positionals: string[]; values: Map<string, string[]>; flags: Set<string> }
 
@@ -184,11 +184,14 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const play = playId !== undefined ? { scenario: playId, ...(every !== undefined ? { seconds: every } : {}) } : undefined;
     const tour = tourIds !== undefined ? { views: tourIds.split(",").map((x) => x.trim()).filter(Boolean), ...(every !== undefined ? { seconds: every } : {}) } : tourOwn ? (true as const) : undefined;
     if (tour === true && every !== undefined) throw new CliError("--every with --tour needs an explicit list of views", 2);
+    const headingValue = one(args, "--heading");
+    if (headingValue !== undefined && headingValue !== "left" && headingValue !== "centre") throw new CliError(`--heading takes "left" or "centre", got "${headingValue}"`, 2);
+    const heading: true | "left" | "centre" | undefined = headingValue !== undefined ? headingValue : args.flags.has("--heading") ? true : undefined;
     const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined || open !== undefined || zoom !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
-      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}), ...(args.flags.has("--heading") ? { heading: true } : {}) };
+      const common = { ...(view !== undefined ? { view } : {}), ...(hasSet ? { set } : {}), ...(play ? { play } : {}), ...(tour !== undefined ? { tour } : {}), ...(heading !== undefined ? { heading } : {}) };
       svg = isStatic
         ? await render(model, new ElkLayoutEngine(), { ...common, ...(scenario !== undefined ? { scenario } : {}), ...(step !== undefined ? { step } : {}), ...(open ? { open } : {}), ...(zoom !== undefined ? { zoom } : {}) })
         : await renderDocument(model, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...common });

@@ -134,7 +134,9 @@ export interface Model {
  * One file the model produces (4.9): a view at a moment, a scenario playing, or the tour. `open` lists the closed
  * groups drawn open (in declaration order); `zoom` is the entity the picture is cropped to.
  */
-export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true; /** Draw the title and description block above the picture (R15). */ heading?: true }
+/** Where a heading's text sits: centred (the default) or at the left edge. */
+export type HeadingAlign = "centre" | "left";
+export interface Export { id: string; view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; play?: Play; tour?: true; /** Draw the title and description block above the picture (R15): `true` centred, or an alignment. */ heading?: true | HeadingAlign }
 
 /**
  * One moment of a tour: a view, the closed groups drawn open, what the camera closes on, optionally a point in a
