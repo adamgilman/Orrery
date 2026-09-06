@@ -34,7 +34,7 @@ function easeInOut(x: number): number {
 
 /**
  * A transform list of translate() and scale() functions, as the renderer writes them: an entity's position, or the
- * camera (translate to the stage centre, scale, translate the focus centre to the origin). `none` is the identity
+ * camera (translate to the stage centre, scale, translate the zoom target's centre to the origin). `none` is the identity
  * in the shape of whatever it is paired with.
  */
 type Fn = { name: "translate" | "scale"; args: number[] };

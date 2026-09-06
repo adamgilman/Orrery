@@ -49,12 +49,9 @@ export function activeView(svg: string): string {
     else out = out.slice(0, m.index) + out.slice(out.indexOf("</text>", m.index) + 7).replace(/^\n/, "");
     hiddenAt0.lastIndex = m.index;
   }
-  for (const cls of ["entity", "variant", "shown", "detail", "lod-summary", "legend-variant"]) {
-    const wrap = `<g class="${cls}`;
-    for (let i = out.indexOf(wrap); i >= 0; i = out.indexOf(wrap, i)) {
-      if (cls === "lod-summary") { i += wrap.length; continue; } // a real element in static renders too: keep it
-      out = unwrapElement(out, i);
-    }
+  for (const cls of ["entity", "variant", "shown", "detail", "legend-variant"]) {
+    const wrap = `<g class="${cls}`; // a prefix: variants carry their state class too
+    for (let i = out.indexOf(wrap); i >= 0; i = out.indexOf(wrap, i)) out = unwrapElement(out, i);
   }
   out = out.replace(/<g class="edges" data-edges="\d+" data-t0="1" style="[^"]*">/g, '<g class="edges">');
   out = out.replace(/ data-t0="[01]"/g, "");

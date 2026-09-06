@@ -83,7 +83,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const model = JSON.parse(modelText) as Model;
   const session = new Session(model);
   const scene = root.querySelector<SVGGElement>(".scene")!;
-  // One layer per view and per set of open groups (`data-open`): drilling down is a morph between two of them.
+  // One layer per view and per set of open groups (`data-open`): opening and closing is a morph between two of them.
   const layerKey = (view: string, open: string) => `${view}|${open}`;
   const layers = new Map([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => [layerKey(g.getAttribute("data-view")!, g.getAttribute("data-open") ?? ""), g]));
   const viewIds = [...new Set([...root.querySelectorAll<SVGGElement>("g.view")].map((g) => g.getAttribute("data-view")!))];
@@ -101,7 +101,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   };
   // The space the diagram has: the option, else the element's own box (an embed on a page), else the window.
   const screen = (): Size => { if (opts.size) return opts.size; const r = root.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { width: r.width, height: r.height } : { width: window.innerWidth, height: window.innerHeight }; };
-  const frame = { left: 0, margin: MARGIN };
+  const frame = { margin: MARGIN };
   const ac = new AbortController();
   const on = <T extends EventTarget>(t: T, type: string, fn: (ev: Event) => void) => t.addEventListener(type, fn, { signal: ac.signal });
 
@@ -109,7 +109,6 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const activeId = () => activeKey.split("|")[0]!;
   let selected: { id: string; type: EntityType } | null = null;
   let camera: Camera = { k: 1, tx: 0, ty: 0 };
-  let zoomed = false;
   let cameraTimer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
   let autoplayTimer: ReturnType<typeof setInterval> | undefined;
@@ -200,8 +199,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     };
     step();
   };
-  const fit = (animate: boolean) => { zoomed = false; zoomId = null; tween(fitView(layerSize(active()), screen(), frame), animate); };
-  const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomed = true; zoomId = id; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), animate); return true; };
+  const fit = (animate: boolean) => { zoomId = null; tween(fitView(layerSize(active()), screen(), frame), animate); };
+  const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomId = id; tween(zoomToBox(bbox(el), screen(), { ...frame, maxZoom: type === "node" ? 2 : 4 }), animate); return true; };
 
   /* ---- selection: the entities of the active layer, in outline order (components first, then groups and what they hold) ---- */
   const order: { id: string; type: EntityType }[] = [];
@@ -302,7 +301,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     for (const g of from.querySelectorAll<SVGGElement>("[data-group]")) {
       const twin = to.querySelector<SVGGElement>(`[data-group="${g.getAttribute("data-group")}"]`);
       const rect = g.querySelector<SVGRectElement>(".group-box");
-      if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.summary-open").forEach((t) => (t.style.opacity = "0")); }
+      if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.expand-mark").forEach((t) => (t.style.opacity = "0")); }
       else g.style.opacity = "0";
     }
     from.querySelectorAll<SVGElement>(".edges, .legend").forEach((e) => (e.style.opacity = "0"));
@@ -397,7 +396,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     else handled = false;
     if (handled) ev.preventDefault();
   });
-  on(window, "resize", () => { if (!zoomed) fit(false); });
+  on(window, "resize", () => { if (!zoomId) fit(false); });
 
   rebuildOrder(); fit(false); apply(); play();
   return {

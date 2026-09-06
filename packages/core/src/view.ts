@@ -32,7 +32,7 @@ export function scopeModel(model: Model, view: View, open: readonly string[] = [
 
   // Closed groups (R11): a group in `collapse` that is not in `open` is drawn as one node-sized box. Everything inside
   // it leaves the model, and connections to what was inside re-attach to the box. Closed groups nest: the visible
-  // representative of an entity is its outermost closed ancestor. `open` lists the groups a focus has opened.
+  // representative of an entity is its outermost closed ancestor. `open` lists the closed groups drawn open.
   const opened = new Set(open);
   const collapsed = new Set((view.collapse ?? []).filter((id) => shownGroups.has(id) && id !== view.scope && !opened.has(id)));
   const representative = (id: string): string => { let rep = id; for (const g of chain(id)) if (collapsed.has(g)) rep = g; return rep; };
@@ -69,4 +69,24 @@ export function selectView(model: Model, id?: string): View {
   const v = model.views.find((x) => x.id === id);
   if (!v) throw new ModelError(`unknown view "${id}"; available: ${model.views.map((x) => x.id).join(", ")}`);
   return v;
+}
+
+/** `open` in declaration order: the canonical form layers and layouts are keyed by. */
+export const openOrder = (groups: { id: string }[], open: readonly string[]): string[] => { const order = new Map(groups.map((g, i) => [g.id, i] as const)); return [...open].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)); };
+
+/**
+ * Every way the closed groups of a view can be open, each closed under its closed ancestors, in declaration order
+ * (R11). The interactive file carries a layer per configuration.
+ */
+export function configurationsOf(groups: { id: string; parent?: string | undefined }[], collapse: readonly string[]): string[][] {
+  const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
+  const closed = new Set(collapse);
+  const closedParent = (id: string): string | undefined => { for (let cur = parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; };
+  const childrenOf = (id: string | undefined) => collapse.filter((g) => closedParent(g) === id);
+  /** The open sets for a forest of closed groups: each root closed, or open with any combination of its children's sets. */
+  const combos = (roots: string[]): string[][] => roots.reduce<string[][]>((acc, g) => {
+    const own: string[][] = [[], ...combos(childrenOf(g)).map((c) => [g, ...c])];
+    return acc.flatMap((a) => own.map((o) => [...a, ...o]));
+  }, [[]]);
+  return combos(childrenOf(undefined)).map((c) => openOrder(groups, c));
 }

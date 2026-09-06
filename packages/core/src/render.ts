@@ -6,8 +6,7 @@ import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
 import type { Component, Connection, Export, Group, GroupKindDef, Model, Play, Tour, View } from "./types.js";
-import { configurationsOf } from "./validate.js";
-import { scopeModel, selectView } from "./view.js";
+import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -117,7 +116,7 @@ const BASE_STYLE = `
 .group-label{font:600 11px ${FONT};fill:#475569;letter-spacing:.06em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:4px;stroke-linejoin:round}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 16px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
-.summary-open{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:11px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central}
@@ -166,7 +165,7 @@ function componentBody(c: Component, model: Model, b: { width: number; height: n
 }
 
 /** The expand mark: a small boxed plus in the top-right corner of a closed group, the conventional sign that there is more inside. */
-const expandMark = (w: number) => `<g class="summary-open" transform="translate(${num(w - 22)} 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`;
+const expandMark = (w: number) => `<g class="expand-mark" transform="translate(${num(w - 22)} 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`;
 
 /** A group's frame at (0,0): open, with its title in the band; or closed (R11), the size of a component, with its name centred and an expand mark. */
 function groupBody(g: Group, b: { width: number; height: number }): string {
@@ -174,7 +173,7 @@ function groupBody(g: Group, b: { width: number; height: number }): string {
   return [
     `<rect class="group-box" width="${num(b.width)}" height="${num(b.height)}" rx="10"/>`,
     closed
-      ? `<g class="lod-summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width)}</g>`
+      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width)}</g>`
       : `<text class="group-label" x="12" y="16">${esc(g.label)}</text>`,
   ].join("\n");
 }
@@ -338,7 +337,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
   const opacity = (on: boolean) => (on ? "opacity:1" : "opacity:0");
   const anim = (name: string) => `animation:${name} ${num(total)}s linear infinite`;
   /** An element that is shown per scene: it carries whether it is visible at t = 0, so a still can drop what is not. */
-  const shown = (name: string, isOn: (k: number) => boolean, phase: Phase, inner: string, cls = "shown", extra = "") =>
+  const shown = (name: string, isOn: (k: number) => boolean, inner: string, cls = "shown", extra = "") =>
     `<g class="${cls}"${extra} data-t0="${isOn(0) ? 1 : 0}" style="${anim(name)}">${inner}</g>`;
   const anchor = scenes[0]!.view;
   const oneView = scenes.every((s) => s.view.id === anchor.id);
@@ -389,7 +388,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
         const e = held(k0, id, (j) => entityAt(j));
         const name = `orrery-var-${id}-${st}`;
         css.push(`@keyframes ${name}{${track((k) => held(k, id, (j) => entityAt(j)?.state) === st, opacity, whole)}}`);
-        return shown(name, (k) => held(k, id, (j) => entityAt(j)?.state) === st, whole, body(e, k0), `variant st-${st}`, ` data-state="${escAttr(st)}"`);
+        return shown(name, (k) => held(k, id, (j) => entityAt(j)?.state) === st, body(e, k0), `variant st-${st}`, ` data-state="${escAttr(st)}"`);
       }).join("\n");
     };
     const groupIds = model.groups.filter((g) => scenes.some((_, k) => groupAt(k, g.id))).map((g) => g.id);
@@ -406,11 +405,11 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       css.push(`@keyframes orrery-centre-${id}{${track((k) => { const [w, h] = size(id)(k).split(" "); return `${num((Number(w) - EXPAND_MARK_WIDTH) / 2)} ${num(Number(h) / 2)}`; }, translate, move, ease)}}`);
       const b0 = held(0, id, (j) => boxAt(j, id));
       const frames = variants(id, (k) => groupAt(k, id), (g) => `<rect class="group-box" width="${num(b0.width)}" height="${num(b0.height)}" rx="10" style="${anim(`orrery-size-${id}`)}"/>${g.reason !== undefined ? `<title>${esc(g.reason)}</title>` : ""}`);
-      const title = shown(`orrery-open-${id}`, isOpen, staged, `<text class="group-label" x="12" y="16">${esc(g0.label)}</text>`, "detail");
-      const summary = shown(`orrery-closed-${id}`, (k) => !isOpen(k), staged,
+      const title = shown(`orrery-open-${id}`, isOpen, `<text class="group-label" x="12" y="16">${esc(g0.label)}</text>`, "detail");
+      const summary = shown(`orrery-closed-${id}`, (k) => !isOpen(k),
         `<g transform="translate(${num((b0.width - EXPAND_MARK_WIDTH) / 2)} ${num(b0.height / 2)})" style="${anim(`orrery-centre-${id}`)}"><text class="summary-label">${esc(g0.label)}</text></g>` +
-        `<g class="summary-open" transform="translate(${num(b0.width - 22)} 8)" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
-      return shown(`orrery-show-${id}`, present, staged, moved(id, `group gk-${g0.kind}`, `data-group="${escAttr(id)}"${g0.collapsed !== undefined ? ` data-collapsed="${g0.collapsed}"` : ""}`, `${frames}\n${title}\n${summary}`), "entity");
+        `<g class="expand-mark" transform="translate(${num(b0.width - 22)} 8)" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
+      return shown(`orrery-show-${id}`, present, moved(id, `group gk-${g0.kind}`, `data-group="${escAttr(id)}"${g0.collapsed !== undefined ? ` data-collapsed="${g0.collapsed}"` : ""}`, `${frames}\n${title}\n${summary}`), "entity");
     });
     const nodesMarkup = componentIds.map((id) => {
       const present = (k: number) => nodeAt(k, id) !== undefined;
@@ -418,7 +417,7 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       const b0 = held(0, id, (j) => boxAt(j, id));
       css.push(`@keyframes orrery-show-${id}{${track(present, opacity, staged)}}`);
       const body = variants(id, (k) => nodeAt(k, id), (c) => `${c.reason !== undefined ? `<title>${esc(c.reason)}</title>` : ""}${componentBody(c, model, b0)}`);
-      return shown(`orrery-show-${id}`, present, staged, moved(id, `node${c0.ghost ? "" : ` kind-${c0.kind}`}`, `data-node="${escAttr(id)}" data-kind="${escAttr(c0.kind)}"${c0.ghost ? ' data-ghost="1"' : ""}`, body), "entity");
+      return shown(`orrery-show-${id}`, present, moved(id, `node${c0.ghost ? "" : ` kind-${c0.kind}`}`, `data-node="${escAttr(id)}" data-kind="${escAttr(c0.kind)}"${c0.ghost ? ' data-ghost="1"' : ""}`, body), "entity");
     });
     // Edges: one set per distinct drawing (layout and loads), swapped in the staged phases when the layout changes,
     // crossfaded when only the loads do.
@@ -428,14 +427,14 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
     const edgesMarkupAll = edgeKeys.map((markup, i) => {
       const isOn = (k: number) => edgeSets[k] === markup;
       css.push(`@keyframes orrery-edges-${i}{${track(isOn, opacity, edgesPhase)}}`);
-      return shown(`orrery-edges-${i}`, isOn, edgesPhase, markup, "edges", ` data-edges="${i}"`);
+      return shown(`orrery-edges-${i}`, isOn, markup, "edges", ` data-edges="${i}"`);
     });
     // Legend variants, outside the camera; captions, staged.
     const legendKeys = [...new Set(legends.map((l) => l.markup))].filter(Boolean);
     const legendsMarkup = legendKeys.map((markup, i) => {
       const isOn = (k: number) => legends[k]!.markup === markup;
       css.push(`@keyframes orrery-legend-${i}{${track(isOn, opacity, whole)}}`);
-      return shown(`orrery-legend-${i}`, isOn, whole, markup.replace(/translate\(20 [\d.]+\)/, `translate(20 ${num(stageH + 8)})`), "legend-variant");
+      return shown(`orrery-legend-${i}`, isOn, markup.replace(/translate\(20 [\d.]+\)/, `translate(20 ${num(stageH + 8)})`), "legend-variant");
     });
     const captions = scenes.map((sc, k) => {
       css.push(`@keyframes orrery-caption-${k}{${track((j) => j === k, opacity, staged)}}`);
@@ -542,8 +541,7 @@ export interface RenderOptions {
   /** The entity the picture is cropped to, with a little air around it. */
   zoom?: string;
 }
-/** `open` in declaration order: the canonical form layers and layouts are keyed by. */
-export const openKey = (model: Model, open: readonly string[]): string[] => { const order = new Map(model.groups.map((g, i) => [g.id, i] as const)); return [...open].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)); };
+
 const playOf = (view: View, options: { play?: { scenario: string; seconds?: number }; scenario?: string }): Play | undefined =>
   options.scenario !== undefined ? undefined : options.play ? { scenario: options.play.scenario, seconds: options.play.seconds ?? 3 } : view.play;
 
@@ -563,7 +561,7 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   const view = selectView(model, options.view);
   const play = playOf(view, options);
   if (play && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
-  const open = openKey(model, options.open ?? []);
+  const open = openOrder(model.groups, options.open ?? []);
   for (const g of open) if (!(view.collapse ?? []).includes(g)) throw new ModelError(`"${g}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
   const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}) });
   let title = view.title ?? model.title;

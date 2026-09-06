@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
+import { configurationsOf, openOrder } from "./view.js";
 import type { Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
@@ -262,7 +263,6 @@ export function validate(input: unknown): ValidationResult {
    * that one open too, so what is open is exactly what is written. `zoom` names an entity not inside a closed group.
    * Returns `open` in declaration order, the canonical form every layer and layout is keyed by.
    */
-  const groupOrder = new Map(raw.groups.map((g, i) => [g.id, i] as const));
   const checkOpen = (base: string, view: View | undefined, open: string[] | undefined, zoom: string | undefined): string[] | undefined => {
     const collapse = new Set(view?.collapse ?? []);
     const opened = new Set(open ?? []);
@@ -279,7 +279,7 @@ export function validate(input: unknown): ValidationResult {
         if (inside !== undefined) err(`${base}/zoom`, `"${zoom}" is inside "${inside}", which is closed here`);
       }
     }
-    return open ? [...open].sort((a, b) => (groupOrder.get(a) ?? 0) - (groupOrder.get(b) ?? 0)) : undefined;
+    return open ? openOrder(raw.groups, open) : undefined;
   };
 
   /* tour: a plain list of views, or scenes */
@@ -350,22 +350,4 @@ export function validate(input: unknown): ValidationResult {
   if (errors.length) return { ok: false, errors: dedupe(errors) };
   const model: Model = { ...opt("title", raw.title), direction: raw.direction, states, kinds, components, connections, groups, views, scenarios, ...opt("tour", tour), exports };
   return { ok: true, model, warnings };
-}
-
-/**
- * Every way the closed groups of a view can be open, each closed under its closed ancestors, in declaration order
- * (R11). The interactive file carries a layer per configuration.
- */
-export function configurationsOf(groups: { id: string; parent?: string | undefined }[], collapse: readonly string[]): string[][] {
-  const order = new Map(groups.map((g, i) => [g.id, i] as const));
-  const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
-  const closed = new Set(collapse);
-  const closedParent = (id: string): string | undefined => { for (let cur = parentOf.get(id); cur !== undefined; cur = parentOf.get(cur)) if (closed.has(cur)) return cur; return undefined; };
-  const childrenOf = (id: string | undefined) => collapse.filter((g) => closedParent(g) === id);
-  /** The open sets for a forest of closed groups: each root closed, or open with any combination of its children's sets. */
-  const combos = (roots: string[]): string[][] => roots.reduce<string[][]>((acc, g) => {
-    const own: string[][] = [[], ...combos(childrenOf(g)).map((c) => [g, ...c])];
-    return acc.flatMap((a) => own.map((o) => [...a, ...o]));
-  }, [[]]);
-  return combos(childrenOf(undefined)).map((c) => c.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)));
 }

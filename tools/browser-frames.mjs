@@ -3,7 +3,7 @@
 // animation (Web Animations API), sets them all to time t, and screenshots. Usage:
 //   node tools/browser-frames.mjs <file.svg> --from 11.5 --to 13.6 --fps 5 [--width 1200] [--out dir]
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, join } from "node:path";
 import { chromium } from "playwright";
 import { contactSheet } from "@orrery/raster";
 const args = process.argv.slice(2);
@@ -18,9 +18,7 @@ const [, w, h] = readFileSync(file, "utf8").match(/viewBox="0 0 ([\d.]+) ([\d.]+
 const height = Math.round((width * h) / w);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
-// Wrap the SVG in a page so it renders as an image would (no script), sized to the viewport.
-await page.setContent(`<!doctype html><html><body style="margin:0;background:#fff"><img id="i" src="file://${resolve(file)}" style="display:block;width:${width}px;height:${height}px"></body></html>`);
-// An <img> cannot be driven by WAAPI; use an inline copy instead, which browsers animate identically.
+// Inline the SVG (its script stripped) so the Web Animations API can drive it; browsers animate it as an <img> would.
 await page.setContent(`<!doctype html><html><body style="margin:0;background:#fff">${readFileSync(file, "utf8").replace(/<script[\s\S]*?<\/script>/g, "").replace(/<svg /, `<svg style="display:block;width:${width}px;height:${height}px" `)}</body></html>`);
 await page.evaluate(() => document.getAnimations().forEach((a) => a.pause()));
 const pngs = [];

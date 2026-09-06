@@ -134,5 +134,3 @@ export interface Export { id: string; view: string; open?: string[]; zoom?: stri
 export interface Scene { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, string[]>; reasons?: Record<string, string>; note?: string; seconds: number }
 export interface Tour { seconds: number; scenes: Scene[] }
 
-/** Anything with an id and a state: a component or a group. */
-export type Entity = Component | Group;

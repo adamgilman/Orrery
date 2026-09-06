@@ -162,7 +162,7 @@ describe("renderSvg: closed groups (R11)", () => {
     const payments = between(svg, 'data-group="payments"');
     expect(payments).toContain('data-collapsed="4"');
     expect(payments).toMatch(/data-bbox="[\d.]+ [\d.]+ [\d.]+ 48"/); // a component's height
-    expect(payments).toMatch(/<g class="lod-summary"><text class="summary-label"[^>]*>Payments<\/text><g class="summary-open"/);
+    expect(payments).toMatch(/<g class="summary"><text class="summary-label"[^>]*>Payments<\/text><g class="expand-mark"/);
     expect(payments).not.toContain('class="group-label"');
     expect(svg).not.toContain('data-node="ledger"');
     expect(svg).not.toContain('data-group="pay-core"');
@@ -182,7 +182,7 @@ describe("renderSvg: closed groups (R11)", () => {
   });
 });
 
-describe("render: focus and exports", () => {
+describe("render: open, zoom and exports", () => {
   it("open renders the layout with exactly those groups open, as a still; zoom crops the picture to one entity", async () => {
     const n = fixture("nested-drill");
     const svg = await render(n, new FakeLayoutEngine(), { open: ["inner", "outer"] });
