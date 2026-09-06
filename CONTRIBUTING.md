@@ -29,7 +29,9 @@ at what you changed. `yarn examples` regenerates every picture in the README and
    says what you saw. Frame tooling exists so the change can be checked frame by frame.
 5. **Less code with the same behaviour is better code.** Remove what a change makes dead.
 
-Pull requests run typecheck, lint and the full test suite; main requires them to pass. One reviewer, usually the
+Pull requests run typecheck, lint and the full test suite; main requires them to pass. The `orrery-pr` skill in
+`.claude/skills` writes the description in the house shape: the model change with its invariant and JSON, the
+pictures embedded as SVG files from the branch, tests, docs, and the ratchet's verdict. One reviewer, usually the
 maintainer, merges. Small pull requests merge fastest.
 
 ## The test suites and what each is for

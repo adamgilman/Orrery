@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
 import { mount, type Orrery, type Snapshot } from "../src/browser/index.js";
 
-const doc = async (name: string) => {
+const doc = async (name: string, view?: string) => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
   if (!r.ok) throw new Error(JSON.stringify(r.errors));
-  const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "" });
+  const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "", ...(view ? { view } : {}) });
   const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
   const walker = parsed.createTreeWalker(parsed, 8);
   const cdata: Node[] = [];
@@ -463,5 +463,40 @@ describe("callouts (R16)", () => {
     expect(stepSets()).toEqual(["2"]);
     rt.reset();
     expect(stepSets()).toEqual([]);
+  });
+});
+
+describe("sequence views (R17)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("steps the messages of a sequence view with next, prev and the brackets; play reveals them; reset shows all", async () => {
+    const root = await doc("sequence", "checkout"); // a sequence is its own file: the topology views are not in it
+    rt = mount(root, SIZE);
+    rt.stop();
+    expect(rt.views.map((v) => v.id)).toEqual(["checkout"]);
+    vi.advanceTimersByTime(900);
+    const shown = () => [...shownLayer(root).querySelectorAll<SVGGElement>(".message")].filter((g) => g.style.display !== "none").length;
+    expect(shown()).toBe(6);
+    expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
+    rt.prev(); rt.prev();
+    expect(shown()).toBe(4);
+    expect(rt.snapshot().message).toEqual({ index: 4, count: 6 });
+    key("]");
+    expect(shown()).toBe(5);
+    key("[");
+    expect(shown()).toBe(4);
+    rt.play();
+    expect(rt.snapshot().playing).toBe(true);
+    expect(shown()).toBe(0);
+    vi.advanceTimersByTime(2100); // the view plays one message per second
+    expect(shown()).toBe(2);
+    rt.stop();
+    rt.reset();
+    expect(shown()).toBe(6);
+    expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
+    // a participant is an entity: clicking it steps its state as on the topology
+    click(vis(root, '[data-node="db"]'));
+    expect(state(root, "db")).toBe("degraded");
   });
 });

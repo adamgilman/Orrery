@@ -18,7 +18,7 @@ describe("smoke: the orrery command on the diagram of Orrery", () => {
     const r = run("validate", file);
     expect(r.err).toBe("");
     expect(r.code).toBe(0);
-    expect(r.out).toMatch(/^OK: \d+ components, \d+ connections, \d+ groups, 4 views, 2 scenarios, \d+ exports/);
+    expect(r.out).toMatch(/^OK: \d+ components, \d+ connections, \d+ groups, 5 views, 2 scenarios, \d+ exports/);
   });
   it("renders the interactive file with the model and the engine inside, and a static one without", { timeout: SLOW }, () => {
     const doc = run("render", file);
@@ -44,7 +44,7 @@ describe("smoke: the orrery command on the diagram of Orrery", () => {
     const dir = mkdtempSync(join(tmpdir(), "orrery-smoke-"));
     const r = run("embed", file, "--out", dir);
     expect(r.code).toBe(0);
-    expect(readdirSync(dir).sort()).toEqual(["app.js", "index.html", "orrery.js", "orrery.svg"]);
+    expect(readdirSync(dir).sort()).toEqual(["app.js", "index.html", "orrery.js", "orrery.render-seq.svg", "orrery.svg"]); // the sequence is its own file
     const packs = run("packs");
     expect(packs.code).toBe(0);
     for (const p of ["aws", "azure", "gcp", "sre"]) expect(packs.out).toMatch(new RegExp(`^${p}\\s`, "m"));

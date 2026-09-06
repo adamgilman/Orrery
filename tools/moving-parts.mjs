@@ -29,6 +29,8 @@ const model = {
     { id: "step-1", scenario: "db-fails", step: 1 }, { id: "step-2", scenario: "db-fails", step: 2 }, { id: "step-3", scenario: "db-fails", step: 3 },
     { id: "what-if", set: { off: { replica: "out for maintenance" }, degraded: { api: "no failover while the replica is out" } } },
     { id: "heading", heading: true },
+    { id: "sequence", view: "checkout-seq" },
+    { id: "sequence-failed", view: "checkout-seq", scenario: "db-fails", step: 1 },
     { id: "play", play: "db-fails", seconds: 3 },
     { id: "tour", tour: true },
   ],

@@ -16,6 +16,14 @@ describe("renderDocument", () => {
     const re = await renderDocument(fixture("grouped"), engine(), { runtime: "", view: "data-tier" });
     expect([...re.matchAll(/data-view="([^"]+)"/g)].map((m) => m[1])).toEqual(["data-tier", "overview"]);
   });
+  it("is one drawing: the topology views together, or one sequence view alone (R17)", async () => {
+    const views = (svg: string) => [...svg.matchAll(/<g class="view"[^>]* data-view="([^"]+)" data-open=""/g)].map((m) => m[1]);
+    expect(views(await renderDocument(fixture("sequence"), engine(), { runtime: "" }))).toEqual(["overview"]);
+    expect(views(await renderDocument(fixture("sequence"), engine(), { runtime: "", view: "checkout" }))).toEqual(["checkout"]);
+    const lookup = await renderDocument(fixture("sequence"), engine(), { runtime: "", view: "lookup" });
+    expect(views(lookup)).toEqual(["lookup"]);
+    expect(lookup).toContain('data-message="1"');
+  });
   it("embeds the normalised model as CDATA-safe JSON, and the runtime after it", async () => {
     const svg = await renderDocument(fixture("own-vocabulary"), engine(), { runtime: "console.log(1)" });
     const json = svg.match(/<script type="application\/json" id="orrery-model"><!\[CDATA\[([\s\S]*?)\]\]><\/script>/)![1]!;

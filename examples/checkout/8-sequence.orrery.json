@@ -1,0 +1,186 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "title": "Checkout: one request",
+  "direction": "down",
+  "kinds": {
+    "use": [
+      "aws"
+    ]
+  },
+  "groups": [
+    {
+      "id": "data",
+      "label": "Data",
+      "kind": "tier"
+    },
+    {
+      "id": "sessions",
+      "label": "Session cache",
+      "kind": "cluster",
+      "parent": "data"
+    },
+    {
+      "id": "cache-a",
+      "label": "Node A",
+      "kind": "cluster",
+      "parent": "sessions"
+    },
+    {
+      "id": "cache-b",
+      "label": "Node B",
+      "kind": "cluster",
+      "parent": "sessions"
+    }
+  ],
+  "components": [
+    {
+      "id": "web",
+      "label": "Storefront",
+      "kind": "client"
+    },
+    {
+      "id": "api",
+      "label": "Checkout API",
+      "kind": "aws:fargate"
+    },
+    {
+      "id": "db",
+      "label": "Orders DB",
+      "kind": "aws:rds",
+      "group": "data"
+    },
+    {
+      "id": "replica",
+      "label": "Read replica",
+      "kind": "aws:rds",
+      "group": "data"
+    },
+    {
+      "id": "redis-a",
+      "label": "Redis",
+      "kind": "aws:elasticache",
+      "group": "cache-a"
+    },
+    {
+      "id": "aof-a",
+      "label": "Append-only file",
+      "kind": "aws:s3",
+      "group": "cache-a"
+    },
+    {
+      "id": "redis-b",
+      "label": "Redis",
+      "kind": "aws:elasticache",
+      "group": "cache-b"
+    },
+    {
+      "id": "aof-b",
+      "label": "Append-only file",
+      "kind": "aws:s3",
+      "group": "cache-b"
+    }
+  ],
+  "connections": [
+    {
+      "from": "web",
+      "to": "api",
+      "load": 0.8
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "load": 0.6,
+      "label": "writes"
+    },
+    {
+      "id": "failover",
+      "from": "api",
+      "to": "replica",
+      "load": 0
+    },
+    {
+      "from": "db",
+      "to": "replica",
+      "kind": "replication",
+      "load": 0.2
+    },
+    {
+      "from": "api",
+      "to": "sessions",
+      "load": 0.5
+    },
+    {
+      "from": "redis-a",
+      "to": "aof-a",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "redis-b",
+      "to": "aof-b",
+      "kind": "dataflow",
+      "load": 0.3
+    },
+    {
+      "from": "cache-a",
+      "to": "cache-b",
+      "kind": "replication",
+      "load": 0.2
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "collapse": [
+        "sessions"
+      ]
+    },
+    {
+      "id": "checkout-seq",
+      "type": "sequence",
+      "title": "A customer checks out",
+      "description": "The happy path: the storefront calls the API, the API writes the order and clears the session.",
+      "messages": [
+        {
+          "from": "web",
+          "to": "api",
+          "text": "POST /checkout"
+        },
+        {
+          "from": "api",
+          "to": "sessions",
+          "text": "read cart"
+        },
+        {
+          "from": "api",
+          "to": "db",
+          "text": "insert order"
+        },
+        {
+          "from": "db",
+          "to": "api",
+          "text": "ok",
+          "reply": true
+        },
+        {
+          "from": "api",
+          "to": "sessions",
+          "text": "clear cart"
+        },
+        {
+          "from": "api",
+          "to": "web",
+          "text": "201 Created",
+          "reply": true
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "id": "8-sequence",
+      "view": "checkout-seq"
+    }
+  ]
+}

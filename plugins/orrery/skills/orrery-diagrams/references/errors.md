@@ -68,9 +68,9 @@ Provoked by: `{"shapes":{"define":{"a":{"path":"circle"},"b":{"path":"M0 0H100V1
 
 ### bad-view-type
 
-- `/views/0/type`: must be one of: topology
+- `/views/0/type`: must be one of: topology, sequence
 
-Provoked by: `{"components":[{"id":"a"}],"views":[{"id":"v","type":"sequence"}]}`
+Provoked by: `{"components":[{"id":"a"}],"views":[{"id":"v","type":"walkthrough"}]}`
 
 ### collapse-not-a-group
 
@@ -257,6 +257,24 @@ Provoked by: `{"components":[{"id":"a"}],"scenarios":[{"id":"s","steps":[{"set":
 - `/connections/0`: to itself
 
 Provoked by: `{"components":[{"id":"a"}],"connections":[{"from":"a","to":"a"}]}`
+
+### sequence-no-connection
+
+- `/views/0/messages/1`: no connection between "b" and "c"; connections: a->b
+- `/views/0/messages/2/to`: unknown entity "zzz"
+- `/views/0/messages/3/kind`: unknown connection kind "grpc"
+
+Provoked by: `{"components":[{"id":"a"},{"id":"b"},{"id":"c"}],"connections":[{"from":"a","to":"b"}],"views":[{"id":"s","type":"sequence","messages":[{"from":"a","to":"b"},{"from":"b","to":"c","text":"no line"},{"from":"a","to":"zzz"},{"from":"a","to":"b","kind":"grpc"}]}]}`
+
+### sequence-topology-fields
+
+- `/views/0/collapse`: not for a sequence view
+- `/views/0/scope`: not for a sequence view
+- `/views/0/play/scenario`: a sequence view plays its messages
+- `/views/1/messages`: only a sequence view has messages
+- `/views/2/messages`: a sequence view needs messages
+
+Provoked by: `{"components":[{"id":"a"},{"id":"b"}],"connections":[{"from":"a","to":"b"}],"groups":[{"id":"g"}],"scenarios":[{"id":"s","steps":[{"set":{"failed":"a"}}]}],"views":[{"id":"seq","type":"sequence","messages":[{"from":"a","to":"b"}],"collapse":["g"],"scope":"g","play":{"scenario":"s"}},{"id":"topo","me…`
 
 ### shapes-replace-without-box
 

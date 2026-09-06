@@ -96,6 +96,16 @@ width, dash pattern and flow colour.
 
 ![Cache maintenance, in our words](examples/checkout/7-vocabulary-play.svg)
 
+**8. One request, as a sequence.** Every picture so far is a topology: the entities, the connections between them,
+groups as frames. A sequence view is the other drawing of the same model: the messages of one interaction, in order,
+between the entities the model already has, over the connections it already declares: a message with no connection under it
+is an error. Each participant is its own box, in its state, on a lifeline; a reply is the dashed return and closes
+the activation its call opened. The same model, another drawing of it; a scenario step colours the participants
+the same way it colours the topology. A sequence is its own drawing, so it is its own file: `render --view checkout-seq`
+writes it, interactive like the topology's file, the brackets stepping the messages.
+
+![A customer checks out](examples/checkout/8-sequence.svg)
+
 ## Two reference pages
 
 Every variant and every movement, drawn from the same checkout, regenerated with the examples:
@@ -132,8 +142,8 @@ Every picture in this README is one of them.
 orrery export examples/checkout.orrery.json --out docs/diagrams
 ```
 
-**One diagram, for a page.** For a web page, `embed` writes the whole model as one SVG with every view and every
-drill-down, the engine as a script, and a sample page. The engine has no user interface of its own: your page
+**One diagram, for a page.** For a web page, `embed` writes the model as one SVG with every topology view and every
+drill-down, one more SVG per sequence view, the engine as a script, and a sample page. The engine has no user interface of its own: your page
 mounts it and builds its controls from what it reports.
 
 ```sh
@@ -154,7 +164,8 @@ The sample `index.html` and `app.js` build a view chooser, a scenario stepper, s
 component, drill-down buttons and play controls from that interface, in plain HTML. Throw them away and wire your
 own. Opened directly with no page around it, the SVG is purely the diagram: click a component to step it through
 your states, click a closed group to drill in, Escape to step back out, digits to switch views, `s` to start a
-scenario and cycle through them, brackets to step it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
+scenario and cycle through them, brackets to step it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
+or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout-sequence.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server. ## Status
 
 The model is specified in [docs/MODEL.md](docs/MODEL.md) and the file is interactive. Next: sequence and walkthrough

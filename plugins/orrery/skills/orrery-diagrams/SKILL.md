@@ -48,7 +48,7 @@ invariants and the reasons behind the design, is `docs/MODEL.md` in the reposito
 | `connections` | What one entity does to another, directed, with a kind (line style), label, load 0..1, bidirectional | `references/model.md` |
 | `groups` | Containers that mean something: tiers, regions, zones, clusters, boundaries; nested; may be empty | `references/model.md` |
 | `states`, `kinds`, `shapes` | The vocabulary: names bound to looks, glyphs, shapes, frames and lines; defaults, packs, your own | `references/variants.md` |
-| `views` | Drawings of the model: scope, only, direction, closed groups, play | `references/variants.md` |
+| `views` | Drawings of the model: the topology (scope, only, direction, closed groups, play) or a sequence (messages on lifelines), each its own file | `references/variants.md` |
 | `scenarios` | Ordered, cumulative steps: set states with reasons, restore, move loads, callouts | `references/variants.md` |
 | `callouts` | Notes with an arrow at an entity or connection, per moment | `references/variants.md` |
 | `tour`, `exports` | A story on a timer; the files one export run writes | `references/variants.md` |

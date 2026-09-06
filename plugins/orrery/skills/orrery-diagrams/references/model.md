@@ -72,15 +72,28 @@ connection pointing at it keeps working.
 | `id` | id | required | Used by `render --view`. |
 | `title` | string | document title | |
 | `description` | string | document description | What this view shows; with its title, the heading block for pictures of this view. |
-| `type` | `topology` | `topology` | `sequence` and `walkthrough` are reserved. |
+| `type` | `topology` \| `sequence` | `topology` | A topology draws the entities and their connections; a sequence draws this view's `messages` (below). `walkthrough` is reserved. |
 | `direction` | `right` \| `down` | document direction | |
 | `scope` | group id | | Drill in: the group becomes the outer frame and only its descendants are shown. |
 | `only` | array of entity id | | Restrict to these entities; a group id means the group and everything in it. Groups containing a selected entity are shown. Combines with `scope` by intersection. |
 | `collapse` | array of group id | | Groups drawn closed in this view: a closed group is one box the size of a component, its name centred with an expand mark in the corner; what is inside is not drawn, and connections to it re-attach to the box. Opening it, from a scene's or export's `open`, a click, or a page's call, lays the view out again with the group as a frame and its members inside, and the picture moves from one layout to the other. Closed groups nest to any depth; opening an inner one means opening the ones above it too (R11). |
-| `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view: the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
+| `messages` | array of `{ from, to, text?, kind?, reply? }` | | A sequence view's messages, in order (R17). `from` and `to` are entities; each message runs over a connection the model declares between them, in either direction, or it is an error (a self-message needs none). `kind` names a connection kind for the line, default the connection's own; `reply: true` draws the dashed return and closes the activation its call opened. Only a sequence view has messages; a sequence view has no `scope`, `only`, `collapse` or `direction`. |
+| `play` | `{ scenario, seconds }` | | Play that scenario on a timer in this view (a sequence view gives `seconds` alone: reveal one message per period, looping): the base model, then each step for `seconds` (default 3), looping. In the file this is pure CSS over pre-rendered step layers, so it plays inside an image tag; the interactive runtime plays the same steps until the reader interacts (R10). |
 
 Connections with exactly one end inside a view are drawn to a ghost of the outside entity at the view's edge
 (R4). Nothing is dropped silently.
+
+**Sequence views.** A sequence view is a projection of the topology: the participants are the entities its
+messages touch, in order of first appearance, each drawn as its own box (its kind, shape, pack icon and state, so a
+sequence exported at a scenario step colours its participants as the topology would, with the same legend) on a
+dashed lifeline; the messages are rows in order, an arrow from sender to receiver in the line of its kind, the
+label above; a reply is dashed; a self-message is a small loop. A call opens an activation bar on its receiver
+and the receiver's reply closes it; a call never answered stays active to the end. Layout is a pure function:
+columns spaced by the widest label between them. A model may have as many sequence views as it has stories, each
+with its own title and description. Exports, scenario moments, what-ifs, callouts (at participants) and the
+heading apply as to any view; a tour may show one as a scene. A sequence is its own drawing, so it is its own
+file: the interactive file carries the topology views together, or one sequence view alone (`render --view`
+names it; `embed` writes one file per sequence beside the topology).
 
 ### 4.6 Scenario
 
