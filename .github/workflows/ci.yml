@@ -34,8 +34,10 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn test
+      # The ratchet measures whenever there is a build, whatever the tests said, so a pull request always gets its table.
       - name: Fetch the performance baseline
         id: baseline
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -43,6 +45,7 @@ jobs:
           case "$json" in "{"*) ;; *) json="" ;; esac
           echo "json=$json" >> "$GITHUB_OUTPUT"
       - run: yarn perf
+        if: always()
         env:
           ORRERY_SKIP_BUILD: "1"
           ORRERY_PERF_BASELINE_JSON: ${{ steps.baseline.outputs.json }}
@@ -57,7 +60,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          body="$(printf '<!-- perf-ratchet -->\n## Performance ratchet\n\n%s\n_Measured on this runner against the baseline CI keeps on the `perf-baseline` branch. Bytes and counts must not grow; timings may not exceed the baseline by more than 1.6× plus 2 ms. A metric marked SLOWER blocks the merge._\n' "$(cat test/perf/last.md)")"
+          table=$(cat test/perf/last.md 2>/dev/null || echo "_Not measured: the build or the benchmark itself failed; see the test job._")
+          body="$(printf '<!-- perf-ratchet -->\n## Performance ratchet\n\n%s\n_Measured on this runner against the baseline CI keeps on the `perf-baseline` branch. Bytes and counts must not grow; timings may not exceed the baseline by more than 1.6× plus 2 ms. A metric marked SLOWER blocks the merge._\n' "$table")"
           id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- perf-ratchet -->")) | .id' | head -1)
           if [ -n "$id" ]; then gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" >/dev/null
           else gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -f body="$body" >/dev/null; fi
