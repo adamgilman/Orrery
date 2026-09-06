@@ -112,8 +112,8 @@ orrery.on("change", (snapshot) => { /* view, open groups, scenario step and note
 The sample `index.html` and `app.js` build a view chooser, a scenario stepper, state buttons for the selected
 component, drill-down buttons and play controls from that interface, in plain HTML. Throw them away and wire your
 own. Opened directly with no page around it, the SVG is purely the diagram: click a component to step it through
-your states, click a closed group to drill in, Escape to step back out, digits to switch views, brackets to step a
-scenario. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
+your states, click a closed group to drill in, Escape to step back out, digits to switch views, `s` to start a
+scenario and cycle through them, brackets to step it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server. ## Status
 
 The model is specified in [docs/MODEL.md](docs/MODEL.md) and the file is interactive. Next: sequence and walkthrough

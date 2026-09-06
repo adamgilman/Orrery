@@ -31,7 +31,9 @@ export interface Snapshot {
 
 /**
  * The engine's interface: what a page builds its controls from and calls. The engine has no user interface of its
- * own; inside the diagram, clicks and the keyboard keep working with no page code at all (MODEL.md R11, the spec
+ * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to step a state,
+ * click a closed group to drill in, Escape back, arrows select, Enter zooms, f steps, s cycles scenarios, [ and ]
+ * step one, digits switch views (MODEL.md R11, the spec
  * docs/superpowers/specs/2026-09-05-two-paths-design.md).
  */
 export interface Orrery {
@@ -363,6 +365,10 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     } else if (k === "Enter" && selected) { stop(); zoomTo(selected.id, selected.type); }
     else if (k === "f" && selected) cycle(selected.id);
     else if (k === "Escape") { stop(); if (!back()) { select(null); fit(true); emit(); } }
+    else if (k === "s" && model.scenarios.length) { // the next scenario, from the first, none after the last
+      const i = session.scenario ? model.scenarios.findIndex((sc) => sc.id === session.scenario!.id) + 1 : 0;
+      setScenario(model.scenarios[i]?.id ?? null, 1);
+    }
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);
     else if (/^[1-9]$/.test(k)) { const id = viewIds[Number(k) - 1]; if (id) showView(id); }

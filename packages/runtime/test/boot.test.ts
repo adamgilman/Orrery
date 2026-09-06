@@ -200,7 +200,7 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
     expect(rt.snapshot().scenario!.step).toBe(1);
   });
 
-  it("keyboard: arrows select in outline order, Enter zooms, f steps the state, brackets step the scenario, digits switch views, Escape resets the camera", async () => {
+  it("keyboard: arrows select in outline order, Enter zooms, f steps the state, s starts and cycles scenarios, brackets step, digits switch views, Escape resets the camera", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
@@ -225,6 +225,14 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
     vi.runAllTimers();
     expect(root.querySelector(".is-selected")).toBeNull();
     expect(root.querySelector(".scene")!.getAttribute("transform")).toBe(fitT);
+    rt.setScenario(null);
+    key("s"); // s cycles through the scenarios, from the first, at step 1
+    expect(rt.snapshot().scenario).toMatchObject({ id: "orders-failover", step: 1 });
+    key("]");
+    key("s");
+    expect(rt.snapshot().scenario).toMatchObject({ id: "stripe-outage", step: 1 });
+    key("s");
+    expect(rt.snapshot().scenario).toBeNull(); // past the last: none
     key("2");
     vi.advanceTimersByTime(500); // the morph; this view then plays its scenario on a loop
     expect(rt.snapshot()).toMatchObject({ view: "failover-loop", playing: true });
