@@ -36,7 +36,9 @@ maintainer, merges. Small pull requests merge fastest.
 
 Dependabot's pull requests merge themselves. When CI is green on one, the `dependabot` workflow merges it into
 main with the deploy key and deletes the branch; an ordinary push, so the ratchet and the site run as after any
-merge. A red one waits, with the failing job to read. Nothing else is merged by a machine.
+merge. A red one waits, with the failing job to read. Nothing else is merged by a machine. They carry the
+`perf-ignore` label: the performance table is measured and posted, but does not block them, and the baseline
+resets to what was measured on merge (test/perf/README.md).
 
 ## The test suites and what each is for
 
