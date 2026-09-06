@@ -115,6 +115,25 @@ until the reader interacts.
 
 ![Primary fails, on a loop](play.svg)
 
+## A sequence
+
+A view of type `sequence` draws the messages of one interaction between entities the model already has, over the
+connections it declares. Participants appear in order of first appearance, each as its own box on a lifeline; a
+reply is the dashed return and closes the activation its call opened. Exported at a scenario step, the participants
+wear that step's states.
+
+```jsonc
+{ "id": "checkout-seq", "type": "sequence", "title": "A customer checks out", "messages": [
+  { "from": "web", "to": "api", "text": "POST /checkout" },
+  { "from": "api", "to": "db", "text": "insert order" },
+  { "from": "db", "to": "api", "text": "ok", "reply": true },
+  { "from": "api", "to": "web", "text": "201 Created", "reply": true }
+] }
+```
+
+![A customer checks out](sequence.svg)
+![The same request while the primary is down](sequence-failed.svg)
+
 ## A heading
 
 A model and a view may carry a `description`. A picture draws the title and the description above the scene when
@@ -152,5 +171,7 @@ what leaves fades, what arrives fades in, and the camera closes on the scene's z
 Open any rendered SVG directly in a browser and it is interactive with no page around it: arrows select in outline
 order, Enter zooms, `f` steps a state, `s` starts and cycles scenarios, brackets step, digits switch views, Escape
 resets the camera, a click steps an entity through the author's states and shift+click steps back. The README's
-[checkout.svg](../checkout.svg) is one. For a page of your own, `orrery embed` writes the diagram, the engine and a
-sample page that builds controls from the engine's interface: open, zoom, back, next, prev, set, play.
+[checkout.svg](../checkout.svg) is one, and [checkout-sequence.svg](../checkout-sequence.svg) is its sequence view,
+rendered on its own with `--view checkout-seq`: a sequence is its own drawing, so it is its own file, the brackets
+stepping its messages. For a page of your own, `orrery embed` writes the diagram, one file per sequence view, the
+engine and a sample page that builds controls from the engine's interface: open, zoom, back, next, prev, set, play.

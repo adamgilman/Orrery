@@ -6,7 +6,7 @@ import { CSS_COLOR } from "./looks.js";
 import { loadPack, packNames, type Pack } from "./packs.js";
 import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
 import { configurationsOf, openOrder } from "./view.js";
-import type { Callout, Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
+import type { Callout, Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Message, ViewType, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
   constructor(public readonly pointer: string, message: string) { super(message); }
@@ -69,7 +69,7 @@ interface Raw {
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
-  views?: { id: string; title?: string; description?: string; type: "topology"; direction?: Direction; scope?: string; only?: string[]; play?: { scenario: string; seconds: number }; collapse?: string[] }[];
+  views?: { id: string; title?: string; description?: string; type: ViewType; direction?: Direction; scope?: string; only?: string[]; play?: { scenario?: string; seconds: number }; collapse?: string[]; messages?: { from: string; to: string; text?: string; kind?: string; reply?: boolean }[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; callouts?: Callout[]; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
   tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; callouts?: Callout[]; note?: string; seconds?: number }[] };
   exports?: { id: string; heading?: boolean | HeadingAlign; callouts?: Callout[]; view?: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; play?: string; seconds?: number; tour?: boolean }[];
@@ -257,13 +257,31 @@ export function validate(input: unknown): ValidationResult {
       if (!isEntity(id)) return err(`/views/${i}/only/${k}`, `unknown entity "${id}"`);
       if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/only/${k}`, `"${id}" is not inside scope "${v.scope}"`);
     });
-    if (v.play && !raw.scenarios.some((sc) => sc.id === v.play!.scenario)) err(`/views/${i}/play/scenario`, `unknown scenario "${v.play.scenario}"`);
+    const sequence = v.type === "sequence";
+    if (sequence) {
+      for (const f of ["collapse", "scope", "only", "direction"] as const) if (v[f] !== undefined) err(`/views/${i}/${f}`, "not for a sequence view: it draws its messages, not the topology");
+      if (v.play?.scenario !== undefined) err(`/views/${i}/play/scenario`, "a sequence view plays its messages; give seconds only");
+      if (!v.messages) err(`/views/${i}/messages`, "a sequence view needs messages");
+    } else {
+      if (v.messages !== undefined) err(`/views/${i}/messages`, "only a sequence view has messages; set type to sequence");
+      if (v.play && v.play.scenario === undefined) err(`/views/${i}/play/scenario`, "a topology view plays a scenario; name one");
+      if (v.play?.scenario !== undefined && !raw.scenarios.some((sc) => sc.id === v.play!.scenario)) err(`/views/${i}/play/scenario`, `unknown scenario "${v.play.scenario}"`);
+    }
+    // a message runs over a declared connection (R17); its line is that connection's kind unless it says otherwise
+    const messages: Message[] | undefined = sequence ? (v.messages ?? []).map((x, k) => {
+      const base = `/views/${i}/messages/${k}`;
+      for (const end of ["from", "to"] as const) if (!isEntity(x[end])) err(`${base}/${end}`, `unknown entity "${x[end]}"`);
+      const over = x.from === x.to ? undefined : raw.connections.find((c) => (c.from === x.from && c.to === x.to) || (c.from === x.to && c.to === x.from));
+      if (x.from !== x.to && !over && isEntity(x.from) && isEntity(x.to)) err(base, `no connection between "${x.from}" and "${x.to}"; connections: ${raw.connections.map((c) => `${c.from}->${c.to}`).join(", ") || "none"}`);
+      if (x.kind !== undefined && !connectionKindOk(x.kind)) err(`${base}/kind`, `unknown connection kind "${x.kind}"; known: ${Object.keys(kinds.connections).join(", ")}`);
+      return { from: x.from, to: x.to, ...opt("text", x.text), kind: x.kind ?? over?.kind ?? "sync", reply: x.reply ?? false };
+    }) : undefined;
     v.collapse?.forEach((id, k) => {
       if (componentIds.has(id)) return err(`/views/${i}/collapse/${k}`, `"${id}" is not a group`);
       if (!groupIds.has(id)) return err(`/views/${i}/collapse/${k}`, `unknown group "${id}"`);
       if (v.scope !== undefined && groupIds.has(v.scope) && id !== v.scope && !ancestors(id).includes(v.scope)) err(`/views/${i}/collapse/${k}`, `"${id}" is not inside scope "${v.scope}"`);
     });
-    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("description", v.description), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play), ...opt("collapse", v.collapse) };
+    return { id: v.id, type: v.type, direction: v.direction ?? raw.direction, ...opt("title", v.title), ...opt("description", v.description), ...opt("scope", v.scope), ...opt("only", v.only), ...opt("play", v.play), ...opt("collapse", v.collapse), ...opt("messages", messages) };
   });
 
   /* scenarios */

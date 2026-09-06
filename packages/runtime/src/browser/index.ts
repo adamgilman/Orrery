@@ -25,6 +25,8 @@ export interface Snapshot {
   /** What the camera is closed on, or null for the whole picture. */
   zoom: string | null;
   scenario: { id: string; step: number; steps: number; note?: string } | null;
+  /** On a sequence view: how many of its messages are shown, and how many there are (R17). */
+  message: { index: number; count: number } | null;
   /** Every entity, as drawn. */
   states: Record<string, { state: string; reason?: string }>;
   selected: string | null;
@@ -138,6 +140,15 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const elOf = (id: string, type: EntityType) => active().querySelector<SVGGElement>(type === "node" ? `[data-node="${id}"]:not([data-ghost])` : `[data-group="${id}"]`);
   const typeOf = (id: string): EntityType => (model.groups.some((g) => g.id === id) ? "group" : "node");
 
+  /* ---- sequence views: the messages of the active layer, revealed so far (R17) ---- */
+  const isSequence = () => model.views.find((v) => v.id === activeId())?.type === "sequence";
+  const messagesOf = () => [...active().querySelectorAll<SVGGElement>(".message")];
+  let revealed: number | null = null;
+  const showMessages = (n: number | null) => { revealed = n; messagesOf().forEach((m, i) => (m.style.display = n === null || i < n ? "" : "none")); };
+  const setMessage = (n: number, byPlayer = false) => { if (!byPlayer) stop(); showMessages(Math.min(Math.max(n, 0), messagesOf().length)); emit(); };
+  // the file reveals messages with CSS; the runtime does it itself
+  for (const layer of layers.values()) for (const m of layer.querySelectorAll<SVGGElement>(".message")) { m.removeAttribute("style"); m.removeAttribute("data-t0"); }
+
   /* ---- the snapshot, and telling the page ---- */
   let lastEffective = session.effective();
   const snapshot = (): Snapshot => {
@@ -148,6 +159,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     return {
       view: activeId(), open: [...openSet], zoom: zoomId,
       scenario: sc ? { id: sc.id, step: sc.step, steps: session.stepCount(), ...(note ? { note } : {}) } : null,
+      message: isSequence() ? { index: revealed ?? messagesOf().length, count: messagesOf().length } : null,
       states, selected: selected?.id ?? null, playing,
     };
   };
@@ -233,12 +245,13 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const stop = () => {
     const was = playing;
     playing = false; sceneNote = undefined;
-    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; }
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; if (isSequence() && revealed !== null) showMessages(null); } // a stopped sequence is the still: every message
     if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; }
     if (was) emit();
   };
   const playTour = () => {
-    const tour = model.tour!;
+    const tour = { scenes: model.tour!.scenes.filter((sc) => layers.has(layerKey(sc.view, ""))) }; // a sequence scene lives in its own file
+    if (!tour.scenes.length) return;
     playing = true;
     const scene = (k: number) => {
       const sc = tour.scenes[k]!;
@@ -255,21 +268,27 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   };
   const playScenario = () => {
     const play = model.views.find((v) => v.id === activeId())?.play;
-    if (!play) return;
+    if (!play?.scenario) return;
     const n = model.scenarios.find((s) => s.id === play.scenario)?.steps.length ?? 0;
     if (!n) return;
     playing = true;
     let k = 0;
     setScenario(null, 1, true);
-    autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario, k, true); }, play.seconds * 1000);
+    autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario!, k, true); }, play.seconds * 1000);
   };
-  const play = () => { stop(); if (model.tour) playTour(); else playScenario(); };
+  const playMessages = () => {
+    const seconds = model.views.find((v) => v.id === activeId())?.play?.seconds ?? 1;
+    playing = true;
+    showMessages(0);
+    autoplayTimer = setInterval(() => { const n = (revealed ?? 0) + 1; showMessages(n > messagesOf().length ? 0 : n); emit(); }, seconds * 1000);
+  };
+  const play = () => { stop(); if (model.tour) playTour(); else if (isSequence()) playMessages(); else playScenario(); };
 
   /* ---- what the interface does ---- */
   const setState = (id: string, state: string) => { stop(); session.set(id, state); apply(); };
   const cycle = (id: string, by = 1) => { stop(); session.cycle(id, by); apply(); };
   const setScenario = (id: string | null, step = 1, byPlayer = false) => { if (!byPlayer) stop(); session.setScenario(id, step); apply(); };
-  const reset = () => { stop(); session.reset(); select(null); if (openSet.length) openTo([], () => { fit(true); apply(); }); else { apply(); fit(true); } };
+  const reset = () => { stop(); session.reset(); select(null); if (isSequence()) showMessages(null); if (openSet.length) openTo([], () => { fit(true); apply(); }); else { apply(); fit(true); } };
 
   /** Opening and closing (R11): the layer with exactly that set of open groups shows, by a morph; the camera keeps its zoom if the target is still drawn, else fits. */
   const openTo = (target: string[], after: () => void, byPlayer = false) => {
@@ -349,7 +368,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     const key = layerKey(id, "");
     if (!layers.has(key) || key === activeKey) return;
     if (!byPlayer) stop();
-    openSet = []; zoomId = null;
+    openSet = []; zoomId = null; revealed = null;
     morphTo(key, () => { fit(true); apply(); if (!byPlayer) playScenario(); });
   };
 
@@ -402,6 +421,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       const i = session.scenario ? model.scenarios.findIndex((sc) => sc.id === session.scenario!.id) + 1 : 0;
       setScenario(model.scenarios[i]?.id ?? null, 1);
     }
+    else if (k === "[" && isSequence()) setMessage((revealed ?? messagesOf().length) - 1);
+    else if (k === "]" && isSequence()) setMessage((revealed ?? messagesOf().length) + 1);
     else if (k === "[" && session.scenario) setScenario(session.scenario.id, session.scenario.step - 1);
     else if (k === "]" && session.scenario) setScenario(session.scenario.id, session.scenario.step + 1);
     else if (/^[1-9]$/.test(k)) { const id = viewIds[Number(k) - 1]; if (id) showView(id); }
@@ -420,8 +441,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     open, zoom,
     back: () => { stop(); return back(); },
     setScenario: (id, step) => setScenario(id, step),
-    next: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step + 1); },
-    prev: () => { if (session.scenario) setScenario(session.scenario.id, session.scenario.step - 1); },
+    next: () => { if (isSequence()) setMessage((revealed ?? messagesOf().length) + 1); else if (session.scenario) setScenario(session.scenario.id, session.scenario.step + 1); },
+    prev: () => { if (isSequence()) setMessage((revealed ?? messagesOf().length) - 1); else if (session.scenario) setScenario(session.scenario.id, session.scenario.step - 1); },
     setState, cycle, reset,
     select: (id) => { select(id, id ? typeOf(id) : "node"); emit(); },
     zoomTo: (id) => zoom(id),

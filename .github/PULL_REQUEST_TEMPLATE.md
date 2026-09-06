@@ -1,3 +1,5 @@
+<!-- The orrery-pr skill (.claude/skills/orrery-pr/SKILL.md) writes this body: what, why, the model change with its invariant and JSON, the pictures embedded as SVG files from the branch, tests, docs, the ratchet's verdict. -->
+
 ## What
 
 <!-- One or two sentences: what changes for someone using Orrery. -->

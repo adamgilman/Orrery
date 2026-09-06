@@ -660,6 +660,80 @@
         "scenario": "invalid-model",
         "seconds": 3
       }
+    },
+    {
+      "id": "render-seq",
+      "type": "sequence",
+      "title": "One render, as a sequence",
+      "description": "What happens between the file and the picture when the agent runs orrery render.",
+      "messages": [
+        {
+          "from": "agent",
+          "to": "model",
+          "text": "writes app.orrery.json"
+        },
+        {
+          "from": "model",
+          "to": "render",
+          "text": "orrery render"
+        },
+        {
+          "from": "render",
+          "to": "validator",
+          "text": "the file"
+        },
+        {
+          "from": "validator",
+          "to": "render",
+          "text": "OK, or pointers",
+          "reply": true
+        },
+        {
+          "from": "validator",
+          "to": "declare",
+          "text": "the model"
+        },
+        {
+          "from": "declare",
+          "to": "scope",
+          "text": "states, reasons, loads folded"
+        },
+        {
+          "from": "scope",
+          "to": "elk",
+          "text": "layout graph"
+        },
+        {
+          "from": "elk",
+          "to": "scope",
+          "text": "boxes and routes",
+          "reply": true
+        },
+        {
+          "from": "scope",
+          "to": "renderer",
+          "text": "laid out"
+        },
+        {
+          "from": "renderer",
+          "to": "renderer",
+          "text": "CSS tracks"
+        },
+        {
+          "from": "renderer",
+          "to": "scene",
+          "text": "SVG",
+          "kind": "dataflow"
+        },
+        {
+          "from": "scene",
+          "to": "readme",
+          "text": "img tag"
+        }
+      ],
+      "play": {
+        "seconds": 1
+      }
     }
   ],
   "scenarios": [
@@ -929,6 +1003,10 @@
     {
       "id": "tour",
       "tour": true
+    },
+    {
+      "id": "sequence",
+      "view": "render-seq"
     }
   ]
 }

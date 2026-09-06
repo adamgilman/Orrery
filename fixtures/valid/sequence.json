@@ -1,0 +1,31 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "Checkout",
+  "groups": [{ "id": "data", "label": "Data" }, { "id": "sessions", "label": "Session cache", "kind": "cluster", "parent": "data" }],
+  "components": [
+    { "id": "web", "label": "Storefront", "kind": "client" },
+    { "id": "api", "label": "Checkout API" },
+    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" },
+    { "id": "redis", "label": "Redis", "kind": "cache", "group": "sessions" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.8 },
+    { "from": "api", "to": "db", "load": 0.6 },
+    { "from": "api", "to": "sessions", "kind": "async", "load": 0.5 }
+  ],
+  "scenarios": [{ "id": "db-fails", "steps": [{ "note": "Orders DB goes down", "set": { "failed": "db", "degraded": { "api": "writes queue" } } }] }],
+  "views": [
+    { "id": "overview", "collapse": ["sessions"] },
+    { "id": "checkout", "type": "sequence", "title": "A customer checks out", "description": "The happy path, then the cache is told.", "messages": [
+      { "from": "web", "to": "api", "text": "POST /checkout" },
+      { "from": "api", "to": "db", "text": "insert order" },
+      { "from": "db", "to": "api", "text": "ok", "reply": true },
+      { "from": "api", "to": "sessions", "text": "clear cart" },
+      { "from": "api", "to": "api", "text": "audit" },
+      { "from": "api", "to": "web", "text": "201 Created", "reply": true }
+    ], "play": { "seconds": 1 } },
+    { "id": "lookup", "type": "sequence", "title": "A cart lookup", "messages": [{ "from": "web", "to": "api", "text": "GET /cart" }, { "from": "api", "to": "web", "text": "200", "reply": true }] }
+  ],
+  "callouts": [{ "at": "db", "text": "The only write" }],
+  "exports": [{ "id": "checkout", "view": "checkout" }, { "id": "checkout-failed", "view": "checkout", "scenario": "db-fails", "step": 1 }, { "id": "lookup", "view": "lookup", "heading": true }]
+}

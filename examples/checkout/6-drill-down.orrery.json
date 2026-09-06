@@ -208,6 +208,46 @@
       "collapse": [
         "sessions"
       ]
+    },
+    {
+      "id": "checkout-seq",
+      "type": "sequence",
+      "title": "A customer checks out",
+      "description": "The happy path: the storefront calls the API, the API writes the order and clears the session.",
+      "messages": [
+        {
+          "from": "web",
+          "to": "api",
+          "text": "POST /checkout"
+        },
+        {
+          "from": "api",
+          "to": "sessions",
+          "text": "read cart"
+        },
+        {
+          "from": "api",
+          "to": "db",
+          "text": "insert order"
+        },
+        {
+          "from": "db",
+          "to": "api",
+          "text": "ok",
+          "reply": true
+        },
+        {
+          "from": "api",
+          "to": "sessions",
+          "text": "clear cart"
+        },
+        {
+          "from": "api",
+          "to": "web",
+          "text": "201 Created",
+          "reply": true
+        }
+      ]
     }
   ],
   "tour": {

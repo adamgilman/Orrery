@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2821 656" width="2821" height="656" data-orrery="1">
+<title>One render, as a sequence</title>
+<style>.group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
+.group-label{font:700 11px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;letter-spacing:.1em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:3px;stroke-linejoin:round}
+.group-label.centred{text-anchor:middle}
+.group[data-collapsed] .group-box{fill-opacity:.7}
+.summary-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.node-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
+.node-tech{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.badge{font:600 12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
+.node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
+.glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.glyph-text{font:600 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#475569;text-anchor:middle;dominant-baseline:central}
+.edge{fill:none;stroke:#94a3b8;stroke-width:1.5}
+.flow{fill:none;stroke:#2563eb;stroke-linecap:round;stroke-dasharray:6 10;animation:orrery-flow 1s linear infinite}
+.edge-label{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+.legend text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;dominant-baseline:central}.legend .legend-name{font-weight:600;fill:#0f172a}
+.step-note{font:500 13px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.callout-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
+.callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
+.callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
+.heading-back{fill:#ffffff}
+.heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
+.heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
+.heading-title.centred,.heading-text.centred{text-anchor:middle}
+@keyframes orrery-flow{to{stroke-dashoffset:-16}}
+@keyframes orrery-pulse{0%{stroke-opacity:1}50%{stroke-opacity:0.4}100%{stroke-opacity:1}}
+.kind-external .node-box{stroke-dasharray:5 4;fill:#f8fafc}
+.kind-command .node-box{fill:#f8fafc;stroke:#475569}
+.kind-word .node-box{stroke-dasharray:5 4}
+.gk-region .group-box{stroke-dasharray:8 6}
+.gk-zone .group-box{stroke-dasharray:3 5}
+.gk-cluster .group-box{stroke:#94a3b8}
+.gk-boundary .group-box{stroke:#dc2626;fill-opacity:0;stroke-dasharray:8 6}
+.gk-aws\:cloud .group-box{stroke:#232f3e}
+.gk-aws\:account .group-box{stroke:#e7157b}
+.gk-aws\:region .group-box{stroke:#00a4a6;stroke-dasharray:8 6}
+.gk-aws\:availability-zone .group-box{stroke:#00a4a6;stroke-dasharray:3 5}
+.gk-aws\:vpc .group-box{stroke:#8c4fff;stroke-dasharray:8 6}
+.gk-aws\:public-subnet .group-box{stroke:#7aa116;fill:#f2f6e8}
+.gk-aws\:private-subnet .group-box{stroke:#00a4a6;fill:#e6f6f7}
+.gk-aws\:security-group .group-box{stroke:#dd344c;stroke-dasharray:8 6}
+.gk-aws\:auto-scaling-group .group-box{stroke:#ed7100;stroke-dasharray:8 6}
+.gk-aws\:on-premises .group-box{stroke:#5a6b86;stroke-dasharray:8 6}
+.gk-gcp\:project .group-box{stroke:#4285f4}
+.gk-gcp\:region .group-box{stroke:#4285f4;stroke-dasharray:8 6}
+.gk-gcp\:zone .group-box{stroke:#4285f4;stroke-dasharray:3 5}
+.gk-gcp\:vpc .group-box{stroke:#34a853;stroke-dasharray:8 6}
+.gk-gcp\:subnet .group-box{stroke:#34a853;fill:#e6f4ea}
+.gk-gcp\:cluster .group-box{stroke:#4285f4;fill:#e8f0fe}
+.gk-gcp\:on-premises .group-box{stroke:#5f6368;stroke-dasharray:8 6}
+.gk-azure\:subscription .group-box{stroke:#0078d4}
+.gk-azure\:resource-group .group-box{stroke:#0078d4;stroke-dasharray:8 6}
+.gk-azure\:region .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:availability-zone .group-box{stroke:#0078d4;stroke-dasharray:3 5}
+.gk-azure\:vnet .group-box{stroke:#008272;stroke-dasharray:8 6}
+.gk-azure\:subnet .group-box{stroke:#008272;fill:#e5f4f2}
+.gk-azure\:on-premises .group-box{stroke:#5c5c5c;stroke-dasharray:8 6}
+.gk-documents .group-box{stroke:#94a3b8;fill:#f1f5f9;fill-opacity:0.6;stroke-dasharray:8 6}
+.gk-sets .group-box{stroke:#94a3b8;stroke-dasharray:3 5}
+.edge-async{stroke-dasharray:6 5}
+.edge-replication{stroke-dasharray:2 4}
+.edge-dataflow{stroke-width:3}
+.edge-reads{stroke:#0891b2;stroke-dasharray:2 3}
+.edge-inlined{stroke:#7c3aed;stroke-width:2.5}
+.edge-builds{stroke-dasharray:2 4}
+.st-impaired .node-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .group-box{stroke:#d97706;stroke-width:2;fill:#fffbeb}
+.st-impaired .node-label{fill:#92400e}
+.st-impaired .group-label{fill:#92400e}
+.st-brownout .node-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .group-box{stroke:#7c3aed;stroke-width:2;fill:#f5f3ff;animation:orrery-pulse 1.2s linear infinite}
+.st-brownout .node-label{fill:#5b21b6}
+.st-brownout .group-label{fill:#5b21b6}
+.st-outage .node-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .group-box{stroke:#dc2626;stroke-width:2;fill:#fef2f2;animation:orrery-pulse 1.2s linear infinite}
+.st-outage .node-label{fill:#991b1b}
+.st-outage .group-label{fill:#991b1b}
+.st-drained .node-box{stroke-dasharray:4 4}
+.st-drained .group-box{stroke-dasharray:4 4}
+.st-drained{opacity:0.45}
+.st-planned .node-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .group-box{stroke:#94a3b8;stroke-width:2;fill:#f8fafc;stroke-dasharray:4 4}
+.st-planned .node-label{fill:#64748b}
+.st-planned .group-label{fill:#64748b}
+.st-planned{opacity:0.7}
+.st-retired .node-box{stroke-dasharray:4 4}
+.st-retired .group-box{stroke-dasharray:4 4}
+.st-retired{opacity:0.45}
+.lifeline{fill:none;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:4 4}
+.activation{fill:#e2e8f0;stroke:#94a3b8;stroke-width:1}
+.message.reply .edge{stroke-dasharray:6 5}
+@keyframes orrery-message-0{0%{visibility:hidden}7.7%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-1{0%{visibility:hidden}15.4%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-2{0%{visibility:hidden}23.1%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-3{0%{visibility:hidden}30.8%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-4{0%{visibility:hidden}38.5%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-5{0%{visibility:hidden}46.2%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-6{0%{visibility:hidden}53.8%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-7{0%{visibility:hidden}61.5%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-8{0%{visibility:hidden}69.2%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-9{0%{visibility:hidden}76.9%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-10{0%{visibility:hidden}84.6%{visibility:visible}100%{visibility:visible}}
+@keyframes orrery-message-11{0%{visibility:hidden}92.3%{visibility:visible}100%{visibility:visible}}</style>
+<defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<g class="scene">
+<g class="view" data-view="render-seq" data-open="" data-title="One render, as a sequence" data-size="2821 656">
+<g class="lifelines">
+<path class="lifeline" data-lifeline="agent" d="M100 106 V598"/>
+<path class="lifeline" data-lifeline="model" d="M431.6 106 V598"/>
+<path class="lifeline" data-lifeline="render" d="M687.8 106 V598"/>
+<path class="lifeline" data-lifeline="validator" d="M961 106 V598"/>
+<path class="lifeline" data-lifeline="declare" d="M1238.3 106 V598"/>
+<path class="lifeline" data-lifeline="scope" d="M1655.2 106 V598"/>
+<path class="lifeline" data-lifeline="elk" d="M1956.4 106 V598"/>
+<path class="lifeline" data-lifeline="renderer" d="M2173.4 106 V598"/>
+<path class="lifeline" data-lifeline="scene" d="M2455.2 106 V598"/>
+<path class="lifeline" data-lifeline="readme" d="M2719.2 106 V598"/>
+</g>
+<g class="activations">
+<rect class="activation" x="427.6" y="166" width="8" height="432"/>
+<rect class="activation" x="683.8" y="202" width="8" height="396"/>
+<rect class="activation" x="957" y="238" width="8" height="36"/>
+<rect class="activation" x="1234.3" y="310" width="8" height="288"/>
+<rect class="activation" x="1651.2" y="346" width="8" height="252"/>
+<rect class="activation" x="1952.4" y="382" width="8" height="36"/>
+<rect class="activation" x="2169.4" y="454" width="8" height="144"/>
+<rect class="activation" x="2451.2" y="526" width="8" height="72"/>
+<rect class="activation" x="2715.2" y="562" width="8" height="36"/>
+</g>
+<g class="nodes">
+<g class="node kind-client st-healthy" data-node="agent" data-kind="client" data-state="healthy" data-bbox="20 44 160 62" transform="translate(20 44)">
+<rect class="node-box" width="160" height="62" rx="31"/>
+<g class="glyph" transform="translate(18 23)"><rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14.5h6M8 11.5v3"/></g>
+<text class="node-label" x="98" y="23">Coding agent</text>
+<text class="node-tech" x="98" y="41">or a person</text>
+</g>
+<g class="node kind-file st-healthy" data-node="model" data-kind="file" data-state="healthy" data-bbox="346.6 28 170 78" transform="translate(346.6 28)">
+<path class="node-box" d="M0 0H170V65.5Q127.5 54.6 85 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="103" y="31">app.orrery.json</text>
+<text class="node-tech" x="103" y="49">one file</text>
+</g>
+<g class="node kind-command st-healthy" data-node="render" data-kind="command" data-state="healthy" data-bbox="624.8 58 126 48" transform="translate(624.8 58)">
+<path class="node-box" d="M0 0H103.3L126 24 103.3 48H0Z"/>
+<g class="glyph" transform="translate(24 16)"><text class="glyph-text" x="8" y="8.5">λ</text></g>
+<text class="node-label" x="81" y="24">render</text>
+</g>
+<g class="node kind-stage st-healthy" data-node="validator" data-kind="stage" data-state="healthy" data-bbox="872 44 178 62" transform="translate(872 44)">
+<path class="node-box" d="M0 0H151.3L178 31 151.3 62H0L26.7 31Z"/>
+<text class="node-label" x="89" y="23">Validate</text>
+<text class="node-tech" x="89" y="41">schema + pointers</text>
+</g>
+<g class="node kind-stage st-healthy" data-node="declare" data-kind="stage" data-state="healthy" data-bbox="1132.3 44 212 62" transform="translate(1132.3 44)">
+<path class="node-box" d="M0 0H180.2L212 31 180.2 62H0L31.8 31Z"/>
+<text class="node-label" x="106" y="23">Declare</text>
+<text class="node-tech" x="106" y="41">states, reasons, loads</text>
+</g>
+<g class="node kind-stage st-healthy" data-node="scope" data-kind="stage" data-state="healthy" data-bbox="1556.2 44 198 62" transform="translate(1556.2 44)">
+<path class="node-box" d="M0 0H168.3L198 31 168.3 62H0L29.7 31Z"/>
+<text class="node-label" x="99" y="23">Scope</text>
+<text class="node-tech" x="99" y="41">views, closed groups</text>
+</g>
+<g class="node kind-engine st-healthy" data-node="elk" data-kind="engine" data-state="healthy" data-bbox="1881.9 44 149 62" transform="translate(1881.9 44)">
+<path class="node-box" d="M22.4 0H126.7L149 31 126.7 62H22.4L0 31Z"/>
+<g class="glyph" transform="translate(28 23)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<text class="node-label" x="92.5" y="23">ELK</text>
+<text class="node-tech" x="92.5" y="41">elkjs 0.9</text>
+</g>
+<g class="node kind-stage st-healthy" data-node="renderer" data-kind="stage" data-state="healthy" data-bbox="2110.9 44 125 62" transform="translate(2110.9 44)">
+<path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
+<text class="node-label" x="62.5" y="23">Render</text>
+<text class="node-tech" x="62.5" y="41">SVG + CSS</text>
+</g>
+<g class="node kind-file st-healthy" data-node="scene" data-kind="file" data-state="healthy" data-bbox="2352.7 28 205 78" transform="translate(2352.7 28)">
+<g class="replicas"><g transform="translate(6 -6)"><path class="replica-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/></g><g transform="translate(3 -3)"><path class="replica-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/></g></g>
+<path class="node-box" d="M0 0H205V65.5Q153.8 54.6 102.5 65.5T0 65.5Z"/>
+<g class="glyph" transform="translate(12 31)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
+<text class="node-label" x="110.5" y="31">Scene SVGs</text>
+<text class="node-tech" x="110.5" y="49">CSS animation only</text>
+<text class="badge" x="197" y="20">×3</text>
+</g>
+<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="2637.7 20 163 86" transform="translate(2637.7 20)">
+<path class="node-box" d="M32.6 86A32.6 17.2 0 0 1 16.3 53.3A35.9 18.9 0 0 1 61.9 22.4A40.8 21.5 0 0 1 117.4 18.9A32.6 17.2 0 0 1 153.2 48.2A29.3 15.5 0 0 1 136.9 86Z"/>
+<text class="node-label" x="81.5" y="35">GitHub README</text>
+<text class="node-tech" x="81.5" y="53">an img tag</text>
+</g>
+</g>
+<g class="messages">
+<g class="message" data-message="0" data-t0="0" style="animation:orrery-message-0 13s step-end infinite"><path class="edge edge-sync" d="M100 166 L427.6 166" marker-end="url(#arrow)"/><text class="edge-label" x="263.8" y="158">writes app.orrery.json</text></g>
+<g class="message" data-message="1" data-t0="0" style="animation:orrery-message-1 13s step-end infinite"><path class="edge edge-sync" d="M435.6 202 L683.8 202" marker-end="url(#arrow)"/><text class="edge-label" x="559.7" y="194">orrery render</text></g>
+<g class="message" data-message="2" data-t0="0" style="animation:orrery-message-2 13s step-end infinite"><path class="edge edge-sync" d="M691.8 238 L957 238" marker-end="url(#arrow)"/><text class="edge-label" x="824.4" y="230">the file</text></g>
+<g class="message reply" data-message="3" data-t0="0" style="animation:orrery-message-3 13s step-end infinite"><path class="edge edge-sync" d="M957 274 L691.8 274" marker-end="url(#arrow)"/><text class="edge-label" x="824.4" y="266">OK, or pointers</text></g>
+<g class="message" data-message="4" data-t0="0" style="animation:orrery-message-4 13s step-end infinite"><path class="edge edge-sync" d="M961 310 L1234.3 310" marker-end="url(#arrow)"/><text class="edge-label" x="1097.7" y="302">the model</text></g>
+<g class="message" data-message="5" data-t0="0" style="animation:orrery-message-5 13s step-end infinite"><path class="edge edge-sync" d="M1242.3 346 L1651.2 346" marker-end="url(#arrow)"/><text class="edge-label" x="1446.8" y="338">states, reasons, loads folded</text></g>
+<g class="message" data-message="6" data-t0="0" style="animation:orrery-message-6 13s step-end infinite"><path class="edge edge-sync" d="M1659.2 382 L1952.4 382" marker-end="url(#arrow)"/><text class="edge-label" x="1805.8" y="374">layout graph</text></g>
+<g class="message reply" data-message="7" data-t0="0" style="animation:orrery-message-7 13s step-end infinite"><path class="edge edge-sync" d="M1952.4 418 L1659.2 418" marker-end="url(#arrow)"/><text class="edge-label" x="1805.8" y="410">boxes and routes</text></g>
+<g class="message" data-message="8" data-t0="0" style="animation:orrery-message-8 13s step-end infinite"><path class="edge edge-sync" d="M1659.2 454 L2169.4 454" marker-end="url(#arrow)"/><text class="edge-label" x="1914.3" y="446">laid out</text></g>
+<g class="message" data-message="9" data-t0="0" style="animation:orrery-message-9 13s step-end infinite"><path class="edge edge-sync" d="M2177.4 490 h28 v20 h-28" marker-end="url(#arrow)"/><text class="edge-label" style="text-anchor:start" x="2211.4" y="500">CSS tracks</text></g>
+<g class="message" data-message="10" data-t0="0" style="animation:orrery-message-10 13s step-end infinite"><path class="edge edge-dataflow" d="M2177.4 526 L2451.2 526" marker-end="url(#arrow)"/><text class="edge-label" x="2314.3" y="518">SVG</text></g>
+<g class="message" data-message="11" data-t0="0" style="animation:orrery-message-11 13s step-end infinite"><path class="edge edge-sync" d="M2459.2 562 L2715.2 562" marker-end="url(#arrow)"/><text class="edge-label" x="2587.2" y="554">img tag</text></g>
+</g>
+<g class="callouts">
+<g class="callout" data-callout="model"><path class="callout-leader" d="M431.6 0 L431.6 28" marker-end="url(#arrow)"/><rect class="callout-box" x="337.1" y="-69" width="189" height="69" rx="4"/><text class="callout-text" x="347.1" y="-52"><tspan x="347.1" dy="0">One file: the model, its</tspan><tspan x="347.1" dy="17">views, scenarios, tour and</tspan><tspan x="347.1" dy="17">exports</tspan></text></g>
+</g>
+<g class="legend" transform="translate(20 634)">
+<g transform="translate(0 0)"><rect y="1" width="12" height="12" rx="3" style="fill:#f8fafc;stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:4 4;opacity:0.7"/><text x="20" y="7"><tspan class="legend-name">planned</tspan>: On the roadmap, not built</text></g>
+</g>
+</g>
+</g>
+</svg>

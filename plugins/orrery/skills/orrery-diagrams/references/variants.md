@@ -198,6 +198,42 @@ nothing is dropped silently. A view may carry a `title` and `description` for th
 }
 ```
 
+## Sequence views: one interaction, drawn on lifelines
+
+A view with `type: "sequence"` is the other drawing of the same model: its `messages`, in order, between entities
+the model already has (components or groups), over connections it already declares in either direction. A message
+with no connection under it is an error naming the connections that exist; a self-message (`from` = `to`) needs
+none. `text` is the label; `kind` names a connection kind for the line and defaults to the connection's own;
+`reply: true` draws the dashed return and closes the activation its call opened. `play` takes `seconds` alone and
+reveals one message per period. `scope`, `only`, `collapse` and `direction` are errors on a sequence view. A model
+may carry as many sequence views as it has stories, each with its own `title` and `description`. A sequence is its
+own drawing and its own file: `orrery render --view <id>` writes it, `embed` writes one file per sequence, and an
+export names it as any view (a scenario step colours the participants as the topology would).
+
+```json
+{
+  "components": [
+    { "id": "web", "label": "Storefront", "kind": "client" },
+    { "id": "api", "label": "Checkout API" },
+    { "id": "db", "label": "Orders DB", "kind": "database" }
+  ],
+  "connections": [{ "from": "web", "to": "api" }, { "from": "api", "to": "db" }],
+  "views": [
+    { "id": "overview" },
+    { "id": "checkout", "type": "sequence", "title": "A customer checks out", "description": "The happy path.",
+      "messages": [
+        { "from": "web", "to": "api", "text": "POST /checkout" },
+        { "from": "api", "to": "db", "text": "insert order" },
+        { "from": "db", "to": "api", "text": "ok", "reply": true },
+        { "from": "api", "to": "api", "text": "audit" },
+        { "from": "api", "to": "web", "text": "201 Created", "kind": "sync", "reply": true }
+      ],
+      "play": { "seconds": 1 } }
+  ],
+  "exports": [{ "id": "checkout-sequence", "view": "checkout" }]
+}
+```
+
 ## Scenarios: steps, reasons, loads, callouts
 
 Steps are cumulative. `set` puts entities in states: an id, a list, or ids with reasons (a reason is the tooltip).

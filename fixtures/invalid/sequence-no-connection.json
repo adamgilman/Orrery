@@ -1,0 +1,1 @@
+{ "components": [{ "id": "a" }, { "id": "b" }, { "id": "c" }], "connections": [{ "from": "a", "to": "b" }], "views": [{ "id": "s", "type": "sequence", "messages": [{ "from": "a", "to": "b" }, { "from": "b", "to": "c", "text": "no line" }, { "from": "a", "to": "zzz" }, { "from": "a", "to": "b", "kind": "grpc" }] }] }

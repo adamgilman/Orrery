@@ -14,6 +14,9 @@ with `node tools/bench-model.mjs`, delete `baseline.json` so CI measures afresh,
 - **Every push to main** measures again, writes `min(baseline, measured)` for every metric, and commits the file
   back to main as `github-actions[bot]` through a deploy key the branch ruleset lets through. A gain is kept the
   moment it lands; the baseline can only go down, and `git log test/perf/baseline.json` is the record.
+- **Growth a change means** is declared, not smuggled: a line `perf-accept: runtime.bytes, document.bytes` in the pull
+  request body, with the reason beside it. Those metrics show as accepted growth instead of failing, and when the
+  pull request merges the ratchet resets them to what was measured. Everything else still may only improve.
 
 Locally, `yarn perf` prints the same table with looser slack, since a laptop is not the runner. It runs alone,
 after the suite, in `yarn check` and in the CI test job: timings measured beside other test workers are not timings

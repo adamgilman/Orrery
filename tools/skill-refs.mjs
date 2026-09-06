@@ -25,6 +25,7 @@ const stageNotes = {
   "4-scenarios": "A scenario is cumulative steps. This one fails the primary, degrades two components with reasons, moves the failover load, and points at the replica with a callout. Two exports: a still of step 1, and the scenario playing on a loop.",
   "5-views": "One model, two drawings: the overview, and the data tier scoped and laid out downwards. What lies outside a scoped view is a ghost.",
   "6-drill-down": "Closed groups nest. The tour opens the cache, opens both nodes, zooms into node A, fails Redis, zooms out, closes everything: one drawing that moves.",
+  "8-sequence": "A sequence view: the messages of one request, in order, over connections the model already declares (a message with no connection under it is an error). Each participant is its own box on a lifeline, in its state; `reply: true` is the dashed return; `play.seconds` reveals one message per period. A sequence is its own drawing and its own file: `orrery render --view checkout-seq`.",
   "7-vocabulary": "The author's own states, replacing the defaults, each bound to a look; a custom line style. Nothing in the tool reads a name.",
 };
 const examples = stages.map((f) => {

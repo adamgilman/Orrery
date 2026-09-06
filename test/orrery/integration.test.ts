@@ -69,7 +69,7 @@ describe("integration: the interactive file, driven by the engine", () => {
     document.body.innerHTML = ""; document.body.appendChild(root);
     rt = mount(root, { size: { width: 1600, height: 900 } });
     rt.stop();
-    expect(rt.views.map((v) => v.id)).toEqual(["overview", "core", "author", "out"]);
+    expect(rt.views.map((v) => v.id)).toEqual(["overview", "core", "author", "out"]); // the sequence is its own file
     expect(rt.scenarios.map((s) => s.id)).toEqual(["invalid-model", "swap-engine"]);
     expect(rt.groups().filter((g) => g.closable).map((g) => g.id)).toEqual(["icon-sets", "vocabulary", "runtime"]); // packs is inside the closed vocabulary
     expect(rt.open(["packs"])).toBe(false); // its closed parent must be open too
