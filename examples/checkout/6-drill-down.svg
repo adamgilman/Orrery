@@ -54,11 +54,11 @@
 <g class="view" data-view="overview" data-open="" data-title="Overview" data-size="420.2 503.5">
 <g class="groups">
 <g class="group gk-tier st-on" data-group="data" data-bbox="20 289.5 380.2 194" data-state="on" transform="translate(20 289.5)">
-<rect class="group-box" width="380.2" height="194" rx="10"/>
+<rect class="group-box" width="380.2" height="194" rx="8"/>
 <text class="group-label" x="12" y="16">Data</text>
 </g>
 <g class="group gk-cluster st-on" data-group="sessions" data-bbox="32 325.5 155 48" data-state="on" data-collapsed="4" transform="translate(32 325.5)">
-<rect class="group-box" width="155" height="48" rx="10"/>
+<rect class="group-box" width="155" height="48" rx="8"/>
 <g class="summary"><text class="summary-label" x="65.5" y="24">Session cache</text><g class="expand-mark" transform="translate(133 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g>
 </g>
 </g>

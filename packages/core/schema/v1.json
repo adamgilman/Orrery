@@ -252,6 +252,11 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "shape": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z][A-Za-z0-9_-]*)?$",
+                "description": "The frame's outline, a name from 'shapes' (presets: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud). Default box. Drawn open, around the members, and closed, at component size."
+              },
               "frame": {
                 "oneOf": [
                   {
@@ -370,7 +375,7 @@
     "shapes": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Your shape vocabulary: component outlines by name. Omit for the presets: box (the default), sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud. Define an existing name to override it, a new name to extend, or set replace to start from nothing (then define box). A component kind names one with 'shape'.",
+      "description": "Your shape vocabulary: component outlines by name. Omit for the presets: box (the default), sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud. Define an existing name to override it, a new name to extend, or set replace to start from nothing (then define box). A component or group kind names one with 'shape'.",
       "properties": {
         "replace": {
           "type": "boolean",

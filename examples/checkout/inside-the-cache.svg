@@ -54,19 +54,19 @@
 <g class="view" data-view="overview" data-open="sessions" data-title="Overview" data-size="391.2 639.5">
 <g class="groups">
 <g class="group gk-tier st-on" data-group="data" data-bbox="20 289.5 351.2 330" data-state="on" transform="translate(20 289.5)">
-<rect class="group-box" width="351.2" height="330" rx="10"/>
+<rect class="group-box" width="351.2" height="330" rx="8"/>
 <text class="group-label" x="12" y="16">Data</text>
 </g>
 <g class="group gk-cluster st-on" data-group="sessions" data-bbox="32 325.5 126 184" data-state="on" transform="translate(32 325.5)">
-<rect class="group-box" width="126" height="184" rx="10"/>
+<rect class="group-box" width="126" height="184" rx="8"/>
 <text class="group-label" x="12" y="16">Session cache</text>
 </g>
 <g class="group gk-cluster st-on" data-group="cache-a" data-bbox="44 361.5 102 48" data-state="on" data-collapsed="2" transform="translate(44 361.5)">
-<rect class="group-box" width="102" height="48" rx="10"/>
+<rect class="group-box" width="102" height="48" rx="8"/>
 <g class="summary"><text class="summary-label" x="39" y="24">Node A</text><g class="expand-mark" transform="translate(80 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g>
 </g>
 <g class="group gk-cluster st-on" data-group="cache-b" data-bbox="44 449.5 102 48" data-state="on" data-collapsed="2" transform="translate(44 449.5)">
-<rect class="group-box" width="102" height="48" rx="10"/>
+<rect class="group-box" width="102" height="48" rx="8"/>
 <g class="summary"><text class="summary-label" x="39" y="24">Node B</text><g class="expand-mark" transform="translate(80 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g>
 </g>
 </g>

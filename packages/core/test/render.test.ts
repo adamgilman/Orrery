@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, PULSE_PERIOD, applySet, render, renderExport, renderSvg, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
+import { FakeLayoutEngine, PULSE_PERIOD, applySet, render, renderExport, renderSvg, scopeModel, toLayoutGraph, validate, type Model, type LayoutResult } from "../src/index.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
@@ -314,5 +314,28 @@ describe("renderSvg: shapes (R14)", () => {
     expect(s.match(/class="replica-box"/g)).toHaveLength(2);
     expect(s).toContain('<g transform="translate(6 -6)"><path class="replica-box"');
     expect(svg).not.toContain(".replicas rect");
+  });
+});
+
+describe("renderSvg: group shapes (R14)", () => {
+  it("draws an open group's frame as its kind's shape with the title moved in by the pad, and a closed one at node size", async () => {
+    const m = fixture("shapes");
+    const svg = await draw(m);
+    const own = between(svg, 'data-group="own"');
+    expect(own).toMatch(/<path class="group-box" data-shape="M20 100A20 20 0 0 1 10 62[^"]*" d="M[\d.]+ [\d.]+A/);
+    expect(own).not.toContain("<rect");
+    expect(own).toContain('<text class="group-label" x="28" y="28">Your own</text>');
+    expect(between(svg, 'data-group="presets"')).toMatch(/<path class="group-box" data-shape="M12 0H100V100H0V12Z" d="M[\d.]+ 0H/);
+    const closed = await draw(scopeModel(m, m.views[1]!));
+    const box = between(closed, 'data-group="own"');
+    expect(box).toMatch(/data-bbox="\S+ \S+ \S+ 72"/); // 48 + 2 × 12
+    expect(box).toMatch(/<path class="group-box" data-shape="[^"]+" d="M[\d.]+ 72A/); // the base at the full height of 72
+    expect(box).toContain('class="summary"');
+  });
+  it("in a tour, a shaped frame's size track animates its path data", async () => {
+    const m = inline({ kinds: { groups: { pipeline: { shape: "hexagon" } } }, groups: [{ id: "g", kind: "pipeline" }], components: [{ id: "a", group: "g" }, { id: "b" }], connections: [{ from: "b", to: "g" }], views: [{ id: "v", collapse: ["g"] }], tour: { seconds: 2, scenes: [{ view: "v" }, { view: "v", open: ["g"] }] } });
+    const svg = await render(m, new FakeLayoutEngine(), { tour: true });
+    expect(svg).toMatch(/@keyframes orrery-size-g\{0%\{d:path\("M[\d.]+ 0H[\d.]+L[\d.]+ 24 [\d.]+ 48H[\d.]+L0 24Z"\)\}/);
+    expect(svg).toMatch(/<path class="group-box" data-shape="M15 0H85L100 50 85 100H15L0 50Z" d="M[^"]+" style="animation:orrery-size-g /);
   });
 });

@@ -28,7 +28,7 @@ export interface Glyph { viewBox: string; svg: string }
 /** A component outline (4.8): a rounded rectangle by `corner` (px, or `round` for a pill) or SVG path data in a 100×100 unit box; `pad` is the room the label needs, per side. */
 export interface ShapeDef { name: string; path?: string; corner?: number | "round"; pad: { x: number; y: number }; description?: string }
 export interface ComponentKindDef { glyph?: string | Glyph; shape?: string; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
-export interface GroupKindDef { frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
+export interface GroupKindDef { shape?: string; frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
 export type LinePreset = "solid" | "dashed" | "dotted" | "heavy";
 /** How a connection kind is drawn: line colour and width, an SVG dash pattern, and the colour of the animated traffic. */
 export interface LineStyle { stroke?: string; width?: number; dash?: string; flow?: string }

@@ -389,3 +389,28 @@ describe("the tour", () => {
     expect(vis(root, '[data-node="ledger"]')).toBeNull();
   });
 });
+
+describe("shaped frames (R14)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("the morph rescales a path frame to the open layer's size", async () => {
+    const root = await doc("shapes");
+    rt = mount(root, SIZE);
+    rt.stop();
+    rt.showView("closed");
+    vi.advanceTimersByTime(900);
+    const before = vis(root, '[data-group="own"] .group-box');
+    expect(before.tagName).toBe("path");
+    const closedD = before.getAttribute("d")!;
+    const openD = root.querySelector<SVGGElement>('.view[data-open="own"] [data-group="own"] .group-box')!.getAttribute("d")!;
+    expect(openD).not.toBe(closedD);
+    rt.open(["own"]);
+    vi.advanceTimersByTime(100);
+    const mid = before.getAttribute("d")!;
+    expect(mid).not.toBe(closedD); expect(mid).not.toBe(openD); // growing
+    vi.advanceTimersByTime(800);
+    expect(before.getAttribute("d")).toBe(closedD); // the old layer is restored once hidden
+    expect(vis(root, '[data-group="own"] .group-box').getAttribute("d")).toBe(openD);
+  });
+});

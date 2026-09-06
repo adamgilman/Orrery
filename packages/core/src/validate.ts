@@ -145,6 +145,7 @@ function buildKinds(raw: Raw["kinds"], shapes: Record<string, ShapeDef>, packs: 
   }
   for (const [name, k] of Object.entries(raw?.groups ?? {})) {
     groups[name] = { ...(groups[name] ?? { frame: "tier" }), ...k };
+    if (k.shape !== undefined && !Object.hasOwn(shapes, k.shape)) err(`/kinds/groups/${name}/shape`, `unknown shape "${k.shape}"; known: ${Object.keys(shapes).join(", ")}`);
     if (typeof k.frame === "string" && !(FRAME_PRESETS as readonly string[]).includes(k.frame)) err(`/kinds/groups/${name}/frame`, `must be one of: ${FRAME_PRESETS.join(", ")}`);
     if (typeof k.frame === "object") { colour(`/kinds/groups/${name}/frame/stroke`, k.frame.stroke); colour(`/kinds/groups/${name}/frame/fill`, k.frame.fill); }
   }

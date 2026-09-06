@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { LayoutEngine, LayoutGraph } from "../src/index.js";
+import { GROUP_PADDING, type LayoutEngine, type LayoutGraph } from "../src/index.js";
 
 /** Contract every LayoutEngine implementation must satisfy. Import and call from the engine's own test file. */
 export function layoutContract(name: string, make: () => LayoutEngine) {
@@ -104,6 +104,16 @@ export function layoutContract(name: string, make: () => LayoutEngine) {
         expect(inside(b, g, 8), `${n.id} in ${n.group}`).toBe(true);
         expect(b.y, `${n.id} below label of ${n.group}`).toBeGreaterThanOrEqual(g.y + 20);
       }
+    });
+    it("adds a group's pad to its padding on every side, and to a closed group's size", async () => {
+      const padded: LayoutGraph = { direction: "right", groups: [{ id: "g", labelHeight: 20, pad: { x: 30, y: 10 } }, { id: "c", labelHeight: 20, pad: { x: 30, y: 10 }, emptySize: { width: 160, height: 72 } }], nodes: [{ id: "a", width: 100, height: 48, group: "g" }, { id: "b", width: 100, height: 48 }], edges: [{ id: "e", from: "a", to: "c" }] };
+      const r = await make().layout(padded);
+      const g = r.groups.g!, a = r.nodes.a!;
+      expect(a.x - g.x).toBeGreaterThanOrEqual(GROUP_PADDING + 30 - 1);
+      expect(g.x + g.width - (a.x + a.width)).toBeGreaterThanOrEqual(GROUP_PADDING + 30 - 1);
+      expect(a.y - g.y).toBeGreaterThanOrEqual(GROUP_PADDING + 20 + 10 - 1);
+      expect(g.y + g.height - (a.y + a.height)).toBeGreaterThanOrEqual(GROUP_PADDING + 10 - 1);
+      expect(r.groups.c!.width).toBe(160); expect(r.groups.c!.height).toBe(72);
     });
     it("nests child groups strictly inside their parent", async () => {
       const r = await make().layout(grouped);

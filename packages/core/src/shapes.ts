@@ -18,7 +18,7 @@ export const DEFAULT_SHAPES: Record<(typeof SHAPE_PRESETS)[number], Omit<ShapeDe
   parallelogram: { path: "M15 0H100L85 100H0Z", pad: { x: 14, y: 0 } },
   document: { path: "M0 0H100V84Q75 70 50 84T0 84Z", pad: { x: 0, y: 8 } },
   card: { path: "M12 0H100V100H0V12Z", pad: { x: 4, y: 0 } },
-  cloud: { path: "M22 80A18 18 0 0 1 12 48A20 20 0 0 1 40 22A22 22 0 0 1 72 20A18 18 0 0 1 92 46A16 16 0 0 1 84 80Z", pad: { x: 16, y: 12 } },
+  cloud: { path: "M20 100A20 20 0 0 1 10 62A22 22 0 0 1 38 26A25 25 0 0 1 72 22A20 20 0 0 1 94 56A18 18 0 0 1 84 100Z", pad: { x: 16, y: 12 } },
 };
 
 /** Path data as an author may write it: the absolute and relative forms of M L H V C S Q T A Z, numbers, separators. */

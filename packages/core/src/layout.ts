@@ -3,8 +3,8 @@ import type { Direction } from "./types.js";
 /** Orrery's own layout types. No engine-specific types cross this boundary. */
 export interface LayoutGraph {
   direction: Direction;
-  /** Containers. `labelHeight` is the band reserved at the top of the frame for its title. */
-  groups?: { id: string; parent?: string; labelHeight: number; emptySize?: { width: number; height: number } }[];
+  /** Containers. `labelHeight` is the band reserved at the top of the frame for its title; `pad` is extra inset on every side, the room a shaped frame needs. */
+  groups?: { id: string; parent?: string; labelHeight: number; pad?: { x: number; y: number }; emptySize?: { width: number; height: number } }[];
   nodes: { id: string; width: number; height: number; group?: string }[];
   edges: { id: string; from: string; to: string; label?: { width: number; height: number } }[];
 }
@@ -82,10 +82,11 @@ export class FakeLayoutEngine implements LayoutEngine {
         ...graph.nodes.filter((n) => n.group === g.id).map((n) => nodes[n.id]!),
         ...groups.filter((c) => c.parent === g.id).map((c) => groupBoxes[c.id]!),
       ];
-      const x0 = Math.min(...members.map((m) => m.x)) - GROUP_PADDING;
-      const y0 = Math.min(...members.map((m) => m.y)) - GROUP_PADDING - g.labelHeight;
-      const x1 = Math.max(...members.map((m) => m.x + m.width)) + GROUP_PADDING;
-      const y1 = Math.max(...members.map((m) => m.y + m.height)) + GROUP_PADDING;
+      const px = GROUP_PADDING + (g.pad?.x ?? 0), py = GROUP_PADDING + (g.pad?.y ?? 0);
+      const x0 = Math.min(...members.map((m) => m.x)) - px;
+      const y0 = Math.min(...members.map((m) => m.y)) - py - g.labelHeight;
+      const x1 = Math.max(...members.map((m) => m.x + m.width)) + px;
+      const y1 = Math.max(...members.map((m) => m.y + m.height)) + py;
       groupBoxes[g.id] = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
     }
 

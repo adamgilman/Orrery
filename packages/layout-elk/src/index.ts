@@ -51,7 +51,7 @@ export class ElkLayoutEngine implements LayoutEngine {
     for (const g of groups) {
       elkNodes.set(g.id, {
         id: g.id,
-        layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight},left=${GROUP_PADDING},bottom=${GROUP_PADDING},right=${GROUP_PADDING}]` },
+        layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight + (g.pad?.y ?? 0)},left=${GROUP_PADDING + (g.pad?.x ?? 0)},bottom=${GROUP_PADDING + (g.pad?.y ?? 0)},right=${GROUP_PADDING + (g.pad?.x ?? 0)}]` },
         children: [],
         // An empty group is a black box: give it a size, since ELK sizes compound nodes from their children.
         ...(empty.has(g.id) ? (g.emptySize ?? { width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight }) : {}),

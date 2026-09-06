@@ -74,3 +74,12 @@ outline; a later slice may trim to the outline.
 
 MODEL.md: a vocabulary row, `shape` in 4.8 with a Shapes paragraph, S15 and a new R14, a decision. README stage 1
 names the shapes. Schema descriptions say the same.
+
+## Amendment: groups (2026-09-06)
+
+The user asked for the same on groups. A group kind names a shape; the frame is drawn with it open (the pad is
+extra inset on every side, passed to the layout engines as `pad`) and closed (at component size plus the pad). A
+path frame carries its unit path in `data-shape`; the tour's size track animates `d` (`path("…")`, which the
+raster freezer interpolates and writes as an attribute) and the runtime morph rescales the path each step. The
+cloud preset was redrawn to fill its box so a cloud frame wraps its members; the expand mark moves in by the pad.
+Default group kinds keep the box.

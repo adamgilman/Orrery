@@ -32,6 +32,7 @@ it up.
 ![The parts](examples/checkout/1-parts.svg)
 
 **2. Groups.** Put the parts in tiers, regions, zones, clusters or trust boundaries, nested as deep as the system goes.
+A group kind picks a frame style and a shape, so a boundary can be a cloud.
 A group can be connected and given a state, and a view can draw it closed: one box the size of a component, with an
 expand mark. The session cache is a cluster drawn closed here, so the rest of the story stays small.
 

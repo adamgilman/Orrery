@@ -47,15 +47,15 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 <g class="view" data-view="overview" data-open="" data-title="Grouped three tier" data-size="1151 188">
 <g class="groups">
 <g class="group gk-region st-on" data-group="region" data-bbox="369 12 762 156" data-state="on" transform="translate(369 12)">
-<rect class="group-box" width="762" height="156" rx="10"/>
+<rect class="group-box" width="762" height="156" rx="8"/>
 <text class="group-label" x="12" y="16">us-east-1</text>
 </g>
 <g class="group gk-tier st-on" data-group="app" data-bbox="381 48 148 96" data-state="on" transform="translate(381 48)">
-<rect class="group-box" width="148" height="96" rx="10"/>
+<rect class="group-box" width="148" height="96" rx="8"/>
 <text class="group-label" x="12" y="16">Application</text>
 </g>
 <g class="group gk-tier st-on" data-group="data" data-bbox="665 48 454 108" data-state="on" transform="translate(665 48)">
-<rect class="group-box" width="454" height="108" rx="10"/>
+<rect class="group-box" width="454" height="108" rx="8"/>
 <text class="group-label" x="12" y="16">Data</text>
 </g>
 </g>

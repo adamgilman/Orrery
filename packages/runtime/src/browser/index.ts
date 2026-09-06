@@ -1,5 +1,6 @@
 import { flowDuration, flowStyle } from "@orrery/core/flow";
 import { lookOf } from "@orrery/core/looks";
+import { scalePath } from "@orrery/core/shapes";
 import type { Model } from "@orrery/core/types";
 import { fitView, transformOf, zoomToBox, type Box, type Camera, type Size } from "./camera.js";
 import { phaseOf } from "./phase.js";
@@ -297,10 +298,15 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       if (twin) { const t = bbox(twin); moves.push({ el: g, dx: t.x - b.x, dy: t.y - b.y, b }); } else g.style.opacity = "0";
     }
     // Groups present in both layers slide and resize their frame: a closed box opens into the frame it stands for.
-    const frames: { el: SVGGElement; rect: SVGRectElement; a: Box; b: Box }[] = [];
+    const frames: { el: SVGGElement; rect: SVGElement; a: Box; b: Box }[] = [];
+    // A frame is a rect sized by width and height, or a shaped path re-scaled from its unit path data.
+    const resize = (rect: SVGElement, w: number, h: number) => {
+      const unit = rect.getAttribute("data-shape");
+      if (unit) rect.setAttribute("d", scalePath(unit, w, h)); else { rect.setAttribute("width", String(w)); rect.setAttribute("height", String(h)); }
+    };
     for (const g of from.querySelectorAll<SVGGElement>("[data-group]")) {
       const twin = to.querySelector<SVGGElement>(`[data-group="${g.getAttribute("data-group")}"]`);
-      const rect = g.querySelector<SVGRectElement>(".group-box");
+      const rect = g.querySelector<SVGElement>(".group-box");
       if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.expand-mark").forEach((t) => (t.style.opacity = "0")); }
       else g.style.opacity = "0";
     }
@@ -311,7 +317,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       if (handle) clearTimeout(handle);
       morphing = null;
       for (const m of moves) m.el.setAttribute("transform", `translate(${m.b.x} ${m.b.y})`);
-      for (const f of frames) { f.el.setAttribute("transform", `translate(${f.a.x} ${f.a.y})`); f.rect.setAttribute("width", String(f.a.width)); f.rect.setAttribute("height", String(f.a.height)); }
+      for (const f of frames) { f.el.setAttribute("transform", `translate(${f.a.x} ${f.a.y})`); resize(f.rect, f.a.width, f.a.height); }
       from.querySelectorAll<SVGElement>("[style]").forEach((e) => (e.style.opacity = ""));
       from.style.display = "none"; to.style.display = "";
       activeKey = key;
@@ -327,7 +333,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       for (const f of frames) {
         // Frames are drawn at (0,0) inside a translated group: slide the group and grow the rect.
         f.el.setAttribute("transform", `translate(${lerp(f.a.x, f.b.x)} ${lerp(f.a.y, f.b.y)})`);
-        f.rect.setAttribute("width", String(lerp(f.a.width, f.b.width))); f.rect.setAttribute("height", String(lerp(f.a.height, f.b.height)));
+        resize(f.rect, lerp(f.a.width, f.b.width), lerp(f.a.height, f.b.height));
       }
       if (t < 1) handle = setTimeout(step, 16); else finish();
     };

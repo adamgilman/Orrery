@@ -55,6 +55,14 @@ function lerpTransform(a: string, b: string, t: number): string {
   return x.map((f, i) => `${f.name}(${f.args.map((v, j) => lerp(v, y[i]!.args[j]!, t).toFixed(f.name === "scale" ? 4 : 2)).join(" ")})`).join(" ");
 }
 const NUMERIC = new Set(["width", "height", "x", "y"]);
+/** Interpolate two `path("…")` values of the same command structure, number by number: a shaped frame between two sizes. */
+function lerpPath(a: string, b: string, t: number): string {
+  const nums = (s: string) => s.match(/-?\d*\.?\d+/g) ?? [];
+  const bn = nums(b);
+  let i = 0;
+  const inner = a.replace(/^path\("|"\)$/g, "").replace(/-?\d*\.?\d+/g, (n) => String(Math.round(lerp(Number(n), Number(bn[i++]), t) * 100) / 100));
+  return inner;
+}
 
 /** The animated properties of `kf` at fraction `phase` (0..1) of its cycle. */
 export function valuesAt(kf: Keyframes, phase: number): Record<string, string> {
@@ -72,6 +80,7 @@ export function valuesAt(kf: Keyframes, phase: number): Record<string, string> {
     else if (prop === "visibility") out[prop] = t < 1 ? a : b; // discrete
     else if (prop === "transform") out[prop] = lerpTransform(a, b, t);
     else if (NUMERIC.has(prop)) out[prop] = String(Math.round(lerp(parseFloat(a), parseFloat(b), t) * 100) / 100);
+    else if (prop === "d") out[prop] = lerpPath(a, b, t);
     else out[prop] = t < 1 ? a : b;
   }
   return out;
@@ -80,7 +89,7 @@ export function valuesAt(kf: Keyframes, phase: number): Record<string, string> {
 /**
  * Replace every renderer-generated animation with its static value at time t. Flow and pulse are handled elsewhere;
  * this covers the camera, positions, sizes, visibility, state variants, edges, legends, captions, steps and tours.
- * Geometry (transform, width, height, x, y) is written as attributes, which every renderer honours; the rest inline.
+ * Geometry (transform, width, height, x, y, d) is written as attributes, which every renderer honours; the rest inline.
  */
 export function freezeTracks(svg: string, tMs: number): string {
   const styleMatch = svg.match(/<style>([\s\S]*?)<\/style>/);
@@ -96,13 +105,13 @@ export function freezeTracks(svg: string, tMs: number): string {
     return Object.entries(v).map(([k, val]) => `${k}:${val}`).join(";");
   };
   // Inline animations on elements. An attribute the static value replaces is dropped from the tag first.
-  return svg.replace(/<(g|text|rect) ([^>]*?)style="animation:(orrery-(?!flow|pulse)[\w-]+) ([\d.]+)s (?:linear|step-end) infinite"/g, (whole, tag: string, attrs: string, name: string, dur: string) => {
+  return svg.replace(/<(g|text|rect|path) ([^>]*?)style="animation:(orrery-(?!flow|pulse)[\w-]+) ([\d.]+)s (?:linear|step-end) infinite"/g, (whole, tag: string, attrs: string, name: string, dur: string) => {
     const st = staticOf(name, Number(dur));
     if (st === null) return whole;
     const attributes: string[] = [], styles: string[] = [];
     for (const decl of st.split(";")) {
       const i = decl.indexOf(":"), k = decl.slice(0, i), v = decl.slice(i + 1);
-      if (k === "transform" || NUMERIC.has(k)) { attrs = attrs.replace(new RegExp(` ?${k}="[^"]*"`), ""); attributes.push(`${k}="${v}"`); } else styles.push(decl);
+      if (k === "transform" || k === "d" || NUMERIC.has(k)) { attrs = attrs.replace(new RegExp(` ?${k}="[^"]*"`), ""); attributes.push(`${k}="${v}"`); } else styles.push(decl);
     }
     return `<${tag} ${attrs.trim()} ${attributes.join(" ")}${attributes.length ? " " : ""}style="${styles.join(";")}"`;
   });

@@ -1,7 +1,7 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
-import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
+import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, groupShapeOf, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
 import { scalePath } from "./shapes.js";
 import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
@@ -59,10 +59,10 @@ const glyphMarkup = (glyph: string | Glyph, height: number, pad: number) =>
     ? `<g class="glyph" transform="translate(${num(12 + pad)} ${num(height / 2 - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
     : `<svg class="icon" x="${num(10 + pad)}" y="${num(height / 2 - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
 /** A component's outline at its size (R14): a rounded rect for a `corner` shape, a scaled path for a `path` shape. */
-const outline = (shape: ShapeDef, b: { width: number; height: number }, cls: string) =>
+const outline = (shape: ShapeDef, b: { width: number; height: number }, cls: string, extra = "") =>
   shape.path !== undefined
-    ? `<path class="${cls}" d="${scalePath(shape.path, b.width, b.height)}"/>`
-    : `<rect class="${cls}" width="${num(b.width)}" height="${num(b.height)}" rx="${num(shape.corner === "round" ? b.height / 2 : shape.corner ?? 8)}"/>`;
+    ? `<path class="${cls}"${cls === "group-box" ? ` data-shape="${escAttr(shape.path)}"` : ""} d="${scalePath(shape.path, b.width, b.height)}"${extra}/>`
+    : `<rect class="${cls}" width="${num(b.width)}" height="${num(b.height)}" rx="${num(shape.corner === "round" ? b.height / 2 : shape.corner ?? 8)}"${extra}/>`;
 /** A kind name as a CSS class selector: the pack prefix's colon needs escaping. */
 const cls = (name: string) => name.replace(/:/g, "\\:");
 const DASH = "4 4";
@@ -179,16 +179,17 @@ function componentBody(c: Component, model: Model, b: { width: number; height: n
 }
 
 /** The expand mark: a small boxed plus in the top-right corner of a closed group, the conventional sign that there is more inside. */
-const expandMark = (w: number) => `<g class="expand-mark" transform="translate(${num(w - 22)} 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`;
+const expandMark = (w: number, pad = { x: 0, y: 0 }) => `<g class="expand-mark" transform="translate(${num(w - 22 - pad.x)} ${num(8 + pad.y)})"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`;
 
 /** A group's frame at (0,0): open, with its title in the band; or closed (R11), the size of a component, with its name centred and an expand mark. */
-function groupBody(g: Group, b: { width: number; height: number }): string {
+function groupBody(g: Group, model: Model, b: { width: number; height: number }): string {
   const closed = g.collapsed !== undefined;
+  const shape = groupShapeOf(g, model);
   return [
-    `<rect class="group-box" width="${num(b.width)}" height="${num(b.height)}" rx="10"/>`,
+    outline(shape, b, "group-box"),
     closed
-      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width)}</g>`
-      : `<text class="group-label" x="12" y="16">${esc(g.label)}</text>`,
+      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
+      : `<text class="group-label" x="${num(12 + shape.pad.x)}" y="${num(16 + shape.pad.y)}">${esc(g.label)}</text>`,
   ].join("\n");
 }
 
@@ -202,7 +203,7 @@ function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
   return [
     `<g class="group gk-${g.kind} st-${g.state}" data-group="${escAttr(g.id)}" ${bboxAttr(b)} ${entityAttrs(g, model)}${g.collapsed !== undefined ? ` data-collapsed="${g.collapsed}"` : ""} ${at(b)}>`,
     ...(g.reason !== undefined ? [`<title>${esc(g.reason)}</title>`] : []),
-    groupBody(g, b),
+    groupBody(g, model, b),
     `</g>`,
   ].join("\n");
 }
@@ -412,17 +413,20 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       const isOpen = (k: number) => held(k, id, (j) => { const g = groupAt(j, id); return g ? g.collapsed === undefined : undefined; });
       const g0 = held(0, id, (j) => groupAt(j, id));
       css.push(`@keyframes orrery-show-${id}{${track(present, opacity, staged)}}`);
-      css.push(`@keyframes orrery-size-${id}{${track(size(id), sized, move, ease)}}`);
+      const shape = groupShapeOf(g0, model);
+      // a path frame's size track animates its path data; a rect's, width and height
+      const sizedAs = shape.path !== undefined ? (v: string) => { const [w, h] = v.split(" "); return `d:path("${scalePath(shape.path!, Number(w), Number(h))}")`; } : sized;
+      css.push(`@keyframes orrery-size-${id}{${track(size(id), sizedAs, move, ease)}}`);
       css.push(`@keyframes orrery-open-${id}{${track(isOpen, opacity, staged)}}`);
       css.push(`@keyframes orrery-closed-${id}{${track((k) => !isOpen(k), opacity, staged)}}`);
-      css.push(`@keyframes orrery-mark-${id}{${track((k) => { const [w] = size(id)(k).split(" "); return `${num(Number(w) - 22)} 8`; }, translate, move, ease)}}`);
+      css.push(`@keyframes orrery-mark-${id}{${track((k) => { const [w] = size(id)(k).split(" "); return `${num(Number(w) - 22 - shape.pad.x)} ${num(8 + shape.pad.y)}`; }, translate, move, ease)}}`);
       css.push(`@keyframes orrery-centre-${id}{${track((k) => { const [w, h] = size(id)(k).split(" "); return `${num((Number(w) - EXPAND_MARK_WIDTH) / 2)} ${num(Number(h) / 2)}`; }, translate, move, ease)}}`);
       const b0 = held(0, id, (j) => boxAt(j, id));
-      const frames = variants(id, (k) => groupAt(k, id), (g) => `<rect class="group-box" width="${num(b0.width)}" height="${num(b0.height)}" rx="10" style="${anim(`orrery-size-${id}`)}"/>${g.reason !== undefined ? `<title>${esc(g.reason)}</title>` : ""}`);
-      const title = shown(`orrery-open-${id}`, isOpen, `<text class="group-label" x="12" y="16">${esc(g0.label)}</text>`, "detail");
+      const frames = variants(id, (k) => groupAt(k, id), (g) => `${outline(shape, b0, "group-box", ` style="${anim(`orrery-size-${id}`)}"`)}${g.reason !== undefined ? `<title>${esc(g.reason)}</title>` : ""}`);
+      const title = shown(`orrery-open-${id}`, isOpen, `<text class="group-label" x="${num(12 + shape.pad.x)}" y="${num(16 + shape.pad.y)}">${esc(g0.label)}</text>`, "detail");
       const summary = shown(`orrery-closed-${id}`, (k) => !isOpen(k),
         `<g transform="translate(${num((b0.width - EXPAND_MARK_WIDTH) / 2)} ${num(b0.height / 2)})" style="${anim(`orrery-centre-${id}`)}"><text class="summary-label">${esc(g0.label)}</text></g>` +
-        `<g class="expand-mark" transform="translate(${num(b0.width - 22)} 8)" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
+        `<g class="expand-mark" transform="translate(${num(b0.width - 22 - shape.pad.x)} ${num(8 + shape.pad.y)})" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
       return shown(`orrery-show-${id}`, present, moved(id, `group gk-${g0.kind}`, `data-group="${escAttr(id)}"${g0.collapsed !== undefined ? ` data-collapsed="${g0.collapsed}"` : ""}`, `${frames}\n${title}\n${summary}`), "entity");
     });
     const nodesMarkup = componentIds.map((id) => {

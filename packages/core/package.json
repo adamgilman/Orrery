@@ -22,6 +22,10 @@
     "./declare": {
       "types": "./dist/declare.d.ts",
       "default": "./dist/declare.js"
+    },
+    "./shapes": {
+      "types": "./dist/shapes.d.ts",
+      "default": "./dist/shapes.js"
     }
   },
   "files": [
