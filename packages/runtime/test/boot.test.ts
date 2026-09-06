@@ -5,10 +5,10 @@ import { join } from "node:path";
 import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
 import { mount, type Orrery, type Snapshot } from "../src/browser/index.js";
 
-const doc = async (name: string) => {
+const doc = async (name: string, view?: string) => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
   if (!r.ok) throw new Error(JSON.stringify(r.errors));
-  const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "" });
+  const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "", ...(view ? { view } : {}) });
   const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
   const walker = parsed.createTreeWalker(parsed, 8);
   const cdata: Node[] = [];
@@ -471,11 +471,10 @@ describe("sequence views (R17)", () => {
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
   it("steps the messages of a sequence view with next, prev and the brackets; play reveals them; reset shows all", async () => {
-    const root = await doc("sequence");
+    const root = await doc("sequence", "checkout"); // a sequence is its own file: the topology views are not in it
     rt = mount(root, SIZE);
     rt.stop();
-    expect(rt.snapshot().message).toBeNull();
-    rt.showView("checkout");
+    expect(rt.views.map((v) => v.id)).toEqual(["checkout"]);
     vi.advanceTimersByTime(900);
     const shown = () => [...shownLayer(root).querySelectorAll<SVGGElement>(".message")].filter((g) => g.style.display !== "none").length;
     expect(shown()).toBe(6);

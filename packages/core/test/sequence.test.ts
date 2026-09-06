@@ -62,14 +62,16 @@ describe("sequence views: rendering (R17)", () => {
     expect(still).not.toContain("orrery-message-");
     expect(still).toContain('class="heading-title centred"'); // heading from the export applies to a sequence too
   }, 30_000);
-  it("exports, crops to a participant, embeds a layer per sequence view, and refuses a scenario play on it", async () => {
+  it("exports, crops to a participant, is its own document, and refuses a scenario play on it", async () => {
     const x = await renderExport(m, engine(), m.exports.find((e) => e.id === "lookup")!);
     expect(x).toContain('data-node="web"');
     const zoomed = await render(m, engine(), { view: "checkout", zoom: "api" });
     expect(Number(zoomed.match(/viewBox="[\d.]+ [\d.]+ ([\d.]+)/)![1])).toBeLessThan(400);
-    const doc = await renderDocument(m, engine(), { runtime: "" });
-    expect(doc).toMatch(/<g class="view" style="display:none" data-view="checkout" data-open=""/);
-    expect(doc).toMatch(/data-view="lookup"/);
+    const doc = await renderDocument(m, engine(), { runtime: "" }); // the topology views alone: a sequence is its own file
+    expect(doc).not.toMatch(/data-view="checkout"|data-view="lookup"/);
+    const own = await renderDocument(m, engine(), { runtime: "", view: "checkout" });
+    expect(own).toMatch(/<g class="view" data-view="checkout" data-open=""/);
+    expect(own).not.toMatch(/data-view="overview"|data-view="lookup"/);
     await expect(render(m, engine(), { view: "checkout", play: { scenario: "db-fails" } })).rejects.toThrow(/sequence view plays its messages/);
     expect(scopeModel(m, seq).views[0]!.type).toBe("sequence");
   }, 30_000);

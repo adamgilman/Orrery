@@ -49,6 +49,14 @@ tag; a still shows everything. In the interactive file the brackets and `next`/`
 sequence view, `play` reveals them on the view's period, and the snapshot reports `message: { index, count }`.
 Callouts may point at participants. A tour may show a sequence view as a scene, crossfading like any other view.
 
+## Amendments while building
+
+- **A sequence is its own file (user, 2026-09-06).** The interactive file first embedded every view, topology and
+  sequence alike, with digits switching between them. A sequence is a separate diagram with its own title, so the
+  command line produces them separately: the default file carries the topology views, `render --view <sequence>`
+  writes that sequence alone, and `embed` writes `<name>.<view>.svg` per sequence beside `<name>.svg`. In the
+  runtime a tour skips scenes whose view is not in the file, and stopping a playing sequence shows every message.
+
 ## Not in this slice
 
 Messages that carry a moment (a `set` mid-sequence), the `walkthrough` view (the same messages as a token on the

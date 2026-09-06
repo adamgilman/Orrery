@@ -44,7 +44,7 @@ describe("smoke: the orrery command on the diagram of Orrery", () => {
     const dir = mkdtempSync(join(tmpdir(), "orrery-smoke-"));
     const r = run("embed", file, "--out", dir);
     expect(r.code).toBe(0);
-    expect(readdirSync(dir).sort()).toEqual(["app.js", "index.html", "orrery.js", "orrery.svg"]);
+    expect(readdirSync(dir).sort()).toEqual(["app.js", "index.html", "orrery.js", "orrery.render-seq.svg", "orrery.svg"]); // the sequence is its own file
     const packs = run("packs");
     expect(packs.code).toBe(0);
     for (const p of ["aws", "azure", "gcp", "sre"]) expect(packs.out).toMatch(new RegExp(`^${p}\\s`, "m"));

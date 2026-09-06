@@ -171,5 +171,7 @@ what leaves fades, what arrives fades in, and the camera closes on the scene's z
 Open any rendered SVG directly in a browser and it is interactive with no page around it: arrows select in outline
 order, Enter zooms, `f` steps a state, `s` starts and cycles scenarios, brackets step, digits switch views, Escape
 resets the camera, a click steps an entity through the author's states and shift+click steps back. The README's
-[checkout.svg](../checkout.svg) is one. For a page of your own, `orrery embed` writes the diagram, the engine and a
-sample page that builds controls from the engine's interface: open, zoom, back, next, prev, set, play.
+[checkout.svg](../checkout.svg) is one, and [checkout-sequence.svg](../checkout-sequence.svg) is its sequence view,
+rendered on its own with `--view checkout-seq`: a sequence is its own drawing, so it is its own file, the brackets
+stepping its messages. For a page of your own, `orrery embed` writes the diagram, one file per sequence view, the
+engine and a sample page that builds controls from the engine's interface: open, zoom, back, next, prev, set, play.

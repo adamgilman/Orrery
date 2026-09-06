@@ -166,7 +166,9 @@ label above; a reply is dashed; a self-message is a small loop. A call opens an 
 and the receiver's reply closes it; a call never answered stays active to the end. Layout is a pure function:
 columns spaced by the widest label between them. A model may have as many sequence views as it has stories, each
 with its own title and description. Exports, scenario moments, what-ifs, callouts (at participants) and the
-heading apply as to any view; a tour may show one as a scene.
+heading apply as to any view; a tour may show one as a scene. A sequence is its own drawing, so it is its own
+file: the interactive file carries the topology views together, or one sequence view alone (`render --view`
+names it; `embed` writes one file per sequence beside the topology).
 
 ### 4.6 Scenario
 

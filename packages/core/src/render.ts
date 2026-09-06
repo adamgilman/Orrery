@@ -783,6 +783,7 @@ export function renderExport(model: Model, engine: LayoutEngine, x: Export): Pro
   });
 }
 
+/** `view` names the first view; a topology view brings every topology view with it, a sequence view is the whole file (R17). */
 export interface DocumentOptions { runtime: string; view?: string; set?: Record<string, string[]>; play?: { scenario: string; seconds?: number }; heading?: boolean | HeadingAlign }
 /** The heading a picture of `view` carries: the view's title and description, falling back to the model's, sized to the picture. */
 const headingFor = (model: Model, view: View | undefined, width: number, heading: boolean | HeadingAlign) => headingBlock(view?.title ?? model.title, view?.description ?? model.description, width, heading === "left" ? "left" : "centre");
@@ -791,7 +792,8 @@ const headingFor = (model: Model, view: View | undefined, width: number, heading
  * The shippable file: every view pre-laid-out and embedded (first visible), the normalised model as JSON, and the
  * runtime script. Inside <img> it is the animated first view; opened directly, the runtime makes it interactive. A
  * view with closed groups also carries one layer per way they can be open, so opening and closing is a morph between
- * layouts the runtime never has to compute.
+ * layouts the runtime never has to compute. A file is one drawing: the topology views together, or one sequence view
+ * alone; a model with sequences is several files (R17).
  */
 /** The model with only the kinds and shapes its entities use: a pack is hundreds of icons, and the file should carry the few it draws. */
 function usedVocabulary(model: Model): Model {
@@ -820,8 +822,9 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   // The declared model with the what-if applied is what the runtime starts from.
   const declared = declare(model, { ...(options.set ? { set: options.set } : {}) }).model;
   const first = selectView(model, options.view);
+  const views = first.type === "sequence" ? [first] : [first, ...model.views.filter((v) => v.id !== first.id && v.type !== "sequence")];
   const layers: ViewLayer[] = [];
-  for (const view of [first, ...model.views.filter((v) => v.id !== first.id)]) {
+  for (const view of views) {
     const play = view === first ? playOf(view, options) : view.play;
     if (play && play.scenario !== undefined && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
     const withSteps = (layer: ViewLayer, open: readonly string[]) => (layer.css === undefined ? { ...layer, markup: [layer.markup, stepCallouts(declared, view, open, layer.layout!)].filter(Boolean).join("\n") } : layer);

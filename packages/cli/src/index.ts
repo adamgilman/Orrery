@@ -9,16 +9,18 @@ export const USAGE = `Usage:
                                          warnings; or one "<file>:<json-pointer>: <message>" line per error on stderr.
   orrery render <file> [-o <out.svg>]    Validate, lay out and render one standalone SVG. Inside <img> (a README)
                  [--view <id>]           it is the animated first view; opened directly in a browser it is
-                 [--static]              interactive: every view is embedded with the model and a runtime
-                 [--scenario <id>]       (outline, zoom, click to change state, scenarios). Deterministic.
-                 [--step <n>]            --view: which view is shown first. --static: one view, no runtime.
-                 [--set <state>=<ids>]   --scenario applies a scenario's steps (cumulative) and implies
-                 [--play <id>]           --static; --step <n> (1-based) stops after step n (default: last).
-                 [--every <seconds>]     --set failed=db,cache  declares states for a one-off what-if
-                 [--tour [<ids>]]        (repeatable; applied after the scenario). --open draws closed groups
-                 [--open <ids>]          open (comma-separated, with their closed ancestors); --zoom crops the
-                 [--zoom <id>]           picture to one entity. Both imply --static. --heading draws the
-                 [--heading [left]]      title and description block above the picture (a view's own, else
+                 [--static]              interactive: the model and a runtime are embedded (outline, zoom,
+                 [--scenario <id>]       click to change state, scenarios). Deterministic. A file is one
+                 [--step <n>]            drawing: every topology view together (--view: the one shown first),
+                 [--set <state>=<ids>]   or, when --view names a sequence view, that sequence alone; a model's
+                 [--play <id>]           sequences are separate files. --static: one view, no runtime.
+                 [--every <seconds>]     --scenario applies a scenario's steps (cumulative) and implies
+                 [--tour [<ids>]]        --static; --step <n> (1-based) stops after step n (default: last).
+                 [--open <ids>]          --set failed=db,cache  declares states for a one-off what-if
+                 [--zoom <id>]           (repeatable; applied after the scenario). --open draws closed groups
+                 [--heading [left]]      open (comma-separated, with their closed ancestors); --zoom crops the
+                                         picture to one entity. Both imply --static. --heading draws the
+                                         title and description block above the picture (a view's own, else
                                          the model's), centred, or at the left edge; still or interactive.
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
@@ -26,10 +28,11 @@ export const USAGE = `Usage:
   orrery export <file> [--out <dir>]     Write every entry of the model's "exports" to <dir>/<id>.svg: enclosed
                                          files, CSS animation only, no script. Default <dir> is the current
                                          directory. Prints one line per file.
-  orrery embed <file> [--out <dir>]      Write an embeddable diagram for a web page: <name>.svg (every view and
-                                         drill-down, the model, the engine), orrery.js (the engine, defining
-                                         window.Orrery), and a sample index.html and app.js that build controls
-                                         from the engine's interface. Replace the sample with your own page.
+  orrery embed <file> [--out <dir>]      Write an embeddable diagram for a web page: <name>.svg (every topology
+                                         view and drill-down, the model, the engine), <name>.<view>.svg for each
+                                         sequence view, orrery.js (the engine, defining window.Orrery), and a
+                                         sample index.html and app.js that build controls from the engine's
+                                         interface. Replace the sample with your own page.
   orrery packs [<name>]                  List the vocabulary packs shipped with the tool (aws, azure, gcp: the
                                          providers' icons as kinds; sre: states), or one pack's names with their
                                          descriptions. A model pulls a pack in with "kinds": { "use": ["aws"] }
@@ -139,10 +142,14 @@ export async function main(argv: string[], io: Io): Promise<number> {
       const m = loadModel(file, io);
       const name = basename(file).replace(/\.orrery\.json$|\.json$/, "");
       const title = m.title ?? name;
-      let svg: string;
-      try { svg = await renderDocument(m, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE }); } catch (e) { if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`); throw e; }
+      // One file per drawing: the topology views together, then each sequence view alone (R17).
+      const drawings: [string, string | undefined][] = [[`${name}.svg`, undefined], ...m.views.filter((v) => v.type === "sequence").map((v): [string, string] => [`${name}.${v.id}.svg`, v.id])];
+      const files: [string, string][] = [];
+      for (const [f, view] of drawings) {
+        try { files.push([f, await renderDocument(m, new ElkLayoutEngine(), { runtime: RUNTIME_SOURCE, ...(view !== undefined ? { view } : {}) })]); } catch (e) { if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`); throw e; }
+      }
       const sample = (f: string) => readFileSync(join(import.meta.dirname, "../sample", f), "utf8").replaceAll("{{name}}", name).replaceAll("{{title}}", title.replace(/[<>&]/g, ""));
-      const files: [string, string][] = [[`${name}.svg`, svg], ["orrery.js", RUNTIME_SOURCE], ["index.html", sample("index.html")], ["app.js", sample("app.js")]];
+      files.push(["orrery.js", RUNTIME_SOURCE], ["index.html", sample("index.html")], ["app.js", sample("app.js")]);
       try { mkdirSync(dir, { recursive: true }); } catch (e) { throw new CliError(`${dir}: ${(e as Error).message}`); }
       for (const [f, text] of files) {
         const target = join(dir, f);

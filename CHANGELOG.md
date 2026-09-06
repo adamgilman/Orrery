@@ -5,7 +5,7 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 ## Unreleased
 
-- Sequence views: `type: sequence` with `messages` over declared connections; participants as the entities' own boxes on lifelines; activations; `play` reveals; the runtime steps messages and reports `message`.
+- Sequence views: `type: sequence` with `messages` over declared connections; participants as the entities' own boxes on lifelines; activations; `play` reveals; the runtime steps messages and reports `message`. A sequence is its own file: `render --view <sequence>` writes it alone, the default file carries the topology views, `embed` writes one file per sequence.
 
 ## 0.1.1
 

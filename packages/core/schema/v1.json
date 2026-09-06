@@ -647,7 +647,7 @@
               "sequence"
             ],
             "default": "topology",
-            "description": "Kind of drawing. 'topology' draws the entities and their connections; 'sequence' draws this view's messages between them as a sequence diagram, each participant its own box on a lifeline. 'walkthrough' is reserved."
+            "description": "Kind of drawing. 'topology' draws the entities and their connections; 'sequence' draws this view's messages between them as a sequence diagram, each participant its own box on a lifeline; a sequence is its own drawing and renders to its own file. 'walkthrough' is reserved."
           },
           "direction": {
             "type": "string",

@@ -245,12 +245,13 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const stop = () => {
     const was = playing;
     playing = false; sceneNote = undefined;
-    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; }
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = undefined; if (isSequence() && revealed !== null) showMessages(null); } // a stopped sequence is the still: every message
     if (sceneTimer) { clearTimeout(sceneTimer); sceneTimer = undefined; }
     if (was) emit();
   };
   const playTour = () => {
-    const tour = model.tour!;
+    const tour = { scenes: model.tour!.scenes.filter((sc) => layers.has(layerKey(sc.view, ""))) }; // a sequence scene lives in its own file
+    if (!tour.scenes.length) return;
     playing = true;
     const scene = (k: number) => {
       const sc = tour.scenes[k]!;

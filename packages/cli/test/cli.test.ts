@@ -185,6 +185,16 @@ describe("orrery render: interactive document by default", () => {
     const layers = [...r.out.matchAll(/<g class="view"( style="display:none")? data-view="([^"]+)"/g)].map((m) => [m[2], !!m[1]]);
     expect(layers).toEqual([["data-tier", false], ["overview", true]]);
   });
+  it("is one drawing: the topology views by default, or the sequence view --view names, alone", () => {
+    const views = (svg: string) => [...svg.matchAll(/<g class="view"[^>]* data-view="([^"]+)" data-open=""/g)].map((m) => m[1]);
+    const topo = run("render", join(fixtures, "valid/sequence.json"));
+    expect(topo.code).toBe(0);
+    expect(views(topo.out)).toEqual(["overview"]);
+    const seq = run("render", join(fixtures, "valid/sequence.json"), "--view", "checkout");
+    expect(seq.code).toBe(0);
+    expect(views(seq.out)).toEqual(["checkout"]);
+    expect(seq.out).toContain('id="orrery-model"');
+  });
   it("--scenario renders a static snapshot of that step", () => {
     const r = run("render", join(fixtures, "valid/alternatives.json"), "--scenario", "orders-failover", "--step", "1");
     expect(r.code).toBe(0);
@@ -304,6 +314,16 @@ describe("orrery embed", () => {
     expect(app).toContain('fetch("drill-down.svg")');
     expect(app).toContain("Orrery.mount(");
     expect(run("embed", join(fixtures, "valid/drill-down.json"), "--view", "overview").code).toBe(2);
+  });
+  it("writes each sequence view as its own file beside the topology", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const r = run("embed", join(fixtures, "valid/sequence.json"), "--out", dir);
+    expect(r.err).toBe("");
+    expect(r.out.trim().split("\n")).toEqual(["sequence.svg", "sequence.checkout.svg", "sequence.lookup.svg", "orrery.js", "index.html", "app.js"].map((f) => join(dir, f)));
+    const views = (f: string) => [...readFileSync(join(dir, f), "utf8").matchAll(/<g class="view"[^>]* data-view="([^"]+)" data-open=""/g)].map((m) => m[1]);
+    expect(views("sequence.svg")).toEqual(["overview"]);
+    expect(views("sequence.checkout.svg")).toEqual(["checkout"]);
+    expect(views("sequence.lookup.svg")).toEqual(["lookup"]);
   });
 });
 
