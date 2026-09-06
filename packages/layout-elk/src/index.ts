@@ -39,7 +39,8 @@ export class ElkLayoutEngine implements LayoutEngine {
       // Input order is a signal from the author: keep siblings in JSON order so agents can predict the canvas.
       "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
       // considerModelOrder=NODES_AND_EDGES crashes ELK 0.9 inside compound graphs (hierarchyHandling INCLUDE_CHILDREN),
-      // so it is only enabled for flat graphs.
+      // so it is only enabled for flat graphs. ELK 0.12 crashes on compound graphs with forceNodeModelOrder too
+      // ("Cannot read properties of undefined (reading 'a')"), so elkjs stays at 0.9 until a release fixes it.
       ...(groups.length === 0 ? { "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES" } : {}),
       // Inline labels: ELK reserves room on the edge itself, so labels never collide with nodes or each other.
       "elk.edgeLabels.inline": "true",
