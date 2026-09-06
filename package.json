@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22",
+    "@types/node": "^26",
     "aws-icons": "3.3.0",
     "eslint": "^10.10.0",
     "globals": "^17.12.0",
