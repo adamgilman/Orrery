@@ -28,9 +28,10 @@ database is a cylinder, a client a pill, a gateway a hexagon); you can define yo
 and a box style, and your own shapes as path data (`shapes` in the model, next to `states` and `kinds`); or pull
 in a pack. `"kinds": { "use": ["aws"] }` is in this file, so the
 API is `aws:fargate`, the databases `aws:rds` and the storefront a plain `client`, and the boxes carry the
-provider's own icons. Three packs ship, `aws`, `gcp` and `azure`, every service in each provider's official icon
-set under the names people say (`aws:s3`, `gcp:run`, `azure:aks`); `orrery packs aws` lists them, and
-[docs/PACKS.md](docs/PACKS.md) carries the providers' terms. The session cache is one part for now; stage 6 opens
+provider's own icons. Three packs exist, `aws`, `gcp` and `azure`, every service in each provider's official icon
+set under the names people say (`aws:s3`, `gcp:run`, `azure:aks`). Each is its own package under the provider's
+terms, since the icons are theirs and not MIT: `npm install @orrery-diagrams/pack-aws`, and `orrery packs aws`
+lists them; [docs/PACKS.md](docs/PACKS.md) carries the terms. The session cache is one part for now; stage 6 opens
 it up.
 
 ![The parts](examples/checkout/1-parts.svg)
@@ -194,7 +195,8 @@ orrery export app.orrery.json --out docs/           # every picture the model li
 In a project, add it as a dev dependency so the docs build renders the diagrams: `npm install -D orrery-diagrams`,
 `yarn add -D orrery-diagrams`, `pnpm add -D orrery-diagrams` or `bun add -d orrery-diagrams`, then `orrery export`
 from a script. The libraries are `@orrery-diagrams/core`, `layout-elk`, `runtime` and `raster` for anyone building
-on the model directly.
+on the model directly. The providers' icon packs are separate: `@orrery-diagrams/pack-aws`, `pack-azure` and
+`pack-gcp`, each under its provider's terms rather than MIT, installed only when a model uses one.
 
 From a checkout:
 
@@ -262,7 +264,8 @@ orrery render app.json --set failed=db
 The default states (`on`, `degraded`, `failed`, `off`) and kinds are a preset. A `states` block binds your own
 names to looks (preset or custom style) and to whether flow stops; a `kinds` block does the same for component
 glyphs, group frames and connection lines. Nothing in the tool reads a name. `"use"` in either block pulls in a
-pack shipped with the tool: `aws`, `gcp`, `azure` (kinds named `aws:s3`) and `sre` (states).
+pack: `sre` (states, with the tool) or `aws`, `gcp`, `azure` (kinds named `aws:s3`; each its own package under the
+provider's terms, installed with `npm install @orrery-diagrams/pack-aws`).
 
 Rules an agent needs to know:
 
@@ -310,4 +313,6 @@ request, and main requires them to pass.
 
 ## License
 
-MIT
+MIT, for the code and everything in this repository except the icon packs. `packages/pack-aws`, `pack-azure` and
+`pack-gcp` hold the providers' own icons under the providers' terms, each in its own `LICENSE`; see
+[docs/PACKS.md](docs/PACKS.md).

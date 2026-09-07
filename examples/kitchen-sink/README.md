@@ -79,8 +79,9 @@ the frame open, the box closed.
 ## Packs
 
 `"kinds": { "use": ["aws", "gcp", "azure"] }` brings in every service in each provider's official icon set, named
-`aws:s3`, `gcp:run`, `azure:aks`, plus a few provider-coloured frames such as `aws:vpc`. `orrery packs aws` lists
-them; [docs/PACKS.md](../../docs/PACKS.md) carries the providers' terms.
+`aws:s3`, `gcp:run`, `azure:aks`, plus a few provider-coloured frames such as `aws:vpc`. Each pack is its own
+package under the provider's terms, not MIT (`npm install @orrery-diagrams/pack-aws`), installed by the model
+that uses it. `orrery packs aws` lists them; [docs/PACKS.md](../../docs/PACKS.md) carries the terms.
 
 ![AWS](packs-aws.svg)
 ![Google Cloud](packs-gcp.svg)

@@ -80,7 +80,9 @@ and ignored by rendering.
 ## Packs: the providers' icons as kinds
 
 `aws`, `gcp` and `azure` carry every service in each provider's official icon set, under a name derived from the
-provider's file name and under the names people say. `orrery packs aws` lists them (`aws:s3`, `aws:lambda`,
+provider's file name and under the names people say. Each is its own package under the provider's terms, not MIT:
+the model that uses one needs `@orrery-diagrams/pack-aws` (or `pack-gcp`, `pack-azure`) installed beside the tool,
+and validation says so by name when it is missing. `orrery packs aws` lists them (`aws:s3`, `aws:lambda`,
 `aws:rds`, `aws:dynamodb`, `aws:sqs`, `aws:sns`, `aws:eks`, `aws:cloudfront`, `gcp:run`, `gcp:cloudsql`,
 `gcp:pubsub`, `gcp:gke`, `gcp:bigquery`, `azure:aks`, `azure:sql`, `azure:functions`, `azure:service-bus`,
 `azure:key-vault`, `azure:blob` among them). Each pack also has group kinds as frames in the provider's colours:

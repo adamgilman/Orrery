@@ -62,7 +62,7 @@
               "description": "Pack names; later packs win over earlier ones."
             }
           ],
-          "description": "A states vocabulary shipped with the tool, merged before 'define': sre (healthy, impaired, brownout, outage, drained)."
+          "description": "A states vocabulary merged before 'define': sre, with the tool (healthy, impaired, brownout, outage, drained)."
         },
         "define": {
           "type": "object",
@@ -149,7 +149,7 @@
     "kinds": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Your kind vocabulary for components, groups and connections, bound to a glyph, a frame or a line style. Omit for the defaults. 'use' pulls in a pack shipped with the tool. Define an existing name to override it, a new name to extend, or set replace to start from nothing.",
+      "description": "Your kind vocabulary for components, groups and connections, bound to a glyph, a frame or a line style. Omit for the defaults. 'use' pulls in a pack by name: sre comes with the tool; a provider's icon pack is its own package under the provider's terms (@orrery-diagrams/pack-aws) and must be installed. Define an existing name to override it, a new name to extend, or set replace to start from nothing.",
       "properties": {
         "replace": {
           "type": "boolean",
@@ -170,7 +170,7 @@
               "description": "Pack names; later packs win over earlier ones."
             }
           ],
-          "description": "Vocabulary packs shipped with the tool, merged before your own definitions: aws, azure, gcp (the providers' icons as kinds named aws:s3, gcp:cloud-run, azure:sql-database). `orrery packs <name>` lists a pack's kinds."
+          "description": "Vocabulary packs merged before your own definitions, each a separate package under its provider's terms (@orrery-diagrams/pack-aws, pack-azure, pack-gcp), installed by the model that uses it: aws, azure, gcp (the providers' icons as kinds named aws:s3, gcp:cloud-run, azure:sql-database). `orrery packs <name>` lists a pack's kinds."
         },
         "components": {
           "type": "object",

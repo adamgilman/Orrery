@@ -333,6 +333,8 @@ describe("orrery packs", () => {
     expect(all.code).toBe(0);
     expect(all.out.split("\n").filter(Boolean).map((l) => l.split(/\s+/)[0])).toEqual(["aws", "azure", "gcp", "sre"]);
     expect(all.out).toContain("AWS Architecture Icons");
+    expect(all.out).toMatch(/^aws\s+AWS Architecture Icons \([^)]*\)\s+@orrery-diagrams\/pack-aws\b/m); // whose package, so whose terms
+    expect(all.out).toMatch(/^sre\s+SRE states \(1\)\s+with the tool/m);
     const aws = run("packs", "aws");
     expect(aws.code).toBe(0);
     expect(aws.out).toMatch(/^aws:s3\s+Amazon Simple Storage Service/m);

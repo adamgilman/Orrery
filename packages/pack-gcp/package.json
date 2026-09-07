@@ -1,0 +1,30 @@
+{
+  "name": "@orrery-diagrams/pack-gcp",
+  "version": "0.1.1",
+  "description": "The Google Cloud product icons as an Orrery vocabulary pack: every product as a kind (gcp:run, gcp:gke, gcp:cloud-sql) and provider-coloured group frames. The icons are Google's and come under their terms, not the tool's MIT licence; see LICENSE.",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamgilman/Orrery.git",
+    "directory": "packages/pack-gcp"
+  },
+  "homepage": "https://github.com/adamgilman/Orrery/blob/main/docs/PACKS.md",
+  "keywords": [
+    "orrery",
+    "architecture",
+    "diagram",
+    "gcp",
+    "google-cloud",
+    "icons"
+  ],
+  "main": "pack.json",
+  "exports": {
+    ".": "./pack.json",
+    "./pack.json": "./pack.json"
+  },
+  "files": [
+    "pack.json",
+    "LICENSE",
+    "README.md"
+  ]
+}

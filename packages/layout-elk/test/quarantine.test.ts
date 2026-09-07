@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const root = join(import.meta.dirname, "../../..");
@@ -12,7 +12,7 @@ const walk = (dir: string): string[] =>
 describe("ELK quarantine", () => {
   it("only @orrery-diagrams/layout-elk imports elkjs", () => {
     const offenders = readdirSync(join(root, "packages"))
-      .filter((p) => p !== "layout-elk")
+      .filter((p) => p !== "layout-elk" && existsSync(join(root, "packages", p, "src"))) // the pack packages are data only
       .flatMap((p) => walk(join(root, "packages", p, "src")))
       .filter((f) => /from\s+["']elkjs/.test(readFileSync(f, "utf8")))
       .map((f) => relative(root, f));

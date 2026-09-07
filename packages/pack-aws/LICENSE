@@ -1,0 +1,17 @@
+AWS Architecture Icons
+https://aws.amazon.com/architecture/icons/
+Set version: 01/30/2026. Fetched 2026-09-06.
+
+The icons in this package (pack.json) are Amazon Web Services's and are provided under Amazon Web Services's
+terms, quoted here as published:
+
+    AWS Architecture Icons are provided by Amazon Web Services for customers and partners to use in architecture diagrams. See the AWS Architecture Icons page and the asset package's terms of use.
+
+They are not covered by the MIT licence of Orrery, the tool this package is a vocabulary for. Installing this
+package is your acceptance of the provider's terms; using the icons for anything the provider does not permit is
+between you and the provider.
+
+What this package changed: each icon's SVG was normalised for embedding (XML declaration, comments and titles
+removed; style rules inlined; unreferenced ids dropped and the rest prefixed) and given a name. Nothing was cropped,
+flipped, rotated, recoloured or redrawn. The provider's own group frames were not part of the set: the few group
+kinds in this pack are plain frames in the provider's colours, drawn by Orrery.

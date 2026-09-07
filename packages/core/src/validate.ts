@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
 import { CSS_COLOR } from "./looks.js";
-import { loadPack, packNames, type Pack } from "./packs.js";
+import { loadPack, packProblem, type Pack } from "./packs.js";
 import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
 import { configurationsOf, openOrder } from "./view.js";
 import type { Callout, Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Message, ViewType, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
@@ -76,18 +76,18 @@ interface Raw {
 }
 
 /* ---------- vocabulary ---------- */
-/** The packs a `use` names, in order; an unknown name is an error at its own pointer. */
-function packsOf(use: string | string[] | undefined, pointer: string, err: (p: string, m: string) => void) {
+/** The packs a `use` names, in order; an unknown or uninstalled name is an error at its own pointer. */
+function packsOf(use: string | string[] | undefined, pointer: string, given: readonly Pack[], err: (p: string, m: string) => void) {
   return list(use).flatMap((name, i) => {
-    const pack = loadPack(name);
-    if (!pack) err(Array.isArray(use) ? `${pointer}/${i}` : pointer, `unknown pack "${name}"; known: ${packNames().join(", ")}`);
+    const pack = loadPack(name, given);
+    if (!pack) err(Array.isArray(use) ? `${pointer}/${i}` : pointer, packProblem(name, given)!);
     return pack ? [pack] : [];
   });
 }
-function buildStates(raw: Raw["states"], given: Raw["states"], err: (p: string, m: string) => void): States {
+function buildStates(raw: Raw["states"], given: Raw["states"], packsGiven: readonly Pack[], err: (p: string, m: string) => void): States {
   const define: Record<string, StateDef> = Object.create(null);
   // a states pack is a whole vocabulary: like `replace`, it stands in for the defaults
-  const packs = packsOf(raw?.use, "/states/use", err);
+  const packs = packsOf(raw?.use, "/states/use", packsGiven, err);
   if (!raw?.replace && !packs.length) for (const [name, d] of Object.entries(DEFAULT_STATES)) define[name] = { name, ...d };
   let packDefault: string | undefined;
   for (const pack of packs) {
@@ -162,7 +162,9 @@ function buildKinds(raw: Raw["kinds"], shapes: Record<string, ShapeDef>, packs: 
 export const SAFE_SVG = (svg: string) => !/<\s*(script|foreignObject|image|style|iframe|use)\b|\bon[a-z]+\s*=|javascript:/i.test(svg);
 
 /* ---------- main ---------- */
-export function validate(input: unknown): ValidationResult {
+/** `packs`: vocabularies given in code (a browser, a bundler), found by name ahead of anything built in or installed. */
+export interface ValidateOptions { packs?: readonly Pack[] }
+export function validate(input: unknown, options: ValidateOptions = {}): ValidationResult {
   const data: unknown = structuredClone(input);
   if (!checkSchema(data)) return { ok: false, errors: dedupe(pickOneOfBranch(checkSchema.errors ?? [], data).map(describe)) };
   const raw = data as Raw;
@@ -171,8 +173,8 @@ export function validate(input: unknown): ValidationResult {
   const err = (p: string, m: string) => errors.push(new ValidationError(p, m));
 
   // Schema defaults have filled `raw`; the untouched input says what the author actually wrote.
-  const states = buildStates(raw.states, (input as Raw | undefined)?.states, err);
-  const packs = packsOf(raw.kinds?.use, "/kinds/use", err);
+  const states = buildStates(raw.states, (input as Raw | undefined)?.states, options.packs ?? [], err);
+  const packs = packsOf(raw.kinds?.use, "/kinds/use", options.packs ?? [], err);
   const shapes = buildShapes(raw.shapes, packs, err);
   const kinds = buildKinds(raw.kinds, shapes, packs, err);
   const stateOk = (name: string) => Object.hasOwn(states.define, name);

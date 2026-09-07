@@ -508,6 +508,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@orrery-diagrams/pack-aws@workspace:*, @orrery-diagrams/pack-aws@workspace:packages/pack-aws":
+  version: 0.0.0-use.local
+  resolution: "@orrery-diagrams/pack-aws@workspace:packages/pack-aws"
+  languageName: unknown
+  linkType: soft
+
+"@orrery-diagrams/pack-azure@workspace:*, @orrery-diagrams/pack-azure@workspace:packages/pack-azure":
+  version: 0.0.0-use.local
+  resolution: "@orrery-diagrams/pack-azure@workspace:packages/pack-azure"
+  languageName: unknown
+  linkType: soft
+
+"@orrery-diagrams/pack-gcp@workspace:*, @orrery-diagrams/pack-gcp@workspace:packages/pack-gcp":
+  version: 0.0.0-use.local
+  resolution: "@orrery-diagrams/pack-gcp@workspace:packages/pack-gcp"
+  languageName: unknown
+  linkType: soft
+
 "@orrery-diagrams/raster@workspace:packages/raster":
   version: 0.0.0-use.local
   resolution: "@orrery-diagrams/raster@workspace:packages/raster"
@@ -2069,6 +2087,9 @@ __metadata:
   resolution: "orrery-monorepo@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.1"
+    "@orrery-diagrams/pack-aws": "workspace:*"
+    "@orrery-diagrams/pack-azure": "workspace:*"
+    "@orrery-diagrams/pack-gcp": "workspace:*"
     "@types/jsdom": "npm:^30"
     "@types/node": "npm:^26"
     aws-icons: "npm:3.3.0"
