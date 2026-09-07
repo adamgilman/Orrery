@@ -6,14 +6,14 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc -b && yarn workspace @orrery-diagrams/runtime run bundle",
+    "build": "node packages/core/scripts/embed.mjs && tsc -b && yarn workspace @orrery-diagrams/runtime run bundle",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:regression": "vitest run test/orrery/regression.test.ts",
     "test:smoke": "vitest run test/orrery/smoke.test.ts",
     "test:integration": "vitest run test/orrery/integration.test.ts",
     "perf": "vitest run --config vitest.perf.config.ts",
-    "typecheck": "tsc -b",
+    "typecheck": "node packages/core/scripts/embed.mjs && tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "yarn typecheck && yarn lint && yarn test && ORRERY_SKIP_BUILD=1 yarn perf",
