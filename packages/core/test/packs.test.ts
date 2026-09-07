@@ -1,12 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { loadPack, packNames, validate, type Glyph, type Model } from "../src/index.js";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { PROVIDER_PACKS, installHint, loadPack, packNames, packProblem, validate, type Glyph, type Model, type Pack } from "../src/index.js";
+
+const root = join(import.meta.dirname, "../../..");
+const json = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
 
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const KIND_NAME = /^[A-Za-z][A-Za-z0-9_-]*$/;
 const glyphOf = (m: Model, kind: string) => m.kinds.components[kind]?.glyph as Glyph;
 
+describe("packs: the providers' icons are separate packages under their own terms", () => {
+  it("the tool itself ships only sre; each provider pack is its own package, licensed by the provider, not MIT", () => {
+    expect(readdirSync(join(root, "packages/core/packs"))).toEqual(["sre.json"]);
+    expect(Object.keys(PROVIDER_PACKS)).toEqual(["aws", "azure", "gcp"]);
+    const version = json("packages/core/package.json").version;
+    for (const [name, info] of Object.entries(PROVIDER_PACKS)) {
+      const dir = `packages/pack-${name}`;
+      const manifest = json(`${dir}/package.json`);
+      expect(manifest.name, name).toBe(`@orrery-diagrams/pack-${name}`);
+      expect(info.package).toBe(manifest.name);
+      expect(manifest.version, name).toBe(version);
+      expect(manifest.license, name).toBe("SEE LICENSE IN LICENSE");
+      expect(manifest.main, name).toBe("pack.json");
+      expect(manifest.files, name).toEqual(expect.arrayContaining(["pack.json", "LICENSE", "README.md"]));
+      const licence = readFileSync(join(root, dir, "LICENSE"), "utf8");
+      const pack = json(`${dir}/pack.json`) as Pack;
+      expect(licence, name).toContain(pack.terms);
+      expect(licence, name).toContain(pack.source);
+      expect(licence, name).not.toMatch(/MIT License|Permission is hereby granted/);
+      expect(readFileSync(join(root, dir, "README.md"), "utf8"), name).toContain(manifest.name);
+      expect(existsSync(join(root, "packages/core/packs", `${name}.json`)), name).toBe(false);
+    }
+    const cli = json("packages/cli/package.json");
+    expect(Object.keys({ ...cli.dependencies, ...cli.optionalDependencies, ...cli.peerDependencies }).filter((d) => d.includes("pack-"))).toEqual([]);
+  });
+  it("names the package to install and whose terms it carries; an unknown name lists the known ones", () => {
+    expect(installHint("aws")).toBe('pack "aws" is not installed: add @orrery-diagrams/pack-aws (AWS Architecture Icons, Amazon Web Services\' icons under their terms)');
+    expect(installHint("azure")).toContain("@orrery-diagrams/pack-azure (Azure Public Service Icons, Microsoft's icons under their terms)");
+    expect(installHint("gcp")).toContain("@orrery-diagrams/pack-gcp (Google Cloud product icons, Google's icons under their terms)");
+    expect(packProblem("ibm")).toBe('unknown pack "ibm"; known: aws, azure, gcp, sre');
+    expect(packProblem("aws")).toBeUndefined(); // installed in this workspace
+    expect(packProblem("sre")).toBeUndefined();
+  });
+  it("validate takes packs given in code, for a browser or a bundler, ahead of anything installed", () => {
+    const mine: Pack = { name: "mine", title: "Mine", version: "1", source: "here", terms: "yours", kinds: { components: { thing: { glyph: { viewBox: "0 0 10 10", svg: "<circle cx=\"5\" cy=\"5\" r=\"4\"/>" } } } } };
+    const r = validate({ kinds: { use: ["mine"] }, components: [{ id: "a", kind: "mine:thing" }] }, { packs: [mine] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect((r.model.kinds.components["mine:thing"]!.glyph as Glyph).viewBox).toBe("0 0 10 10");
+    const aws: Pack = { name: "aws", title: "Not AWS", version: "0", source: "test", terms: "none", kinds: { components: { only: { glyph: "storage" } } } };
+    const shadowed = validate({ kinds: { use: ["aws"] }, components: [{ id: "a", kind: "aws:only" }] }, { packs: [aws] });
+    expect(shadowed.ok).toBe(true);
+    expect(validate({ kinds: { use: ["aws"] }, components: [{ id: "a", kind: "aws:s3" }] }, { packs: [aws] }).ok).toBe(false);
+  });
+});
+
 describe("packs: the shipped files", () => {
-  it("ships aws, azure, gcp and sre, each naming its source and terms", () => {
+  it("knows aws, azure, gcp and sre, each naming its source and terms", () => {
     expect(packNames()).toEqual(["aws", "azure", "gcp", "sre"]);
     for (const name of packNames()) {
       const p = loadPack(name)!;

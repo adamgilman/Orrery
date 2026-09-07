@@ -144,7 +144,7 @@ defaults, in which case `default` must name a state from `define` (S14).
 | `look` | `normal` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object with `stroke`, `fill`, `text` (colours), `dash`, `pulse` (animated outline), `opacity` (0..1). The renderer emits exactly this. |
 | `flows` | `keep` | `stop`: connections touching an entity in this state are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic. |
 | `description` | | What the state means to you. Shown in the legend. |
-| `use` | | A states pack shipped with the tool (`sre`), or a list. A pack is a whole vocabulary: it stands in for the defaults, as `replace` does, and `define` merges onto it. `orrery packs` lists them. |
+| `use` | | A states pack (`sre`, with the tool), or a list. A pack is a whole vocabulary: it stands in for the defaults, as `replace` does, and `define` merges onto it. `orrery packs` lists them. |
 
 ### 4.8 Kinds
 
@@ -204,7 +204,10 @@ rectangle with that radius in px (`"round"` for a pill); one or the other. `pad`
 clear the outline, per side, declared rather than computed. A pack's `shapes` come in with `kinds.use`, prefixed
 like its kinds.
 
-**Packs.** `"use": ["aws"]` pulls in a vocabulary shipped with the tool (docs/PACKS.md). A kinds pack's names are
+**Packs.** `"use": ["aws"]` pulls in a vocabulary by name (docs/PACKS.md): `sre` comes with the tool; a provider's
+icon set is its own package, `@orrery-diagrams/pack-aws`, under the provider's terms rather than the tool's MIT
+licence, and a model that names one needs it installed (the error names the package) or given in code
+(`validate(model, { packs })`). A kinds pack's names are
 prefixed with the pack's name, `aws:s3`, `gcp:cloud-run`, `azure:sql-database`, so a kind name may carry one
 `:`; authors may namespace their own kinds the same way. Packs merge after the defaults and before the author's
 own definitions, later packs over earlier ones; `replace: true` drops the defaults and keeps the packs asked for.

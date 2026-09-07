@@ -1,0 +1,29 @@
+{
+  "name": "@orrery-diagrams/pack-aws",
+  "version": "0.1.1",
+  "description": "The AWS Architecture Icons as an Orrery vocabulary pack: every service as a kind (aws:s3, aws:lambda, aws:rds) and provider-coloured group frames. The icons are Amazon Web Services' and come under their terms, not the tool's MIT licence; see LICENSE.",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamgilman/Orrery.git",
+    "directory": "packages/pack-aws"
+  },
+  "homepage": "https://github.com/adamgilman/Orrery/blob/main/docs/PACKS.md",
+  "keywords": [
+    "orrery",
+    "architecture",
+    "diagram",
+    "aws",
+    "icons"
+  ],
+  "main": "pack.json",
+  "exports": {
+    ".": "./pack.json",
+    "./pack.json": "./pack.json"
+  },
+  "files": [
+    "pack.json",
+    "LICENSE",
+    "README.md"
+  ]
+}

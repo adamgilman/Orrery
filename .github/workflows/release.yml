@@ -39,11 +39,11 @@ jobs:
           set -e
           if [ -n "$NPM_TOKEN" ]; then npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"; fi
           mkdir -p /tmp/tarballs
-          for w in core layout-elk runtime raster cli; do
+          for w in core layout-elk runtime raster cli pack-aws pack-azure pack-gcp; do
             (cd packages/$w && yarn pack -o /tmp/tarballs/$w.tgz)
           done
           # idempotent: a rerun after a partial failure skips what is already on the registry
-          for w in core layout-elk runtime raster cli; do
+          for w in core layout-elk runtime raster cli pack-aws pack-azure pack-gcp; do
             name=$(node -p "require('./packages/$w/package.json').name")
             version=$(node -p "require('./packages/$w/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then echo "$name@$version is already published"; continue; fi

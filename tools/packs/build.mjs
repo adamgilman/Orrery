@@ -1,5 +1,8 @@
-// Writes the vocabulary packs in packages/core/packs/ (docs/PACKS.md): aws, azure and gcp from the providers'
-// own icon sets, and sre, a states vocabulary. Usage: node tools/packs/build.mjs
+// Writes the vocabulary packs (docs/PACKS.md): sre, a states vocabulary, into packages/core/packs/ with the tool;
+// aws, azure and gcp from the providers' own icon sets, each into its own package packages/pack-<name>/ with the
+// provider's terms as its LICENSE and a README, since the icons are the provider's, not the tool's to license.
+// Usage: node tools/packs/build.mjs            (fetches the sets and rewrites everything)
+//        node tools/packs/build.mjs --manifests (rewrites LICENSE and README from the committed pack.json files)
 // The Azure and Google zips are downloaded once into tools/packs/cache/ (unzip must be on the PATH); the AWS set
 // comes from the aws-icons npm package, an MIT-licensed wrapper of the official asset package. The generated files
 // are committed, so a change to a set shows in a diff and the tool has no build-time network dependency.
@@ -8,7 +11,6 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { basename, join } from "node:path";
 
 const CACHE = "tools/packs/cache";
-const OUT = "packages/core/packs";
 const FETCHED = "2026-09-06";
 
 async function unzipped(name, url) {
@@ -202,10 +204,62 @@ const sre = () => ({
   },
 });
 
-mkdirSync(OUT, { recursive: true });
-for (const pack of [await aws(), await azure(), await gcp(), sre()]) {
-  const file = join(OUT, `${pack.name}.json`);
+/* ---------- writing ---------- */
+const HOLDER = { aws: "Amazon Web Services", azure: "Microsoft", gcp: "Google" };
+const EXAMPLE = { aws: ["aws:s3", "aws:lambda", "aws:rds", "aws:vpc"], azure: ["azure:aks", "azure:functions", "azure:sql-database", "azure:resource-group"], gcp: ["gcp:run", "gcp:gke", "gcp:cloud-sql", "gcp:project"] };
+/** The provider's terms, verbatim, with what this package is and what the build changed; not the tool's MIT licence. */
+const licence = (pack) => `${pack.title}
+${pack.source}
+Set version: ${pack.version}. Fetched ${pack.fetched}.
+
+The icons in this package (pack.json) are ${HOLDER[pack.name]}'s and are provided under ${HOLDER[pack.name]}'s
+terms, quoted here as published:
+
+    ${pack.terms}
+
+They are not covered by the MIT licence of Orrery, the tool this package is a vocabulary for. Installing this
+package is your acceptance of the provider's terms; using the icons for anything the provider does not permit is
+between you and the provider.
+
+What this package changed: each icon's SVG was normalised for embedding (XML declaration, comments and titles
+removed; style rules inlined; unreferenced ids dropped and the rest prefixed) and given a name. Nothing was cropped,
+flipped, rotated, recoloured or redrawn. The provider's own group frames were not part of the set: the few group
+kinds in this pack are plain frames in the provider's colours, drawn by Orrery.
+`;
+const readme = (pack) => {
+  const n = Object.keys(pack.kinds.components).length, g = Object.keys(pack.kinds.groups).length;
+  return `# @orrery-diagrams/pack-${pack.name}
+
+${pack.title} as an [Orrery](https://github.com/adamgilman/Orrery) vocabulary pack: ${n} icons as kinds and ${g}
+group frames in the provider's colours. **The icons are ${HOLDER[pack.name]}'s and come under their terms, which are
+in [LICENSE](LICENSE), not under Orrery's MIT licence.** Set version ${pack.version}, fetched ${pack.fetched}, from
+${pack.source}.
+
+\`\`\`sh
+npm install @orrery-diagrams/pack-${pack.name}      # or yarn add, pnpm add, bun add
+\`\`\`
+
+\`\`\`jsonc
+"kinds": { "use": ["${pack.name}"] }   // then "kind": ${EXAMPLE[pack.name].map((k) => `"${k}"`).join(", ")} ...
+\`\`\`
+
+\`orrery packs ${pack.name}\` lists every name with its description. In code, pass the pack to the validator:
+\`validate(model, { packs: [pack] })\` with \`pack\` imported from this package. How the pack is built, and the
+terms of every pack, are in [docs/PACKS.md](https://github.com/adamgilman/Orrery/blob/main/docs/PACKS.md).
+`;
+};
+function write(pack) {
+  const own = pack.name === "sre";
+  const dir = own ? "packages/core/packs" : `packages/pack-${pack.name}`;
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, own ? "sre.json" : "pack.json");
   writeFileSync(file, JSON.stringify(pack) + "\n");
+  if (!own) { writeFileSync(join(dir, "LICENSE"), licence(pack)); writeFileSync(join(dir, "README.md"), readme(pack)); }
   const n = Object.keys(pack.kinds?.components ?? {}).length || Object.keys(pack.states?.define ?? {}).length;
-  console.log(`${file}: ${n} ${pack.kinds ? "kinds" : "states"}, ${(statSync(file).size / 1024).toFixed(0)} KB`);
+  console.log(`${file}: ${n} ${pack.kinds ? "kinds" : "states"}, ${(statSync(file).size / 1024).toFixed(0)} KB${own ? "" : ", LICENSE, README.md"}`);
+}
+if (process.argv.includes("--manifests")) {
+  for (const name of ["aws", "azure", "gcp"]) write(JSON.parse(readFileSync(`packages/pack-${name}/pack.json`, "utf8")));
+} else {
+  for (const pack of [await aws(), await azure(), await gcp(), sre()]) write(pack);
 }

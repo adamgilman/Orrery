@@ -24,6 +24,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@orrery-diagrams/pack-aws": "workspace:*",
+    "@orrery-diagrams/pack-azure": "workspace:*",
+    "@orrery-diagrams/pack-gcp": "workspace:*",
     "@types/jsdom": "^30",
     "@types/node": "^26",
     "aws-icons": "3.3.0",

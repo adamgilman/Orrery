@@ -1,0 +1,17 @@
+Google Cloud product icons
+https://cloud.google.com/icons
+Set version: legacy set and core products set as published on 2026-09-06. Fetched 2026-09-06.
+
+The icons in this package (pack.json) are Google's and are provided under Google's
+terms, quoted here as published:
+
+    Google Cloud offers these icons for building architecture diagrams. No separate licence text accompanies the download; see the Google Cloud icons page.
+
+They are not covered by the MIT licence of Orrery, the tool this package is a vocabulary for. Installing this
+package is your acceptance of the provider's terms; using the icons for anything the provider does not permit is
+between you and the provider.
+
+What this package changed: each icon's SVG was normalised for embedding (XML declaration, comments and titles
+removed; style rules inlined; unreferenced ids dropped and the rest prefixed) and given a name. Nothing was cropped,
+flipped, rotated, recoloured or redrawn. The provider's own group frames were not part of the set: the few group
+kinds in this pack are plain frames in the provider's colours, drawn by Orrery.

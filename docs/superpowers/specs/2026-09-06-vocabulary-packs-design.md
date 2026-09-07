@@ -144,6 +144,12 @@ URL), and the Microsoft 365, Entra, Fabric and Power Platform sets.
 - **The README runs on the pack (user, 2026-09-06).** Rather than a separate stage 8, the master checkout model
   declares `"kinds": { "use": ["aws"] }`, so every stage picture and the landing page carry the AWS icons from the
   first picture on; stage 1's text introduces packs.
+- **Each provider pack is its own package (user, 2026-09-07).** The icons are the provider's under the provider's
+  terms, so they cannot ship inside `@orrery-diagrams/core` (MIT). `@orrery-diagrams/pack-aws`, `pack-azure` and
+  `pack-gcp` carry `pack.json`, the terms as LICENSE and a README, with `license: SEE LICENSE IN LICENSE`; the
+  loader resolves an installed package by name from the tool's install and the working project; a missing one
+  fails validation naming the package; `validate(model, { packs })` takes packs in code. The tool ships `sre` only.
+  The README and site keep the AWS icons in their diagrams, the permitted use.
 - **The embedded model is pruned (2026-09-06).** The interactive file carried the whole merged `kinds` block, so a
   checkout on the aws pack grew from 62 KB to 611 KB and three packs broke the site build. `renderDocument` now
   embeds only the kinds and shapes the entities use.
