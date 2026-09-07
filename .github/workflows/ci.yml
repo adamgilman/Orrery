@@ -36,12 +36,24 @@ jobs:
       - run: yarn test
       # The ratchet measures whenever there is a build, whatever the tests said, so a pull request always gets its table.
       # A pull request may declare growth it means: a line `perf-accept: metric, metric` in its body, with the reason.
+      # The `perf-ignore` label accepts every metric: the table is still measured and posted, but nothing blocks, and
+      # the ratchet resets the baseline to what was measured when the pull request merges. Dependabot's carry it.
+      # A push to main is judged by what the pull request it merged accepted, so the ratchet can run and reset.
       - name: Accepted growth, if the pull request declares any
         id: accept
         if: always()
         env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
           BODY: ${{ github.event.pull_request.body }}
-        run: echo "metrics=$(printf '%s' "$BODY" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
+          IGNORE: ${{ contains(github.event.pull_request.labels.*.name, 'perf-ignore') }}
+        run: |
+          if [ "$EVENT" = "push" ]; then
+            pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0] // empty' 2>/dev/null || true)
+            BODY=$(jq -r '.body // ""' <<<"${pr:-null}"); IGNORE=$(jq -r '[.labels[]?.name] | index("perf-ignore") != null' <<<"${pr:-null}")
+          fi
+          if [ "$IGNORE" = "true" ]; then echo "metrics=*" >> "$GITHUB_OUTPUT"
+          else echo "metrics=$(printf '%s' "$BODY" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"; fi
       - run: yarn perf
         if: always()
         env:
@@ -85,8 +97,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          body=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0].body // ""' 2>/dev/null || true)
-          echo "metrics=$(printf '%s' "$body" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[0] // empty' 2>/dev/null || true)
+          if [ "$(jq -r '[.labels[]?.name] | index("perf-ignore") != null' <<<"${pr:-null}")" = "true" ]; then echo "metrics=*" >> "$GITHUB_OUTPUT"
+          else echo "metrics=$(jq -r '.body // ""' <<<"${pr:-null}" | grep -oiE 'perf-accept:.*' | head -1 | sed 's/^[^:]*://')" >> "$GITHUB_OUTPUT"; fi
       - run: yarn perf
         env:
           ORRERY_SKIP_BUILD: "1"

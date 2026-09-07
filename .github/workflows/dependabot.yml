@@ -1,0 +1,61 @@
+# Dependabot's pull requests merge themselves when CI is green. GitHub's own auto-merge would do this with the
+# workflow token, but a merge made by that token starts no workflow: the ratchet would not tighten and the site
+# would not deploy. So when the ci workflow finishes on a Dependabot branch, this job checks the result and pushes
+# the merge to main with the deploy key, an ordinary push that CI and the site see. Only Dependabot's pull requests
+# qualify; every other pull request is merged by a person.
+name: dependabot
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  merge:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.actor.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: The pull request, if it is Dependabot's, open, unchanged since this run, and green
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&head=${GITHUB_REPOSITORY%%/*}:$BRANCH" --jq '.[0] // empty')
+          [ -n "$pr" ] || { echo "no open pull request for $BRANCH"; exit 0; }
+          number=$(jq -r .number <<<"$pr"); login=$(jq -r .user.login <<<"$pr"); head=$(jq -r .head.sha <<<"$pr"); base=$(jq -r .base.ref <<<"$pr")
+          [ "$login" = "dependabot[bot]" ] || { echo "#$number is not Dependabot's; a person merges it"; exit 0; }
+          [ "$base" = "main" ] || { echo "#$number targets $base, not main"; exit 0; }
+          [ "$head" = "$SHA" ] || { echo "#$number moved on since this run; the next run decides"; exit 0; }
+          [ "$CONCLUSION" = "success" ] || { echo "#$number: CI $CONCLUSION; not merging"; exit 0; }
+          { echo "number=$number"; echo "title=$(jq -r .title <<<"$pr")"; } >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        if: steps.pr.outputs.number
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge into main and push with the deploy key
+        if: steps.pr.outputs.number
+        env:
+          KEY: ${{ secrets.PERF_RATCHET_KEY }}
+          NUMBER: ${{ steps.pr.outputs.number }}
+          TITLE: ${{ steps.pr.outputs.title }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -e
+          git fetch -q origin "$SHA"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-ff "$SHA" -m "Merge pull request #$NUMBER from ${GITHUB_REPOSITORY%%/*}/$BRANCH" -m "$TITLE"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/ratchet && chmod 600 ~/.ssh/ratchet
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/ratchet -o IdentitiesOnly=yes"
+          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
+          git push -q origin HEAD:main
+          git push -q origin --delete "$BRANCH" || true
+          echo "merged #$NUMBER into main"
