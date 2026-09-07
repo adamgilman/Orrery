@@ -155,6 +155,26 @@ describe("validate: namespaced kinds and glyph objects", () => {
   });
 });
 
+describe("validate: a union reports the branch the value was reaching for (an outside review)", () => {
+  const errors = (input: unknown) => { const r = validate(input); return r.ok ? [] : r.errors.map((e) => e.toString()); };
+  const base = { components: [{ id: "a" }] };
+  it("an object of reasons with a non-string reason: the reason is the error, not 'must be an array'", () => {
+    expect(errors({ ...base, scenarios: [{ id: "s", steps: [{ set: { failed: { a: 123 } } }] }] })).toEqual(["/scenarios/0/steps/0/set/failed/a: must be a string"]);
+    expect(errors({ ...base, exports: [{ id: "x", set: { failed: { a: 123 } } }] })).toEqual(["/exports/0/set/failed/a: must be a string"]);
+  });
+  it("a string that is not one of the enum: the enum is the error, not 'must be a boolean'", () => {
+    expect(errors({ ...base, exports: [{ id: "x", heading: "middle" }] })).toEqual(["/exports/0/heading: must be one of: centre, left"]);
+  });
+  it("a value of a type no branch takes: the forms it may take, in words", () => {
+    expect(errors({ ...base, scenarios: [{ id: "s", steps: [{ set: { failed: 123 } }] }] })).toEqual(["/scenarios/0/steps/0/set/failed: must be a string, an array or an object"]);
+    expect(errors({ ...base, kinds: { use: 5 } })).toEqual(["/kinds/use: must be a string or an array"]);
+    expect(errors({ ...base, exports: [{ id: "x", heading: 1 }] })).toEqual(["/exports/0/heading: must be a boolean or a string"]);
+  });
+  it("an array with a bad item: the item is the error", () => {
+    expect(errors({ ...base, scenarios: [{ id: "s", steps: [{ set: { failed: ["a", 2] } }] }] })).toEqual(["/scenarios/0/steps/0/set/failed/1: must be a string"]);
+  });
+});
+
 describe("validate: descriptions and headings (R15)", () => {
   it("keeps the model's and a view's description, and an export's heading, including on a tour export", () => {
     const r = validate({ title: "T", description: "About the system", views: [{ id: "v", description: "About this view" }], tour: { seconds: 2, scenes: [{ view: "v" }, { view: "v", note: "again" }] }, exports: [{ id: "a", heading: true }, { id: "b", tour: true, heading: "left" }], components: [{ id: "x" }] });

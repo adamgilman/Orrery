@@ -1,0 +1,4 @@
+[
+  { "pointer": "/scenarios/0/steps/0/set/failed/a", "message": "must be a string" },
+  { "pointer": "/exports/0/heading", "message": "must be one of: centre, left" }
+]
