@@ -3,7 +3,9 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
-## Unreleased
+## 0.3.0 (2026-09-07)
+
+A breaking release for library users: `@orrery-diagrams/core`'s root export is now its curated public API, and the root runs in a browser. For the command line nothing breaks: `--version`, stdin, and a second name for the command, `orrery-diagrams`.
 
 - `orrery --version`; a `<file>` of `-` reads the model from stdin; the command is installed as `orrery-diagrams` as well as `orrery`, since the package is `orrery-diagrams` (`orrery` on npm is someone else's). The Claude Code plugin is versioned with the packages, checked by a test and by the release workflow. The design notes moved from `docs/superpowers/specs` to `docs/design/notes` with an index (housekeeping from an outside review).
 - Every package has a README, so its npm page says what it is for. The repository README's Status heading renders again and says what has shipped; PRD.md no longer lists GIF and PNG export as outputs that exist nor describes propagation as done. CI regenerates every example picture and fails when a committed one differs, so a renderer change cannot leave the README lying (found in an outside review).
