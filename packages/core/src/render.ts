@@ -8,7 +8,7 @@ import { lineOf, lookOf } from "./looks.js";
 export { LINE_STYLES, LOOK_PRESETS, lineOf, lookOf } from "./looks.js";
 import { declare, ModelError, stopFlows } from "./declare.js";
 import type { Callout, CalloutSide, Component, Connection, Export, Glyph, Group, GroupKindDef, HeadingAlign, Model, Play, ShapeDef, Tour, View } from "./types.js";
-import { configurationsOf, openOrder, scopeModel, selectView } from "./view.js";
+import { configurationsOf, openOrder, openProblems, scopeModel, selectView } from "./view.js";
 
 /** Text-content escaping. */
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -746,7 +746,8 @@ export async function render(model: Model, engine: LayoutEngine, options: Render
   const play = playOf(view, options);
   if (play && play.scenario !== undefined && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
   const open = openOrder(model.groups, options.open ?? []);
-  for (const g of open) if (!(view.collapse ?? []).includes(g)) throw new ModelError(`"${g}" is not a closed group in view "${view.id}"; closed: ${(view.collapse ?? []).join(", ") || "none"}`);
+  const bad = openProblems(model.groups, view, open, model.components)[0]; // the same rule the validator applies to an export's open (R11)
+  if (bad) throw new ModelError(bad.message);
   const d = declare(model, { ...(options.scenario !== undefined ? { scenario: options.scenario } : {}), ...(options.step !== undefined ? { step: options.step } : {}), ...(options.set ? { set: options.set } : {}), ...(options.reasons ? { reasons: options.reasons } : {}), ...(options.callouts ? { callouts: options.callouts } : {}) });
   let title = view.title ?? model.title;
   if (options.scenario !== undefined) {

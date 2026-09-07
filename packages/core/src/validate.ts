@@ -6,7 +6,7 @@ import { sanitizeGlyph } from "./glyph.js";
 import { CSS_COLOR } from "./looks.js";
 import { loadPack, packProblem, type Pack } from "./packs.js";
 import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
-import { configurationsOf, openOrder } from "./view.js";
+import { configurationsOf, openOrder, openProblems } from "./view.js";
 import type { Callout, Component, ComponentKindDef, Connection, ConnectionKindDef, Direction, Export, Message, ViewType, Group, GroupKindDef, HeadingAlign, Kinds, LookPreset, LookStyle, Model, Scenario, ScenarioStep, Scene, ShapeDef, StateDef, States, Tour, View } from "./types.js";
 
 export class ValidationError extends Error {
@@ -351,14 +351,8 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
    * Returns `open` in declaration order, the canonical form every layer and layout is keyed by.
    */
   const checkOpen = (base: string, view: View | undefined, open: string[] | undefined, zoom: string | undefined): string[] | undefined => {
-    const collapse = new Set(view?.collapse ?? []);
-    const opened = new Set(open ?? []);
-    (open ?? []).forEach((id, k) => {
-      if (!groupIds.has(id)) return err(`${base}/open/${k}`, componentIds.has(id) ? `"${id}" is not a group` : `unknown group "${id}"`);
-      if (!collapse.has(id)) return err(`${base}/open/${k}`, `"${id}" is not closed in view "${view?.id ?? "?"}"; list it in the view's collapse`);
-      const above = ancestors(id).find((g) => collapse.has(g));
-      if (above !== undefined && !opened.has(above)) err(`${base}/open/${k}`, `"${id}" is inside "${above}", which is closed; open "${above}" too`);
-    });
+    for (const p of openProblems(raw.groups, { id: view?.id ?? "?", collapse: view?.collapse }, open ?? [], raw.components)) err(`${base}/open/${p.index}`, p.message);
+    const collapse = new Set(view?.collapse ?? []), opened = new Set(open ?? []);
     if (zoom !== undefined) {
       if (!isEntity(zoom)) err(`${base}/zoom`, `unknown entity "${zoom}"`);
       else {

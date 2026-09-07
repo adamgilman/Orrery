@@ -7,6 +7,13 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 - A value that fails a union (`set` entries, `heading`, `use`, looks, glyphs, lines, frames) is reported against the branch its type was reaching for: a non-string reason says the reason must be a string, `heading: "middle"` lists the allowed words, and a type no branch takes gets the forms in words. The old picker took strings for the first branch and everything else for the second, which was wrong for any three-way union (found in an outside review).
 
+## Unreleased
+
+- `render({ open })` applies the rule the validator applies to an export's `open`: a group inside a closed group needs that group open too, and a component is named as not a group (found in an outside review).
+- Runtime: `destroy()` in the middle of a morph no longer lets the morph's completion start a scenario autoplay or a camera tween after everything was stopped; nothing runs after destroy.
+- Runtime: a tour scene that switches view and opens groups now opens them in the view it switched to; before, the open list was resolved against the view being left and silently opened nothing.
+- Raster: `inspect` and the region maths read the viewBox's origin, so a zoomed export is measured where it is drawn instead of from (0, 0); flow regions are clipped to the picture. A flow whose line never enters the picture is not checked. The rasteriser draws a cropped picture whole and cuts the pixels to its viewBox, because resvg 2.6 aborts the process on any element needing its own layer (a marker, a nested icon, a fallback glyph) that lies wholly outside the canvas, which a zoomed export always has.
+
 ## 0.2.1 (2026-09-07)
 
 A security fix; upgrade if a model file you render can come from someone else.
