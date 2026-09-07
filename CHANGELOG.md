@@ -3,22 +3,23 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- The five MIT packages ship the project's licence notice in their own directory, which is what the MIT licence requires of copies and what npm includes in a tarball. A test keeps every workspace carrying a manifest, a README and a notice, and keeps the changelog's Unreleased section single and first.
+
 ## 0.3.0 (2026-09-07)
 
-A breaking release for library users: `@orrery-diagrams/core`'s root export is now its curated public API, and the root runs in a browser. For the command line nothing breaks: `--version`, stdin, and a second name for the command, `orrery-diagrams`.
+A breaking release for library users: `@orrery-diagrams/core`'s root export is now its curated public API, and the root runs in a browser. For the command line nothing breaks: `--version`, stdin, and a second name for the command, `orrery-diagrams`. It also carries four fixes found in an outside review.
 
 - `orrery --version`; a `<file>` of `-` reads the model from stdin; the command is installed as `orrery-diagrams` as well as `orrery`, since the package is `orrery-diagrams` (`orrery` on npm is someone else's). The Claude Code plugin is versioned with the packages, checked by a test and by the release workflow. The design notes moved from `docs/superpowers/specs` to `docs/design/notes` with an index (housekeeping from an outside review).
 - Every package has a README, so its npm page says what it is for. The repository README's Status heading renders again and says what has shipped; PRD.md no longer lists GIF and PNG export as outputs that exist nor describes propagation as done. CI regenerates every example picture and fails when a committed one differs, so a renderer change cannot leave the README lying (found in an outside review).
 - Core's root runs in a browser: the JSON Schema and the built-in `sre` pack are generated into code (`src/generated.ts`, from `schema/v1.json` and `packs/sre.json`, which stay the sources) instead of being read from disk at import time, and installed provider packs are looked up through Node's builtins only when a pack is named and only where Node is. A test bundles the root for the browser and validates in a context with no `process` (found in an outside review: the root was Node-only and the browser-safe subpaths existed by convention).
 - Breaking for library users: `@orrery-diagrams/core`'s root export is now a curated public API (the model's types, `validate`, `declare`, `render`, `renderDocument`, `renderExport`, the packs, `sanitizeGlyph`, the `LayoutEngine` contract), pinned by a test. Everything else moved behind `@orrery-diagrams/core/internal` (and `/internal/<module>`), the fake layout engine behind `@orrery-diagrams/core/testing`; the `/flow`, `/looks`, `/shapes` subpaths are gone (found in an outside review: thirteen `export *` lines made test doubles, regex constants and layout internals semver-committed).
-- A value that fails a union (`set` entries, `heading`, `use`, looks, glyphs, lines, frames) is reported against the branch its type was reaching for: a non-string reason says the reason must be a string, `heading: "middle"` lists the allowed words, and a type no branch takes gets the forms in words. The old picker took strings for the first branch and everything else for the second, which was wrong for any three-way union (found in an outside review).
-
-## Unreleased
-
 - `render({ open })` applies the rule the validator applies to an export's `open`: a group inside a closed group needs that group open too, and a component is named as not a group (found in an outside review).
 - Runtime: `destroy()` in the middle of a morph no longer lets the morph's completion start a scenario autoplay or a camera tween after everything was stopped; nothing runs after destroy.
 - Runtime: a tour scene that switches view and opens groups now opens them in the view it switched to; before, the open list was resolved against the view being left and silently opened nothing.
 - Raster: `inspect` and the region maths read the viewBox's origin, so a zoomed export is measured where it is drawn instead of from (0, 0); flow regions are clipped to the picture. A flow whose line never enters the picture is not checked. The rasteriser draws a cropped picture whole and cuts the pixels to its viewBox, because resvg 2.6 aborts the process on any element needing its own layer (a marker, a nested icon, a fallback glyph) that lies wholly outside the canvas, which a zoomed export always has.
+- A value that fails a union (`set` entries, `heading`, `use`, looks, glyphs, lines, frames) is reported against the branch its type was reaching for: a non-string reason says the reason must be a string, `heading: "middle"` lists the allowed words, and a type no branch takes gets the forms in words. The old picker took strings for the first branch and everything else for the second, which was wrong for any three-way union (found in an outside review).
 
 ## 0.2.1 (2026-09-07)
 
