@@ -42,10 +42,13 @@ jobs:
           for w in core layout-elk runtime raster cli pack-aws pack-azure pack-gcp; do
             (cd packages/$w && yarn pack -o /tmp/tarballs/$w.tgz)
           done
-          # idempotent: a rerun after a partial failure skips what is already on the registry
+          # idempotent: a rerun after a partial failure skips what is already on the registry; every package is
+          # tried before the job fails, so one package's missing publisher never blocks the packages after it
+          failed=""
           for w in core layout-elk runtime raster cli pack-aws pack-azure pack-gcp; do
             name=$(node -p "require('./packages/$w/package.json').name")
             version=$(node -p "require('./packages/$w/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then echo "$name@$version is already published"; continue; fi
-            npm publish /tmp/tarballs/$w.tgz --access public --provenance
+            npm publish /tmp/tarballs/$w.tgz --access public --provenance || failed="$failed $name"
           done
+          [ -z "$failed" ] || { echo "::error::not published:$failed"; exit 1; }
