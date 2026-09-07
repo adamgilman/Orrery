@@ -167,10 +167,14 @@ own. Opened directly with no page around it, the SVG is purely the diagram: clic
 your states, click a closed group to drill in, Escape to step back out, digits to switch views, `s` to start a
 scenario and cycle through them, brackets to step it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
 or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout-sequence.svg)
-(served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server. ## Status
+(served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server.
 
-The model is specified in [docs/MODEL.md](docs/MODEL.md) and the file is interactive. Next: sequence and walkthrough
-views, GIF export, and an MCP server. See the [PRD](PRD.md).
+## Status
+
+The model is specified in [docs/MODEL.md](docs/MODEL.md); the file is interactive; sequence views, the providers'
+icon packs, shapes, callouts and headings have shipped, and every package is on npm. Next, in the order the
+[PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, GIF and PNG
+export from the frame tooling, and an MCP server.
 
 ## Quick start
 
