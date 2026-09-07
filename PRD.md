@@ -36,7 +36,7 @@ Three tests every release must pass:
 |---|---|---|
 | Author | AI coding agent (Claude Code, Cursor, etc.), occasionally a human | Writes `*.orrery.json`, runs `validate` and `render`, looks at the result with `yarn inspect` |
 | Navigator | Engineer, architect, reviewer | Opens the interactive SVG or a page built on it, drills into groups, steps components through states, plays failure scenarios |
-| Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG or GIF |
+| Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG (a GIF once M4 ships) |
 
 ## 3. Scope
 
@@ -80,7 +80,7 @@ Specified in [docs/MODEL.md](docs/MODEL.md). That document is normative; nothing
 |---|---|---|---|
 | GitHub README, most markdown renderers | `orrery.svg` via `<img>` | yes (CSS/SMIL) | no |
 | Browser, GitHub Pages, jsDelivr link, Backstage, iframe macros | same `orrery.svg`, or `orrery.html` | yes | **yes** |
-| Confluence Cloud, Slack, Google Docs, anything raster-only | `orrery.gif` / `.png` | GIF yes | no |
+| Confluence Cloud, Slack, Google Docs, anything raster-only | `orrery.gif` / `.png`: planned, M4; today the frame tooling in `@orrery-diagrams/raster` writes PNG frames and contact sheets | GIF yes, once M4 ships | no |
 | PR review | per-scenario static SVGs | no | no |
 
 Rule: **one source file, every output derived**. Layout runs at build time so the shipped SVG carries coordinates and needs no layout engine at view time.
@@ -114,8 +114,8 @@ interface LayoutEngine {
 |---|---|
 | M0 thin slice | Schema, validator with pointer errors, ELK behind `LayoutEngine`, animated SVG, CLI, examples page. README animation confirmed on GitHub web and mobile. Fresh agent validated first try. |
 | M1 model and views | Groups, kinds, views with scope, label-aware layout, group frames and glyphs. Measured ELK option sweep found no win over the baseline. |
-| M2 failure semantics | Declared states, dependencies with alternatives, cumulative scenarios, pure propagation with reasons, state styling, frame tooling that freezes the pulse. |
-| M3 runtime | Runtime inside the raw SVG: outline, zoom, state changes with live propagation, scenario step-through, multi-view morph, keyboard. CLI emits the interactive document by default. Verified in jsdom; browser check pending. |
+| M2 failure semantics | Declared states, cumulative scenarios, state styling, frame tooling that freezes the pulse. Shipped with dependencies and propagation, both removed a day later (see Declared model): every state in a picture is now one the author wrote. |
+| M3 runtime | Runtime inside the raw SVG: outline, zoom, state changes, scenario step-through, multi-view morph, keyboard (propagation since removed, see Declared model). CLI emits the interactive document by default. Verified in jsdom; browser check pending. |
 | Timer playback | A view can `play` a scenario: pre-rendered step layers cycled by CSS in the file (plays in a README), and runtime autoplay until the reader interacts. |
 | Model redesign | The specification in docs/MODEL.md replaced fixed system states with the author's vocabulary, moved dependencies to `needs` on components, made connections fluid across entities, added `--set`, warnings, legend, ghosts. Four fresh-agent walks, zero validation failures on the last one. |
 | Drill-down and tours | Closed groups drawn as node-sized boxes; opening one lays the view out again and the picture moves between layouts, to any depth, in the file's tour and in the runtime; frame tooling in resvg and real Chromium to debug transitions frame by frame. |
