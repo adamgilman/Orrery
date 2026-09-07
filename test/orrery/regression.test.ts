@@ -6,7 +6,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONNECTION_KINDS, SHAPE_PRESETS, packNames, schema, validate, type Model } from "@orrery-diagrams/core";
+import { packNames, schema, validate, type Model } from "@orrery-diagrams/core";
+import { DEFAULT_CONNECTION_KINDS, SHAPE_PRESETS } from "@orrery-diagrams/core/internal";
 
 const root = join(import.meta.dirname, "../..");
 const raw: any = JSON.parse(readFileSync(join(root, "examples/orrery.orrery.json"), "utf8"));

@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
+import { renderDocument, validate } from "@orrery-diagrams/core";
+import { FakeLayoutEngine } from "@orrery-diagrams/core/testing";
 import { mount, type Orrery, type Snapshot } from "../src/browser/index.js";
 
 const doc = async (name: string, view?: string, change: (m: Record<string, unknown>) => void = () => {}) => {

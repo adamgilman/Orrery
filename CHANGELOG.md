@@ -5,6 +5,7 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 ## Unreleased
 
+- Breaking for library users: `@orrery-diagrams/core`'s root export is now a curated public API (the model's types, `validate`, `declare`, `render`, `renderDocument`, `renderExport`, the packs, `sanitizeGlyph`, the `LayoutEngine` contract), pinned by a test. Everything else moved behind `@orrery-diagrams/core/internal` (and `/internal/<module>`), the fake layout engine behind `@orrery-diagrams/core/testing`; the `/flow`, `/looks`, `/shapes` subpaths are gone (found in an outside review: thirteen `export *` lines made test doubles, regex constants and layout internals semver-committed).
 - A value that fails a union (`set` entries, `heading`, `use`, looks, glyphs, lines, frames) is reported against the branch its type was reaching for: a non-string reason says the reason must be a string, `heading: "middle"` lists the allowed words, and a type no branch takes gets the forms in words. The old picker took strings for the first branch and everything else for the second, which was wrong for any three-way union (found in an outside review).
 
 ## Unreleased

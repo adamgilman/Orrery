@@ -22,7 +22,8 @@ describe("ElkLayoutEngine: compound graphs", () => {
   it("lays out nested groups with edges crossing hierarchy levels (regression: considerModelOrder crashed ELK)", async () => {
     const { readFileSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const { validate, toLayoutGraph } = await import("@orrery-diagrams/core");
+    const { validate } = await import("@orrery-diagrams/core");
+    const { toLayoutGraph } = await import("@orrery-diagrams/core/internal");
     const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid/own-vocabulary.json"), "utf8")));
     if (!r.ok) throw new Error(JSON.stringify(r.errors));
     const out = await new ElkLayoutEngine().layout(toLayoutGraph(r.model));

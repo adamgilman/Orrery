@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, renderDocument, validate, type Model } from "../src/index.js";
+import { renderDocument, validate, type Model } from "../src/index.js";
+import { FakeLayoutEngine } from "../src/testing.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const engine = () => new FakeLayoutEngine();

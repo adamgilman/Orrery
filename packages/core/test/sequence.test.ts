@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FakeLayoutEngine, layoutSequence, render, renderDocument, renderExport, scopeModel, validate, type Model } from "../src/index.js";
+import { render, renderDocument, renderExport, validate, type Model } from "../src/index.js";
+import { FakeLayoutEngine } from "../src/testing.js";
+import { layoutSequence, scopeModel } from "../src/internal.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const between = (svg: string, start: string) => svg.slice(svg.indexOf(start), svg.indexOf("\n</g>", svg.indexOf(start)));

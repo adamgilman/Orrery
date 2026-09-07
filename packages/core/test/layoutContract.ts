@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GROUP_PADDING, type LayoutEngine, type LayoutGraph } from "../src/index.js";
+import { type LayoutEngine, type LayoutGraph } from "../src/index.js";
+import { GROUP_PADDING } from "../src/internal.js";
 
 /** Contract every LayoutEngine implementation must satisfy. Import and call from the engine's own test file. */
 export function layoutContract(name: string, make: () => LayoutEngine) {

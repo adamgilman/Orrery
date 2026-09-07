@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { applySet, declare, stopFlows, validate, type Model } from "../src/index.js";
+import { declare, validate, type Model } from "../src/index.js";
+import { applySet, stopFlows } from "../src/internal.js";
 
 const fixture = (name: string): Model => {
   const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));

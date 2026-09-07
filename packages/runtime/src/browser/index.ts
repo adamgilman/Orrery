@@ -1,6 +1,6 @@
-import { flowDuration, flowStyle } from "@orrery-diagrams/core/flow";
-import { lookOf } from "@orrery-diagrams/core/looks";
-import { scalePath } from "@orrery-diagrams/core/shapes";
+import { flowDuration, flowStyle } from "@orrery-diagrams/core/internal/flow";
+import { lookOf } from "@orrery-diagrams/core/internal/looks";
+import { scalePath } from "@orrery-diagrams/core/internal/shapes";
 import type { Model } from "@orrery-diagrams/core/types";
 import { fitView, transformOf, zoomToBox, type Box, type Camera, type Size } from "./camera.js";
 import { phaseOf } from "./phase.js";
