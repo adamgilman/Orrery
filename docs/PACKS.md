@@ -60,8 +60,8 @@ in this repository's README and site are architecture diagrams drawn with the AW
 set from `node_modules/aws-icons`, downloads the Azure and Google zips once into `tools/packs/cache/`, and
 normalises every SVG: XML declaration, comments and titles dropped; `<style>` class rules inlined as style
 attributes (the sets reuse class names across icons); ids that nothing references dropped and the rest prefixed
-with the kind's name (gradients, clip paths); `xlink:href` rewritten as `href`; markup with script, foreignObject,
-image or an event handler refused. Nothing is cropped, flipped, rotated or recoloured. The result is a
+with the kind's name (gradients, clip paths); `xlink:href` rewritten as `href`; zero-width characters dropped; then the same allowlist parser a model's own
+glyph goes through rebuilds the markup, and anything it refuses fails the build. Nothing is cropped, flipped, rotated or recoloured. The result is a
 `{ "viewBox", "svg" }` glyph the renderer draws as a nested `<svg>` in the box's glyph slot, 20×20.
 `node tools/packs/build.mjs --manifests` rewrites the LICENSE and README files from the committed packs.
 

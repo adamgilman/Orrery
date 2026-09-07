@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
+import { sanitizeGlyph } from "./glyph.js";
 import { CSS_COLOR } from "./looks.js";
 import { loadPack, packProblem, type Pack } from "./packs.js";
 import { DEFAULT_SHAPES, PATH_DATA } from "./shapes.js";
@@ -141,7 +142,9 @@ function buildKinds(raw: Raw["kinds"], shapes: Record<string, ShapeDef>, packs: 
       err(`/kinds/components/${name}/glyph`, `must be a preset glyph (${GLYPH_PRESETS.join(", ")}) or SVG path data starting with M`);
     if (typeof g === "object") {
       if (!/^-?[\d.]+( -?[\d.]+){3}$/.test(g.viewBox)) err(`/kinds/components/${name}/glyph/viewBox`, 'must be four numbers, like "0 0 64 64"');
-      if (!SAFE_SVG(g.svg)) err(`/kinds/components/${name}/glyph/svg`, "must be plain SVG markup: no script, foreignObject, image, style or event handlers");
+      const clean = sanitizeGlyph(g.svg); // rebuilt from the allowlist (S15): the model carries what was allowed, never the input
+      if (clean.ok) components[name] = { ...components[name]!, glyph: { viewBox: g.viewBox, svg: clean.svg } };
+      else err(`/kinds/components/${name}/glyph/svg`, `must be drawing markup only: ${clean.reason}`);
     }
   }
   for (const [name, k] of Object.entries(raw?.groups ?? {})) {
@@ -157,9 +160,6 @@ function buildKinds(raw: Raw["kinds"], shapes: Record<string, ShapeDef>, packs: 
   }
   return { components, groups, connections };
 }
-
-/** Icon markup is drawn as written, so it must be pictures only. */
-export const SAFE_SVG = (svg: string) => !/<\s*(script|foreignObject|image|style|iframe|use)\b|\bon[a-z]+\s*=|javascript:/i.test(svg);
 
 /* ---------- main ---------- */
 /** `packs`: vocabularies given in code (a browser, a bundler), found by name ahead of anything built in or installed. */

@@ -9,6 +9,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { sanitizeGlyph } from "../../packages/core/dist/glyph.js"; // the same door a model's own glyph goes through (S15)
 
 const CACHE = "tools/packs/cache";
 const FETCHED = "2026-09-06";
@@ -60,9 +61,9 @@ function normalise(text, prefix) {
   // styles → style attributes
   const rules = new Map();
   body = body.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/g, (_, css) => { for (const [k, v] of classRules(css)) rules.set(k, [...(rules.get(k) ?? []), ...v]); return ""; });
-  body = body.replace(/<defs>\s*<\/defs>/g, "");
+  body = body.replace(/<defs>\s*<\/defs>/g, "").replace(/[\u200b-\u200d\ufeff]/g, ""); // zero-width characters some sets carry between tags
   body = body.replace(/<([a-zA-Z]+)([^>]*?)(\/?)>/g, (_, tag, attrs, close) => {
-    attrs = attrs.replace(/\s(data-name|enable-background|xml:space)="[^"]*"/g, "").replace(/\sxlink:href=/g, " href=");
+    attrs = attrs.replace(/\s(data-name|enable-background|xml:space|jetwayHookID)="[^"]*"/g, "").replace(/\sxlink:href=/g, " href=");
     const cls = attrs.match(/\sclass="([^"]*)"/);
     if (cls) {
       const decls = cls[1].split(/\s+/).flatMap((c) => rules.get(c) ?? []);
@@ -78,9 +79,9 @@ function normalise(text, prefix) {
   const referenced = new Set([...body.matchAll(/url\(#([^)]+)\)|href="#([^"]+)"/g)].map((m) => m[1] ?? m[2]));
   body = body.replace(/\sid="([^"]*)"/g, (_, id) => (referenced.has(id) ? ` id="${prefix}-${id}"` : ""));
   body = body.replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${prefix}-${id})`).replace(/href="#([^"]+)"/g, (_, id) => `href="#${prefix}-${id}"`);
-  body = body.replace(/\s+/g, " ").replace(/>\s+</g, "><").trim();
-  if (/<\s*(script|foreignObject|image|style|iframe)\b|\bon[a-z]+\s*=|href="(?!#)/i.test(body)) throw new Error(`unsafe markup in ${prefix}`);
-  return { viewBox, svg: body };
+  const clean = sanitizeGlyph(body);
+  if (!clean.ok) throw new Error(`${prefix}: ${clean.reason}`);
+  return { viewBox, svg: clean.svg };
 }
 
 /* ---------- names ---------- */

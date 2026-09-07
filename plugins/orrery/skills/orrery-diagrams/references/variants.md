@@ -54,7 +54,7 @@ The default component kinds and what they draw:
 | `external` | none | cloud, dashed, pale |
 
 A glyph is a preset name, SVG path data in a 16×16 box drawn with the theme's stroke, or an icon object with its
-own colours (`viewBox` and `svg` markup; no script, foreignObject, image, style or event handlers). A box style
+own colours (`viewBox` and `svg` markup, rebuilt from an allowlist of drawing elements and attributes; nothing that runs, links, animates or loads). A box style
 takes `dash`, `fill`, `stroke`.
 
 ```json
