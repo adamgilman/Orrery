@@ -99,12 +99,40 @@ export interface RasterOptions { scale?: number; background?: string }
 
 /** SVG string to PNG bytes with a bundled font, so output is identical on every machine. */
 export function rasterize(svg: string, { scale = 1, background = "#ffffff" }: RasterOptions = {}): Buffer {
-  const r = new Resvg(cullOutside(svg), {
+  const png = (s: string) => Buffer.from(new Resvg(s, {
     fitTo: { mode: "zoom", value: scale },
     background,
     font: { loadSystemFonts: false, fontFiles: FONT_FILES, defaultFontFamily: "Inter", sansSerifFamily: "Inter" },
-  });
-  return Buffer.from(r.render().asPng());
+  }).render().asPng());
+  const full = fullCanvas(svg);
+  if (!full) return png(svg);
+  // A cropped picture (a zoomed export) is drawn whole and cut to its viewBox in pixels: resvg 2.6 aborts the
+  // process on any element that needs its own layer (a marker, a nested icon, a text run with a fallback glyph)
+  // when it lies wholly outside the canvas, and a crop leaves most of the drawing outside. The layer records
+  // the drawing's size, so the whole is known; the cut is exact at the raster's scale.
+  const vb = viewBoxOf(svg);
+  const whole = decodePng(png(svg.replace(/viewBox="[^"]*"/, `viewBox="0 0 ${full.width} ${full.height}"`).replace(/ width="[^"]*" height="[^"]*"/, ` width="${full.width}" height="${full.height}"`)));
+  return cropPng(whole, { x: Math.round(vb.x * scale), y: Math.round(vb.y * scale), width: Math.round(vb.width * scale), height: Math.round(vb.height * scale) });
+}
+/** The drawing's whole extent when the viewBox shows less of it, from the active layer's recorded size; undefined when the viewBox already shows it all. */
+function fullCanvas(svg: string): { width: number; height: number } | undefined {
+  const vb = viewBoxOf(svg);
+  const size = svg.match(/<g class="view"[^>]* data-size="([\d.]+) ([\d.]+)"/);
+  if (!size) return undefined;
+  const top = Number(svg.match(/<g class="scene" transform="translate\(0 ([\d.]+)\)"/)?.[1] ?? 0); // a heading above the scene
+  const width = Math.max(Number(size[1]), vb.x + vb.width), height = Math.max(top + Number(size[2]), vb.y + vb.height);
+  return vb.x === 0 && vb.y === 0 && vb.width >= width && vb.height >= height ? undefined : { width, height };
+}
+/** A region of a bitmap as PNG bytes. */
+export function cropPng(b: Bitmap, r: Rect): Buffer {
+  const out = new PNG({ width: r.width, height: r.height });
+  for (let y = 0; y < r.height; y++) {
+    const sy = r.y + y;
+    if (sy < 0 || sy >= b.height) continue;
+    const from = (sy * b.width + Math.max(0, r.x)) * 4, len = Math.max(0, Math.min(r.width, b.width - Math.max(0, r.x))) * 4;
+    b.data.copy(out.data, (y * r.width + Math.max(0, -r.x)) * 4, from, from + len);
+  }
+  return PNG.sync.write(out);
 }
 
 export interface Bitmap { width: number; height: number; data: Buffer }
@@ -113,22 +141,16 @@ export const decodePng = (png: Buffer): Bitmap => { const p = PNG.sync.read(png)
 export interface Region extends Rect { load: number; durationMs: number }
 
 /** Padded, scaled bounding box of every flow path, keyed by connection key. */
-/**
- * resvg 2.6 aborts the process on a marker whose path lies wholly outside the viewBox, and a zoomed export crops
- * most edges away. Such a path draws nothing, so it is dropped before the picture reaches resvg. Points are read
- * from the M and L segments the layout writes; a path with none is kept.
- */
-function cullOutside(svg: string): string {
-  const vb = viewBoxOf(svg);
-  if (!vb.width || !vb.height) return svg;
-  const margin = 16; // room for a marker on the last point
-  return svg.replace(/<path\s(?:[^"'>]|"[^"]*"|'[^']*')*\/>/g, (tag) => {
-    const d = tag.match(/\sd="([^"]*)"/)?.[1];
-    const pts = d ? [...d.matchAll(/[ML]\s*([\d.-]+)[ ,]([\d.-]+)/g)].map((m) => [Number(m[1]), Number(m[2])] as const) : [];
-    if (!pts.length) return tag;
-    const outside = pts.every(([x, y]) => x < vb.x - margin || x > vb.x + vb.width + margin || y < vb.y - margin || y > vb.y + vb.height + margin);
-    return outside ? "" : tag;
-  });
+/** Whether the segment a-b, in picture coordinates, meets the rectangle (0, 0, w, h): Liang-Barsky. */
+function segmentMeets(a: { x: number; y: number }, b: { x: number; y: number }, w: number, h: number): boolean {
+  let t0 = 0, t1 = 1;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  for (const [p, q] of [[-dx, a.x], [dx, w - a.x], [-dy, a.y], [dy, h - a.y]] as const) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return true;
 }
 /** The picture's viewBox: a zoomed export starts away from the origin, and pixels are measured from where it starts. */
 export function viewBoxOf(svg: string): { x: number; y: number; width: number; height: number } {
@@ -143,8 +165,11 @@ export function flowRegions(svg: string, scale = 1): Record<string, Region> {
     const [, key, load, d, style] = m;
     const pts = [...d!.matchAll(/([ML])([\d.-]+) ([\d.-]+)/g)].map((p) => ({ x: Number(p[2]) - ox, y: Number(p[3]) - oy }));
     if (pts.length === 0) continue;
-    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+    // a flow whose line never enters the picture is not in it: a zoomed export crops most away, and a box that merely
+    // touches the crop with a corner of its bounding box has nothing that could move
     const pad = 8;
+    if (vb.width && !pts.some((p, i) => i > 0 && segmentMeets({ x: pts[i - 1]!.x + pad, y: pts[i - 1]!.y + pad }, { x: p.x + pad, y: p.y + pad }, vb.width + 2 * pad, vb.height + 2 * pad))) continue;
+    const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
     // clipped to the picture: a zoomed export leaves some flows partly or wholly outside, and those pixels do not exist
     const x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
     const x1 = Math.min(vb.width || Infinity, Math.max(...xs) + pad), y1 = Math.min(vb.height || Infinity, Math.max(...ys) + pad);

@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderDocument, renderExport, validate, type Model } from "@orrery-diagrams/core";
 import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
-import { activeView, freezeFrame } from "@orrery-diagrams/raster";
+import { activeView, freezeFrame, inspect } from "@orrery-diagrams/raster";
 import { mount, type Orrery } from "../../packages/runtime/src/browser/index.js";
 
 const root = join(import.meta.dirname, "../..");
@@ -51,6 +51,48 @@ describe("integration: every export of the diagram of Orrery", () => {
     expect(still).not.toContain("Packs, two levels down");
     expect(still).not.toMatch(/data-t0="0"/);
   }, 60_000);
+});
+
+describe("integration: a tour scene that switches view and opens groups, on the diagram of Orrery", () => {
+  let rt: Orrery | undefined;
+  afterEach(() => { rt?.destroy(); rt = undefined; vi.useRealTimers(); });
+  it("opens them in the view it switched to (an outside review found it opened nothing)", async () => {
+    const raw = JSON.parse(readFileSync(join(root, "examples/orrery.orrery.json"), "utf8")) as Record<string, unknown>;
+    raw.tour = { seconds: 2, scenes: [{ view: "core" }, { view: "overview", open: ["vocabulary", "packs"], zoom: "packs", note: "Into the packs" }] };
+    const r = validate(raw);
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const svg = await renderDocument(r.model, engine(), { runtime: "" });
+    vi.useFakeTimers();
+    const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
+    const walker = parsed.createTreeWalker(parsed, 8);
+    const cdata: Node[] = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) cdata.push(n);
+    for (const n of cdata) n.parentNode!.replaceChild(parsed.createTextNode(n.textContent ?? ""), n);
+    const el = document.importNode(parsed.documentElement, true) as unknown as SVGSVGElement;
+    document.body.innerHTML = ""; document.body.appendChild(el);
+    rt = mount(el, { size: { width: 1600, height: 900 } });
+    vi.advanceTimersByTime(800);
+    expect(rt.snapshot().view).toBe("core");
+    vi.advanceTimersByTime(2400); // scene two began at 2 s: the view switch morphs, then the open morphs, then the zoom; the loop restarts at 4 s
+    expect(rt.snapshot()).toMatchObject({ view: "overview", open: ["vocabulary", "packs"], zoom: "packs", playing: true });
+  }, 120_000);
+});
+
+describe("integration: the raster measures every kind of picture of the diagram of Orrery", () => {
+  // the still, a zoom, an open group and an open group zoomed: each is drawn, frozen, rasterised and checked frame by
+  // frame, and the report must find nothing wrong and measure the picture at its own size (an outside review found
+  // a zoomed export measured from the wrong corner)
+  for (const id of ["overview", "zoom-renderer", "open-packs", "open-runtime"]) {
+    it(`inspects ${id}`, async () => {
+      const svg = await pictureOf(id);
+      const [, w, h] = svg.match(/viewBox="[\d.-]+ [\d.-]+ ([\d.]+) ([\d.]+)"/)!;
+      const report = inspect(svg, { fps: 4 });
+      expect(report.problems, id).toEqual([]);
+      expect(report.ok, id).toBe(true);
+      expect(report.size, id).toEqual({ width: Number(w), height: Number(h) });
+      expect(report.connections.length, id).toBeGreaterThan(0);
+    }, 120_000);
+  }
 });
 
 describe("integration: the interactive file, driven by the engine", () => {
