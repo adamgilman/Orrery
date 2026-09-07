@@ -57,7 +57,7 @@ regenerated pictures.
 
 | Path | What |
 |---|---|
-| `packages/core` | schema, validator, declaration, view scoping, renderer, packs, shapes |
+| `packages/core` | schema, validator, declaration, view scoping, renderer, packs, shapes. `src/index.ts` is the public API, pinned by `test/api.test.ts`; `src/internal.ts` and `src/testing.ts` are the unpromised subpaths |
 | `packages/layout-elk` | the only package that imports elkjs; layout runs behind `LayoutEngine` |
 | `packages/runtime` | the engine inlined into every rendered SVG |
 | `packages/raster` | freeze, rasterise, frame tooling |

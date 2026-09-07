@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 import { JSDOM } from "jsdom";
-import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
+import { renderDocument, validate } from "@orrery-diagrams/core";
+import { FakeLayoutEngine } from "@orrery-diagrams/core/testing";
 import { RUNTIME_SOURCE } from "../src/index.js";
 
 /**

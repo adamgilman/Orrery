@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SHAPE_PRESETS, measureComponent, scalePath, scopeModel, toLayoutGraph, validate, type Model } from "../src/index.js";
+import { validate, type Model } from "../src/index.js";
+import { SHAPE_PRESETS, measureComponent, scalePath, scopeModel, toLayoutGraph } from "../src/internal.js";
 
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 

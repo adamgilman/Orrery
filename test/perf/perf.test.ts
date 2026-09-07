@@ -7,7 +7,8 @@ import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { describe, expect, it } from "vitest";
-import { declare, renderDocument, renderExport, renderSvg, scopeModel, stopFlows, toLayoutGraph, validate, type LayoutEngine, type LayoutGraph, type LayoutResult, type Model } from "@orrery-diagrams/core";
+import { declare, renderDocument, renderExport, validate, type LayoutEngine, type LayoutGraph, type LayoutResult, type Model } from "@orrery-diagrams/core";
+import { renderSvg, scopeModel, stopFlows, toLayoutGraph } from "@orrery-diagrams/core/internal";
 import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
 import { freezeFrame } from "@orrery-diagrams/raster";
 

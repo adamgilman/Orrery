@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FLOW_DASH, FLOW_PERIOD, flowDuration, flowStyle } from "../src/index.js";
+import { FLOW_DASH, FLOW_PERIOD, flowDuration, flowStyle } from "../src/internal.js";
 import * as flow from "../src/flow.js";
 
 describe("flow animation constants", () => {

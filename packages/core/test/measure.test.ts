@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GROUP_LABEL_HEIGHT, measureComponent, measureConnectionLabel, toLayoutGraph, validate } from "../src/index.js";
+import { validate } from "../src/index.js";
+import { GROUP_LABEL_HEIGHT, measureComponent, measureConnectionLabel, toLayoutGraph } from "../src/internal.js";
 
 const model = (input: unknown) => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 

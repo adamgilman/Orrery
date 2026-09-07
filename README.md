@@ -195,7 +195,10 @@ orrery export app.orrery.json --out docs/           # every picture the model li
 In a project, add it as a dev dependency so the docs build renders the diagrams: `npm install -D orrery-diagrams`,
 `yarn add -D orrery-diagrams`, `pnpm add -D orrery-diagrams` or `bun add -d orrery-diagrams`, then `orrery export`
 from a script. The libraries are `@orrery-diagrams/core`, `layout-elk`, `runtime` and `raster` for anyone building
-on the model directly. The providers' icon packs are separate: `@orrery-diagrams/pack-aws`, `pack-azure` and
+on the model directly. Core's root export is its public API and the whole of what semver covers: the model's types,
+`validate`, `declare`, `render`, `renderDocument`, `renderExport`, the packs, `sanitizeGlyph` and the `LayoutEngine`
+contract. The renderer's parts are reachable at `@orrery-diagrams/core/internal` and the fake layout engine at
+`@orrery-diagrams/core/testing`, both unpromised. The providers' icon packs are separate: `@orrery-diagrams/pack-aws`, `pack-azure` and
 `pack-gcp`, each under its provider's terms rather than MIT, installed only when a model uses one.
 
 From a checkout:
