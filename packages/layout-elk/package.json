@@ -1,6 +1,6 @@
 {
   "name": "@orrery-diagrams/layout-elk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Orrery's layout engine backed by the Eclipse Layout Kernel (elkjs).",
   "keywords": [
     "orrery",
