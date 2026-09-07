@@ -77,7 +77,8 @@ architecture diagrams. A new pack package needs its trusted publisher on npm bef
 
 ## Releasing
 
-Every package shares one version. To release: `yarn workspaces foreach -A version <x.y.z>`, a line in
+Every package shares one version, and so does the Claude Code plugin. To release: `yarn workspaces foreach -A version <x.y.z>`,
+the same version in `plugins/orrery/.claude-plugin/plugin.json` (a test and the release workflow both check it), a line in
 CHANGELOG.md, commit, `git tag v<x.y.z>`, push the tag. The release workflow runs the full check and publishes
 every package to npm with provenance; npm's trusted publishing ties each package to this repository's workflow, so
 the workflow uses the NPM_TOKEN repository secret if one is set, else trusted publishing.

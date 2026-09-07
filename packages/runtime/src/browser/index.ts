@@ -38,7 +38,7 @@ export interface Snapshot {
  * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to step a state,
  * click a closed box to open it, double-click or Enter to zoom, Escape to zoom out then close, arrows select, f
  * steps, s cycles scenarios, [ and ] step one, digits switch views (MODEL.md R11, the spec
- * docs/superpowers/specs/2026-09-05-two-paths-design.md).
+ * docs/design/notes/2026-09-05-two-paths-design.md).
  */
 export interface Orrery {
   readonly views: { id: string; title: string }[];

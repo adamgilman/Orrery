@@ -17,6 +17,7 @@ const jsonBlocks = (md: string) => [...md.matchAll(/```json\n([\s\S]*?)```/g)].m
 describe("the orrery skill", () => {
   it("has a manifest, a marketplace entry and a SKILL.md that name real things", () => {
     const plugin = JSON.parse(readFileSync(join(root, "plugins/orrery/.claude-plugin/plugin.json"), "utf8"));
+    expect(plugin.version, "the plugin is versioned with the packages").toBe(JSON.parse(readFileSync(join(root, "packages/core/package.json"), "utf8")).version);
     const market = JSON.parse(readFileSync(join(root, ".claude-plugin/marketplace.json"), "utf8"));
     expect(plugin.name).toBe("orrery");
     expect(market.plugins.map((p: { name: string; source: string }) => [p.name, p.source])).toEqual([["orrery", "./plugins/orrery"]]);

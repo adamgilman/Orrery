@@ -187,7 +187,9 @@ pnpm add -g orrery-diagrams
 bun add -g orrery-diagrams
 ```
 
-Or run it without installing: `npx orrery-diagrams …`, `pnpm dlx orrery-diagrams …`, `bunx orrery-diagrams …`.
+Or run it without installing: `npx orrery-diagrams …`, `pnpm dlx orrery-diagrams …`, `bunx orrery-diagrams …`. The
+command is `orrery`, and `orrery-diagrams` too, so the name you installed is a name you can run; `orrery --version`
+says which; a file of `-` reads the model from stdin.
 
 ```sh
 orrery validate app.orrery.json
