@@ -31,7 +31,8 @@
   },
   "type": "module",
   "bin": {
-    "orrery": "./dist/main.js"
+    "orrery": "./dist/main.js",
+    "orrery-diagrams": "./dist/main.js"
   },
   "exports": {
     ".": {

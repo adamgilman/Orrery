@@ -28,7 +28,7 @@ jobs:
       - name: Tag matches the package versions
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          for f in packages/*/package.json; do
+          for f in packages/*/package.json plugins/orrery/.claude-plugin/plugin.json; do
             v=$(node -p "require('./$f').version")
             [ "$v" = "$tag" ] || { echo "$f is $v, tag is $tag"; exit 1; }
           done

@@ -2079,6 +2079,7 @@ __metadata:
     jsdom: "npm:^30"
   bin:
     orrery: ./dist/main.js
+    orrery-diagrams: ./dist/main.js
   languageName: unknown
   linkType: soft
 

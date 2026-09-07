@@ -38,11 +38,15 @@ export const USAGE = `Usage:
                                          terms, installed or not), or one pack's names with their descriptions.
                                          A model pulls a pack in with "kinds": { "use": ["aws"] } or "states":
                                          { "use": "sre" } and then names kinds like aws:s3.
-  orrery --help
+  orrery --help                          This. orrery --version prints the version. A <file> of - reads the model
+                                         from stdin. The command is also installed as orrery-diagrams.
 
 Exit codes: 0 ok, 1 invalid or unreadable input, 2 usage error.
 Layout is automatic; the file never contains coordinates. Every property is documented in the schema
 (packages/core/schema/v1.json) and the model is specified in docs/MODEL.md.`;
+
+/** The package's own version, read beside the built file. */
+const VERSION: string = (JSON.parse(readFileSync(join(import.meta.dirname, "../package.json"), "utf8")) as { version: string }).version;
 
 export class CliError extends Error {
   constructor(message: string, public readonly exitCode: number = 1) { super(message); }
@@ -72,8 +76,8 @@ function parseArgs(tokens: string[]): Args {
       const v = tokens[i + 1];
       if (v !== undefined && !v.startsWith("-")) { args.values.set(t, [v]); i++; } else args.flags.add(t);
     } else if (BOOL_FLAGS.has(t)) args.flags.add(t);
-    else if (t.startsWith("-")) throw new CliError(`unknown option ${t}`, 2);
-    else args.positionals.push(t);
+    else if (t.startsWith("-") && t !== "-") throw new CliError(`unknown option ${t}`, 2);
+    else args.positionals.push(t); // "-" is a file: stdin
   }
   return args;
 }
@@ -97,7 +101,8 @@ function parseSets(values: string[] | undefined): Record<string, string[]> {
 
 function loadModel(file: string, io: Io) {
   let text: string;
-  try { text = readFileSync(file, "utf8"); } catch (e) { throw new CliError(`${file}: ${(e as Error).message}`); }
+  if (file === "-") file = "stdin";
+  try { text = readFileSync(file === "stdin" ? 0 : file, "utf8"); } catch (e) { throw new CliError(`${file}: ${(e as Error).message}`); }
   let json: unknown;
   try { json = JSON.parse(text); } catch (e) { throw new CliError(`${file}: invalid JSON: ${(e as Error).message}`); }
   const result = validate(json);
@@ -133,6 +138,7 @@ function listPacks(rest: string[]): string {
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.includes("--help") || rest.includes("-h") || command === "--help" || command === "-h" || command === "help") { io.stdout(USAGE + "\n"); return 0; }
+  if (command === "--version" || command === "-v" || command === "version") { io.stdout(`orrery ${VERSION}\n`); return 0; }
   try {
     if (command === "packs") { io.stdout(listPacks(rest)); return 0; }
     if (command !== "validate" && command !== "render" && command !== "export" && command !== "embed") throw new CliError(USAGE, 2);
@@ -151,7 +157,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
       for (const flag of args.values.keys()) if (flag !== "--out") throw new CliError(`embed takes only --out, not ${flag}`, 2);
       if (args.flags.size) throw new CliError(`embed takes only --out`, 2);
       const m = loadModel(file, io);
-      const name = basename(file).replace(/\.orrery\.json$|\.json$/, "");
+      const name = file === "-" ? "model" : basename(file).replace(/\.orrery\.json$|\.json$/, "");
       const title = m.title ?? name;
       // One file per drawing: the topology views together, then each sequence view alone (R17).
       const drawings: [string, string | undefined][] = [[`${name}.svg`, undefined], ...m.views.filter((v) => v.type === "sequence").map((v): [string, string] => [`${name}.${v.id}.svg`, v.id])];

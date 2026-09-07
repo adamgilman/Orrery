@@ -75,6 +75,33 @@ describe("orrery render", () => {
   });
 });
 
+describe("orrery --version and stdin (housekeeping from an outside review)", () => {
+  const version = JSON.parse(readFileSync(join(import.meta.dirname, "../package.json"), "utf8")).version as string;
+  it("prints its version", () => {
+    for (const flag of ["--version", "-v"]) {
+      const r = run(flag);
+      expect(r.code).toBe(0);
+      expect(r.out.trim()).toBe(`orrery ${version}`);
+    }
+  });
+  it("reads the model from stdin when the file is -", () => {
+    const model = readFileSync(join(fixtures, "valid/grouped.json"), "utf8");
+    const v = spawnSync("node", [bin, "validate", "-"], { encoding: "utf8", input: model });
+    expect(v.status).toBe(0);
+    expect(v.stdout).toMatch(/^OK: /);
+    const r = spawnSync("node", [bin, "render", "-", "--static"], { encoding: "utf8", input: model });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/^<svg/);
+    const bad = spawnSync("node", [bin, "validate", "-"], { encoding: "utf8", input: "{ not json" });
+    expect(bad.status).toBe(1);
+    expect(bad.stderr).toMatch(/^stdin: invalid JSON/);
+  });
+  it("is installed as orrery and as orrery-diagrams, the package's own name", () => {
+    const pkg = JSON.parse(readFileSync(join(import.meta.dirname, "../package.json"), "utf8"));
+    expect(pkg.bin).toEqual({ orrery: "./dist/main.js", "orrery-diagrams": "./dist/main.js" });
+  });
+});
+
 describe("orrery usage", () => {
   it("prints usage and exits 2 on an unknown command", () => {
     const r = run("frobnicate");
