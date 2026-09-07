@@ -1,7 +1,6 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { Ajv, type ErrorObject } from "ajv";
 import { DEFAULT_COMPONENT_KINDS, DEFAULT_CONNECTION_KINDS, DEFAULT_GROUP_KINDS, DEFAULT_STATE, DEFAULT_STATES, FRAME_PRESETS, GLYPH_PRESETS, LINE_PRESETS, NEW_STATE_DEFAULTS } from "./defaults.js";
+import { schema as generatedSchema } from "./generated.js";
 import { sanitizeGlyph } from "./glyph.js";
 import { CSS_COLOR } from "./looks.js";
 import { loadPack, packProblem, type Pack } from "./packs.js";
@@ -19,7 +18,8 @@ export type ValidationResult =
   | { ok: true; model: Model; warnings: ValidationWarning[] }
   | { ok: false; errors: ValidationError[] };
 
-export const schema: object = JSON.parse(readFileSync(join(import.meta.dirname, "../schema/v1.json"), "utf8"));
+/** The JSON Schema, as code (generated from schema/v1.json, the published reference), so the root needs no disk and runs in a browser. */
+export const schema: object = generatedSchema;
 const ajv = new Ajv({ allErrors: true, useDefaults: true, strict: true });
 const checkSchema = ajv.compile(schema);
 

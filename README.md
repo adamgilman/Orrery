@@ -198,7 +198,8 @@ from a script. The libraries are `@orrery-diagrams/core`, `layout-elk`, `runtime
 on the model directly. Core's root export is its public API and the whole of what semver covers: the model's types,
 `validate`, `declare`, `render`, `renderDocument`, `renderExport`, the packs, `sanitizeGlyph` and the `LayoutEngine`
 contract. The renderer's parts are reachable at `@orrery-diagrams/core/internal` and the fake layout engine at
-`@orrery-diagrams/core/testing`, both unpromised. The providers' icon packs are separate: `@orrery-diagrams/pack-aws`, `pack-azure` and
+`@orrery-diagrams/core/testing`, both unpromised. The root runs in a browser: nothing is read from disk, and a
+provider pack is handed to `validate(model, { packs })` where nothing is installed by name. The providers' icon packs are separate: `@orrery-diagrams/pack-aws`, `pack-azure` and
 `pack-gcp`, each under its provider's terms rather than MIT, installed only when a model uses one.
 
 From a checkout:

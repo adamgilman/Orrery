@@ -58,7 +58,7 @@
     "schema"
   ],
   "scripts": {
-    "build": "tsc -b"
+    "build": "node scripts/embed.mjs && tsc -b"
   },
   "dependencies": {
     "ajv": "^8.17"
