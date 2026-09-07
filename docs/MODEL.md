@@ -254,7 +254,9 @@ colour of the animated traffic). Kinds are vocabulary with a picture.
 
 A glyph is a preset name, SVG path data drawn with the theme's stroke in a 16×16 box, or an icon object: `viewBox`
 and `svg`, the icon's own markup in its own colours, drawn as a nested `<svg>` in the glyph slot. Icon markup is
-pictures only: no script, foreignObject, image, style or event handlers (S15).
+pictures only: it is parsed and rebuilt from an allowlist of drawing elements and attributes, so script, event
+handlers, SMIL animation, links, foreignObject, image, style elements, external references, comments and entities
+never reach the output (S15). The model carries the rebuilt markup.
 
 **Shapes.** A component kind or a group kind names its outline with `shape`; a kind without one is drawn as
 `box`. A group's shape frames its members when open, with the pad as extra inset on every side, and is its box
@@ -366,7 +368,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
 | S13 | A group may be empty; it still renders and may be connected and given a state. | valid fixture `group-endpoints`; layoutContract "(group endpoints)" |
 | S14 | Every state and kind name used anywhere (components, groups, connections) is defined after defaults and overrides; with `replace: true`, `default` is given explicitly. | validate.test "vocabulary (S14)"; invalid fixtures `unknown-state`, `unknown-kind`, `unknown-group-kind`, `unknown-connection-kind`, `replace-without-default`, `scenario-unknown-state` |
-| S15 | Colours are CSS colours; a shape is `path` or `corner` with a `pad`; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-shape`, `shapes-replace-without-box`, `bad-look`, `bad-line`; validate.test "glyph objects"; shapes.test |
+| S15 | Colours are CSS colours; a shape is `path` or `corner` with a `pad`; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup rebuilt from an allowlist of drawing elements and attributes (nothing that runs, loads, links or rewrites; `href` and `url()` only to an id in the glyph); the model carries the rebuilt markup, and the packs are built through the same check. Was: free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-shape`, `shapes-replace-without-box`, `bad-look`, `bad-line`; validate.test "glyph objects"; shapes.test |
 | S16 | Export ids are unique; `view`, `scenario`, `step`, `set` and `play` resolve as elsewhere; `play` and `scenario` are exclusive; `tour` needs a tour and stands alone. | validate.test "exports (S16)"; invalid fixtures `export-duplicate-id`, `export-unknown-view`, `export-play-and-scenario`, `export-tour-without-tour` |
 | S17 | Opening and zooming are declared apart and checked the same way in a scene and an export: every `open` id is a group in the view's `collapse`, and a group inside another closed group needs that one in `open` too, so what is open is exactly what is written; `zoom` is an entity not inside a closed group. `open` is kept in declaration order. | invalid fixtures `open-and-zoom`, `tour-bad-zoom`; validate.test "exports (S16)" |
 | B1 | Declaring is pure, deterministic and never mutates its input. | declare.test "pure (B1)" |

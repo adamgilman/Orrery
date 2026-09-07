@@ -29,7 +29,7 @@ Provoked by: `{"direction":"left","components":[{"id":"a"}]}`
 
 ### bad-glyph-object
 
-- `/kinds/components/k/glyph/svg`: plain SVG markup
+- `/kinds/components/k/glyph/svg`: drawing markup only
 
 Provoked by: `{"kinds":{"components":{"k":{"glyph":{"viewBox":"0 0 16 16","svg":"<image href=\"x.png\"/>"}}}},"components":[{"id":"a","kind":"k"}]}`
 

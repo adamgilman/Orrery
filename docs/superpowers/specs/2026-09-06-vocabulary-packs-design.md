@@ -144,6 +144,12 @@ URL), and the Microsoft 365, Entra, Fabric and Power Platform sets.
 - **The README runs on the pack (user, 2026-09-06).** Rather than a separate stage 8, the master checkout model
   declares `"kinds": { "use": ["aws"] }`, so every stage picture and the landing page carry the AWS icons from the
   first picture on; stage 1's text introduces packs.
+- **The glyph check is an allowlist parser (outside review, 2026-09-07).** The regex denial list was bypassed with
+  `<a xlink:href="&#106;avascript:alert(1)">`: entities decode before the browser looks, and SMIL `<set>` can write
+  `href` at runtime. `sanitizeGlyph` in core parses the markup, allows only drawing elements and attributes,
+  restricts `href` and `url()` to ids inside the glyph, refuses comments, CDATA, directives, text and unknown
+  entities, and serialises the tree again; the model carries the rebuilt markup and the pack build uses the same
+  function.
 - **Each provider pack is its own package (user, 2026-09-07).** The icons are the provider's under the provider's
   terms, so they cannot ship inside `@orrery-diagrams/core` (MIT). `@orrery-diagrams/pack-aws`, `pack-azure` and
   `pack-gcp` carry `pack.json`, the terms as LICENSE and a README, with `license: SEE LICENSE IN LICENSE`; the

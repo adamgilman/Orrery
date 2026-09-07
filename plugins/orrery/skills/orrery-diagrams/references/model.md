@@ -179,7 +179,9 @@ colour of the animated traffic). Kinds are vocabulary with a picture.
 
 A glyph is a preset name, SVG path data drawn with the theme's stroke in a 16×16 box, or an icon object: `viewBox`
 and `svg`, the icon's own markup in its own colours, drawn as a nested `<svg>` in the glyph slot. Icon markup is
-pictures only: no script, foreignObject, image, style or event handlers (S15).
+pictures only: it is parsed and rebuilt from an allowlist of drawing elements and attributes, so script, event
+handlers, SMIL animation, links, foreignObject, image, style elements, external references, comments and entities
+never reach the output (S15). The model carries the rebuilt markup.
 
 **Shapes.** A component kind or a group kind names its outline with `shape`; a kind without one is drawn as
 `box`. A group's shape frames its members when open, with the pad as extra inset on every side, and is its box

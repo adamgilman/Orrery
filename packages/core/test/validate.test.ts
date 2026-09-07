@@ -149,7 +149,7 @@ describe("validate: namespaced kinds and glyph objects", () => {
   it("rejects a glyph object with a bad viewBox or unsafe markup", () => {
     const bad = (glyph: unknown) => { const r = validate({ kinds: { components: { k: { glyph } } }, components: [{ id: "a" }] }); return r.ok ? [] : r.errors.map((e) => e.toString()); };
     expect(bad({ viewBox: "big", svg: "<path/>" })).toEqual(['/kinds/components/k/glyph/viewBox: must be four numbers, like "0 0 64 64"']);
-    expect(bad({ viewBox: "0 0 64 64", svg: '<path onclick="x()"/>' })).toEqual(["/kinds/components/k/glyph/svg: must be plain SVG markup: no script, foreignObject, image, style or event handlers"]);
+    expect(bad({ viewBox: "0 0 64 64", svg: '<path onclick="x()"/>' })).toEqual(['/kinds/components/k/glyph/svg: must be drawing markup only: attribute "onclick" is not allowed on <path>']);
     expect(bad({ viewBox: "0 0 64 64", svg: "<script>1</script>" })).toHaveLength(1);
     expect(bad({ viewBox: "0 0 64 64" })).toEqual(['/kinds/components/k/glyph: missing required property "svg"']);
   });

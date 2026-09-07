@@ -205,7 +205,7 @@
                       "svg": {
                         "type": "string",
                         "minLength": 1,
-                        "description": "The icon's SVG markup: shapes, gradients, groups. No script, foreignObject, image, style or event handlers."
+                        "description": "The icon's SVG markup: shapes, groups, gradients, clips, masks, filters. Parsed and rebuilt from an allowlist of drawing elements and attributes: no script, event handlers, animation, links, foreignObject, image, style elements or external references; href and url() only to an id inside the glyph."
                       }
                     }
                   }
