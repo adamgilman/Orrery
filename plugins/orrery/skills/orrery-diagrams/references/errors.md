@@ -66,6 +66,13 @@ Provoked by: `{"states":{"define":{"x":{"look":"pink"}}},"components":[{"id":"a"
 
 Provoked by: `{"shapes":{"define":{"a":{"path":"circle"},"b":{"path":"M0 0H100V100Z","corner":4},"c":{"pad":{"x":2,"y":2}}}},"kinds":{"components":{"k":{"shape":"octagon"}}},"components":[{"id":"x","kind":"k"}]}`
 
+### bad-union-branch
+
+- `/scenarios/0/steps/0/set/failed/a`: must be a string
+- `/exports/0/heading`: must be one of: centre, left
+
+Provoked by: `{"components":[{"id":"a"}],"scenarios":[{"id":"s","steps":[{"set":{"failed":{"a":123}}}]}],"exports":[{"id":"x","heading":"middle"}]}`
+
 ### bad-view-type
 
 - `/views/0/type`: must be one of: topology, sequence

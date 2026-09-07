@@ -1,0 +1,1 @@
+{ "components": [{ "id": "a" }], "scenarios": [{ "id": "s", "steps": [{ "set": { "failed": { "a": 123 } } }] }], "exports": [{ "id": "x", "heading": "middle" }] }

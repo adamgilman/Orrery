@@ -32,22 +32,34 @@ function describe(e: ErrorObject): ValidationError {
     case "enum": return new ValidationError(e.instancePath, `must be one of: ${(p.allowedValues as unknown[]).join(", ")}`);
     case "type": return new ValidationError(e.instancePath, `must be ${article(String(p.type))}`);
     case "oneOf": return new ValidationError(e.instancePath, "does not match any allowed form");
+    case "forms": return new ValidationError(e.instancePath, e.message ?? "does not match any allowed form");
     default: return new ValidationError(e.instancePath, e.message ?? e.keyword);
   }
 }
 /**
- * A failed oneOf reports every branch's complaints. Keep the complaints of the branch whose shape matches the
- * instance (string vs object/array), so "min must be >= 1" survives instead of "does not match any allowed form".
+ * A failed oneOf reports every branch's complaints. Keep the complaints of the branch whose type the value has
+ * (a string, an array, an object, a boolean, a number), so the real error survives: a non-string reason inside an
+ * object of reasons, or a string that is not one of the enum. A value of a type no branch takes gets the forms it
+ * may take, in words, in place of the branch noise. Branch types are read from the schema itself, so a union of
+ * any width works the same.
  */
+const typeOf = (v: unknown): string => (Array.isArray(v) ? "array" : v === null ? "null" : typeof v);
+const branchTypes = (schemaPath: string): string[] => {
+  const node = schemaPath.replace(/^#\//, "").split("/").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k.replace(/~1/g, "/").replace(/~0/g, "~")], schema);
+  return ((node as { type?: string; enum?: unknown[] }[] | undefined) ?? []).map((b) => (b.type === "integer" ? "number" : b.type) ?? (b.enum?.length ? typeOf(b.enum[0]) : "unknown"));
+};
+const forms = (types: string[]): string => types.map(article).reduce((s, t, i, a) => (i === 0 ? t : i === a.length - 1 ? `${s} or ${t}` : `${s}, ${t}`), "");
 function pickOneOfBranch(all: ErrorObject[], data: unknown): ErrorObject[] {
   const at = (pointer: string): unknown => pointer.split("/").slice(1).reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k.replace(/~1/g, "/").replace(/~0/g, "~")], data);
-  const oneOfs = all.filter((e) => e.keyword === "oneOf");
   let kept = all;
-  for (const o of oneOfs) {
-    const branch = typeof at(o.instancePath) === "string" ? 0 : 1;
+  for (const o of all.filter((e) => e.keyword === "oneOf")) {
+    const types = branchTypes(o.schemaPath);
+    const branch = types.indexOf(typeOf(at(o.instancePath)));
     const inside = (e: ErrorObject) => e !== o && (e.instancePath === o.instancePath || e.instancePath.startsWith(o.instancePath + "/"));
-    const matching = kept.filter((e) => inside(e) && e.schemaPath.includes(`/oneOf/${branch}/`));
-    kept = matching.length ? kept.filter((e) => !inside(e) && e !== o).concat(matching) : kept.filter((e) => !inside(e));
+    const matching = branch >= 0 ? kept.filter((e) => inside(e) && e.schemaPath.includes(`${o.schemaPath}/${branch}/`)) : [];
+    kept = matching.length
+      ? kept.filter((e) => !inside(e) && e !== o).concat(matching)
+      : kept.filter((e) => !inside(e)).map((e) => (e === o ? { ...o, keyword: "forms", message: `must be ${forms(types)}` } : e));
   }
   return kept;
 }
