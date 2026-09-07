@@ -1,6 +1,6 @@
 {
   "validate.ms": {
-    "value": 0.97,
+    "value": 0.92,
     "unit": "ms"
   },
   "layout.ms": {
@@ -8,7 +8,7 @@
     "unit": "ms"
   },
   "render.ms": {
-    "value": 0.73,
+    "value": 0.64,
     "unit": "ms"
   },
   "overview.bytes": {
@@ -44,7 +44,7 @@
     "unit": "bytes"
   },
   "freeze.ms": {
-    "value": 3.1,
+    "value": 3.02,
     "unit": "ms"
   },
   "runtime.bytes": {
