@@ -99,7 +99,7 @@ export interface RasterOptions { scale?: number; background?: string }
 
 /** SVG string to PNG bytes with a bundled font, so output is identical on every machine. */
 export function rasterize(svg: string, { scale = 1, background = "#ffffff" }: RasterOptions = {}): Buffer {
-  const r = new Resvg(svg, {
+  const r = new Resvg(cullOutside(svg), {
     fitTo: { mode: "zoom", value: scale },
     background,
     font: { loadSystemFonts: false, fontFiles: FONT_FILES, defaultFontFamily: "Inter", sansSerifFamily: "Inter" },
@@ -113,22 +113,48 @@ export const decodePng = (png: Buffer): Bitmap => { const p = PNG.sync.read(png)
 export interface Region extends Rect { load: number; durationMs: number }
 
 /** Padded, scaled bounding box of every flow path, keyed by connection key. */
+/**
+ * resvg 2.6 aborts the process on a marker whose path lies wholly outside the viewBox, and a zoomed export crops
+ * most edges away. Such a path draws nothing, so it is dropped before the picture reaches resvg. Points are read
+ * from the M and L segments the layout writes; a path with none is kept.
+ */
+function cullOutside(svg: string): string {
+  const vb = viewBoxOf(svg);
+  if (!vb.width || !vb.height) return svg;
+  const margin = 16; // room for a marker on the last point
+  return svg.replace(/<path\s(?:[^"'>]|"[^"]*"|'[^']*')*\/>/g, (tag) => {
+    const d = tag.match(/\sd="([^"]*)"/)?.[1];
+    const pts = d ? [...d.matchAll(/[ML]\s*([\d.-]+)[ ,]([\d.-]+)/g)].map((m) => [Number(m[1]), Number(m[2])] as const) : [];
+    if (!pts.length) return tag;
+    const outside = pts.every(([x, y]) => x < vb.x - margin || x > vb.x + vb.width + margin || y < vb.y - margin || y > vb.y + vb.height + margin);
+    return outside ? "" : tag;
+  });
+}
+/** The picture's viewBox: a zoomed export starts away from the origin, and pixels are measured from where it starts. */
+export function viewBoxOf(svg: string): { x: number; y: number; width: number; height: number } {
+  const m = svg.match(/viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/);
+  return m ? { x: Number(m[1]), y: Number(m[2]), width: Number(m[3]), height: Number(m[4]) } : { x: 0, y: 0, width: 0, height: 0 };
+}
 export function flowRegions(svg: string, scale = 1): Record<string, Region> {
   svg = activeView(svg);
+  const vb = viewBoxOf(svg), { x: ox, y: oy } = vb;
   const out: Record<string, Region> = {};
   for (const m of svg.matchAll(FLOW_RE)) {
     const [, key, load, d, style] = m;
-    const pts = [...d!.matchAll(/([ML])([\d.-]+) ([\d.-]+)/g)].map((p) => ({ x: Number(p[2]), y: Number(p[3]) }));
+    const pts = [...d!.matchAll(/([ML])([\d.-]+) ([\d.-]+)/g)].map((p) => ({ x: Number(p[2]) - ox, y: Number(p[3]) - oy }));
     if (pts.length === 0) continue;
     const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
     const pad = 8;
+    // clipped to the picture: a zoomed export leaves some flows partly or wholly outside, and those pixels do not exist
     const x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
+    const x1 = Math.min(vb.width || Infinity, Math.max(...xs) + pad), y1 = Math.min(vb.height || Infinity, Math.max(...ys) + pad);
+    if (x1 <= x0 || y1 <= y0) continue;
     const dur = style!.match(/animation-duration:([\d.]+)s/);
     out[key!] = {
       x: Math.floor(x0 * scale),
       y: Math.floor(y0 * scale),
-      width: Math.ceil((Math.max(...xs) + pad - x0) * scale),
-      height: Math.ceil((Math.max(...ys) + pad - y0) * scale),
+      width: Math.ceil((x1 - x0) * scale),
+      height: Math.ceil((y1 - y0) * scale),
       load: Number(load),
       durationMs: dur ? Number(dur[1]) * 1000 : 0,
     };
@@ -141,6 +167,7 @@ export interface Rect { x: number; y: number; width: number; height: number }
 /** Padded, scaled box of every pulsing entity (any state whose look pulses), keyed by id. */
 export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
   svg = activeView(svg);
+  const { x: ox, y: oy } = viewBoxOf(svg);
   const out: Record<string, Rect> = {};
   const pad = 6;
   for (const m of svg.matchAll(/<g class="(?:node|group) [^>]*>/g)) {
@@ -149,7 +176,7 @@ export function pulseRegions(svg: string, scale = 1): Record<string, Rect> {
     const id = tag.match(/data-(?:node|group)="([^"]+)"/)?.[1];
     const bb = tag.match(/data-bbox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/);
     if (!id || !bb) continue;
-    const x0 = Math.max(0, Number(bb[1]) - pad), y0 = Math.max(0, Number(bb[2]) - pad);
+    const x0 = Math.max(0, Number(bb[1]) - ox - pad), y0 = Math.max(0, Number(bb[2]) - oy - pad);
     out[id] = { x: Math.floor(x0 * scale), y: Math.floor(y0 * scale), width: Math.ceil((Number(bb[3]) + 2 * pad) * scale), height: Math.ceil((Number(bb[4]) + 2 * pad) * scale) };
   }
   return out;
@@ -248,8 +275,8 @@ export function inspect(svg: string, { scale = 1, fps = 10, durationMs = 1000 }:
   const v = XMLValidator.validate(svg);
   svg = activeView(svg);
   const xml = v === true ? { ok: true } : { ok: false, error: v.err.msg };
-  const vb = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
-  const size = { width: vb ? Number(vb[1]) : 0, height: vb ? Number(vb[2]) : 0 };
+  const vb = viewBoxOf(svg);
+  const size = { width: vb.width, height: vb.height };
   const problems: string[] = [];
   if (!xml.ok) problems.push(`malformed XML: ${xml.error}`);
   const connections: ConnectionReport[] = [];

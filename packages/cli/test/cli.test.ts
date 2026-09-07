@@ -290,7 +290,7 @@ describe("orrery export", () => {
     expect(r.out).not.toMatch(/<script/);
     const bad = run("render", join(fixtures, "valid/nested-drill.json"), "--open", "app");
     expect(bad.code).toBe(1);
-    expect(bad.err).toContain("is not a closed group");
+    expect(bad.err).toContain('"app" is not a group');
   });
 });
 

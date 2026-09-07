@@ -193,7 +193,9 @@ describe("render: open, zoom and exports", () => {
     const zoomed = await render(n, new FakeLayoutEngine(), { open: ["outer", "inner"], zoom: "inner" });
     const [bx, by, bw, bh] = zoomed.match(/data-group="inner" data-bbox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number) as [number, number, number, number];
     expect(zoomed).toContain(`viewBox="${Math.max(0, bx - 24)} ${Math.max(0, by - 24)} ${bw + 48} ${bh + 48}"`);
-    await expect(render(n, new FakeLayoutEngine(), { open: ["app"] })).rejects.toThrow(/"app" is not a closed group in view "overview"/);
+    await expect(render(n, new FakeLayoutEngine(), { open: ["app"] })).rejects.toThrow(/"app" is not a group/);
+    // a library caller gets the rule validate enforces on exports: a group inside a closed one needs that one open too (R11)
+    await expect(render(n, new FakeLayoutEngine(), { open: ["inner"] })).rejects.toThrow(/"inner" is inside "outer", which is closed; open "outer" too/);
     await expect(render(n, new FakeLayoutEngine(), { zoom: "x" })).rejects.toThrow(/"x" is not drawn in view "overview" with everything closed/);
   });
   it("renderExport maps every kind of export onto render", async () => {

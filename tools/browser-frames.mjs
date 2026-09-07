@@ -14,7 +14,7 @@ if (!file) { console.error("usage: node tools/browser-frames.mjs <file.svg> --fr
 const from = opt("from", 0), to = opt("to", 4), fps = opt("fps", 5), width = opt("width", 1200);
 const out = join(optS("out", ".orrery-inspect"), `${basename(file, ".svg")}-browser`);
 mkdirSync(out, { recursive: true });
-const [, w, h] = readFileSync(file, "utf8").match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/).map(Number);
+const [, , , w, h] = readFileSync(file, "utf8").match(/viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/).map(Number);
 const height = Math.round((width * h) / w);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });

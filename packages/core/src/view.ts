@@ -77,6 +77,25 @@ export function selectView(model: Model, id?: string): View {
 }
 
 /** `open` in declaration order: the canonical form layers and layouts are keyed by. */
+/**
+ * Why `open` is not a set of groups a picture of `view` can draw open (R11): each offender by index with its
+ * message. A group must be closed in the view, and a group inside a closed group needs that one open too, so
+ * what is open is exactly what is written. The validator applies it to exports and scenes; render to its options.
+ */
+export function openProblems(groups: { id: string; parent?: string | undefined }[], view: { id: string; collapse?: readonly string[] | undefined }, open: readonly string[], components: { id: string }[] = []): { index: number; message: string }[] {
+  const collapse = new Set(view.collapse ?? []);
+  const opened = new Set(open);
+  const parentOf = new Map(groups.map((g) => [g.id, g.parent] as const));
+  const ancestors = (id: string): string[] => { const out: string[] = []; for (let p = parentOf.get(id); p !== undefined; p = parentOf.get(p)) out.push(p); return out; };
+  const out: { index: number; message: string }[] = [];
+  open.forEach((id, index) => {
+    if (!parentOf.has(id)) return out.push({ index, message: components.some((c) => c.id === id) ? `"${id}" is not a group` : `unknown group "${id}"` });
+    if (!collapse.has(id)) return out.push({ index, message: `"${id}" is not closed in view "${view.id}"; list it in the view's collapse` });
+    const above = ancestors(id).find((g) => collapse.has(g));
+    if (above !== undefined && !opened.has(above)) out.push({ index, message: `"${id}" is inside "${above}", which is closed; open "${above}" too` });
+  });
+  return out;
+}
 export const openOrder = (groups: { id: string }[], open: readonly string[]): string[] => { const order = new Map(groups.map((g, i) => [g.id, i] as const)); return [...open].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)); };
 
 /**

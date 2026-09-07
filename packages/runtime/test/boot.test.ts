@@ -5,8 +5,10 @@ import { join } from "node:path";
 import { FakeLayoutEngine, renderDocument, validate } from "@orrery-diagrams/core";
 import { mount, type Orrery, type Snapshot } from "../src/browser/index.js";
 
-const doc = async (name: string, view?: string) => {
-  const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")));
+const doc = async (name: string, view?: string, change: (m: Record<string, unknown>) => void = () => {}) => {
+  const input = JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8")) as Record<string, unknown>;
+  change(input);
+  const r = validate(input);
   if (!r.ok) throw new Error(JSON.stringify(r.errors));
   const svg = await renderDocument(r.model, new FakeLayoutEngine(), { runtime: "", ...(view ? { view } : {}) });
   const parsed = new DOMParser().parseFromString(svg, "image/svg+xml");
@@ -387,6 +389,31 @@ describe("the tour", () => {
     vi.advanceTimersByTime(30000);
     expect(state(root, "payments")).toBe("on");
     expect(vis(root, '[data-node="ledger"]')).toBeNull();
+  });
+});
+
+describe("what an outside review found", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("destroy in the middle of a morph leaves no timer running: the morph's completion must not start a play", async () => {
+    const root = await doc("alternatives"); // failover-loop autoplays a scenario once shown
+    rt = mount(root, SIZE);
+    rt.stop();
+    rt.showView("failover-loop");
+    vi.advanceTimersByTime(100); // mid-morph
+    rt.destroy();
+    vi.advanceTimersByTime(60_000);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("a tour scene that switches view and opens groups opens them in the view it switched to", async () => {
+    const root = await doc("drill-down", undefined, (m) => { m.tour = { seconds: 2, scenes: [{ view: "payments" }, { view: "overview", open: ["payments"], zoom: "payments" }] }; });
+    rt = mount(root, SIZE);
+    vi.advanceTimersByTime(800);
+    expect(rt.snapshot().view).toBe("payments");
+    vi.advanceTimersByTime(2000 + 800);
+    expect(rt.snapshot()).toMatchObject({ view: "overview", open: ["payments"], zoom: "payments" });
+    expect(shownLayer(root).getAttribute("data-open")).toBe("payments");
   });
 });
 

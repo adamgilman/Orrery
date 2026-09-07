@@ -114,6 +114,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   let camera: Camera = { k: 1, tx: 0, ty: 0 };
   let cameraTimer: ReturnType<typeof setTimeout> | undefined;
   let morphing: (() => void) | null = null;
+  let destroyed = false; // after destroy nothing may start a timer, whatever callback is still unwinding
   let autoplayTimer: ReturnType<typeof setInterval> | undefined;
   let sceneTimer: ReturnType<typeof setTimeout> | undefined;
   let sceneNote: string | undefined;
@@ -250,23 +251,29 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     if (was) emit();
   };
   const playTour = () => {
+    if (destroyed) return;
     const tour = { scenes: model.tour!.scenes.filter((sc) => layers.has(layerKey(sc.view, ""))) }; // a sequence scene lives in its own file
     if (!tour.scenes.length) return;
     playing = true;
     const scene = (k: number) => {
       const sc = tour.scenes[k]!;
-      if (sc.view !== activeId()) showView(sc.view, true);
-      session.replaceOverrides(sc.set);
-      session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
-      sceneNote = sc.note;
-      const target = canonical(activeId(), sc.open ?? []) ?? [];
-      const zoomThen = () => { if (sc.zoom) zoomTo(sc.zoom, typeOf(sc.zoom)); else fit(true); apply(); };
-      if (target.join(" ") !== openSet.join(" ")) openTo(target, zoomThen, true); else zoomThen();
       sceneTimer = setTimeout(() => scene((k + 1) % tour.scenes.length), sc.seconds * 1000);
+      // the scene's view first, then its moment, open groups and zoom in that view, once the view is shown
+      const rest = () => {
+        session.replaceOverrides(sc.set);
+        session.setScenario(sc.scenario ?? null, sc.step ?? (sc.scenario ? model.scenarios.find((s) => s.id === sc.scenario)!.steps.length : 1));
+        sceneNote = sc.note;
+        const target = canonical(activeId(), sc.open ?? []) ?? [];
+        const zoomThen = () => { if (sc.zoom) zoomTo(sc.zoom, typeOf(sc.zoom)); else fit(true); apply(); };
+        if (target.join(" ") !== openSet.join(" ")) openTo(target, zoomThen, true); else zoomThen();
+      };
+      if (sc.view !== activeId() && showView(sc.view, true, rest)) return;
+      rest();
     };
     scene(0);
   };
   const playScenario = () => {
+    if (destroyed) return;
     const play = model.views.find((v) => v.id === activeId())?.play;
     if (!play?.scenario) return;
     const n = model.scenarios.find((s) => s.id === play.scenario)?.steps.length ?? 0;
@@ -277,6 +284,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     autoplayTimer = setInterval(() => { k = (k + 1) % (n + 1); setScenario(k === 0 ? null : play.scenario!, k, true); }, play.seconds * 1000);
   };
   const playMessages = () => {
+    if (destroyed) return;
     const seconds = model.views.find((v) => v.id === activeId())?.play?.seconds ?? 1;
     playing = true;
     showMessages(0);
@@ -364,12 +372,14 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     };
     if (moves.length || frames.length) step(); else finish();
   };
-  const showView = (id: string, byPlayer = false) => {
+  /** Morph to a view's closed layer; `then` runs once it is shown. False when there is nothing to do. */
+  const showView = (id: string, byPlayer = false, then?: () => void): boolean => {
     const key = layerKey(id, "");
-    if (!layers.has(key) || key === activeKey) return;
+    if (!layers.has(key) || key === activeKey) return false;
     if (!byPlayer) stop();
     openSet = []; zoomId = null; revealed = null;
-    morphTo(key, () => { fit(true); apply(); if (!byPlayer) playScenario(); });
+    morphTo(key, () => { fit(true); apply(); if (!byPlayer) playScenario(); then?.(); });
+    return true;
   };
 
   /* ---- inside the diagram: clicks, hover, keyboard; no page code needed ---- */
@@ -437,7 +447,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     scenarios: model.scenarios.map((s) => ({ id: s.id, label: s.label, steps: s.steps.length })),
     states: Object.values(model.states.define).map((d) => ({ name: d.name, ...(d.description !== undefined ? { description: d.description } : {}) })),
     groups: () => model.groups.filter((g) => active().querySelector(`[data-group="${g.id}"]`)).map((g) => ({ id: g.id, label: g.label, closable: collapseOf(activeId()).includes(g.id), open: openSet.includes(g.id) })),
-    showView: (id) => showView(id),
+    showView: (id) => { showView(id); },
     open, zoom,
     back: () => { stop(); return back(); },
     setScenario: (id, step) => setScenario(id, step),
@@ -450,7 +460,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     play, stop,
     on: (_event, fn) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
     snapshot,
-    destroy: () => { ac.abort(); stop(); if (cameraTimer) clearTimeout(cameraTimer); if (morphing) morphing(); listeners.clear(); style.remove(); },
+    // finish the morph first: its completion may fit the camera or start a play, and both are refused or cleared after
+    destroy: () => { destroyed = true; if (morphing) morphing(); stop(); if (cameraTimer) clearTimeout(cameraTimer); ac.abort(); listeners.clear(); style.remove(); },
   };
 }
 
