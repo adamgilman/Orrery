@@ -3,7 +3,9 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
-## Unreleased
+## 0.2.1 (2026-09-07)
+
+A security fix; upgrade if a model file you render can come from someone else.
 
 - Security: a custom glyph's markup is parsed and rebuilt from an allowlist of drawing elements and attributes instead of being checked against a list of forbidden strings. The old check could be bypassed with an entity-encoded `javascript:` link (found in an outside review), and did not cover SMIL animation or links. The provider packs are rebuilt through the same parser.
 

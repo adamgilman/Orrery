@@ -1,6 +1,6 @@
 {
   "name": "@orrery-diagrams/pack-azure",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The Azure Public Service Icons as an Orrery vocabulary pack: every service as a kind (azure:aks, azure:functions, azure:sql-database) and provider-coloured group frames. The icons are Microsoft's and come under their terms, not the tool's MIT licence; see LICENSE.",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
