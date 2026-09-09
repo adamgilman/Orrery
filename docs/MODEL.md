@@ -288,7 +288,8 @@ licence, and a model that names one needs it installed (the error names the pack
 prefixed with the pack's name, `aws:s3`, `gcp:cloud-run`, `azure:sql-database`, so a kind name may carry one
 `:`; authors may namespace their own kinds the same way. Packs merge after the defaults and before the author's
 own definitions, later packs over earlier ones; `replace: true` drops the defaults and keeps the packs asked for.
-`aws`, `azure` and `gcp` carry every icon in the provider's own set, under a name derived from the provider's
+`user` comes with the tool and carries the basic pieces beside the services: a person, a device, a computer and a
+house. `aws`, `azure` and `gcp` carry every icon in the provider's own set, under a name derived from the provider's
 and under the names people say (`aws:s3`, `gcp:run`, `azure:aks`), plus a few group kinds as frames in the
 provider's colours. `orrery packs <name>` lists a pack.
 

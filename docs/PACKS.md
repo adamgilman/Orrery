@@ -25,6 +25,7 @@ npm install @orrery-diagrams/pack-aws     # or yarn add, pnpm add, bun add; the 
 | `azure` | `@orrery-diagrams/pack-azure` | 636 service icons, 18×18; 7 group frames | [Azure Public Service Icons](https://learn.microsoft.com/en-us/azure/architecture/icons/) | V24 (July 2026) | 2026-09-06 |
 | `gcp` | `@orrery-diagrams/pack-gcp` | 216 legacy product icons (24×24) and 19 current core product icons (512×512); 7 group frames | [Google Cloud icons](https://cloud.google.com/icons), the legacy and core products downloads | as published on the fetch date | 2026-09-06 |
 | `sre` | with the tool (`@orrery-diagrams/core`, MIT) | five states: healthy, impaired, brownout, outage, drained; default `healthy` | this repository | 1 | |
+| `user` | with the tool (`@orrery-diagrams/core`, MIT) | the basic pieces beside the services: `user:user`, `user:device`, `user:computer`, `user:house`, plus the names people say as aliases | [Lucide](https://lucide.dev), ISC | the `lucide-static` release named in the pack | 2026-09-09 |
 
 A model naming a pack that is not installed fails validation with the package to add:
 `/kinds/use/0: pack "aws" is not installed: add @orrery-diagrams/pack-aws (AWS Architecture Icons, Amazon Web
@@ -52,10 +53,15 @@ in this repository's README and site are architecture diagrams drawn with the AW
   rotate or distort an icon; do not use a Microsoft icon to represent your own product.
 - **Google Cloud.** Google offers the icons on its icons page for building architecture diagrams. No separate
   licence text accompanies the download.
+- **Lucide**, for the `user` pack, is ISC, which asks only that its notice travel with copies. One of the four
+  icons reaches Lucide from Feather and carries Feather's MIT notice too. Both notices are in
+  `packages/core/NOTICES.md` and ship inside `@orrery-diagrams/core`. Unlike the providers' sets, these permit any
+  use, so the pack comes with the tool rather than being its own package.
 
 ## How a pack is built
 
-`node tools/packs/build.mjs` writes `packages/core/packs/sre.json` and, for each provider, `packages/pack-<name>/`:
+`node tools/packs/build.mjs` writes `packages/core/packs/sre.json` and `user.json` and, for each provider,
+`packages/pack-<name>/`:
 `pack.json`, a `LICENSE` with the provider's terms and what the build changed, and a `README.md`. It reads the AWS
 set from `node_modules/aws-icons`, downloads the Azure and Google zips once into `tools/packs/cache/`, and
 normalises every SVG: XML declaration, comments and titles dropped; `<style>` class rules inlined as style
@@ -63,7 +69,10 @@ attributes (the sets reuse class names across icons); ids that nothing reference
 with the kind's name (gradients, clip paths); `xlink:href` rewritten as `href`; zero-width characters dropped; then the same allowlist parser a model's own
 glyph goes through rebuilds the markup, and anything it refuses fails the build. Nothing is cropped, flipped, rotated or recoloured. The result is a
 `{ "viewBox", "svg" }` glyph the renderer draws as a nested `<svg>` in the box's glyph slot, 20×20.
-`node tools/packs/build.mjs --manifests` rewrites the LICENSE and README files from the committed packs.
+`node tools/packs/build.mjs --manifests` rewrites the LICENSE and README files from the committed packs, and
+`--own` rebuilds only the packs that are ours, `sre` and `user`, which needs no network. The `user` pack's glyphs
+are Lucide icons merged into a single path and scaled from Lucide's 24 by 24 box to the 16 by 16 box a glyph is
+drawn in, so they take the theme's stroke exactly as the built-in glyphs do.
 
 Names: an AWS file `AmazonSimpleStorageService` becomes `simple-storage-service` with the description "Amazon
 Simple Storage Service"; Azure `10130-icon-service-SQL-Database` becomes `sql-database`; Google `cloud_sql`

@@ -20,6 +20,12 @@ describe("every workspace carries what a package must", () => {
       expect(files, w).toContain("package.json");
       expect(files, w).toContain("README.md");
       expect(files, `${w} ships no LICENSE; npm includes one only from the package's own directory`).toContain("LICENSE");
+      if (w === "core") {
+        expect(files, "core carries art that is not ours, so its notices must ship too").toContain("NOTICES.md");
+        expect(json("packages/core/package.json").files as string[]).toContain("NOTICES.md"); // npm ships a notices file only when listed
+        const notices = readFileSync(join(root, "packages/core/NOTICES.md"), "utf8");
+        for (const owed of ["ISC License", "Lucide", "The MIT License (MIT)", "Cole Bemis"]) expect(notices, owed).toContain(owed);
+      }
     }
   });
   it("says MIT and carries the project's notice, or says the provider's terms and carries those", () => {

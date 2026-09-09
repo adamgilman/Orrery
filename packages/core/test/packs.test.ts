@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PROVIDER_PACKS, installHint, loadPack, packNames, packProblem, validate, type Glyph, type Model, type Pack } from "../src/index.js";
+import { PROVIDER_PACKS, installHint, loadPack, packNames, packProblem, render, validate, type Glyph, type Model, type Pack } from "../src/index.js";
+import { FakeLayoutEngine } from "../src/testing.js";
 
 const root = join(import.meta.dirname, "../../..");
 const json = (p: string) => JSON.parse(readFileSync(join(root, p), "utf8"));
@@ -12,7 +13,7 @@ const glyphOf = (m: Model, kind: string) => m.kinds.components[kind]?.glyph as G
 
 describe("packs: the providers' icons are separate packages under their own terms", () => {
   it("the tool itself ships only sre; each provider pack is its own package, licensed by the provider, not MIT", () => {
-    expect(readdirSync(join(root, "packages/core/packs"))).toEqual(["sre.json"]);
+    expect(readdirSync(join(root, "packages/core/packs")).sort()).toEqual(["sre.json", "user.json"]); // ours; a provider's set is its own package
     expect(Object.keys(PROVIDER_PACKS)).toEqual(["aws", "azure", "gcp"]);
     const version = json("packages/core/package.json").version;
     for (const [name, info] of Object.entries(PROVIDER_PACKS)) {
@@ -39,7 +40,7 @@ describe("packs: the providers' icons are separate packages under their own term
     expect(installHint("aws")).toBe('pack "aws" is not installed: add @orrery-diagrams/pack-aws (AWS Architecture Icons, Amazon Web Services\' icons under their terms)');
     expect(installHint("azure")).toContain("@orrery-diagrams/pack-azure (Azure Public Service Icons, Microsoft's icons under their terms)");
     expect(installHint("gcp")).toContain("@orrery-diagrams/pack-gcp (Google Cloud product icons, Google's icons under their terms)");
-    expect(packProblem("ibm")).toBe('unknown pack "ibm"; known: aws, azure, gcp, sre');
+    expect(packProblem("ibm")).toBe('unknown pack "ibm"; known: aws, azure, gcp, sre, user');
     expect(packProblem("aws")).toBeUndefined(); // installed in this workspace
     expect(packProblem("sre")).toBeUndefined();
   });
@@ -58,7 +59,7 @@ describe("packs: the providers' icons are separate packages under their own term
 
 describe("packs: the shipped files", () => {
   it("knows aws, azure, gcp and sre, each naming its source and terms", () => {
-    expect(packNames()).toEqual(["aws", "azure", "gcp", "sre"]);
+    expect(packNames()).toEqual(["aws", "azure", "gcp", "sre", "user"]);
     for (const name of packNames()) {
       const p = loadPack(name)!;
       expect(p.name).toBe(name);
@@ -98,6 +99,35 @@ describe("packs: the shipped files", () => {
   });
 });
 
+describe("packs: user, the basic pieces of a diagram", () => {
+  it("ships with the tool and names a person, a device, a computer and a house", () => {
+    const pack = loadPack("user")!;
+    expect(pack, "the user pack is not there").toBeDefined();
+    expect(pack.terms).toMatch(/MIT/);
+    const c = pack.kinds!.components!;
+    expect(Object.keys(c)).toEqual(expect.arrayContaining(["user", "device", "computer", "house"]));
+    for (const [name, def] of Object.entries(c)) {
+      expect(name, name).toMatch(/^[a-z][a-z0-9-]*$/);
+      expect(def.description, name).toMatch(/\S/);
+      expect(typeof def.glyph, `${name} draws with the theme's stroke, so its glyph is path data`).toBe("string");
+      expect(def.glyph as string, name).toMatch(/^[Mm][\d\s.,+a-zA-Z-]+$/);
+    }
+  });
+  it("answers to the names people say", () => {
+    const c = loadPack("user")!.kinds!.components!;
+    for (const [alias, target] of [["person", "user"], ["phone", "device"], ["laptop", "computer"], ["home", "house"]]) {
+      expect(c[alias!], alias).toBeDefined();
+      expect(c[alias!]!.glyph, alias).toBe(c[target!]!.glyph);
+    }
+  });
+  it("draws a component of every one of its kinds", async () => {
+    const m = inline({ kinds: { use: ["user"] }, components: [{ id: "a", kind: "user:user" }, { id: "b", kind: "user:device" }, { id: "c", kind: "user:computer" }, { id: "d", kind: "user:house" }] });
+    for (const kind of ["user:user", "user:device", "user:computer", "user:house"]) expect(m.kinds.components[kind], kind).toBeDefined();
+    const svg = await render(m, new FakeLayoutEngine());
+    expect((svg.match(/<g class="glyph"/g) ?? []).length).toBe(4);
+  });
+});
+
 describe("packs: use (R13)", () => {
   it("kinds.use merges a pack's kinds under its prefix, after the defaults and before the author's own", () => {
     const m = inline({ kinds: { use: ["aws"], components: { "aws:s3": { box: { fill: "#fff7ed" } }, bucket: { glyph: "storage" } } }, components: [{ id: "a", kind: "aws:s3" }, { id: "b", kind: "aws:lambda" }, { id: "c", kind: "bucket" }], groups: [{ id: "v", kind: "aws:vpc" }] });
@@ -127,8 +157,8 @@ describe("packs: use (R13)", () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.errors.map((e) => e.toString())).toEqual([
-      '/states/use: unknown pack "ops"; known: aws, azure, gcp, sre',
-      '/kinds/use/1: unknown pack "ibm"; known: aws, azure, gcp, sre',
+      '/states/use: unknown pack "ops"; known: aws, azure, gcp, sre, user',
+      '/kinds/use/1: unknown pack "ibm"; known: aws, azure, gcp, sre, user',
     ]);
   });
 });

@@ -355,7 +355,7 @@ Provoked by: `{"components":[{"id":"a"}],"views":[{"id":"v","only":["a","zzz"]}]
 
 ### unknown-pack
 
-- `/kinds/use/0`: unknown pack "ibm"; known: aws, azure, gcp, sre
+- `/kinds/use/0`: unknown pack "ibm"; known: aws, azure, gcp, sre, user
 
 Provoked by: `{"kinds":{"use":["ibm"]},"components":[{"id":"a"}]}`
 

@@ -3,6 +3,7 @@
 // provider's terms as its LICENSE and a README, since the icons are the provider's, not the tool's to license.
 // Usage: node tools/packs/build.mjs            (fetches the sets and rewrites everything)
 //        node tools/packs/build.mjs --manifests (rewrites LICENSE and README from the committed pack.json files)
+//        node tools/packs/build.mjs --own       (only the packs that are ours: sre and user; no network)
 // The Azure and Google zips are downloaded once into tools/packs/cache/ (unzip must be on the PATH); the AWS set
 // comes from the aws-icons npm package, an MIT-licensed wrapper of the official asset package. The generated files
 // are committed, so a change to a set shows in a diff and the tool has no build-time network dependency.
@@ -191,6 +192,66 @@ async function azure() {
     },
   };
 }
+
+/* ---------- the user pack: basic pieces, from Lucide ---------- */
+const LUCIDE = "node_modules/lucide-static/icons";
+/** Our kind name to Lucide's file name. Only stroke line art, so each becomes path data in our 16x16 glyph slot. */
+const LUCIDE_PICK = {
+  user: ["user", "A person"],
+  device: ["smartphone", "A phone or tablet"],
+  computer: ["laptop", "A laptop or desktop computer"],
+  house: ["house", "A home, an office or a site"],
+};
+const USER_ALIASES = { person: "user", customer: "user", phone: "device", mobile: "device", tablet: "device", laptop: "computer", desktop: "computer", pc: "computer", home: "house", office: "house" };
+const round = (n) => String(Math.round(n * 1000) / 1000);
+/** One drawn element as path data, so a whole icon can become the single path our glyph slot draws. */
+function elementPath(tag, attrs) {
+  const a = (k, d = 0) => { const m = attrs.match(new RegExp(`\\b${k}="([^"]*)"`)); return m ? Number(m[1]) : d; };
+  if (tag === "path") return attrs.match(/\bd="([^"]*)"/)[1];
+  if (tag === "circle") { const cx = a("cx"), cy = a("cy"), r = a("r"); return `M${round(cx - r)} ${round(cy)}a${round(r)} ${round(r)} 0 1 0 ${round(2 * r)} 0a${round(r)} ${round(r)} 0 1 0 ${round(-2 * r)} 0`; }
+  if (tag === "line") return `M${round(a("x1"))} ${round(a("y1"))}L${round(a("x2"))} ${round(a("y2"))}`;
+  if (tag === "rect") {
+    const x = a("x"), y = a("y"), w = a("width"), h = a("height"), rx = a("rx"), ry = a("ry", rx);
+    if (!rx) return `M${round(x)} ${round(y)}h${round(w)}v${round(h)}h${round(-w)}z`;
+    return `M${round(x + rx)} ${round(y)}h${round(w - 2 * rx)}a${round(rx)} ${round(ry)} 0 0 1 ${round(rx)} ${round(ry)}v${round(h - 2 * ry)}a${round(rx)} ${round(ry)} 0 0 1 ${round(-rx)} ${round(ry)}h${round(-(w - 2 * rx))}a${round(rx)} ${round(ry)} 0 0 1 ${round(-rx)} ${round(-ry)}v${round(-(h - 2 * ry))}a${round(rx)} ${round(ry)} 0 0 1 ${round(rx)} ${round(-ry)}z`;
+  }
+  if (tag === "polyline" || tag === "polygon") {
+    const pts = attrs.match(/\bpoints="([^"]*)"/)[1].trim().split(/[\s,]+/).map(Number);
+    let d = `M${round(pts[0])} ${round(pts[1])}`;
+    for (let i = 2; i < pts.length; i += 2) d += `L${round(pts[i])} ${round(pts[i + 1])}`;
+    return d + (tag === "polygon" ? "z" : "");
+  }
+  throw new Error(`unsupported icon element <${tag}>`);
+}
+/** Scale path data uniformly. Every number is a length except an arc's rotation and its two flags. */
+const ARITY = { m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0 };
+function scaleData(d, k) {
+  return d.replace(/([a-zA-Z])([^a-zA-Z]*)/g, (_, cmd, rest) => {
+    if (!ARITY[cmd.toLowerCase()]) return cmd;
+    const nums = (rest.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+    return cmd + nums.map((v, i) => round(cmd.toLowerCase() === "a" && [2, 3, 4].includes(i % 7) ? v : v * k)).join(" ");
+  });
+}
+function userPack() {
+  const version = JSON.parse(readFileSync("node_modules/lucide-static/package.json", "utf8")).version;
+  const components = {};
+  for (const [name, [icon, description]] of Object.entries(LUCIDE_PICK)) {
+    const svg = readFileSync(join(LUCIDE, `${icon}.svg`), "utf8").replace(/<!--[\s\S]*?-->/g, "");
+    const body = svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/)[1];
+    const parts = [...body.matchAll(/<([a-z]+)([^>]*?)\/>/g)].map(([, tag, attrs]) => elementPath(tag, attrs));
+    if (!parts.length) throw new Error(`${icon}: nothing drawn`);
+    const glyph = scaleData(parts.join(""), 16 / 24);
+    if (!/^[Mm][\d\s.,+a-zA-Z-]+$/.test(glyph)) throw new Error(`${name}: path data a model could not carry`);
+    components[name] = { glyph, description };
+  }
+  alias(components, USER_ALIASES, "user");
+  return {
+    name: "user", title: "Basic pieces", version, source: "https://lucide.dev", fetched: FETCHED,
+    terms: "The tool's own vocabulary, MIT. The glyphs are derived from Lucide (ISC); smartphone comes to Lucide from Feather (MIT). Both notices are in packages/core/NOTICES.md and ship with the package.",
+    kinds: { components },
+  };
+}
+
 const sre = () => ({
   name: "sre", title: "SRE states", version: "1", source: "Orrery", fetched: FETCHED, terms: "MIT, with the tool.",
   states: {
@@ -250,10 +311,10 @@ terms of every pack, are in [docs/PACKS.md](https://github.com/adamgilman/Orrery
 `;
 };
 function write(pack) {
-  const own = pack.name === "sre";
+  const own = !HOLDER[pack.name]; // ours ships with the tool; a provider's set is its own package
   const dir = own ? "packages/core/packs" : `packages/pack-${pack.name}`;
   mkdirSync(dir, { recursive: true });
-  const file = join(dir, own ? "sre.json" : "pack.json");
+  const file = join(dir, own ? `${pack.name}.json` : "pack.json");
   writeFileSync(file, JSON.stringify(pack) + "\n");
   if (!own) { writeFileSync(join(dir, "LICENSE"), licence(pack)); writeFileSync(join(dir, "README.md"), readme(pack)); }
   const n = Object.keys(pack.kinds?.components ?? {}).length || Object.keys(pack.states?.define ?? {}).length;
@@ -261,6 +322,8 @@ function write(pack) {
 }
 if (process.argv.includes("--manifests")) {
   for (const name of ["aws", "azure", "gcp"]) write(JSON.parse(readFileSync(`packages/pack-${name}/pack.json`, "utf8")));
+} else if (process.argv.includes("--own")) {
+  for (const pack of [sre(), userPack()]) write(pack); // the packs that are ours, with no network
 } else {
-  for (const pack of [await aws(), await azure(), await gcp(), sre()]) write(pack);
+  for (const pack of [await aws(), await azure(), await gcp(), sre(), userPack()]) write(pack);
 }
