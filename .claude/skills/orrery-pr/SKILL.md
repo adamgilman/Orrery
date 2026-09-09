@@ -41,9 +41,23 @@ One paragraph: what changes for someone using Orrery, in their terms.
 The problem, the request, or the link to the issue.
 
 ## Model
-The block or field added or changed, the invariant it adds or changes (Rn or Sn in docs/MODEL.md), and the
-smallest JSON that exercises the invariant, as a fenced json block. If the schema changed, say which property
-and what its description says.
+The block or field added or changed, the invariant it adds or changes (Rn or Sn in docs/MODEL.md), and a JSON
+example, as a fenced `json` block. If the schema changed, say which property and what its description says.
+
+The example is a **complete model a reader can copy into a file and run**, not a fragment: the smallest whole
+model that exercises the invariant, with the `components` and `connections` it needs to validate. A reader should
+be able to save it and get a picture:
+
+```sh
+orrery render example.orrery.json -o example.svg      # or: pbpaste | orrery render - -o example.svg
+```
+
+Check it before pasting it in. An example that does not validate is worse than none, because a reviewer will try
+it. A fragment is fine only as a second block, to point at the one field under discussion, and only beside the
+whole model, never instead of it.
+
+A change with no model surface says so in one line and carries no JSON. A change that only moves code says which
+invariant it now enforces that it did not, and gives the model that used to slip through.
 
 ## Pictures
 Every picture the change adds or alters, embedded from the branch. One line of caption each: what to look at.
