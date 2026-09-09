@@ -201,6 +201,12 @@ to `hexagon`, `client` to `pill` and `external` to `cloud`. A top-level `shapes`
 }
 ```
 
+A shape's path is expected to draw inside its box at every size, because everything downstream trusts the box:
+the room the label needs, the node's measured size, and the frame a group draws around it. A curve whose control
+points are all inside the box satisfies that at any width and height; an elliptical arc does not, since its bulge
+leaves the line between its endpoints and grows as the box is stretched. The presets are drawn accordingly and a
+test holds them to it.
+
 An outline is `path`, SVG path data in a 100×100 box scaled to the component's size, or `corner`, a rounded
 rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is the room the label needs to
 clear the outline, per side, declared rather than computed. A pack's `shapes` come in with `kinds.use`, prefixed

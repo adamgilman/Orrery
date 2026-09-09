@@ -22,6 +22,12 @@ execFileSync("node", ["tools/moving-parts.mjs"], { stdio: "inherit" });
 for (const line of run("export", "examples/moving-parts/moving-parts.orrery.json", "--out", "examples/moving-parts").trim().split("\n")) console.log(line);
 // Orrery drawn in Orrery: the model behind the regression suite (test/orrery), every picture it lists
 for (const line of run("export", "examples/orrery.orrery.json", "--out", "examples/orrery").trim().split("\n")) console.log(line);
+// every replicated bug report, drawn: the picture beside the model is the evidence a fix works (fixtures/issues)
+for (const f of readdirSync("fixtures/issues").filter((f) => f.endsWith(".json"))) {
+  const out = `fixtures/issues/${f.replace(/\.json$/, ".svg")}`;
+  run("render", `fixtures/issues/${f}`, "--static", "-o", out);
+  console.log(out);
+}
 // the landing page inlines these
 run("render", "examples/solar-system.orrery.json", "--static", "-o", "site/landing/solar.svg");
 for (const [from, to] of [["4-scenarios-play", "failover-play"], ["7-vocabulary-play", "vocabulary-play"], ["5-views-data", "data-view"], ["6-drill-down-tour", "drill-down-tour"]]) copyFileSync(`examples/checkout/${from}.svg`, `site/landing/${to}.svg`);
