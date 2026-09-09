@@ -3,7 +3,9 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
-## Unreleased
+## 0.4.0 (2026-09-09)
+
+Drawings that a reader can work: a group of replicas opens into one instance, an open group can be closed from the picture, and the basic pieces of a diagram, a person, a device, a computer and a house, come with the tool. Nothing an existing model says has changed meaning.
 
 - `replicas` on a group, as on a component: the closed frame is stacked and carries the count, and opening it drills into one instance rather than all of them. The frames behind the front one take no clicks, so only the front one opens. A group and a component can now be repeated and drilled into at once, which needed one group per instance before (#34).
 - An open group's frame is never narrower than its own title band, so a label can no longer run into the corner mark or off the frame. Engines are told the width the band needs; the ELK adapter takes it as side padding, since ELK honours a minimum size on a compound node in a rightward layout but not a downward one.

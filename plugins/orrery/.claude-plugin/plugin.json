@@ -1,6 +1,6 @@
 {
   "name": "orrery",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Author Orrery architecture diagrams: write the .orrery.json model, validate it, render and export the pictures.",
   "author": {
     "name": "Adam Gilman",
