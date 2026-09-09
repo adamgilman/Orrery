@@ -390,6 +390,9 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
     // A click on a closed box opens it; the whole picture stays in view. Enter or double-click zooms to the selection.
     if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey) { open([...openSet, id]); return; }
+    // A click on an open frame's own chrome closes that one group, the mirror of opening it. `closest` already
+    // gave us the innermost box under the pointer, so a click on a child never reaches its frame (#33).
+    if (g.hasAttribute("data-group") && openSet.includes(id) && !(ev as MouseEvent).shiftKey) { open(openSet.filter((o) => o !== id && !isInside(o, id))); return; }
     select(id, g.hasAttribute("data-node") ? "node" : "group");
     // A click walks the author's states in order; shift+click walks back.
     cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);

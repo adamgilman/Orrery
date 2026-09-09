@@ -362,6 +362,43 @@ describe("open and zoom", () => {
   });
 });
 
+describe("closing a group from the picture (#33)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  it("a click on an open group's own frame closes just that group; a click inside it does not", async () => {
+    const root = await doc("nested-drill");
+    rt = mount(root, SIZE);
+    rt.stop();
+    expect(rt.open(["outer", "inner"])).toBe(true);
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot().open).toEqual(["outer", "inner"]);
+    // a click on a node inside stays put: it is the node's click, not the frame's
+    click(vis(root, '[data-node="y"]'));
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot().open, "a child's click must not close the group around it").toEqual(["outer", "inner"]);
+    // the collapse mark on the inner frame closes only the inner one
+    click(vis(root, '[data-group="inner"] .collapse-mark'));
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot().open).toEqual(["outer"]);
+    // the outer frame's own background closes the outer one, and the picture is back where it started
+    click(vis(root, '[data-group="outer"] .group-box'));
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot().open).toEqual([]);
+  });
+  it("shift+click still walks an open group through its states", async () => {
+    const root = await doc("nested-drill");
+    rt = mount(root, SIZE);
+    rt.stop();
+    rt.open(["outer"]);
+    vi.advanceTimersByTime(900);
+    const before = state(root, "outer");
+    click(vis(root, '[data-group="outer"] .group-box'), { shiftKey: true });
+    expect(rt.snapshot().open, "shift is the state gesture, not the close gesture").toEqual(["outer"]);
+    expect(state(root, "outer")).not.toBe(before);
+  });
+});
+
 describe("the tour", () => {
   let rt: Orrery;
   beforeEach(() => { vi.useFakeTimers(); });

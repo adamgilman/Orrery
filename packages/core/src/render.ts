@@ -132,7 +132,8 @@ const BASE_STYLE = `
 .group-label.centred{text-anchor:middle}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
-.expand-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.expand-mark,.collapse-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
+.collapse-mark{cursor:pointer}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
@@ -190,17 +191,20 @@ function componentBody(c: Component, model: Model, b: { width: number; height: n
 }
 
 /** The expand mark: a small boxed plus in the top-right corner of a closed group, the conventional sign that there is more inside. */
-const expandMark = (w: number, pad = { x: 0, y: 0 }) => `<g class="expand-mark" transform="translate(${num(w - 22 - pad.x)} ${num(8 + pad.y)})"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`;
+const expandMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("expand-mark", "M7 3.5v7M3.5 7h7", w, pad);
+/** The collapse mark: the same box with a minus, on a group the reader can close. Drawn only where a click does something, so a still never shows a control that is not there (R11). */
+const collapseMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("collapse-mark", "M3.5 7h7", w, pad);
+const cornerMark = (cls: string, d: string, w: number, pad: { x: number; y: number }) => `<g class="${cls}" transform="translate(${num(w - 22 - pad.x)} ${num(8 + pad.y)})"><rect width="14" height="14" rx="3"/><path d="${d}"/></g>`;
 
 /** A group's frame at (0,0): open, with its title in the band; or closed (R11), the size of a component, with its name centred and an expand mark. */
-function groupBody(g: Group, model: Model, b: { width: number; height: number }): string {
+function groupBody(g: Group, model: Model, b: { width: number; height: number }, collapsible = false): string {
   const closed = g.collapsed !== undefined;
   const shape = groupShapeOf(g, model);
   return [
     outline(shape, b, "group-box"),
     closed
       ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
-      : groupTitle(g.label, shape, b.width),
+      : groupTitle(g.label, shape, b.width) + (collapsible && g.closable ? `\n${collapseMark(b.width, shape.pad)}` : ""),
   ].join("\n");
 }
 /** A frame's title: in the band at the top left; centred on a path-shaped frame, whose corners are not where a box's are. */
@@ -213,13 +217,13 @@ const entityAttrs = (e: Component | Group, model: Model) => `data-state="${escAt
 const bboxAttr = (b: { x: number; y: number; width: number; height: number }) => `data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}"`;
 const at = (b: { x: number; y: number }) => `transform="translate(${num(b.x)} ${num(b.y)})"`;
 
-function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
+function groupMarkup(g: Group, model: Model, layout: LayoutResult, collapsible = false): string {
   const b = layout.groups[g.id];
   if (!b) throw new Error(`layout returned no box for group ${g.id}`);
   return [
     `<g class="group gk-${g.kind} st-${g.state}" data-group="${escAttr(g.id)}" ${bboxAttr(b)} ${entityAttrs(g, model)}${g.collapsed !== undefined ? ` data-collapsed="${g.collapsed}"` : ""} ${at(b)}>`,
     ...(g.reason !== undefined ? [`<title>${esc(g.reason)}</title>`] : []),
-    groupBody(g, model, b),
+    groupBody(g, model, b, collapsible),
     `</g>`,
   ].join("\n");
 }
@@ -325,7 +329,7 @@ function legendMarkup(model: Model, y: number): { markup: string; height: number
 }
 
 /** One view's drawing (groups, connections, components) and its legend, apart, with the size both need together. */
-export function renderView(model: Model, layout: LayoutResult): { picture: string; legend: string; width: number; height: number; layout: LayoutResult; css?: string } {
+export function renderView(model: Model, layout: LayoutResult, collapsible = false): { picture: string; legend: string; width: number; height: number; layout: LayoutResult; css?: string } {
   const view = model.views[0];
   if (view?.type === "sequence") return renderSequenceView(model, view);
   let notes = calloutsMarkup(model, layout);
@@ -334,7 +338,7 @@ export function renderView(model: Model, layout: LayoutResult): { picture: strin
   const bottom = Math.max(layout.height, notes.bottom + CALLOUT_MARGIN);
   const legend = legendMarkup(model, bottom + LEGEND_GAP);
   const picture = [
-    `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout)).join("\n")}\n</g>`,
+    `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout, collapsible)).join("\n")}\n</g>`,
     `<g class="edges">\n${edgesMarkup(model, layout)}\n</g>`,
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout)).join("\n")}\n</g>`,
     ...(notes.markup ? [notes.markup] : []),
@@ -631,7 +635,7 @@ function shiftLayout(l: LayoutResult, dx: number, dy: number): LayoutResult {
 }
 
 /** Lay out and render one view of a declared model with the given groups open, playing a scenario when asked. */
-async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string, shift?: { dx: number; dy: number }, open: readonly string[] = []): Promise<ViewLayer> {
+async function layerFor(declared: Model, view: View, engine: LayoutEngine, play: Play | undefined, title: string, shift?: { dx: number; dy: number }, open: readonly string[] = [], collapsible = false): Promise<ViewLayer> {
   const base = scopeModel(stopFlows(declared), view, open);
   if (view.type === "sequence") {
     if (play?.scenario !== undefined) throw new ModelError(`a sequence view plays its messages, not a scenario: "${view.id}" takes play.seconds only`);
@@ -642,7 +646,7 @@ async function layerFor(declared: Model, view: View, engine: LayoutEngine, play:
   let layout = await engine.layout(toLayoutGraph(base));
   if (shift) layout = shiftLayout(layout, shift.dx, shift.dy);
   if (play) return { view, title, open, layout, ...playingLayer(declared, view, play, layout) };
-  const v = renderView(base, layout);
+  const v = renderView(base, layout, collapsible);
   return { view, title, open, layout: v.layout, width: v.width, height: v.height, markup: withLegend(v) };
 }
 /** Hidden layers carry `style="display:none"` right after the class so the raster package can match them exactly. `data-open` lists the closed groups this layer opens. */
@@ -830,7 +834,8 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
     if (play && play.scenario !== undefined && !model.scenarios.some((s) => s.id === play.scenario)) throw new ModelError(`unknown scenario "${play.scenario}"; available: ${model.scenarios.map((s) => s.id).join(", ") || "none"}`);
     const withSteps = (layer: ViewLayer, open: readonly string[]) => (layer.css === undefined ? { ...layer, markup: [layer.markup, stepCallouts(declared, view, open, layer.layout!)].filter(Boolean).join("\n") } : layer);
     layers.push(withSteps(await layerFor(declared, view, engine, play, view.title ?? model.title ?? view.id), []));
-    for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(withSteps(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open), open));
+    // the interactive file is the only place a reader can close a group, so it is the only place the mark is drawn
+    for (const open of configurationsOf(model.groups, view.collapse ?? [])) if (open.length) layers.push(withSteps(await layerFor(declared, view, engine, undefined, view.title ?? model.title ?? view.id, undefined, open, true), open));
   }
   // JSON is escaped rather than CDATA-split so tools can extract it with one regex and parse it as-is.
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
