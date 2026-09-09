@@ -4,7 +4,9 @@ import type { Direction } from "./types.js";
 export interface LayoutGraph {
   direction: Direction;
   /** Containers. `labelHeight` is the band reserved at the top of the frame for its title; `pad` is extra inset on every side, the room a shaped frame needs. */
-  groups?: { id: string; parent?: string; labelHeight: number; pad?: { x: number; y: number }; emptySize?: { width: number; height: number } }[];
+  groups?: { id: string; parent?: string; labelHeight: number; pad?: { x: number; y: number }; emptySize?: { width: number; height: number };
+    /** The frame is never narrower than this: the room its own title band needs, label and corner mark. */
+    minWidth?: number }[];
   nodes: { id: string; width: number; height: number; group?: string }[];
   edges: { id: string; from: string; to: string; label?: { width: number; height: number } }[];
 }
@@ -87,7 +89,8 @@ export class FakeLayoutEngine implements LayoutEngine {
       const y0 = Math.min(...members.map((m) => m.y)) - py - g.labelHeight;
       const x1 = Math.max(...members.map((m) => m.x + m.width)) + px;
       const y1 = Math.max(...members.map((m) => m.y + m.height)) + py;
-      groupBoxes[g.id] = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+      const width = Math.max(x1 - x0, g.minWidth ?? 0); // the frame fits its own title band (R11)
+      groupBoxes[g.id] = { x: x0, y: y0, width, height: y1 - y0 };
     }
 
     const edges: LayoutResult["edges"] = {};
