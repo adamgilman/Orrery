@@ -63,6 +63,8 @@ export interface Group {
   meta?: Record<string, unknown>;
   /** Set by view scoping when the group is drawn closed: how many components are hidden inside. */
   collapsed?: number;
+  /** Set by view scoping when the group is drawn open and the view could draw it closed: the reader may collapse it (R11). */
+  closable?: boolean;
 }
 
 export interface Connection {

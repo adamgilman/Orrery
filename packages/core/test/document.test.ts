@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { renderDocument, validate, type Model } from "../src/index.js";
+import { render, renderDocument, validate, type Model } from "../src/index.js";
 import { FakeLayoutEngine } from "../src/testing.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
@@ -49,6 +49,27 @@ describe("renderDocument", () => {
     expect(a).toBe(await renderDocument(fixture("grouped"), engine(), { runtime: "x" }));
     expect(a).toMatch(/data-node="api"[^>]*data-bbox="[\d.]+ [\d.]+ [\d.]+ [\d.]+"/);
     expect(a).toMatch(/data-group="app" data-bbox="[\d.]+ [\d.]+ [\d.]+ [\d.]+"/);
+  });
+});
+
+describe("renderDocument: a collapse mark on an open group (#33)", () => {
+  const marks = (svg: string, open: string, group: string) => {
+    const layer = svg.slice(svg.indexOf(`data-open="${open}"`));
+    const at = layer.indexOf(`data-group="${group}"`);
+    const next = layer.indexOf('data-group="', at + 12);
+    const g = layer.slice(at, next < 0 ? undefined : next); // this group's markup, not its neighbour's
+    return { collapse: g.includes('<g class="collapse-mark"'), expand: g.includes('<g class="expand-mark"') };
+  };
+  it("marks a group the reader can close, and keeps the expand mark on the closed one", async () => {
+    const svg = await renderDocument(fixture("drill-down"), engine(), { runtime: "" });
+    expect(marks(svg, "", "payments"), "closed: a plus, nothing to collapse").toEqual({ collapse: false, expand: true });
+    expect(marks(svg, "payments", "payments"), "open: a minus the reader can click").toEqual({ collapse: true, expand: false });
+    expect(marks(svg, "payments", "identity"), "still closed in that layer").toEqual({ collapse: false, expand: true });
+  });
+  it("draws no collapse mark on a still, where nothing can be clicked", async () => {
+    const still = await render(fixture("drill-down"), engine(), { open: ["payments"] });
+    expect(still).toContain('data-group="payments"');
+    expect(still).not.toContain('<g class="collapse-mark"'); // the rule is in every stylesheet; the mark is not
   });
 });
 

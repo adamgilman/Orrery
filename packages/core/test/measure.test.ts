@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validate } from "../src/index.js";
-import { GROUP_LABEL_HEIGHT, measureComponent, measureConnectionLabel, toLayoutGraph } from "../src/internal.js";
+import { GROUP_LABEL_HEIGHT, titleBandWidth, measureComponent, measureConnectionLabel, toLayoutGraph } from "../src/internal.js";
 
 const model = (input: unknown) => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 
@@ -22,7 +22,7 @@ describe("toLayoutGraph", () => {
     const m = model({ direction: "down", groups: [{ id: "r" }, { id: "t", parent: "r" }], components: [{ id: "a", group: "t" }, { id: "b" }], connections: [{ from: "a", to: "b", label: "x" }, { from: "b", to: "r" }] });
     const g = toLayoutGraph(m);
     expect(g.direction).toBe("down");
-    expect(g.groups).toEqual([{ id: "r", labelHeight: GROUP_LABEL_HEIGHT }, { id: "t", parent: "r", labelHeight: GROUP_LABEL_HEIGHT }]);
+    expect(g.groups).toEqual([{ id: "r", labelHeight: GROUP_LABEL_HEIGHT, minWidth: titleBandWidth("r", { x: 0, y: 0 }) }, { id: "t", parent: "r", labelHeight: GROUP_LABEL_HEIGHT, minWidth: titleBandWidth("t", { x: 0, y: 0 }) }]);
     expect(g.nodes.map((n) => [n.id, n.group])).toEqual([["a", "t"], ["b", undefined]]);
     expect(g.edges.map((e) => e.id)).toEqual(["a->b", "b->r"]);
     expect(g.edges[0]!.label!.width).toBeGreaterThan(measureConnectionLabel("").width);

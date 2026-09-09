@@ -41,7 +41,7 @@ export function scopeModel(model: Model, view: View, open: readonly string[] = [
   for (const c of model.components) { const box = representative(c.id); if (box !== c.id) hiddenCount.set(box, (hiddenCount.get(box) ?? 0) + 1); }
   const groups = model.groups.filter((g) => shownGroups.has(g.id) && visible(g.id))
     .map((g) => { if (g.id !== view.scope) return g; const { parent, ...root } = g; return root; })
-    .map((g) => (collapsed.has(g.id) ? { ...g, collapsed: hiddenCount.get(g.id) ?? 0 } : g));
+    .map((g) => (collapsed.has(g.id) ? { ...g, collapsed: hiddenCount.get(g.id) ?? 0 } : opened.has(g.id) ? { ...g, closable: true } : g));
   const components: Component[] = model.components.filter((c) => shown.has(c.id) && visible(c.id));
   const ghosts = new Map<string, Component>();
   const connections: Connection[] = [];

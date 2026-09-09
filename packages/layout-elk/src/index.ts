@@ -50,10 +50,30 @@ export class ElkLayoutEngine implements LayoutEngine {
     // Build the compound-node tree: groups become ELK nodes with padding that reserves the label band.
     const elkNodes = new Map<string, ElkNode>();
     const empty = emptyGroups(graph);
+    // A frame is never narrower than its own title band (`minWidth`). ELK honours elk.nodeSize.minimum on a
+    // compound node in a rightward layout but not a downward one, so the room is taken as side padding instead,
+    // which works in both. The shortfall is measured against what the contents will occupy: side by side in a
+    // rightward layout, stacked in a downward one. Deepest first, so a parent sees its children's widths.
+    const sidePad = new Map<string, number>();
+    const outerWidth = new Map<string, number>();
+    const depthOf = (id: string | undefined): number => { let d = 0; for (let cur = id; cur !== undefined; cur = groups.find((g) => g.id === cur)?.parent) d++; return d; };
+    for (const g of [...groups].sort((a, b) => depthOf(b.id) - depthOf(a.id))) {
+      const base = GROUP_PADDING + (g.pad?.x ?? 0);
+      const kids = [
+        ...graph.nodes.filter((n) => n.group === g.id).map((n) => n.width),
+        ...groups.filter((c) => c.parent === g.id).map((c) => outerWidth.get(c.id) ?? EMPTY_GROUP.width),
+      ];
+      const inner = kids.length === 0
+        ? (g.emptySize?.width ?? EMPTY_GROUP.width) - 2 * base
+        : graph.direction === "right" ? kids.reduce((a, b) => a + b, 0) + nodeSpacing * (kids.length - 1) : Math.max(...kids);
+      const extra = Math.max(0, Math.ceil(((g.minWidth ?? 0) - (inner + 2 * base)) / 2));
+      sidePad.set(g.id, extra);
+      outerWidth.set(g.id, inner + 2 * (base + extra));
+    }
     for (const g of groups) {
       elkNodes.set(g.id, {
         id: g.id,
-        layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight + (g.pad?.y ?? 0)},left=${GROUP_PADDING + (g.pad?.x ?? 0)},bottom=${GROUP_PADDING + (g.pad?.y ?? 0)},right=${GROUP_PADDING + (g.pad?.x ?? 0)}]` },
+        layoutOptions: { ...common, "elk.padding": `[top=${GROUP_PADDING + g.labelHeight + (g.pad?.y ?? 0)},left=${GROUP_PADDING + (g.pad?.x ?? 0) + (sidePad.get(g.id) ?? 0)},bottom=${GROUP_PADDING + (g.pad?.y ?? 0)},right=${GROUP_PADDING + (g.pad?.x ?? 0) + (sidePad.get(g.id) ?? 0)}]` },
         children: [],
         // An empty group is a black box: give it a size, since ELK sizes compound nodes from their children.
         ...(empty.has(g.id) ? (g.emptySize ?? { width: EMPTY_GROUP.width, height: EMPTY_GROUP.height + g.labelHeight }) : {}),

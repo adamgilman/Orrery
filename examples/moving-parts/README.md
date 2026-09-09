@@ -55,8 +55,10 @@ the picture is laid out again around them. `zoom` crops the picture to one entit
 ![Zoomed to the Orders DB](zoom-db.svg)
 ![Open and zoomed](open-and-zoom.svg)
 
-In the interactive file a click opens a closed box, Enter or a double-click zooms, and Escape zooms out and then
-closes the innermost group; the picture slides between layouts rather than cutting.
+In the interactive file a click opens a closed box, and a click on an open frame's own chrome, its background,
+its label or the minus in its corner, closes that one group again. Enter or a double-click zooms, and Escape
+zooms out and then closes the innermost group; the picture slides between layouts rather than cutting. A still
+carries no minus, because there is nothing there to click.
 
 ## Scenarios
 

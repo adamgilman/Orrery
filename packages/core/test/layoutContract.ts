@@ -78,6 +78,15 @@ export function layoutContract(name: string, make: () => LayoutEngine) {
         expect(overlap).toBe(false);
       }
     });
+    it("never draws a frame narrower than its own title band", async () => {
+      const r = await make().layout({
+        direction: "right",
+        groups: [{ id: "sessions", labelHeight: 24, minWidth: 260 }],
+        nodes: [{ id: "a", width: 90, height: 48, group: "sessions" }],
+        edges: [],
+      });
+      expect(r.groups.sessions!.width, "a long label must not run into the corner mark").toBeGreaterThanOrEqual(260);
+    });
     it("routes edges to a group's frame boundary", async () => {
       const r = await make().layout(groupEnds);
       const onBoundary = (p: { x: number; y: number }, b: { x: number; y: number; width: number; height: number }) => {
