@@ -18,7 +18,9 @@ export const DEFAULT_SHAPES: Record<(typeof SHAPE_PRESETS)[number], Omit<ShapeDe
   parallelogram: { path: "M15 0H100L85 100H0Z", pad: { x: 14, y: 0 } },
   document: { path: "M0 0H100V84Q75 70 50 84T0 84Z", pad: { x: 0, y: 8 } },
   card: { path: "M12 0H100V100H0V12Z", pad: { x: 4, y: 0 } },
-  cloud: { path: "M20 100A20 20 0 0 1 10 62A22 22 0 0 1 38 26A25 25 0 0 1 72 22A20 20 0 0 1 94 56A18 18 0 0 1 84 100Z", pad: { x: 16, y: 12 } },
+  // Cubic curves, not arcs: a cubic stays inside the hull of its control points under any scaling, so the lobes
+  // cannot swell out of the box and through the group frame drawn around the node (issue #31).
+  cloud: { path: "M10 100C2 96 0 82 8 68C4 46 22 34 34 44C36 16 60 0 70 26C80 10 98 20 94 46C100 62 100 86 88 100Z", pad: { x: 26, y: 12 } },
 };
 
 /** Path data as an author may write it: the absolute and relative forms of M L H V C S Q T A Z, numbers, separators. */

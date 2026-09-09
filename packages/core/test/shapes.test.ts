@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { pathExtent } from "./pathExtent.js";
 import { validate, type Model } from "../src/index.js";
-import { SHAPE_PRESETS, measureComponent, scalePath, scopeModel, toLayoutGraph } from "../src/internal.js";
+import { DEFAULT_SHAPES, SHAPE_PRESETS, measureComponent, scalePath, scopeModel, toLayoutGraph } from "../src/internal.js";
 
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 
@@ -54,14 +55,34 @@ describe("shapes: groups (R14)", () => {
     const m = inline({ kinds: { groups: { pipeline: { shape: "cloud" } } }, groups: [{ id: "g", kind: "pipeline" }, { id: "c", kind: "pipeline" }, { id: "t" }], components: [{ id: "a", group: "g" }, { id: "b", group: "c" }], views: [{ id: "v", collapse: ["c"] }] });
     expect(m.kinds.groups.pipeline!.shape).toBe("cloud");
     const graph = toLayoutGraph(m);
-    expect(graph.groups!.find((g) => g.id === "g")!.pad).toEqual({ x: 16, y: 12 });
+    expect(graph.groups!.find((g) => g.id === "g")!.pad).toEqual({ x: 26, y: 12 });
     expect(graph.groups!.find((g) => g.id === "t")!.pad).toBeUndefined();
     const closed = toLayoutGraph(scopeModel(m, m.views[0]!));
     const plain = toLayoutGraph(scopeModel(inline({ groups: [{ id: "c" }], components: [{ id: "b", group: "c" }], views: [{ id: "v", collapse: ["c"] }] }), { id: "v", title: "v", type: "topology", collapse: ["c"] }));
-    expect(closed.groups!.find((g) => g.id === "c")!.emptySize!.width - plain.groups!.find((g) => g.id === "c")!.emptySize!.width).toBe(32);
+    expect(closed.groups!.find((g) => g.id === "c")!.emptySize!.width - plain.groups!.find((g) => g.id === "c")!.emptySize!.width).toBe(52); // twice the cloud pad
     expect(closed.groups!.find((g) => g.id === "c")!.emptySize!.height - plain.groups!.find((g) => g.id === "c")!.emptySize!.height).toBe(24);
     const r = validate({ kinds: { groups: { x: { shape: "blob" } } }, groups: [{ id: "g", kind: "x" }], components: [{ id: "a" }] });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors.map((e) => e.toString())).toEqual(['/kinds/groups/x/shape: unknown shape "blob"; known: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud']);
+  });
+});
+
+describe("a preset shape draws inside the box it declares (issue #31)", () => {
+  // Everything downstream trusts the 100x100 box: the label's room, the node's size, the group frame drawn around
+  // it. A shape whose outline swells past the box at some aspect ratio breaks the frame, and a node is rarely
+  // square: a long label makes a wide, short box.
+  const BOXES: [number, number][] = [[100, 100], [160, 48], [400, 48], [640, 56], [80, 220]];
+  it("stays inside at every aspect ratio a label can produce", () => {
+    for (const [name, shape] of Object.entries(DEFAULT_SHAPES)) {
+      if (!shape.path) continue;
+      for (const [w, h] of BOXES) {
+        const e = pathExtent(scalePath(shape.path, w, h));
+        const slack = 0.5; // the scaler rounds to a tenth
+        expect(e.minX, `${name} at ${w}x${h} draws left of its box`).toBeGreaterThanOrEqual(-slack);
+        expect(e.minY, `${name} at ${w}x${h} draws above its box`).toBeGreaterThanOrEqual(-slack);
+        expect(e.maxX, `${name} at ${w}x${h} draws past its right edge`).toBeLessThanOrEqual(w + slack);
+        expect(e.maxY, `${name} at ${w}x${h} draws below its bottom edge`).toBeLessThanOrEqual(h + slack);
+      }
+    }
   });
 });

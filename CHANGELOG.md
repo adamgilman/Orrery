@@ -5,6 +5,7 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 ## Unreleased
 
+- The `cloud` shape is drawn with cubic curves instead of elliptical arcs, so it stays inside its box at every aspect ratio. An arc's bulge grew with the box, so a cloud-shaped node with a long label drew out through the frame of the group holding it (#31). A test now samples every preset shape at five aspect ratios and fails if one draws outside its box. The cloud's label clearance widened to match its new outline.
 - A `user` vocabulary pack, with the tool: `user:user`, `user:device`, `user:computer` and `user:house`, the basic pieces a diagram needs beside its services, with `person`, `phone`, `laptop` and `home` among the aliases. The glyphs are derived from [Lucide](https://lucide.dev), merged to a single path and scaled into the glyph slot so they take the theme's stroke like the built-in ones; Lucide's ISC notice and Feather's MIT notice ship in `packages/core/NOTICES.md`.
 - The five MIT packages ship the project's licence notice in their own directory, which is what the MIT licence requires of copies and what npm includes in a tarball. A test keeps every workspace carrying a manifest, a README and a notice, and keeps the changelog's Unreleased section single and first.
 
