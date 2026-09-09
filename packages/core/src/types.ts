@@ -57,6 +57,8 @@ export interface Group {
   label: string;
   kind: string;
   parent?: string;
+  /** How many identical instances run: the closed frame is stacked and counted, and opening it shows one of them. */
+  replicas: number;
   state: string;
   reason?: string;
   description?: string;

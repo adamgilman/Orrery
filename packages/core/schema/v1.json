@@ -187,7 +187,7 @@
                 "oneOf": [
                   {
                     "type": "string",
-                    "description": "A preset glyph name (database, queue, cache, gateway, client, storage, function) or SVG path data drawn with the theme's stroke in a 16×16 box."
+                    "description": "A preset glyph name (database, queue, cache, gateway, client, storage, function) or SVG path data drawn with the theme's stroke in a 16\u00d716 box."
                   },
                   {
                     "type": "object",
@@ -402,7 +402,7 @@
               "path": {
                 "type": "string",
                 "minLength": 1,
-                "description": "SVG path data drawn in a 100×100 box and scaled to the component's size (M L H V C S Q T A Z, absolute or relative)."
+                "description": "SVG path data drawn in a 100\u00d7100 box and scaled to the component's size (M L H V C S Q T A Z, absolute or relative)."
               },
               "corner": {
                 "oneOf": [
@@ -597,9 +597,11 @@
             "type": "string",
             "description": "Id of the enclosing group. Omit for top level. Cycles are rejected."
           },
-          "meta": {
-            "type": "object",
-            "description": "Free-form data ignored by rendering: owner, url, tags, cost centre."
+          "replicas": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "How many identical instances of this group run. Drawn closed as a stacked frame with the count; opening it drills into one of them."
           },
           "state": {
             "type": "string",
@@ -610,6 +612,10 @@
             "type": "string",
             "minLength": 1,
             "description": "One or two sentences, shown as a tooltip."
+          },
+          "meta": {
+            "type": "object",
+            "description": "Free-form data ignored by rendering: owner, url, tags, cost centre."
           }
         }
       }

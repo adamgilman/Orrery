@@ -10,7 +10,7 @@
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
-.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;pointer-events:none}
 .badge{font:600 12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
@@ -112,7 +112,7 @@
 <rect class="group-box" width="1334" height="180" rx="8"/>
 <text class="group-label" x="12" y="16">@orrery-diagrams/core</text>
 </g>
-<g class="group gk-cluster st-healthy" data-group="vocabulary" data-bbox="986.5 186.5 132 48" data-state="healthy" data-collapsed="7" transform="translate(986.5 186.5)">
+<g class="group gk-cluster st-healthy" data-group="vocabulary" data-bbox="986.5 186.5 132 48" data-state="healthy" data-collapsed="9" transform="translate(986.5 186.5)">
 <rect class="group-box" width="132" height="48" rx="8"/>
 <g class="summary"><text class="summary-label" x="54" y="24">Vocabulary</text><g class="expand-mark" transform="translate(110 8)"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g></g>
 </g>

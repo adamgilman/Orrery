@@ -1,7 +1,7 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
-import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, groupShapeOf, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
+import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, REPLICA_BADGE_WIDTH, groupShapeOf, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
 import { scalePath } from "./shapes.js";
 import { layoutSequence, sequenceLayoutResult, type SequenceLayout } from "./sequence.js";
 import { lineOf, lookOf } from "./looks.js";
@@ -137,7 +137,7 @@ const BASE_STYLE = `
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
-.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5}
+.replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;pointer-events:none}
 .badge{font:600 12px ${FONT};fill:#64748b;text-anchor:end;dominant-baseline:central;font-variant-numeric:tabular-nums}
 .node[data-ghost]{opacity:.5}.node[data-ghost] .node-box{stroke-dasharray:3 3}.node[data-ghost] .node-label{font-style:italic}
 .glyph{fill:none;stroke:#475569;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
@@ -200,10 +200,16 @@ const cornerMark = (cls: string, d: string, w: number, pad: { x: number; y: numb
 function groupBody(g: Group, model: Model, b: { width: number; height: number }, collapsible = false): string {
   const closed = g.collapsed !== undefined;
   const shape = groupShapeOf(g, model);
+  const many = g.replicas > 1;
   return [
+    // Closed, identical instances stack behind the front frame; the boxes behind take no clicks, so only the
+    // front one opens, and opening drills into one of them (R11).
+    ...(many && closed ? [`<g class="replicas"><g transform="translate(6 -6)">${outline(shape, b, "replica-box")}</g><g transform="translate(3 -3)">${outline(shape, b, "replica-box")}</g></g>`] : []),
     outline(shape, b, "group-box"),
+    // the count sits left of the corner mark in both states; the title band reserves the room for both
+    ...(many ? [`<text class="badge" x="${num(b.width - 8 - EXPAND_MARK_WIDTH - shape.pad.x)}" y="${num(closed ? 12 + shape.pad.y : 16 + shape.pad.y)}">×${g.replicas}</text>`] : []),
     closed
-      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
+      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH - (many ? REPLICA_BADGE_WIDTH : 0)) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
       : groupTitle(g.label, shape, b.width) + (collapsible && g.closable ? `\n${collapseMark(b.width, shape.pad)}` : ""),
   ].join("\n");
 }

@@ -190,6 +190,13 @@
       }
     },
     {
+      "id": "pack-npm",
+      "label": "Its npm package",
+      "kind": "cluster",
+      "parent": "packs",
+      "replicas": 3
+    },
+    {
       "id": "layout",
       "label": "@orrery-diagrams/layout-elk",
       "kind": "package"
@@ -315,6 +322,20 @@
       "label": "azure",
       "kind": "azure:functions",
       "group": "packs"
+    },
+    {
+      "id": "pack-file",
+      "label": "pack.json",
+      "kind": "file",
+      "group": "pack-npm",
+      "tech": "every icon as a kind"
+    },
+    {
+      "id": "pack-terms",
+      "label": "LICENSE",
+      "kind": "file",
+      "group": "pack-npm",
+      "tech": "the provider's terms"
     },
     {
       "id": "sre-pack",
@@ -618,6 +639,13 @@
       "meta": {
         "why": "the same drawing, copied"
       }
+    },
+    {
+      "from": "azure-pack",
+      "to": "pack-npm",
+      "kind": "dataflow",
+      "load": 0.2,
+      "label": "ships as"
     }
   ],
   "callouts": [
