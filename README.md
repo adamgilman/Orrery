@@ -323,6 +323,7 @@ request, and main requires them to pass.
 
 ## License
 
-MIT, for the code and everything in this repository except the icon packs. `packages/pack-aws`, `pack-azure` and
+MIT, for the code and everything in this repository except the icon packs. The `user` pack's glyphs are derived
+from [Lucide](https://lucide.dev) under the ISC licence, whose notice ships in `packages/core/NOTICES.md`. `packages/pack-aws`, `pack-azure` and
 `pack-gcp` hold the providers' own icons under the providers' terms, each in its own `LICENSE`; see
 [docs/PACKS.md](docs/PACKS.md).

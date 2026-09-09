@@ -33,7 +33,8 @@
     "use": [
       "aws",
       "gcp",
-      "azure"
+      "azure",
+      "user"
     ],
     "replace": false,
     "components": {
@@ -415,6 +416,12 @@
       "kind": "client"
     },
     {
+      "id": "reader",
+      "label": "Reader",
+      "kind": "user:user",
+      "tech": "on a laptop or a phone"
+    },
+    {
       "id": "freeze",
       "label": "Freeze at t",
       "group": "raster"
@@ -553,6 +560,18 @@
       "to": "browser",
       "load": 0.5,
       "label": "opened directly"
+    },
+    {
+      "from": "browser",
+      "to": "reader",
+      "load": 0.4,
+      "label": "clicks and keys"
+    },
+    {
+      "from": "readme",
+      "to": "reader",
+      "kind": "dataflow",
+      "load": 0.3
     },
     {
       "from": "page",

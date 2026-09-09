@@ -1952,6 +1952,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-static@npm:^1.42.0":
+  version: 1.42.0
+  resolution: "lucide-static@npm:1.42.0"
+  checksum: 10c0/057529dbd73edcd929c52aa8c09f45f4ab36329686c4fc9ff5f10a6486c7b9557a234fad91519828cb9e9c47ff84f9d3cc8a6b35986d34cc3a87d3f529340ed7
+  languageName: node
+  linkType: hard
+
 "magic-string@npm:^1.2.3":
   version: 1.2.3
   resolution: "magic-string@npm:1.2.3"
@@ -2097,6 +2104,7 @@ __metadata:
     eslint: "npm:^10.10.0"
     globals: "npm:^17.12.0"
     jsdom: "npm:^30"
+    lucide-static: "npm:^1.42.0"
     playwright: "npm:1.62"
     typescript: "npm:^5.6"
     typescript-eslint: "npm:^8.69.0"

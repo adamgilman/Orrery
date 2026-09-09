@@ -47,6 +47,6 @@ describe("smoke: the orrery command on the diagram of Orrery", () => {
     expect(readdirSync(dir).sort()).toEqual(["app.js", "index.html", "orrery.js", "orrery.render-seq.svg", "orrery.svg"]); // the sequence is its own file
     const packs = run("packs");
     expect(packs.code).toBe(0);
-    for (const p of ["aws", "azure", "gcp", "sre"]) expect(packs.out).toMatch(new RegExp(`^${p}\\s`, "m"));
+    for (const p of ["aws", "azure", "gcp", "sre", "user"]) expect(packs.out).toMatch(new RegExp(`^${p}\\s`, "m"));
   });
 });

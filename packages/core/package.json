@@ -55,7 +55,8 @@
   "files": [
     "dist",
     "packs",
-    "schema"
+    "schema",
+    "NOTICES.md"
   ],
   "scripts": {
     "build": "node scripts/embed.mjs && tsc -b"
