@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adamgilman/Orrery/main/packages/core/schema/v1.json",
+  "direction": "down",
+  "groups": [
+    {
+      "id": "data-plane",
+      "label": "Data Plane",
+      "kind": "tier"
+    }
+  ],
+  "components": [
+    {
+      "id": "site",
+      "label": "Site",
+      "kind": "external",
+      "group": "data-plane"
+    },
+    {
+      "id": "embedded-cache",
+      "label": "This is a long description",
+      "kind": "external",
+      "group": "data-plane"
+    }
+  ]
+}

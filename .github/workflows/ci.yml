@@ -38,7 +38,7 @@ jobs:
       - name: The committed pictures match the renderer
         run: |
           yarn examples > /dev/null
-          git diff --exit-code --stat -- examples site/landing || { echo '::error::a committed picture differs from what the renderer draws; run yarn examples and commit the result'; exit 1; }
+          git diff --exit-code --stat -- examples site/landing fixtures/issues || { echo '::error::a committed picture differs from what the renderer draws; run yarn examples and commit the result'; exit 1; }
       # The ratchet measures whenever there is a build, whatever the tests said, so a pull request always gets its table.
       # A pull request may declare growth it means: a line `perf-accept: metric, metric` in its body, with the reason.
       # The `perf-ignore` label accepts every metric: the table is still measured and posted, but nothing blocks, and

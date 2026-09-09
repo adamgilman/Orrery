@@ -325,7 +325,7 @@ describe("renderSvg: group shapes (R14)", () => {
     const m = fixture("shapes");
     const svg = await draw(m);
     const own = between(svg, 'data-group="own"');
-    expect(own).toMatch(/<path class="group-box" data-shape="M20 100A20 20 0 0 1 10 62[^"]*" d="M[\d.]+ [\d.]+A/);
+    expect(own).toMatch(/<path class="group-box" data-shape="M10 100C2 96 0 82 8 68[^"]*" d="M[\d.]+ [\d.]+C/);
     expect(own).not.toContain("<rect");
     expect(own).toMatch(/<text class="group-label centred" x="[\d.]+" y="28">Your own<\/text>/); // centred on a path frame
     expect(between(svg, 'data-group="presets"')).toContain('<text class="group-label centred" x="'); // card is a path too
@@ -333,7 +333,7 @@ describe("renderSvg: group shapes (R14)", () => {
     const closed = await draw(scopeModel(m, m.views[1]!));
     const box = between(closed, 'data-group="own"');
     expect(box).toMatch(/data-bbox="\S+ \S+ \S+ 72"/); // 48 + 2 × 12
-    expect(box).toMatch(/<path class="group-box" data-shape="[^"]+" d="M[\d.]+ 72A/); // the base at the full height of 72
+    expect(box).toMatch(/<path class="group-box" data-shape="[^"]+" d="M[\d.]+ 72C/); // the base at the full height of 72
     expect(box).toContain('class="summary"');
   });
   it("in a tour, a shaped frame's size track animates its path data", async () => {
