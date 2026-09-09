@@ -12,7 +12,7 @@
     "unit": "ms"
   },
   "overview.bytes": {
-    "value": 32158,
+    "value": 32178,
     "unit": "bytes"
   },
   "document.ms": {
@@ -20,7 +20,7 @@
     "unit": "ms"
   },
   "document.bytes": {
-    "value": 385750,
+    "value": 385926,
     "unit": "bytes"
   },
   "document.layers": {
@@ -36,11 +36,11 @@
     "unit": "ms"
   },
   "tour.bytes": {
-    "value": 139683,
+    "value": 139703,
     "unit": "bytes"
   },
   "play.bytes": {
-    "value": 117205,
+    "value": 117225,
     "unit": "bytes"
   },
   "freeze.ms": {
