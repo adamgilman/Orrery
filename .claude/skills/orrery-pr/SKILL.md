@@ -17,6 +17,19 @@ measured. Write it in the same order every time.
 4. If the ratchet flagged growth the change means (a bigger runtime, a bigger document), decide the metrics and the
    reason now. Undeclared growth blocks the merge; declared growth is written in the body (below).
 
+## A bug: replicate the report, then show it resolved
+
+A fix for a reported bug carries the reporter's own model, unchanged, as `fixtures/issues/<number>-<slug>.json`,
+and a case in `packages/core/test/issues.test.ts` whose assertion is the symptom they described. Not the cause,
+the symptom: if they said a box drew outside its frame, assert that every box is inside its frame.
+
+Check it the only way that proves anything. Run the new test against the unfixed code, watch it fail, and put the
+failure message in the pull request beside the fix. A test that covers only the cause can pass while the
+reporter's own picture is still wrong, and they are the one who will look.
+
+The body then carries three things: their model as the JSON example, the failure message from before the fix, and
+the picture after it. Say "Fixes #n" so the issue closes on merge.
+
 ## Pictures: embed the SVG files, never screenshots
 
 GitHub renders an SVG file from the branch inside an image tag, animation included. Embed every picture the change
