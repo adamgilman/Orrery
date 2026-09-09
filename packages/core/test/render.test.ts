@@ -13,6 +13,40 @@ const attr = (svg: string, tag: string, name: string): string[] => [...svg.match
 /** The element block starting at `start`, up to its own closing tag on its own line (nested groups close inline). */
 const between = (svg: string, start: string) => svg.slice(svg.indexOf(start), svg.indexOf("\n</g>", svg.indexOf(start)));
 
+describe("a group of replicas (#34)", () => {
+  const model = (replicas: number) => {
+    const r = validate({ direction: "down", groups: [{ id: "server", label: "Server", replicas }], components: [{ id: "app", label: "App", group: "server" }, { id: "lb", label: "LB" }], connections: [{ from: "lb", to: "server" }], views: [{ id: "closed", collapse: ["server"] }, { id: "open" }] });
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    return r.model;
+  };
+  const draw = async (m: Model, view: string) => render(m, new FakeLayoutEngine(), { view });
+  it("stacks the closed frame and counts it, and leaves the count on the open one", async () => {
+    const closed = await draw(model(3), "closed");
+    const g = between(closed, 'data-group="server"');
+    expect((g.match(/class="replica-box"/g) ?? []).length, "two boxes behind the front one").toBe(2);
+    expect(g).toContain(">×3<");
+    expect(g).toContain('class="expand-mark"'); // still opens
+    const open = await draw(model(3), "open");
+    const o = between(open, 'data-group="server"');
+    expect(o).toContain(">×3<"); // still one of three, seen from inside
+    expect(o).not.toContain('class="replica-box"'); // but not stacked: this is one instance
+  });
+  it("draws no stack and no count for a single instance", async () => {
+    const g = between(await draw(model(1), "closed"), 'data-group="server"');
+    expect(g).not.toContain("replica-box");
+    expect(g).not.toContain("×");
+  });
+  it("makes the boxes behind untouchable, so only the front one opens", async () => {
+    expect(await draw(model(2), "closed")).toContain(".replica-box{fill:#ffffff;stroke:#94a3b8;stroke-width:1.5;pointer-events:none}");
+  });
+  it("reserves room for the count, so the label and the expand mark keep their space", async () => {
+    const one = between(await draw(model(1), "closed"), 'data-group="server"');
+    const many = between(await draw(model(4), "closed"), 'data-group="server"');
+    const width = (s: string) => Number(s.match(/data-bbox="[\d.-]+ [\d.-]+ ([\d.]+)/)![1]);
+    expect(width(many)).toBeGreaterThan(width(one));
+  });
+});
+
 describe("renderSvg: structure", () => {
   it("emits a standalone SVG sized to the layout with groups, edges, nodes in that order", async () => {
     const m = fixture("grouped"); const l = await laidOut(m); const svg = renderSvg(m, l);

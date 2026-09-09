@@ -96,7 +96,9 @@ from [Lucide](https://lucide.dev) under its ISC licence.
 
 ## Details on a box
 
-`replicas` stacks the box and badges the count, `tech` adds a second line, and a scoped view draws what lies
+`replicas` stacks the box and badges the count, on a group as well as a component: a closed frame of replicas is
+stacked and counted, only the front frame opens, and opening it drills into one instance rather than all of them.
+`tech` adds a second line, and a scoped view draws what lies
 outside as a ghost at the edge, so nothing is dropped silently.
 
 ![Replicas, tech lines and labels](details.svg)

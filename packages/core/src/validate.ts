@@ -81,7 +81,7 @@ interface Raw {
   kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
   connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
-  groups: { id: string; label?: string; kind: string; parent?: string; state?: string; description?: string; meta?: Record<string, unknown> }[];
+  groups: { id: string; label?: string; kind: string; parent?: string; replicas: number; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; description?: string; type: ViewType; direction?: Direction; scope?: string; only?: string[]; play?: { scenario?: string; seconds: number }; collapse?: string[]; messages?: { from: string; to: string; text?: string; kind?: string; reply?: boolean }[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; callouts?: Callout[]; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
   tour?: { seconds: number; views?: string[]; scenes?: { view: string; open?: string[]; zoom?: string; scenario?: string; step?: number; set?: Record<string, SetEntry>; callouts?: Callout[]; note?: string; seconds?: number }[] };
@@ -259,7 +259,7 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
   });
 
   const components: Component[] = raw.components.map((c) => ({ id: c.id, label: c.label ?? c.id, kind: c.kind, state: c.state ?? states.default, replicas: c.replicas, ...opt("group", c.group), ...opt("tech", c.tech), ...opt("description", c.description), ...opt("meta", c.meta) }));
-  const groups: Group[] = raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, state: g.state ?? states.default, ...opt("parent", g.parent), ...opt("description", g.description), ...opt("meta", g.meta) }));
+  const groups: Group[] = raw.groups.map((g) => ({ id: g.id, label: g.label ?? g.id, kind: g.kind, replicas: g.replicas, state: g.state ?? states.default, ...opt("parent", g.parent), ...opt("description", g.description), ...opt("meta", g.meta) }));
 
   /* views */
   const viewIds = new Set<string>();

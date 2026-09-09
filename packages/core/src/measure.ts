@@ -9,13 +9,13 @@ export const GROUP_LABEL_HEIGHT = 24;
 /** A group label is 11px, uppercase and letter-spaced, so it runs wider per character than a node's label. */
 export const GROUP_LABEL_CHAR = 7.2;
 /** The room a frame's title band needs: the label from the left inset, then a gap, then the corner mark. */
-export const titleBandWidth = (label: string, pad: { x: number; y: number }) => Math.ceil(12 + pad.x + label.length * GROUP_LABEL_CHAR + 8 + EXPAND_MARK_WIDTH + pad.x);
+export const titleBandWidth = (label: string, pad: { x: number; y: number }, replicas = 1) => Math.ceil(12 + pad.x + label.length * GROUP_LABEL_CHAR + 8 + EXPAND_MARK_WIDTH + (replicas > 1 ? REPLICA_BADGE_WIDTH : 0) + pad.x);
 /** Extra width for the kind glyph drawn left of the label. */
 export const GLYPH_WIDTH = 24;
 /** Extra width for the expand mark on a closed group. */
 export const EXPAND_MARK_WIDTH = 24;
 /** Extra width for the "×n" replicas badge. */
-const REPLICA_BADGE_WIDTH = 28;
+export const REPLICA_BADGE_WIDTH = 28;
 const CHAR_WIDTH = 7.6; // average glyph width at 14px
 const TECH_CHAR_WIDTH = 6.7; // 12px
 const PADDING = 32;
@@ -55,9 +55,9 @@ export function toLayoutGraph(model: Model): LayoutGraph {
         labelHeight: GROUP_LABEL_HEIGHT,
         ...(pad.x || pad.y ? { pad } : {}),
         // Open, the frame is never narrower than its own title band: a long label used to run into the corner mark.
-        ...(g.collapsed === undefined ? { minWidth: titleBandWidth(g.label, pad) } : {}),
+        ...(g.collapsed === undefined ? { minWidth: titleBandWidth(g.label, pad, g.replicas) } : {}),
         // A closed group is the size of a component with that label, plus room for the expand mark and the shape's pad.
-        ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH)) + 2 * pad.x, height: COMPONENT_HEIGHT + 2 * pad.y } } : {}),
+        ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH + (g.replicas > 1 ? REPLICA_BADGE_WIDTH : 0))) + 2 * pad.x, height: COMPONENT_HEIGHT + 2 * pad.y } } : {}),
       };
     }),
     nodes: model.components.map((c) => ({ id: c.id, ...measureComponent(c, model), ...(c.group !== undefined ? { group: c.group } : {}) })),
