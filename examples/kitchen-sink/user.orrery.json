@@ -1,0 +1,21 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "The user pack",
+  "direction": "right",
+  "kinds": { "use": ["user"] },
+  "components": [
+    { "id": "reader", "label": "Reader", "kind": "user:user", "tech": "or a customer, or an operator" },
+    { "id": "phone", "label": "Phone", "kind": "user:device" },
+    { "id": "laptop", "label": "Laptop", "kind": "user:computer" },
+    { "id": "home", "label": "Their home", "kind": "user:house", "tech": "one line out" },
+    { "id": "site", "label": "Storefront", "kind": "client" }
+  ],
+  "connections": [
+    { "from": "reader", "to": "phone", "load": 0.5 },
+    { "from": "reader", "to": "laptop", "load": 0.5 },
+    { "from": "phone", "to": "home", "load": 0.4 },
+    { "from": "laptop", "to": "home", "load": 0.4 },
+    { "from": "home", "to": "site", "kind": "sync", "load": 0.6 }
+  ],
+  "exports": [{ "id": "packs-user" }]
+}

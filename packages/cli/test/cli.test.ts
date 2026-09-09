@@ -358,7 +358,7 @@ describe("orrery packs", () => {
   it("lists the packs with their titles, and a pack's kinds with descriptions", () => {
     const all = run("packs");
     expect(all.code).toBe(0);
-    expect(all.out.split("\n").filter(Boolean).map((l) => l.split(/\s+/)[0])).toEqual(["aws", "azure", "gcp", "sre"]);
+    expect(all.out.split("\n").filter(Boolean).map((l) => l.split(/\s+/)[0])).toEqual(["aws", "azure", "gcp", "sre", "user"]);
     expect(all.out).toContain("AWS Architecture Icons");
     expect(all.out).toMatch(/^aws\s+AWS Architecture Icons \([^)]*\)\s+@orrery-diagrams\/pack-aws\b/m); // whose package, so whose terms
     expect(all.out).toMatch(/^sre\s+SRE states \(1\)\s+with the tool/m);
@@ -370,7 +370,7 @@ describe("orrery packs", () => {
     expect(sre.out).toMatch(/^healthy\s+Within SLO/m);
     const bad = run("packs", "ibm");
     expect(bad.code).toBe(1);
-    expect(bad.err).toContain('unknown pack "ibm"; known: aws, azure, gcp, sre');
+    expect(bad.err).toContain('unknown pack "ibm"; known: aws, azure, gcp, sre, user');
     expect(run("packs", "aws", "--out", "x").code).toBe(2);
   });
   it("renders a model that uses a pack, with the provider's icons inside the nodes, deterministically", () => {

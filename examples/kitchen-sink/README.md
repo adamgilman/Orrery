@@ -87,6 +87,13 @@ that uses it. `orrery packs aws` lists them; [docs/PACKS.md](../../docs/PACKS.md
 ![Google Cloud](packs-gcp.svg)
 ![Azure](packs-azure.svg)
 
+`"kinds": { "use": ["user"] }` brings in the basic pieces a diagram needs beside its services: `user:user`,
+`user:device`, `user:computer` and `user:house`, with the names people say as aliases (`person`, `phone`,
+`laptop`, `home`). These come with the tool, drawn in the theme's stroke like the default glyphs, and are derived
+from [Lucide](https://lucide.dev) under its ISC licence.
+
+![The user pack](packs-user.svg)
+
 ## Details on a box
 
 `replicas` stacks the box and badges the count, `tech` adds a second line, and a scoped view draws what lies
