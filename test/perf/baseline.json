@@ -1,14 +1,14 @@
 {
   "validate.ms": {
-    "value": 0.8,
+    "value": 1,
     "unit": "ms"
   },
   "layout.ms": {
-    "value": 64.86,
+    "value": 87.98,
     "unit": "ms"
   },
   "render.ms": {
-    "value": 0.5,
+    "value": 0.69,
     "unit": "ms"
   },
   "overview.bytes": {
@@ -16,7 +16,7 @@
     "unit": "bytes"
   },
   "document.ms": {
-    "value": 628.46,
+    "value": 845.69,
     "unit": "ms"
   },
   "document.bytes": {
@@ -32,7 +32,7 @@
     "unit": "count"
   },
   "tour.ms": {
-    "value": 152.11,
+    "value": 200.62,
     "unit": "ms"
   },
   "tour.bytes": {
@@ -44,7 +44,7 @@
     "unit": "bytes"
   },
   "freeze.ms": {
-    "value": 2.29,
+    "value": 3.77,
     "unit": "ms"
   },
   "runtime.bytes": {
