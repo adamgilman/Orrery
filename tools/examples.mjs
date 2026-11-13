@@ -8,6 +8,9 @@ const cli = "packages/cli/dist/main.js";
 const run = (...args) => execFileSync("node", [cli, ...args], { encoding: "utf8" });
 execFileSync("node", ["tools/checkout-stages.mjs"], { stdio: "inherit" });
 run("render", "examples/solar-system.orrery.json", "-o", "examples/solar-system.svg");
+// the README's Try it: its model, rendered with the two commands it gives (test/orrery/readme.test.ts holds the three together)
+run("render", "examples/try-it.orrery.json", "-o", "examples/try-it.svg");
+run("render", "examples/try-it.orrery.json", "--set", "failed=db", "-o", "examples/try-it-failed.svg");
 run("render", "examples/checkout.orrery.json", "-o", "examples/checkout.svg"); // the interactive file the README and landing page link to
 run("render", "examples/checkout.orrery.json", "--view", "checkout-seq", "-o", "examples/checkout-sequence.svg"); // its sequence, a file of its own
 for (const f of ["examples/checkout.orrery.json", ...readdirSync("examples/checkout").filter((f) => f.endsWith(".orrery.json")).map((f) => `examples/checkout/${f}`)]) {

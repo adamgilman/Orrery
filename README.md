@@ -48,8 +48,12 @@ bunx orrery-diagrams render app.orrery.json -o app.svg
 yarn dlx orrery-diagrams render app.orrery.json -o app.svg
 ```
 
-Put `app.svg` in an image tag and it animates; open it in a browser and it is interactive. No coordinates, no
-styling: the layout is automatic. Now fail the database and see what the picture says:
+That writes this: one SVG file, which animates in an image tag and is interactive when opened in a browser. No
+coordinates, no styling: the layout is automatic.
+
+![The four components, with traffic flowing](examples/try-it.svg)
+
+Now fail the database:
 
 ```sh
 npx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
@@ -62,6 +66,11 @@ bunx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
 ```sh
 yarn dlx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
 ```
+
+![The database failed, its traffic stopped](examples/try-it-failed.svg)
+
+The database is red and pulsing, and the flow into it has stopped. Nothing else changed, because nothing else was
+said: a scenario is where you write what a failure does to the rest.
 
 Or look before you write anything: [open the checkout below as an interactive file](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
 click the closed box to open it, press `s` to start a scenario and `]` to step it.
