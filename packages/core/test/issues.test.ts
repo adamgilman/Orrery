@@ -3,6 +3,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { render, validate } from "../src/index.js";
 import { FakeLayoutEngine } from "../src/testing.js";
+import { textWidth } from "../src/internal.js";
+import { escaping, insideOutline } from "./outline.js";
 import { pathExtent } from "./pathExtent.js";
 
 /**
@@ -45,8 +47,30 @@ describe("issues, replicated", () => {
       expect(n.maxY, `${n.id} draws out through the bottom of the frame`).toBeLessThanOrEqual(fy + fh);
     }
   });
+  it("#51: on a cloud, a diamond and a parallelogram the label, tech line and badge are inside the node's own outline", async () => {
+    const model = modelOf("51-contents-cross-outline.json");
+    const svg = await render(model, new FakeLayoutEngine());
+    // each node's markup runs to the next node's; nothing after the last one carries a node class
+    const nodes = svg.split(/<g class="node(?=[ "])/).slice(1).map((markup) => ({ id: markup.match(/data-node="([^"]+)"/)![1]!, markup }));
+    expect(nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c", "d", "e", "f", "h"]);
+    const out: string[] = [];
+    for (const n of nodes) {
+      const d = n.markup.match(/<path class="node-box" d="([^"]+)"/)![1]!;
+      const box = pathExtent(d);
+      const isIn = insideOutline({ path: d }, 100, 100); // already at its drawn size: scaling by 100 over 100 leaves it be
+      const texts = [...n.markup.matchAll(/<text class="(node-label|node-tech|badge)" x="([\d.]+)" y="([\d.]+)">([^<]*)</g)].map(([, cls, x, y, t]) => {
+        const px = cls === "node-label" ? 14 : 12, w = textWidth(t!.length, px), cx = Number(x), cy = Number(y);
+        return cls === "badge" ? { what: `${n.id} badge`, x0: cx - w, x1: cx, y0: cy - 5, y1: cy + 5 } : { what: `${n.id} ${cls}`, x0: cx - w / 2, x1: cx + w / 2, y0: cy - px * 0.43, y1: cy + px * 0.43 };
+      });
+      expect(texts.length, `${n.id} draws no label`).toBeGreaterThan(0);
+      expect(box.maxX).toBeGreaterThan(0);
+      // the reported symptom: the outline ran through the text, and the badge sat outside it
+      out.push(...escaping(isIn, texts));
+    }
+    expect(out).toEqual([]);
+  });
   it("every issue fixture is a case here, so a reported model is never left untested", () => {
     const files = readdirSync(dir).filter((f) => f.endsWith(".json")).sort();
-    expect(files).toEqual(["31-shape-escapes-group.json"]);
+    expect(files).toEqual(["31-shape-escapes-group.json", "51-contents-cross-outline.json"]);
   });
 });

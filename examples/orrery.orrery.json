@@ -132,6 +132,7 @@
           "x": 16,
           "y": 0
         },
+        "inner": [15, 0, 85, 100],
         "description": "A stage in a pipeline"
       },
       "tag": {

@@ -113,15 +113,15 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L421.5 146" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="to-draw" data-load="0.7" d="M169 146 L409.5 146" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L417.5 146" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M169 146 L405.5 146" style="stroke-width:3.6;animation-duration:1.3s"/>
 <text class="edge-label" x="259.5" y="157">laid out</text>
 <path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M599 253 L624 253 L624 260.3 L697.2 260.3" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M599 253 L624 253 L624 260.3 L685.2 260.3" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
-<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M546.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M546.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M546.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M546.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M550.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M550.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M550.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M550.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:3;animation-duration:1.8s"/>
 <path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M899.5 153 L1127 153 L1127 325 L1324 325" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="scene->readme" data-load="0.6" d="M899.5 153 L1127 153 L1127 325 L1312 325" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="1048.5" y="164">img tag</text>
@@ -143,10 +143,10 @@
 <path class="flow" data-flow="resvg->png" data-load="0.3" d="M591.5 353 L682.5 353" style="stroke-width:2.4;animation-duration:2.3s"/>
 </g>
 <g class="nodes">
-<g class="node kind-stage st-healthy" data-node="renderer" data-kind="stage" data-state="healthy" data-bbox="421.5 115 125 62" transform="translate(421.5 115)">
-<path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
-<text class="node-label" x="62.5" y="23">Render</text>
-<text class="node-tech" x="62.5" y="41">SVG + CSS</text>
+<g class="node kind-stage st-healthy" data-node="renderer" data-kind="stage" data-state="healthy" data-bbox="417.5 115 133 62" transform="translate(417.5 115)">
+<path class="node-box" d="M0 0H113.1L133 31 113.1 62H0L20 31Z"/>
+<text class="node-label" x="66.5" y="23">Render</text>
+<text class="node-tech" x="66.5" y="41">SVG + CSS</text>
 </g>
 <g class="node kind-client st-healthy" data-node="page" data-kind="client" data-state="healthy" data-bbox="20 20 149 62" transform="translate(20 20)">
 <rect class="node-box" width="149" height="62" rx="31"/>
@@ -168,10 +168,10 @@
 <text class="node-label" x="116.5" y="23">Interactive SVG</text>
 <text class="node-tech" x="116.5" y="41">model + engine inside</text>
 </g>
-<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 282 183 86" transform="translate(1324 282)">
-<path class="node-box" d="M18.3 86C3.7 82.6 0 70.5 14.6 58.5C7.3 39.6 40.3 29.2 62.2 37.8C65.9 13.8 109.8 0 128.1 22.4C146.4 8.6 179.3 17.2 172 39.6C183 53.3 183 74 161 86Z"/>
-<text class="node-label" x="91.5" y="35">GitHub README</text>
-<text class="node-tech" x="91.5" y="53">an img tag</text>
+<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 279.5 183 91" transform="translate(1324 279.5)">
+<path class="node-box" d="M18.3 91C3.7 87.4 0 74.6 14.6 61.9C7.3 41.9 40.3 30.9 62.2 40C65.9 14.6 109.8 0 128.1 23.7C146.4 9.1 179.3 18.2 172 41.9C183 56.4 183 78.3 161 91Z"/>
+<text class="node-label" x="91.5" y="57.5">GitHub README</text>
+<text class="node-tech" x="91.5" y="75.5">an img tag</text>
 </g>
 <g class="node kind-client st-healthy" data-node="browser" data-kind="client" data-state="healthy" data-bbox="1162 164 122 48" transform="translate(1162 164)">
 <rect class="node-box" width="122" height="48" rx="24"/>
@@ -183,9 +183,9 @@
 <g class="glyph" transform="translate(12 24)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
 <text class="node-label" x="84" y="32">PNG frames</text>
 </g>
-<g class="node st-healthy" data-node="scope" data-kind="stage" data-state="healthy" data-ghost="1" data-bbox="57 122 112 48" transform="translate(57 122)">
-<path class="node-box" d="M0 0H95.2L112 24 95.2 48H0L16.8 24Z"/>
-<text class="node-label" x="56" y="24">Scope</text>
+<g class="node st-healthy" data-node="scope" data-kind="stage" data-state="healthy" data-ghost="1" data-bbox="54 122 115 48" transform="translate(54 122)">
+<path class="node-box" d="M0 0H97.7L115 24 97.7 48H0L17.3 24Z"/>
+<text class="node-label" x="57.5" y="24">Scope</text>
 </g>
 <g class="node st-healthy" data-node="reader" data-kind="user:user" data-state="healthy" data-ghost="1" data-bbox="1557 293 102 48" transform="translate(1557 293)">
 <rect class="node-box" width="102" height="48" rx="8"/>
@@ -197,7 +197,7 @@
 </g>
 <g class="node st-healthy" data-node="resvg" data-kind="external" data-state="healthy" data-ghost="1" data-bbox="459.5 317 132 72" transform="translate(459.5 317)">
 <path class="node-box" d="M13.2 72C2.6 69.1 0 59 10.6 49C5.3 33.1 29 24.5 44.9 31.7C47.5 11.5 79.2 0 92.4 18.7C105.6 7.2 129.4 14.4 124.1 33.1C132 44.6 132 61.9 116.2 72Z"/>
-<text class="node-label" x="66" y="36">resvg</text>
+<text class="node-label" x="66" y="51.8">resvg</text>
 </g>
 </g>
 <text class="step-note" x="20" y="481">The model has a mistake</text>
@@ -218,15 +218,15 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L421.5 146" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="to-draw" data-load="0" d="M169 146 L409.5 146" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L417.5 146" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0" d="M169 146 L405.5 146" style="stroke-width:1.5;animation:none;opacity:0"/>
 <text class="edge-label" x="259.5" y="157">laid out</text>
 <path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M599 253 L624 253 L624 260.3 L697.2 260.3" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M599 253 L624 253 L624 260.3 L685.2 260.3" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
-<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M546.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->scene" data-load="0" d="M546.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:1.5;animation:none;opacity:0"/>
-<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M546.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->interactive" data-load="0" d="M546.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M550.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0" d="M550.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:1.5;animation:none;opacity:0"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M550.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0" d="M550.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:1.5;animation:none;opacity:0"/>
 <path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M899.5 153 L1127 153 L1127 325 L1324 325" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="scene->readme" data-load="0.6" d="M899.5 153 L1127 153 L1127 325 L1312 325" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="1048.5" y="164">img tag</text>
@@ -248,10 +248,10 @@
 <path class="flow" data-flow="resvg->png" data-load="0.3" d="M591.5 353 L682.5 353" style="stroke-width:2.4;animation-duration:2.3s"/>
 </g>
 <g class="nodes">
-<g class="node kind-stage st-drained" data-node="renderer" data-kind="stage" data-state="drained" data-bbox="421.5 115 125 62" transform="translate(421.5 115)">
-<path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
-<text class="node-label" x="62.5" y="23">Render</text>
-<text class="node-tech" x="62.5" y="41">SVG + CSS</text>
+<g class="node kind-stage st-drained" data-node="renderer" data-kind="stage" data-state="drained" data-bbox="417.5 115 133 62" transform="translate(417.5 115)">
+<path class="node-box" d="M0 0H113.1L133 31 113.1 62H0L20 31Z"/>
+<text class="node-label" x="66.5" y="23">Render</text>
+<text class="node-tech" x="66.5" y="41">SVG + CSS</text>
 </g>
 <g class="node kind-client st-healthy" data-node="page" data-kind="client" data-state="healthy" data-bbox="20 20 149 62" transform="translate(20 20)">
 <rect class="node-box" width="149" height="62" rx="31"/>
@@ -273,10 +273,10 @@
 <text class="node-label" x="116.5" y="23">Interactive SVG</text>
 <text class="node-tech" x="116.5" y="41">model + engine inside</text>
 </g>
-<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 282 183 86" transform="translate(1324 282)">
-<path class="node-box" d="M18.3 86C3.7 82.6 0 70.5 14.6 58.5C7.3 39.6 40.3 29.2 62.2 37.8C65.9 13.8 109.8 0 128.1 22.4C146.4 8.6 179.3 17.2 172 39.6C183 53.3 183 74 161 86Z"/>
-<text class="node-label" x="91.5" y="35">GitHub README</text>
-<text class="node-tech" x="91.5" y="53">an img tag</text>
+<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 279.5 183 91" transform="translate(1324 279.5)">
+<path class="node-box" d="M18.3 91C3.7 87.4 0 74.6 14.6 61.9C7.3 41.9 40.3 30.9 62.2 40C65.9 14.6 109.8 0 128.1 23.7C146.4 9.1 179.3 18.2 172 41.9C183 56.4 183 78.3 161 91Z"/>
+<text class="node-label" x="91.5" y="57.5">GitHub README</text>
+<text class="node-tech" x="91.5" y="75.5">an img tag</text>
 </g>
 <g class="node kind-client st-healthy" data-node="browser" data-kind="client" data-state="healthy" data-bbox="1162 164 122 48" transform="translate(1162 164)">
 <rect class="node-box" width="122" height="48" rx="24"/>
@@ -288,9 +288,9 @@
 <g class="glyph" transform="translate(12 24)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
 <text class="node-label" x="84" y="32">PNG frames</text>
 </g>
-<g class="node st-drained" data-node="scope" data-kind="stage" data-state="drained" data-ghost="1" data-bbox="57 122 112 48" transform="translate(57 122)">
-<path class="node-box" d="M0 0H95.2L112 24 95.2 48H0L16.8 24Z"/>
-<text class="node-label" x="56" y="24">Scope</text>
+<g class="node st-drained" data-node="scope" data-kind="stage" data-state="drained" data-ghost="1" data-bbox="54 122 115 48" transform="translate(54 122)">
+<path class="node-box" d="M0 0H97.7L115 24 97.7 48H0L17.3 24Z"/>
+<text class="node-label" x="57.5" y="24">Scope</text>
 </g>
 <g class="node st-healthy" data-node="reader" data-kind="user:user" data-state="healthy" data-ghost="1" data-bbox="1557 293 102 48" transform="translate(1557 293)">
 <rect class="node-box" width="102" height="48" rx="8"/>
@@ -302,7 +302,7 @@
 </g>
 <g class="node st-healthy" data-node="resvg" data-kind="external" data-state="healthy" data-ghost="1" data-bbox="459.5 317 132 72" transform="translate(459.5 317)">
 <path class="node-box" d="M13.2 72C2.6 69.1 0 59 10.6 49C5.3 33.1 29 24.5 44.9 31.7C47.5 11.5 79.2 0 92.4 18.7C105.6 7.2 129.4 14.4 124.1 33.1C132 44.6 132 61.9 116.2 72Z"/>
-<text class="node-label" x="66" y="36">resvg</text>
+<text class="node-label" x="66" y="51.8">resvg</text>
 </g>
 </g>
 <g class="legend" transform="translate(20 445)">
@@ -326,15 +326,15 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L421.5 146" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="to-draw" data-load="0.7" d="M169 146 L409.5 146" style="stroke-width:3.6;animation-duration:1.3s"/>
+<path class="edge edge-sync" data-edge="to-draw" data-kind="sync" d="M169 146 L417.5 146" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="to-draw" data-load="0.7" d="M169 146 L405.5 146" style="stroke-width:3.6;animation-duration:1.3s"/>
 <text class="edge-label" x="259.5" y="157">laid out</text>
 <path class="edge edge-inlined" data-edge="runtime->interactive" data-kind="inlined" d="M599 253 L624 253 L624 260.3 L697.2 260.3" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="runtime->interactive" data-load="0.4" d="M599 253 L624 253 L624 260.3 L685.2 260.3" style="stroke-width:2.7;animation-duration:2s;stroke:#7c3aed"/>
-<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M546.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M546.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M546.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M546.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:3;animation-duration:1.8s"/>
+<path class="edge edge-dataflow" data-edge="renderer->scene" data-kind="dataflow" d="M550.5 135.7 L624 135.7 L624 140 L694.5 140" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->scene" data-load="0.8" d="M550.5 135.7 L624 135.7 L624 140 L682.5 140" style="stroke-width:3.9;animation-duration:1s"/>
+<path class="edge edge-dataflow" data-edge="renderer->interactive" data-kind="dataflow" d="M550.5 156.3 L624 156.3 L624 239.7 L697.2 239.7" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="renderer->interactive" data-load="0.5" d="M550.5 156.3 L624 156.3 L624 239.7 L685.2 239.7" style="stroke-width:3;animation-duration:1.8s"/>
 <path class="edge edge-sync" data-edge="scene->readme" data-kind="sync" d="M899.5 153 L1127 153 L1127 325 L1324 325" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="scene->readme" data-load="0.6" d="M899.5 153 L1127 153 L1127 325 L1312 325" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="1048.5" y="164">img tag</text>
@@ -356,10 +356,10 @@
 <path class="flow" data-flow="resvg->png" data-load="0.3" d="M591.5 353 L682.5 353" style="stroke-width:2.4;animation-duration:2.3s"/>
 </g>
 <g class="nodes">
-<g class="node kind-stage st-healthy" data-node="renderer" data-kind="stage" data-state="healthy" data-bbox="421.5 115 125 62" transform="translate(421.5 115)">
-<path class="node-box" d="M0 0H106.3L125 31 106.3 62H0L18.8 31Z"/>
-<text class="node-label" x="62.5" y="23">Render</text>
-<text class="node-tech" x="62.5" y="41">SVG + CSS</text>
+<g class="node kind-stage st-healthy" data-node="renderer" data-kind="stage" data-state="healthy" data-bbox="417.5 115 133 62" transform="translate(417.5 115)">
+<path class="node-box" d="M0 0H113.1L133 31 113.1 62H0L20 31Z"/>
+<text class="node-label" x="66.5" y="23">Render</text>
+<text class="node-tech" x="66.5" y="41">SVG + CSS</text>
 </g>
 <g class="node kind-client st-healthy" data-node="page" data-kind="client" data-state="healthy" data-bbox="20 20 149 62" transform="translate(20 20)">
 <rect class="node-box" width="149" height="62" rx="31"/>
@@ -381,10 +381,10 @@
 <text class="node-label" x="116.5" y="23">Interactive SVG</text>
 <text class="node-tech" x="116.5" y="41">model + engine inside</text>
 </g>
-<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 282 183 86" transform="translate(1324 282)">
-<path class="node-box" d="M18.3 86C3.7 82.6 0 70.5 14.6 58.5C7.3 39.6 40.3 29.2 62.2 37.8C65.9 13.8 109.8 0 128.1 22.4C146.4 8.6 179.3 17.2 172 39.6C183 53.3 183 74 161 86Z"/>
-<text class="node-label" x="91.5" y="35">GitHub README</text>
-<text class="node-tech" x="91.5" y="53">an img tag</text>
+<g class="node kind-external st-healthy" data-node="readme" data-kind="external" data-state="healthy" data-bbox="1324 279.5 183 91" transform="translate(1324 279.5)">
+<path class="node-box" d="M18.3 91C3.7 87.4 0 74.6 14.6 61.9C7.3 41.9 40.3 30.9 62.2 40C65.9 14.6 109.8 0 128.1 23.7C146.4 9.1 179.3 18.2 172 41.9C183 56.4 183 78.3 161 91Z"/>
+<text class="node-label" x="91.5" y="57.5">GitHub README</text>
+<text class="node-tech" x="91.5" y="75.5">an img tag</text>
 </g>
 <g class="node kind-client st-healthy" data-node="browser" data-kind="client" data-state="healthy" data-bbox="1162 164 122 48" transform="translate(1162 164)">
 <rect class="node-box" width="122" height="48" rx="24"/>
@@ -396,9 +396,9 @@
 <g class="glyph" transform="translate(12 24)"><path d="M3 1.5h7l3.5 3.5v9.5H3z M10 1.5V5h3.5"/></g>
 <text class="node-label" x="84" y="32">PNG frames</text>
 </g>
-<g class="node st-healthy" data-node="scope" data-kind="stage" data-state="healthy" data-ghost="1" data-bbox="57 122 112 48" transform="translate(57 122)">
-<path class="node-box" d="M0 0H95.2L112 24 95.2 48H0L16.8 24Z"/>
-<text class="node-label" x="56" y="24">Scope</text>
+<g class="node st-healthy" data-node="scope" data-kind="stage" data-state="healthy" data-ghost="1" data-bbox="54 122 115 48" transform="translate(54 122)">
+<path class="node-box" d="M0 0H97.7L115 24 97.7 48H0L17.3 24Z"/>
+<text class="node-label" x="57.5" y="24">Scope</text>
 </g>
 <g class="node st-healthy" data-node="reader" data-kind="user:user" data-state="healthy" data-ghost="1" data-bbox="1557 293 102 48" transform="translate(1557 293)">
 <rect class="node-box" width="102" height="48" rx="8"/>
@@ -410,7 +410,7 @@
 </g>
 <g class="node st-healthy" data-node="resvg" data-kind="external" data-state="healthy" data-ghost="1" data-bbox="459.5 317 132 72" transform="translate(459.5 317)">
 <path class="node-box" d="M13.2 72C2.6 69.1 0 59 10.6 49C5.3 33.1 29 24.5 44.9 31.7C47.5 11.5 79.2 0 92.4 18.7C105.6 7.2 129.4 14.4 124.1 33.1C132 44.6 132 61.9 116.2 72Z"/>
-<text class="node-label" x="66" y="36">resvg</text>
+<text class="node-label" x="66" y="51.8">resvg</text>
 </g>
 </g>
 <text class="step-note" x="20" y="481">Step 2 of 2: The agent fixes the file; valid first time on the next run</text>

@@ -270,7 +270,7 @@ to `hexagon`, `client` to `pill` and `external` to `cloud`. A top-level `shapes`
 ```jsonc
 "shapes": {
   "define": {
-    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A pipeline stage" },
+    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "inner": [15, 0, 85, 100], "description": "A pipeline stage" },
     "box":     { "corner": 2 }
   }
 }
@@ -283,9 +283,14 @@ leaves the line between its endpoints and grows as the box is stretched. The pre
 test holds them to it.
 
 An outline is `path`, SVG path data in a 100×100 box scaled to the component's size, or `corner`, a rounded
-rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is the room the label needs to
-clear the outline, per side, declared rather than computed. A pack's `shapes` come in with `kinds.use`, prefixed
-like its kinds.
+rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is room added round the contents,
+in px per side. `inner` is the rectangle of the unit box the outline leaves clear, `[x0, y0, x1, y1]`: the label,
+tech line, glyph and badge are drawn inside it, and the component grows until they fit (R18). An edge that slants
+or curves into the box takes a share of the node's size, not a fixed number of px, so `pad` alone stops being
+enough as a label grows; `inner` scales with the node. Both are declared rather than computed, and a node is
+never smaller than `pad` makes it. A shape redefined with a new outline does not keep the old one's `inner`. The
+presets `ellipse`, `hexagon`, `diamond`, `parallelogram` and `cloud` declare one; a cloud's is the body below its
+lobes. A pack's `shapes` come in with `kinds.use`, prefixed like its kinds.
 
 **Packs.** `"use": ["aws"]` pulls in a vocabulary by name (docs/PACKS.md): `sre` comes with the tool; a provider's
 icon set is its own package, `@orrery-diagrams/pack-aws`, under the provider's terms rather than the tool's MIT
@@ -376,7 +381,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
 | S13 | A group may be empty; it still renders and may be connected and given a state. | valid fixture `group-endpoints`; layoutContract "(group endpoints)" |
 | S14 | Every state and kind name used anywhere (components, groups, connections) is defined after defaults and overrides; with `replace: true`, `default` is given explicitly. | validate.test "vocabulary (S14)"; invalid fixtures `unknown-state`, `unknown-kind`, `unknown-group-kind`, `unknown-connection-kind`, `replace-without-default`, `scenario-unknown-state` |
-| S15 | Colours are CSS colours; a shape is `path` or `corner` with a `pad`; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup rebuilt from an allowlist of drawing elements and attributes (nothing that runs, loads, links or rewrites; `href` and `url()` only to an id in the glyph); the model carries the rebuilt markup, and the packs are built through the same check. Was: free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-shape`, `shapes-replace-without-box`, `bad-look`, `bad-line`; validate.test "glyph objects"; shapes.test |
+| S15 | Colours are CSS colours; a shape is `path` or `corner` with a `pad` and, if it says so, an `inner` rectangle `[x0, y0, x1, y1]` in the unit box with x0 < x1 and y0 < y1; a glyph is a preset name, SVG path data, or an icon object with a four-number `viewBox` and markup rebuilt from an allowlist of drawing elements and attributes (nothing that runs, loads, links or rewrites; `href` and `url()` only to an id in the glyph); the model carries the rebuilt markup, and the packs are built through the same check. Was: free of script, foreignObject, image, style and event handlers; looks, frames and lines are preset names or style objects. | invalid fixtures `bad-colour`, `bad-glyph`, `bad-glyph-object`, `bad-shape`, `shapes-replace-without-box`, `bad-look`, `bad-line`; validate.test "glyph objects"; shapes.test |
 | S16 | Export ids are unique; `view`, `scenario`, `step`, `set` and `play` resolve as elsewhere; `play` and `scenario` are exclusive; `tour` needs a tour and stands alone. | validate.test "exports (S16)"; invalid fixtures `export-duplicate-id`, `export-unknown-view`, `export-play-and-scenario`, `export-tour-without-tour` |
 | S17 | Opening and zooming are declared apart and checked the same way in a scene and an export: every `open` id is a group in the view's `collapse`, and a group inside another closed group needs that one in `open` too, so what is open is exactly what is written; `zoom` is an entity not inside a closed group. `open` is kept in declaration order. | invalid fixtures `open-and-zoom`, `tour-bad-zoom`; validate.test "exports (S16)" |
 | B1 | Declaring is pure, deterministic and never mutates its input. | declare.test "pure (B1)" |
@@ -400,6 +405,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, centred unless the export or command line says `left`, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 | R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
+| R18 | What is drawn in a component or a closed group, its label, tech line, glyph, badge and expand mark, is inside the outline of its shape at every size. Each is placed in the shape's content rectangle: its `inner` rectangle scaled with the node, or without one the box less its `pad`. A shape with an `inner` is measured so that rectangle holds the contents, and never smaller than its `pad` makes it. Every preset is held to it across label lengths, with and without a tech line, a glyph and replicas. An open frame drawn with a shape is not covered: its title and members are placed by `pad`. | shapes.test "contents stay inside the outline (R18)"; issues.test "#51"; invalid fixture `bad-shape` |
 
 ## 7. Non-goals (v1)
 
@@ -452,6 +458,14 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   is what most readers see; nothing is embedded, so a README picture stays small. Legend rows on a 22px pitch with
   16px above; captions in a 28px strip. Rejected: a sentence-case group title (a title and a label would look
   alike); embedding a font subset in every picture (80 KB each).
+- **Contents go where the outline is not (2026-11-13).** A label was centred in the node's box and kept off the
+  outline by a fixed `pad`, which holds for a rectangle and fails for anything else: a cloud's lobe line crossed
+  every label, a badge sat at a corner no curved outline reaches, and a long label on a diamond or a
+  parallelogram outgrew its pad, since a slant takes a share of the width (issue #51). A shape now declares the
+  rectangle it leaves clear, `inner`, in the same unit box as its path. Rejected: computing the largest inscribed
+  rectangle (the author knows where a cloud's body is; a solver would not, and the tool does not measure
+  outlines); a per-shape label offset (fixes a cloud, not a long label); dropping `pad` (every existing shape
+  would change size).
 - **Shapes are vocabulary (2026-09-06).** An outline is named by a kind and defined in `shapes`, presets first,
   like states. A custom shape is path data in a unit box plus a declared pad; the renderer scales the coordinates
   rather than transforming the element, so strokes stay true. Rejected: a shape on a component (the kind is the

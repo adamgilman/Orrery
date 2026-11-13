@@ -1,1 +1,1 @@
-{ "shapes": { "define": { "a": { "path": "circle" }, "b": { "path": "M0 0H100V100Z", "corner": 4 }, "c": { "pad": { "x": 2, "y": 2 } } } }, "kinds": { "components": { "k": { "shape": "octagon" } } }, "components": [{ "id": "x", "kind": "k" }] }
+{ "shapes": { "define": { "a": { "path": "circle" }, "b": { "path": "M0 0H100V100Z", "corner": 4 }, "c": { "pad": { "x": 2, "y": 2 } }, "d": { "path": "M0 0H100V100H0Z", "inner": [60, 10, 40, 90] } } }, "kinds": { "components": { "k": { "shape": "octagon" } } }, "components": [{ "id": "x", "kind": "k" }] }

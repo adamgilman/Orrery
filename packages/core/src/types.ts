@@ -25,8 +25,12 @@ export interface States {
 
 /** An icon in its own colours, drawn as a nested `<svg>` in the glyph slot. */
 export interface Glyph { viewBox: string; svg: string }
-/** A component outline (4.8): a rounded rectangle by `corner` (px, or `round` for a pill) or SVG path data in a 100×100 unit box; `pad` is the room the label needs, per side. */
-export interface ShapeDef { name: string; path?: string; corner?: number | "round"; pad: { x: number; y: number }; description?: string }
+/**
+ * A component outline (4.8): a rounded rectangle by `corner` (px, or `round` for a pill) or SVG path data in a 100×100 unit box.
+ * `pad` is room added round the contents, in px per side. `inner` is the rectangle of the unit box the outline leaves
+ * clear, `[x0, y0, x1, y1]`: the contents are drawn inside it and the node grows until they fit (R18).
+ */
+export interface ShapeDef { name: string; path?: string; corner?: number | "round"; pad: { x: number; y: number }; inner?: [number, number, number, number]; description?: string }
 export interface ComponentKindDef { glyph?: string | Glyph; shape?: string; box?: { dash?: boolean; fill?: string; stroke?: string }; description?: string }
 export interface GroupKindDef { shape?: string; frame: "tier" | "region" | "zone" | "cluster" | "boundary" | { stroke?: string; fill?: string; fillOpacity?: number; dash?: boolean; dotted?: boolean }; description?: string }
 export type LinePreset = "solid" | "dashed" | "dotted" | "heavy";

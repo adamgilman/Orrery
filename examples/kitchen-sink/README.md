@@ -65,11 +65,12 @@ gateway a hexagon, queue a parallelogram, external a cloud).
 ![Shapes, first half](shapes-1.svg)
 ![Shapes, second half](shapes-2.svg)
 
-Your own shape is SVG path data in a 100 by 100 box plus the room the label needs. A group kind takes a shape too:
+Your own shape is SVG path data in a 100 by 100 box plus the room the label needs: `pad` in px, and `inner`, the
+rectangle of that box the outline leaves clear, which the label, glyph and badge are drawn inside. A group kind takes a shape too:
 the frame open, the box closed.
 
 ```jsonc
-"shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 } } } },
+"shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "inner": [15, 0, 85, 100] } } },
 "kinds": { "components": { "stage": { "shape": "chevron" } }, "groups": { "pipeline": { "shape": "cloud" } } }
 ```
 

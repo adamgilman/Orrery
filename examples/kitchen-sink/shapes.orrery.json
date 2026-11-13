@@ -2,7 +2,7 @@
   "$schema": "../../packages/core/schema/v1.json",
   "title": "Every shape",
   "direction": "down",
-  "shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A stage in a pipeline" } } },
+  "shapes": { "define": { "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "inner": [15, 0, 85, 100], "description": "A stage in a pipeline" } } },
   "kinds": {
     "components": {
       "box": { "shape": "box" }, "sharp": { "shape": "sharp" }, "pill": { "shape": "pill" }, "ellipse": { "shape": "ellipse" }, "cylinder": { "shape": "cylinder" },

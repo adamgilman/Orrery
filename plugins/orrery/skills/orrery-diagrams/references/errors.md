@@ -62,9 +62,10 @@ Provoked by: `{"states":{"define":{"x":{"look":"pink"}}},"components":[{"id":"a"
 - `/shapes/define/a/path`: SVG path data
 - `/shapes/define/b`: either path or corner, not both
 - `/shapes/define/c`: needs path or corner
-- `/kinds/components/k/shape`: unknown shape "octagon"; known: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud, a, b, c
+- `/shapes/define/d/inner`: x0 < x1 and y0 < y1
+- `/kinds/components/k/shape`: unknown shape "octagon"; known: box, sharp, pill, ellipse, cylinder, hexagon, diamond, parallelogram, document, card, cloud, a, b, c, d
 
-Provoked by: `{"shapes":{"define":{"a":{"path":"circle"},"b":{"path":"M0 0H100V100Z","corner":4},"c":{"pad":{"x":2,"y":2}}}},"kinds":{"components":{"k":{"shape":"octagon"}}},"components":[{"id":"x","kind":"k"}]}`
+Provoked by: `{"shapes":{"define":{"a":{"path":"circle"},"b":{"path":"M0 0H100V100Z","corner":4},"c":{"pad":{"x":2,"y":2}},"d":{"path":"M0 0H100V100H0Z","inner":[60,10,40,90]}}},"kinds":{"components":{"k":{"shape":"octagon"}}},"components":[{"id":"x","kind":"k"}]}`
 
 ### bad-union-branch
 

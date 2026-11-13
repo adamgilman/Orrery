@@ -5,6 +5,8 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 ## Unreleased
 
+- A label, tech line, glyph, `×n` badge and expand mark stay inside the outline of a shaped component or closed group (#51). They were placed against the node's box, so a cloud's lobe line ran through its label, a badge sat outside every curved or slanted outline, and a long label outgrew the fixed `pad` of a diamond or a parallelogram. A shape can now declare `inner`, the rectangle of its unit box the outline leaves clear: contents are drawn inside it and the node grows until they fit. The presets `ellipse`, `hexagon`, `diamond`, `parallelogram` and `cloud` declare one, so those nodes are drawn a little differently: a cloud's label sits in its body, and long labels make wider diamonds and parallelograms. `pad` is unchanged, and a shape of your own without `inner` is measured as before; its badge moves in by its pad.
+
 - In the interactive file a click on a component selects it and no longer steps it through the states, and the `f` key is gone: with nothing inferred, the gesture drew a picture the author never wrote, and a stray click was enough. Shift+click is an ordinary click. A page's own controls are unchanged: `setState` and `cycle` stay on the engine's interface.
 
 ## 0.4.0 (2026-09-09)

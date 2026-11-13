@@ -1,0 +1,15 @@
+{
+  "direction": "down",
+  "kinds": { "components": { "saas": { "shape": "cloud", "glyph": "database" }, "decision": { "shape": "diamond" }, "stream": { "shape": "parallelogram" } } },
+  "groups": [{ "id": "g", "label": "Outside", "kind": "boundary" }],
+  "components": [
+    { "id": "a", "label": "Stripe", "kind": "external", "group": "g" },
+    { "id": "b", "label": "Payment processor gateway", "kind": "external", "group": "g" },
+    { "id": "c", "label": "Identity provider", "tech": "OIDC, SAML 2.0 federation", "kind": "external", "group": "g" },
+    { "id": "d", "label": "Email delivery", "kind": "external", "replicas": 3, "group": "g" },
+    { "id": "e", "label": "Hosted warehouse", "kind": "saas", "group": "g" },
+    { "id": "f", "label": "Is the customer eligible for it", "tech": "rules engine, evaluated per request", "kind": "decision" },
+    { "id": "h", "label": "Order events for the fulfilment pipeline", "kind": "stream", "replicas": 2 }
+  ],
+  "connections": [{ "from": "f", "to": "b" }, { "from": "h", "to": "c" }]
+}
