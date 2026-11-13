@@ -34,8 +34,18 @@ Save this as `app.orrery.json`:
 }
 ```
 
+Render it with whichever runner you have, nothing to install (Node 22 or newer):
+
 ```sh
-npx orrery-diagrams render app.orrery.json -o app.svg     # Node 22 or newer; nothing to install
+npx orrery-diagrams render app.orrery.json -o app.svg
+```
+
+```sh
+bunx orrery-diagrams render app.orrery.json -o app.svg
+```
+
+```sh
+yarn dlx orrery-diagrams render app.orrery.json -o app.svg
 ```
 
 Put `app.svg` in an image tag and it animates; open it in a browser and it is interactive. No coordinates, no
@@ -43,6 +53,14 @@ styling: the layout is automatic. Now fail the database and see what the picture
 
 ```sh
 npx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
+```
+
+```sh
+bunx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
+```
+
+```sh
+yarn dlx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
 ```
 
 Or look before you write anything: [open the checkout below as an interactive file](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
