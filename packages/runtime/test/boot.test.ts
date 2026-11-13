@@ -158,6 +158,7 @@ describe("mount: the engine's interface", () => {
     rt.destroy();
     click(vis(root, '[data-node="orders"]'));
     expect(state(root, "orders")).toBe("degraded");
+    expect(root.querySelector(".is-selected"), "a click after destroy selects nothing").toBeNull();
   });
 });
 
@@ -166,13 +167,30 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
   beforeEach(() => { vi.useFakeTimers(); });
   afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
 
-  it("click steps an entity through the author's states, shift+click steps back; nothing else changes", async () => {
+  it("a click selects and never changes a state, with shift or without: a reader cannot draw what the author did not write", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);
     const orders = vis(root, '[data-node="orders"]');
+    const seen: Array<string | null> = [];
+    rt.on("change", (s) => seen.push(s.selected));
     click(orders);
+    expect(rt.snapshot().selected).toBe("orders");
+    expect(seen, "the page hears about the selection").toEqual(["orders"]);
+    expect(orders.classList.contains("is-selected")).toBe(true);
+    click(orders);
+    click(orders, { shiftKey: true });
+    expect(state(root, "orders")).toBe("on");
+    expect(flowLoad(root, "api->orders")).not.toBe("0");
+    expect(rt.snapshot().states.orders).toEqual({ state: "on" });
+  });
+
+  it("a page steps an entity through the author's states with cycle, back with -1; nothing else changes", async () => {
+    const root = await doc("alternatives");
+    rt = mount(root, SIZE);
+    const orders = vis(root, '[data-node="orders"]');
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("degraded");
-    click(orders);
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("failed");
     expect(state(root, "api")).toBe("on"); // the reader set one thing; the diagram infers nothing
     expect(state(root, "web")).toBe("on");
@@ -181,29 +199,28 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
     expect(vis(root, '[data-node="api"] title')).toBeNull();
     expect(orders.classList.contains("st-failed")).toBe(true);
     expect(orders.getAttribute("data-pulse")).toBe("1");
-    expect(rt.snapshot().selected).toBe("orders");
-    click(orders);
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("off");
-    click(orders);
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("on");
-    click(orders, { shiftKey: true });
+    rt.cycle("orders", -1);
     expect(state(root, "orders")).toBe("off");
   });
 
-  it("a click steps on from the state a scenario set, and modifier keys are ignored", async () => {
+  it("cycle steps on from the state a scenario set, and modifier keys are ignored", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);
     rt.setScenario("orders-failover");
     expect(state(root, "orders")).toBe("failed");
-    click(vis(root, '[data-node="orders"]'));
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("off");
-    click(vis(root, '[data-node="orders"]'));
+    rt.cycle("orders");
     expect(state(root, "orders")).toBe("on");
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "]", metaKey: true, bubbles: true }));
     expect(rt.snapshot().scenario!.step).toBe(1);
   });
 
-  it("keyboard: arrows select in outline order, Enter zooms, f steps the state, s starts and cycles scenarios, brackets step, digits switch views, Escape resets the camera", async () => {
+  it("keyboard: arrows select in outline order, Enter zooms, no key changes a state, s starts and cycles scenarios, brackets step, digits switch views, Escape resets the camera", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);
     const fitT = root.querySelector(".scene")!.getAttribute("transform");
@@ -216,8 +233,8 @@ describe("inside the diagram: clicks and keyboard need no page code", () => {
     expect(root.querySelector(".scene")!.getAttribute("transform")).not.toBe(fitT);
     key("ArrowDown");
     expect(rt.snapshot().selected).toBe("fraud");
-    key("f");
-    expect(state(root, "fraud")).toBe("degraded");
+    key("f"); // once the key that stepped a state: no key does now
+    expect(state(root, "fraud")).toBe("on");
     expect(state(root, "api")).toBe("on");
     rt.setScenario("orders-failover", 1);
     key("]");
@@ -354,7 +371,7 @@ describe("open and zoom", () => {
     rt = mount(root, SIZE);
     rt.open(["payments"]);
     vi.advanceTimersByTime(900);
-    click(vis(root, '[data-node="ledger"]'));
+    rt.setState("ledger", "degraded");
     expect(state(root, "ledger")).toBe("degraded");
     rt.back();
     vi.advanceTimersByTime(900);
@@ -386,7 +403,7 @@ describe("closing a group from the picture (#33)", () => {
     vi.advanceTimersByTime(900);
     expect(rt.snapshot().open).toEqual([]);
   });
-  it("shift+click still walks an open group through its states", async () => {
+  it("shift is no state gesture: shift+click closes an open group as a click does, and its state stays", async () => {
     const root = await doc("nested-drill");
     rt = mount(root, SIZE);
     rt.stop();
@@ -394,8 +411,9 @@ describe("closing a group from the picture (#33)", () => {
     vi.advanceTimersByTime(900);
     const before = state(root, "outer");
     click(vis(root, '[data-group="outer"] .group-box'), { shiftKey: true });
-    expect(rt.snapshot().open, "shift is the state gesture, not the close gesture").toEqual(["outer"]);
-    expect(state(root, "outer")).not.toBe(before);
+    vi.advanceTimersByTime(900);
+    expect(rt.snapshot().open).toEqual([]);
+    expect(state(root, "outer")).toBe(before);
   });
 });
 
@@ -560,8 +578,11 @@ describe("sequence views (R17)", () => {
     rt.reset();
     expect(shown()).toBe(6);
     expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
-    // a participant is an entity: clicking it steps its state as on the topology
+    // a participant is an entity: a click selects it and a page sets its state, as on the topology
     click(vis(root, '[data-node="db"]'));
+    expect(rt.snapshot().selected).toBe("db");
+    expect(state(root, "db")).toBe("on");
+    rt.setState("db", "degraded");
     expect(state(root, "db")).toBe("degraded");
   });
 });

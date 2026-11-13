@@ -90,8 +90,8 @@ type Snapshot = {
 ```
 
 Every mutation ends by emitting `change` with a fresh snapshot. The engine keeps doing what it does inside the
-diagram without any page code: a click steps an entity through the author's states (shift+click steps back), a
-click on a closed group opens it, Escape steps back out, arrow keys move the selection, Enter zooms, digits switch
+diagram without any page code: a click selects an entity (until 2026-11-13 it also stepped it through the author's
+states; see MODEL.md §9), a click on a closed group opens it, Escape steps back out, arrow keys move the selection, Enter zooms, digits switch
 views, `[` and `]` step a scenario. Hover focus stays.
 
 ### Standalone

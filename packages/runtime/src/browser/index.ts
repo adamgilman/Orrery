@@ -35,10 +35,11 @@ export interface Snapshot {
 
 /**
  * The engine's interface: what a page builds its controls from and calls. The engine has no user interface of its
- * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to step a state,
- * click a closed box to open it, double-click or Enter to zoom, Escape to zoom out then close, arrows select, f
- * steps, s cycles scenarios, [ and ] step one, digits switch views (MODEL.md R11, the spec
- * docs/design/notes/2026-09-05-two-paths-design.md).
+ * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to select, click a
+ * closed box to open it, double-click or Enter to zoom, Escape to zoom out then close, arrows select, s cycles
+ * scenarios, [ and ] step one, digits switch views (MODEL.md R11, the spec
+ * docs/design/notes/2026-09-05-two-paths-design.md). No gesture inside the diagram changes a state: `setState` and
+ * `cycle` are for a page's own controls.
  */
 export interface Orrery {
   readonly views: { id: string; title: string }[];
@@ -389,13 +390,13 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     stop();
     const id = g.getAttribute("data-node") ?? g.getAttribute("data-group")!;
     // A click on a closed box opens it; the whole picture stays in view. Enter or double-click zooms to the selection.
-    if (g.hasAttribute("data-collapsed") && !(ev as MouseEvent).shiftKey) { open([...openSet, id]); return; }
+    if (g.hasAttribute("data-collapsed")) { open([...openSet, id]); return; }
     // A click on an open frame's own chrome closes that one group, the mirror of opening it. `closest` already
     // gave us the innermost box under the pointer, so a click on a child never reaches its frame (#33).
-    if (g.hasAttribute("data-group") && openSet.includes(id) && !(ev as MouseEvent).shiftKey) { open(openSet.filter((o) => o !== id && !isInside(o, id))); return; }
+    if (g.hasAttribute("data-group") && openSet.includes(id)) { open(openSet.filter((o) => o !== id && !isInside(o, id))); return; }
+    // Any other click selects, and that is all: states are the author's, or a page's own control through `setState`.
     select(id, g.hasAttribute("data-node") ? "node" : "group");
-    // A click walks the author's states in order; shift+click walks back.
-    cycle(id, (ev as MouseEvent).shiftKey ? -1 : 1);
+    emit();
   });
   on(scene, "dblclick", (ev) => {
     const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
@@ -428,7 +429,6 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       const n = order[Math.min(order.length - 1, Math.max(0, i + (k === "ArrowDown" ? 1 : -1)))];
       if (n) { select(n.id, n.type); emit(); }
     } else if (k === "Enter" && selected) zoom(selected.id);
-    else if (k === "f" && selected) cycle(selected.id);
     else if (k === "Escape") { stop(); if (!back()) { select(null); fit(true); emit(); } }
     else if (k === "s" && model.scenarios.length) { // the next scenario, from the first, none after the last
       const i = session.scenario ? model.scenarios.findIndex((sc) => sc.id === session.scenario!.id) + 1 : 0;

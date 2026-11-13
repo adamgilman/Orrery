@@ -331,8 +331,9 @@ lines will be drawn, which is usually a mistake. Warnings carry a pointer like e
 ### 5.1 States are declared
 
 Every entity has exactly the state the author gave it: in the base model (`state`, default `states.default`),
-changed by scenario steps in order, then by a what-if (`--set`, a tour scene's `set`, or a click in the
-interactive file). Nothing computes a state from another state. A group's state is the group's own; members keep
+changed by scenario steps in order, then by a what-if (`--set`, an export's or a tour scene's `set`, or a page's
+call to the engine). No click or key inside the interactive file changes a state: a reader cannot draw a picture
+the author did not write. Nothing computes a state from another state. A group's state is the group's own; members keep
 theirs until a step sets them. A reason set alongside a state travels with it until the entity is set again or
 restored.
 
@@ -422,6 +423,10 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   shifting. Both grew a rulebook the author had to learn and then argue with, and neither could say that something
   *does not* fail (a buffer, a bulkhead). Now every state, reason and load in a picture is one the author wrote.
   Connection kinds became author-defined line styles at the same time, so emphasis is the author's too.
+- **A click selects; it does not set a state (2026-11-13).** In the interactive file a click on a component used to
+  step it through the author's states, a gesture left from when the tool worked out what a failure did to the rest.
+  With nothing inferred it changed one box and its flows, a picture nobody wrote, and a stray click was enough to
+  draw it. A page's own controls still call `setState` and `cycle` on the engine.
 - **Connections to groups, including empty ones,** after first rejecting them for layout reasons. A group is an
   entity with a state of its own; layout risk is an adapter problem.
 - **A group's state is its own.** Setting a region off does not set its members; list them. Explicit beats a

@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- In the interactive file a click on a component selects it and no longer steps it through the states, and the `f` key is gone: with nothing inferred, the gesture drew a picture the author never wrote, and a stray click was enough. Shift+click is an ordinary click. A page's own controls are unchanged: `setState` and `cycle` stay on the engine's interface.
+
 ## 0.4.0 (2026-09-09)
 
 Drawings that a reader can work: a group of replicas opens into one instance, an open group can be closed from the picture, and the basic pieces of a diagram, a person, a device, a computer and a house, come with the tool. Nothing an existing model says has changed meaning.
