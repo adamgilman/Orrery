@@ -251,6 +251,10 @@ inside an image tag anywhere.
 
 `play` and `scenario` are exclusive (S16).
 
+`orrery export --png` or `--gif` writes every entry as `<id>.png` or `<id>.gif` instead, for where an SVG is not
+taken: the picture at rest, or one loop of it (R19). The format is the command's, not the model's: an export says
+what a picture shows, and the same entry is an SVG in the README and a GIF in a chat.
+
 ### 4.10 Warnings
 
 The validator reports, without failing, a source that connects both to a group and to something inside it: both

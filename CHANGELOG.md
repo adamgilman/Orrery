@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- PNG and animated GIF output, for the places that do not take an SVG (a chat, a forum, a wiki). `orrery render app.orrery.json -o app.png` writes the picture at rest and `-o app.gif` one loop of it, flow, a playing scenario or a tour; `--png` and `--gif` say the same without a file name, and `orrery export --png` or `--gif` writes every export that way. `--scale` (default 2), and for a GIF `--fps` (default 10) and `--duration`. A GIF's loop is the scenario's or tour's whole cycle; for flows alone it is a few seconds in which each flow completes whole cycles, its period moved a few percent to fit, so the loop has no seam. Same model, same bytes, on any machine. `orrery-diagrams` now depends on `@orrery-diagrams/raster` (resvg and the fonts, about 9 MB more on disk), loaded only when a PNG or GIF is asked for; the raster package gains `renderPng`, `renderGif`, `fitLoop` and `encodeGif`, with the GIF writer its own code and no new dependency.
+
 ## 0.5.0 (2026-11-13)
 
 Pictures that only say what the author wrote, drawn inside their own outlines: a reader's click no longer changes a state, and the contents of a shaped node stay within its shape.

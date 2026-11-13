@@ -5,6 +5,7 @@ import { PNG } from "pngjs";
 import { FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowDuration } from "@orrery-diagrams/core/internal";
 import { freezeTracks } from "./keyframes.js";
 export { freezeTracks, parseKeyframes, valuesAt } from "./keyframes.js";
+export { LOOP_MAX_MS, LOOP_STRETCH, encodeGif, fitLoop, renderGif, renderPng, type GifOptions, type Loop } from "./gif.js";
 
 const FONT_FILES = ["Inter-Regular.ttf", "Inter-Medium.ttf"].map((f) => join(import.meta.dirname, "../fonts", f));
 
@@ -71,10 +72,12 @@ const fmt = (n: number) => { const r = Math.round(n * 1000) / 1000; return Strin
 export function freezeFrame(svg: string, tMs: number): string {
   svg = freezeTracks(svg, tMs);
   // Pulse: linear triangle wave on stroke-opacity, shared by every pulsing state, so one static value suffices.
-  const phase = (tMs / (PULSE_PERIOD * 1000)) % 1;
-  const tri = 1 - Math.abs(2 * phase - 1);
-  const opacity = 1 - (1 - PULSE_MIN_OPACITY) * tri;
-  svg = svg.replaceAll(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`, `stroke-opacity:${fmt(opacity)}`);
+  // The period is read from the file: a picture fitted to a loop (fitLoop) carries its own.
+  svg = svg.replace(/animation:orrery-pulse ([\d.]+)s linear infinite/g, (_, period: string) => {
+    const phase = (tMs / (Number(period) * 1000)) % 1;
+    const tri = 1 - Math.abs(2 * phase - 1);
+    return `stroke-opacity:${fmt(1 - (1 - PULSE_MIN_OPACITY) * tri)}`;
+  });
   return svg.replace(FLOW_RE, (whole, key: string, load: string, d: string, style: string) => {
     const m = style.match(/animation-duration:([\d.]+)s/);
     if (!m) return whole;

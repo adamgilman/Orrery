@@ -245,12 +245,28 @@ scenario and cycle through them, brackets to step it. Try it: [open the checkout
 or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout-sequence.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server.
 
+**Pixels, for where an SVG is not taken.** A chat, a forum or a wiki that wants a raster gets the same pictures as
+a PNG or an animated GIF: name the output `.png` or `.gif` (or say `--png` or `--gif`), for one picture or for
+every export at once.
+
+```sh
+orrery render examples/checkout.orrery.json --play db-fails -o primary-fails.gif   # one loop: flow, a playing scenario, a tour
+orrery render examples/checkout.orrery.json -o overview.png                        # the picture at rest
+orrery export examples/checkout.orrery.json --gif --out docs/diagrams              # every export as <id>.gif; --png for stills
+```
+
+![The primary fails and reads move to the replica: the GIF the first command writes](examples/checkout/primary-fails.gif)
+
+A GIF is one loop of what the SVG shows, frame by frame, at twice the picture's size and ten frames a second
+(`--scale`, `--fps`); the one above is about 230 KB. The loop is the scenario's or the tour's whole cycle. Flows
+alone would take minutes to line up again, so each is given the nearest period that fits a loop of a few seconds
+(`--duration` to choose it): the end meets the start, and slower stays slower. Same model, same bytes.
+
 ## Status
 
 The model is specified in [docs/MODEL.md](docs/MODEL.md); the file is interactive; sequence views, the providers'
-icon packs, shapes, callouts and headings have shipped, and every package is on npm. Next, in the order the
-[PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, GIF and PNG
-export from the frame tooling, and an MCP server.
+icon packs, shapes, callouts, headings and PNG and GIF output have shipped, and every package is on npm. Next, in the order the
+[PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, and an MCP server.
 
 ## Installing
 
@@ -272,6 +288,8 @@ orrery validate app.orrery.json
 orrery render app.orrery.json -o app.svg            # interactive when opened directly
 orrery render app.orrery.json --static -o app.svg   # one view, no runtime
 orrery export app.orrery.json --out docs/           # every picture the model lists
+orrery render app.orrery.json -o app.png            # a PNG of the picture at rest
+orrery render app.orrery.json -o app.gif            # an animated GIF of one loop
 ```
 
 In a project, add it as a dev dependency so the docs build renders the diagrams: `npm install -D orrery-diagrams`,

@@ -1,7 +1,7 @@
 {
   "name": "orrery-diagrams",
   "version": "0.5.0",
-  "description": "Animated, navigable architecture diagrams from a JSON model: validate, render, export and embed. The orrery command.",
+  "description": "Animated, navigable architecture diagrams from a JSON model: validate, render (SVG, PNG, GIF), export and embed. The orrery command.",
   "keywords": [
     "architecture",
     "diagram",
@@ -10,7 +10,9 @@
     "c4",
     "infrastructure",
     "documentation",
-    "cli"
+    "cli",
+    "png",
+    "gif"
   ],
   "repository": {
     "type": "git",
@@ -50,6 +52,7 @@
   "dependencies": {
     "@orrery-diagrams/core": "workspace:*",
     "@orrery-diagrams/layout-elk": "workspace:*",
+    "@orrery-diagrams/raster": "workspace:*",
     "@orrery-diagrams/runtime": "workspace:*"
   },
   "devDependencies": {

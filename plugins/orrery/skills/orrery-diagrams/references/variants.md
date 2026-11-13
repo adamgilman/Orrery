@@ -296,6 +296,13 @@ no script, so each plays inside an image tag. Fields: `view`, `open` (closed gro
 closed ancestors), `zoom` (crop to an entity), `scenario` and `step`, `set` (a what-if) with `callouts`, `play`
 with `seconds`, `tour: true`, `heading`.
 
+Where an SVG is not taken (a chat, a forum, a wiki), the same pictures come out as PNG or animated GIF:
+`orrery export app.orrery.json --png --out docs/` (or `--gif`) writes every entry as `<id>.png` or `<id>.gif`, and
+`orrery render app.orrery.json -o app.png` or `-o app.gif` writes one, with any of render's options
+(`--scenario db-fails --step 1 -o failed.png`, `--play db-fails -o fails.gif`, `--tour -o tour.gif`). A PNG is the
+picture at rest; a GIF is one loop. `--scale <n>` (default 2), and for a GIF `--fps <n>` (default 10) and
+`--duration <seconds>`. To look at your own output, render a PNG and open it.
+
 ```json
 {
   "groups": [{ "id": "cache", "label": "Session cache", "kind": "cluster" }, { "id": "node-a", "label": "Node A", "kind": "cluster", "parent": "cache" }],
