@@ -151,6 +151,7 @@ const BASE_STYLE = `
 .callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
 .callout-text{font:12px ${FONT};fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
+.backing{fill:#ffffff}
 .heading-title{font:600 16px ${FONT};fill:#0f172a}
 .heading-text{font:12px ${FONT};fill:#64748b}
 .heading-title.centred,.heading-text.centred{text-anchor:middle}
@@ -699,6 +700,9 @@ function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer
     (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths.
     `<defs>${m("arrow", false)}${m("arrow-start", true)}</defs>`,
+    // The picture's own background (R19): its colours are the author's and were chosen against white, so on a dark
+    // page (a README in GitHub's dark theme) a transparent picture loses its labels. The whole viewBox, corners eased.
+    `<rect class="backing" x="${num(vb.x)}" y="${num(vb.y)}" width="${num(vb.width)}" height="${num(vb.height)}" rx="8"/>`,
     ...(heading ? [`<g class="heading" transform="translate(${num(vb.x)} ${num(vb.y)})">\n${heading.markup}\n</g>`] : []),
     `<g class="scene"${heading ? ` transform="translate(0 ${num(heading.height)})"` : ""}>\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
     ...extra,

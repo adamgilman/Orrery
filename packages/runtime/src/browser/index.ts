@@ -134,6 +134,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   root.removeAttribute("viewBox");
   root.setAttribute("width", "100%"); root.setAttribute("height", "100%");
   root.style.background = "#fff";
+  root.querySelector(":scope > .backing")?.remove(); // the file's own background (R19) is the size of the still; mounted, the element is painted instead
   const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
   style.textContent = RUNTIME_CSS;
   root.insertBefore(style, scene);

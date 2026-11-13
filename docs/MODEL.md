@@ -406,6 +406,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 | R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
 | R18 | What is drawn in a component or a closed group, its label, tech line, glyph, badge and expand mark, is inside the outline of its shape at every size. Each is placed in the shape's content rectangle: its `inner` rectangle scaled with the node, or without one the box less its `pad`. A shape with an `inner` is measured so that rectangle holds the contents, and never smaller than its `pad` makes it. Every preset is held to it across label lengths, with and without a tech line, a glyph and replicas. An open frame drawn with a shape is not covered: its title and members are placed by `pad`. | shapes.test "contents stay inside the outline (R18)"; issues.test "#51"; invalid fixture `bad-shape` |
+| R19 | Every rendered picture paints its own background: one white `backing` rectangle the size of its viewBox, corners eased, behind the heading and the scene, so the picture reads the same on a dark page as on a light one. A zoomed picture's starts where its viewBox does. Mounted, the engine removes it and paints the element it fills instead. A page that wants the picture transparent styles `.backing`. | render.test "a picture paints its own background (R19)"; boot.test "takes the file's backing out" |
 
 ## 7. Non-goals (v1)
 
@@ -458,6 +459,13 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   is what most readers see; nothing is embedded, so a README picture stays small. Legend rows on a 22px pitch with
   16px above; captions in a 28px strip. Rejected: a sentence-case group title (a title and a label would look
   alike); embedding a font subset in every picture (80 KB each).
+- **A picture brings its background (2026-11-13).** Pictures were transparent, and every colour in one, the
+  defaults and the author's own looks, frames and lines, was chosen against white. In a README under a dark theme
+  the group titles and connection labels, dark text with a white halo, became smudges. The picture now carries a
+  white backing. Rejected: a dark variant switched by `prefers-color-scheme` (an image follows the system's
+  setting, a page such as GitHub its own, so the two can disagree; and the tool cannot darken colours the author
+  declared); a `background` property in the model (nobody has asked for another colour, and a page can style
+  `.backing`).
 - **Contents go where the outline is not (2026-11-13).** A label was centred in the node's box and kept off the
   outline by a fixed `pad`, which holds for a rectangle and fails for anything else: a cloud's lobe line crossed
   every label, a badge sat at a corner no curved outline reaches, and a long label on a diamond or a
