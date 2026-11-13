@@ -14,25 +14,102 @@ Orrery's first diagram is, naturally, an orrery.
 *A plain SVG file in an image tag. Dash speed and thickness follow each connection's `load`: the Sun pours heat into Venus,
 Earth gets a steady stream of sunlight, Mars a trickle of solar wind, and the Moon mostly gets tides.*
 
-Every other diagram in this README is the same small system, a checkout, built up one stage at a time. The stages are
+## Try it
+
+Save this as `app.orrery.json`:
+
+```json
+{
+  "components": [
+    { "id": "web", "label": "Web", "kind": "client" },
+    { "id": "api", "label": "API" },
+    { "id": "db", "label": "Orders DB", "kind": "database" },
+    { "id": "pay", "label": "Payments", "kind": "external" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.8 },
+    { "from": "api", "to": "db", "load": 0.5 },
+    { "from": "api", "to": "pay", "load": 0.2 }
+  ]
+}
+```
+
+Render it with whichever runner you have, nothing to install (Node 22 or newer):
+
+```sh
+npx orrery-diagrams render app.orrery.json -o app.svg
+```
+
+```sh
+bunx orrery-diagrams render app.orrery.json -o app.svg
+```
+
+```sh
+yarn dlx orrery-diagrams render app.orrery.json -o app.svg
+```
+
+That writes this: one SVG file, which animates in an image tag and is interactive when opened in a browser. No
+coordinates, no styling: the layout is automatic.
+
+![The four components, with traffic flowing](examples/try-it.svg)
+
+Now fail the database:
+
+```sh
+npx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
+```
+
+```sh
+bunx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
+```
+
+```sh
+yarn dlx orrery-diagrams render app.orrery.json --set failed=db -o failed.svg
+```
+
+![The database failed, its traffic stopped](examples/try-it-failed.svg)
+
+The database is red and pulsing, and the flow into it has stopped. Nothing else changed, because nothing else was
+said: a scenario is where you write what a failure does to the rest.
+
+Or look before you write anything: [open the checkout below as an interactive file](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
+click the closed box to open it, press `s` to start a scenario and `]` to step it.
+
+## Why not Mermaid, D2 or Structurizr?
+
+Use them when they fit; they do more kinds of diagram than Orrery ever will.
+
+- **Mermaid** when you want GitHub to turn text into a flowchart, a sequence or an ER diagram with nothing to run.
+- **D2** when you want a general diagramming language with a choice of layout engines and themes.
+- **Structurizr** when you want the C4 model and the tooling built round it.
+
+Orrery does one thing, the architecture of a running system, and treats it as a model you can move:
+
+- **Traffic is drawn.** Each connection's `load` sets the speed and weight of its flow, in a plain SVG that plays
+  inside an image tag: a README, a wiki, a pull request.
+- **Failure is part of the file.** A scenario is a list of steps in your own words: what failed, what that did to
+  the rest and why, where the load went. The picture plays it.
+- **One model, many drawings.** Views scope it, groups open and close to any depth, and a sequence view draws one
+  request over the same components and connections, so the drawings cannot disagree.
+- **Strict enough for an agent to write.** One JSON file with a schema, unknown properties are errors, and the
+  validator answers with a pointer and a message, so a coding agent can write a model and fix it without seeing it.
+
+What it does not do: flowcharts, ER, class diagrams or Gantt charts; positions you place by hand; themes.
+
+## Building a model, one stage at a time
+
+Every diagram below is the same small system, a checkout, built up one stage at a time. The stages are
 in [examples/checkout](examples/checkout), each a plain SVG in an image tag, small enough to read on a phone, and each
 derived from one master file, [examples/checkout.orrery.json](examples/checkout.orrery.json). Two reference pages,
 [the kitchen sink](examples/kitchen-sink/README.md) and [the moving parts](examples/moving-parts/README.md), draw
 everything else the vocabulary offers and every way a model moves.
 
-## Building a model, one stage at a time
-
-**1. The parts.** Name the components and give each a kind. Components alone render. The defaults are client,
-service, database, cache, queue, gateway, function, storage and external, each with a plain glyph and a shape (a
-database is a cylinder, a client a pill, a gateway a hexagon); you can define your own kind with a glyph, a shape
-and a box style, and your own shapes as path data (`shapes` in the model, next to `states` and `kinds`); or pull
-in a pack. `"kinds": { "use": ["aws"] }` is in this file, so the
-API is `aws:fargate`, the databases `aws:rds` and the storefront a plain `client`, and the boxes carry the
-provider's own icons. Three packs exist, `aws`, `gcp` and `azure`, every service in each provider's official icon
-set under the names people say (`aws:s3`, `gcp:run`, `azure:aks`). Each is its own package under the provider's
-terms, since the icons are theirs and not MIT: `npm install @orrery-diagrams/pack-aws`, and `orrery packs aws`
-lists them; [docs/PACKS.md](docs/PACKS.md) carries the terms. The session cache is one part for now; stage 6 opens
-it up.
+**1. The parts.** Name the components and give each a kind. Components alone render. The default kinds are client,
+service, database, cache, queue, gateway, function, storage and external, each with a glyph and a shape: a
+database is a cylinder, a client a pill, a gateway a hexagon. Define your own kinds and shapes, or pull in a pack:
+`"kinds": { "use": ["aws"] }` is in this file, so the API is `aws:fargate`, the databases are `aws:rds`, and the
+boxes carry the provider's own icons. The `aws`, `gcp` and `azure` packs are separate packages under each
+provider's terms ([docs/PACKS.md](docs/PACKS.md)). The session cache is one part for now; stage 6 opens it up.
 
 ![The parts](examples/checkout/1-parts.svg)
 
@@ -175,9 +252,9 @@ icon packs, shapes, callouts and headings have shipped, and every package is on 
 [PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, GIF and PNG
 export from the frame tooling, and an MCP server.
 
-## Quick start
+## Installing
 
-Install the `orrery` command (Node 22 or newer):
+[Try it](#try-it) above needs nothing installed. To keep the `orrery` command (Node 22 or newer):
 
 ```sh
 npm install -g orrery-diagrams

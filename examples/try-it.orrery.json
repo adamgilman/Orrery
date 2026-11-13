@@ -1,0 +1,13 @@
+{
+  "components": [
+    { "id": "web", "label": "Web", "kind": "client" },
+    { "id": "api", "label": "API" },
+    { "id": "db", "label": "Orders DB", "kind": "database" },
+    { "id": "pay", "label": "Payments", "kind": "external" }
+  ],
+  "connections": [
+    { "from": "web", "to": "api", "load": 0.8 },
+    { "from": "api", "to": "db", "load": 0.5 },
+    { "from": "api", "to": "pay", "load": 0.2 }
+  ]
+}
