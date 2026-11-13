@@ -406,6 +406,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 | R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
 | R18 | What is drawn in a component or a closed group, its label, tech line, glyph, badge and expand mark, is inside the outline of its shape at every size. Each is placed in the shape's content rectangle: its `inner` rectangle scaled with the node, or without one the box less its `pad`. A shape with an `inner` is measured so that rectangle holds the contents, and never smaller than its `pad` makes it. Every preset is held to it across label lengths, with and without a tech line, a glyph and replicas. An open frame drawn with a shape is not covered: its title and members are placed by `pad`. | shapes.test "contents stay inside the outline (R18)"; issues.test "#51"; invalid fixture `bad-shape` |
+| R19 | The interactive file opened on its own draws a strip along its bottom edge when the model gives a reader somewhere to go: more than one view in the file, a scenario, or a sequence's messages. It names the view, the scenario and step (or the message), and carries the step's note or the tour's caption. Each line has a previous and a next target: views go round; scenario steps are walked as one line, every step of every scenario in the order written, back from the first to the picture as written, stopping at the last; messages are stepped as the brackets step them; a cross leaves the scenario. A target is 44 by 44 as the reader sees it, whatever width a phone lays the file out at, and none overlaps another. A tap stops a play as any interaction does, reaches only pictures the author wrote, and never sets a state; the keyboard is unchanged. The strip is outside the scene, the camera fits the picture above it, and its height does not change from step to step. The engine draws it, so nothing of it is in the file as written: a still, an image tag and an animation show none, and a page that mounts the engine gets none unless it asks. | boot.test "the strip (R19)"; bundle.test "minified runtime inside a rendered SVG document" |
 
 ## 7. Non-goals (v1)
 
@@ -433,6 +434,23 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   step it through the author's states, a gesture left from when the tool worked out what a failure did to the rest.
   With nothing inferred it changed one box and its flows, a picture nobody wrote, and a stray click was enough to
   draw it. A page's own controls still call `setState` and `cycle` on the engine.
+- **A strip for the reader with no keyboard (2026-11-13).** In the file opened on its own, starting and stepping a
+  scenario and switching views were keys only, so on a phone the part most worth seeing could not be reached. The
+  file now draws one strip along its bottom edge (R19): the view, the scenario step and its note, with previous and
+  next targets and a cross to leave. This is not the panel coming back. The panel was a general control surface in
+  a `foreignObject` that also set states; the strip only walks the author's own views and steps, which is what the
+  click rule above protects, and it is plain SVG the engine draws at mount. Drawn by the script, it cannot appear
+  where nothing can be tapped (an image tag, a still), which is the collapse mark's rule kept by construction
+  rather than by a render option, and the renderer and the file's bytes as written do not change. A page that
+  mounts the engine still gets no controls and brings its own. Scenario steps are one line across scenarios because
+  the tap equivalent of `s` (tap the name to change scenario) is not discoverable, and with one-step scenarios the
+  step arrows alone would do nothing. Rejected: tap targets on the caption (the interactive file has no caption
+  until a scenario is on, so there is nothing to tap to start one); swipes or tapping the left and right halves of
+  the picture (invisible, and they collide with selecting, opening and the browser's own pan and zoom); a strip
+  written by the renderer and hidden in stills (a second place to keep in step with the engine, bytes in every
+  file, and an image tag would show targets that do nothing); HTML controls in a `foreignObject` (the SVG never
+  contains HTML). A phone lays a bare SVG out about 980 wide and shows it small, so the strip is drawn at the size
+  the reader sees, read from the visual viewport's scale; without that a 44px target is 17 on the glass.
 - **Connections to groups, including empty ones,** after first rejecting them for layout reasons. A group is an
   entity with a state of its own; layout risk is an adapter problem.
 - **A group's state is its own.** Setting a region off does not set its members; list them. Explicit beats a

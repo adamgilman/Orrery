@@ -13,9 +13,33 @@ const RUNTIME_CSS = `
 .scene .group.is-selected .group-box{stroke:#2563eb;stroke-width:2}
 .view.has-hover .node:not(.is-hot),.view.has-hover .edge:not(.is-hot),.view.has-hover .flow:not(.is-hot),.view.has-hover .edge-label:not(.is-hot){opacity:.18;transition:opacity .15s}
 .node,.edge,.flow,.edge-label{transition:opacity .15s}
+.strip{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.strip [data-do]{cursor:pointer}
+.strip .off{opacity:.3;pointer-events:none}
+.strip .key{fill:#fff;stroke:#cbd5e1}
+.strip path{fill:none;stroke:#334155;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 `;
 
-export interface MountOptions { size?: Size }
+export interface MountOptions {
+  size?: Size;
+  /**
+   * Draw the strip (R19): the current view, scenario step and note along the bottom edge, with tap targets to step
+   * them. The file opened on its own asks for it, since a reader there may have no keyboard; a page leaves it off
+   * and brings its own controls.
+   */
+  controls?: boolean;
+}
+/** One line of the strip: what it says, and what its previous and next targets do. */
+interface StripRow { name: string; text(): string; can(by: number): boolean; step(by: number): void; leave?: () => void }
+const ROW = 44; // a tap target's side, and a strip row's height
+const WIDE = 720; // from this width the strip's rows sit side by side
+const GLYPH = { prev: "M25 15l-7 7 7 7", next: "M19 15l7 7-7 7", leave: "M16 16l12 12M28 16l-12 12" };
+const SAYS = { prev: "Previous", next: "Next", leave: "Leave the scenario" };
+const wrap = (text: string, perLine: number): string[] => {
+  const lines: string[] = [];
+  for (const w of text.split(" ")) { const last = lines[lines.length - 1]; if (last !== undefined && last.length + 1 + w.length <= perLine) lines[lines.length - 1] = `${last} ${w}`; else lines.push(w); }
+  return lines;
+};
 
 /** What the diagram shows right now. Emitted after every change; enough to build any control from. */
 export interface Snapshot {
@@ -38,8 +62,9 @@ export interface Snapshot {
  * own; inside the diagram, clicks and the keyboard keep working with no page code at all: click to select, click a
  * closed box to open it, double-click or Enter to zoom, Escape to zoom out then close, arrows select, s cycles
  * scenarios, [ and ] step one, digits switch views (MODEL.md R11, the spec
- * docs/design/notes/2026-09-05-two-paths-design.md). No gesture inside the diagram changes a state: `setState` and
- * `cycle` are for a page's own controls.
+ * docs/design/notes/2026-09-05-two-paths-design.md). The file opened on its own also draws the strip (R19), so
+ * the author's views and scenario steps are reachable by tap. No gesture inside the diagram changes a state:
+ * `setState` and `cycle` are for a page's own controls.
  */
 export interface Orrery {
   readonly views: { id: string; title: string }[];
@@ -123,6 +148,8 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   let openSet: string[] = [];
   let zoomId: string | null = null;
   const listeners = new Set<(s: Snapshot) => void>();
+  let stripHeight = 0;
+  let drawStrip = () => {};
 
   // A playing view ships every step as a CSS-cycled layer; the runtime plays steps itself, so keep the base only.
   for (const layer of layers.values()) {
@@ -165,7 +192,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       states, selected: selected?.id ?? null, playing,
     };
   };
-  const emit = () => { const s = snapshot(); for (const fn of listeners) fn(s); };
+  const emit = () => { drawStrip(); const s = snapshot(); for (const fn of listeners) fn(s); };
 
   /* ---- write the effective model into every layer ---- */
   const apply = () => {
@@ -218,7 +245,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   };
   // A heading block (R15) sits above the scene; the camera works in the screen below it.
   const inset = Number(root.getAttribute("data-heading") ?? 0);
-  const stage = (): Size => { const s = screen(); return { width: s.width, height: s.height - inset }; };
+  const stage = (): Size => { const s = screen(); return { width: s.width, height: s.height - inset - stripHeight }; };
   const below = (c: Camera): Camera => ({ ...c, ty: c.ty + inset });
   const fit = (animate: boolean) => { zoomId = null; tween(below(fitView(layerSize(active()), stage(), frame)), animate); };
   const zoomTo = (id: string, type: EntityType, animate = true): boolean => { const el = elOf(id, type); if (!el) return false; zoomId = id; tween(below(zoomToBox(bbox(el), stage(), { ...frame, maxZoom: type === "node" ? 2 : 4 })), animate); return true; };
@@ -383,6 +410,84 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     return true;
   };
 
+  /* ---- the strip (R19): the author's views and scenario steps, reachable by tap; drawn by the engine, so never in a still or an image tag ---- */
+  const stripRows: StripRow[] = [];
+  if (opts.controls) {
+    const n = viewIds.length;
+    const viewAt = () => viewIds.indexOf(activeId());
+    if (n > 1) stripRows.push({ name: "view", text: () => `${layers.get(layerKey(activeId(), ""))?.getAttribute("data-title") ?? activeId()} · ${viewAt() + 1} of ${n}`, can: () => true, step: (by) => { showView(viewIds[(viewAt() + by + n) % n]!); } });
+    const shown = () => revealed ?? messagesOf().length;
+    if (isSequence() && messagesOf().length) stripRows.push({ name: "message", text: () => `Message ${shown()} of ${messagesOf().length}`, can: (by) => shown() + by >= 0 && shown() + by <= messagesOf().length, step: (by) => setMessage(shown() + by) });
+    // Every authored step of every scenario, in the order written: the taps walk this line and nothing off it.
+    const stops = model.scenarios.flatMap((sc) => sc.steps.map((_, i) => ({ id: sc.id, step: i + 1 })));
+    const stopAt = () => stops.findIndex((p) => p.id === session.scenario?.id && p.step === session.scenario.step);
+    if (stops.length) stripRows.push({
+      name: "scenario",
+      text: () => { const sc = model.scenarios.find((x) => x.id === session.scenario?.id); return sc ? `${sc.label} · ${session.scenario!.step} of ${sc.steps.length}` : `Start: ${model.scenarios[0]!.label}`; },
+      can: (by) => (by < 0 ? stopAt() >= 0 : stopAt() < stops.length - 1),
+      step: (by) => { const to = stops[stopAt() + by]; setScenario(to?.id ?? null, to?.step); },
+      leave: () => setScenario(null),
+    });
+  }
+  if (stripRows.length) {
+    const NS = "http://www.w3.org/2000/svg";
+    const add = (parent: Element, tag: string, attrs: Record<string, string | number>, text?: string) => {
+      const e = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+      if (text !== undefined) e.textContent = text;
+      return parent.appendChild(e);
+    };
+    const strip = add(root, "g", { class: "strip" });
+    const notes = [...model.scenarios.flatMap((sc) => sc.steps.map((st) => st.note)), ...(model.tour?.scenes.filter((sc) => layers.has(layerKey(sc.view, ""))).map((sc) => sc.note) ?? [])].filter((t): t is string => !!t);
+    const clip = (text: string, chars: number) => (text.length > chars ? `${text.slice(0, Math.max(1, chars - 1))}…` : text);
+    // A phone lays a bare SVG out about 980 wide and shows it small. The strip is drawn in the units the reader
+    // sees, so a target is 44 on the glass whatever the layout width; measured at mount and on resize only, so a
+    // pinch does not resize it under the finger.
+    let unit = 1;
+    const measureStrip = () => { unit = Math.max(1, 1 / (window.visualViewport?.scale ?? 1)); };
+    measureStrip();
+    on(window, "resize", measureStrip);
+    drawStrip = () => {
+      const full = screen(), width = full.width / unit;
+      const wide = width >= WIDE, rowWidth = wide ? width / stripRows.length : width;
+      // The note's room is the longest note's, so stepping never moves the picture.
+      const perLine = Math.max(8, Math.floor((width - 32) / 7));
+      const noteLines = Math.max(0, ...notes.map((t) => wrap(t, perLine).length));
+      const noteHeight = noteLines ? noteLines * 18 + 10 : 0;
+      const tall = noteHeight + (wide ? ROW : ROW * stripRows.length);
+      stripHeight = tall * unit;
+      strip.replaceChildren();
+      strip.setAttribute("transform", `translate(0 ${full.height - stripHeight}) scale(${unit})`);
+      add(strip, "rect", { width, height: tall, fill: "#fff" });
+      add(strip, "rect", { width, height: 1, fill: "#e2e8f0" });
+      const note = add(strip, "text", { class: "step-note strip-note" });
+      const lines = wrap(sceneNote ?? session.note(), perLine);
+      lines.forEach((line, i) => add(note, "tspan", { x: 16, y: 19 + i * 18 }, i < lines.length - 1 ? `${line} ` : line));
+      stripRows.forEach((r, i) => {
+        const g = add(strip, "g", { "data-strip": r.name, transform: `translate(${wide ? i * rowWidth : 0} ${noteHeight + (wide ? 0 : i * ROW)})` });
+        const does = [...(r.leave ? (["leave"] as const) : []), "next", "prev"] as const;
+        add(g, "text", { class: "step-note", x: 16, y: ROW / 2 }, clip(r.text(), Math.floor((rowWidth - 24 - does.length * ROW) / 7)));
+        does.forEach((what, j) => {
+          const live = what === "leave" ? session.scenario !== null : r.can(what === "next" ? 1 : -1);
+          const b = add(g, "g", { "data-do": what, role: "button", "aria-label": SAYS[what], ...(live ? {} : { class: "off" }), transform: `translate(${rowWidth - (j + 1) * ROW} 0)` });
+          add(b, "title", {}, SAYS[what]);
+          add(b, "rect", { width: ROW, height: ROW, fill: "transparent" });
+          add(b, "rect", { class: "key", x: 6, y: 6, width: 32, height: 32, rx: 8 });
+          add(b, "path", { d: GLYPH[what] });
+        });
+      });
+    };
+    on(strip, "click", (ev) => {
+      const b = (ev.target as Element).closest?.("[data-do]");
+      const r = stripRows.find((x) => x.name === b?.parentElement?.getAttribute("data-strip"));
+      if (!b || !r || b.classList.contains("off")) return;
+      const what = b.getAttribute("data-do");
+      stop();
+      if (what === "leave") r.leave?.(); else r.step(what === "next" ? 1 : -1);
+    });
+    drawStrip();
+  }
+
   /* ---- inside the diagram: clicks, hover, keyboard; no page code needed ---- */
   on(scene, "click", (ev) => {
     const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
@@ -442,7 +547,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     else handled = false;
     if (handled) ev.preventDefault();
   });
-  on(window, "resize", () => { if (!zoomId) fit(false); });
+  on(window, "resize", () => { drawStrip(); if (!zoomId) fit(false); });
 
   rebuildOrder(); fit(false); apply(); play();
   return {
@@ -464,12 +569,12 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
     on: (_event, fn) => { listeners.add(fn); return () => { listeners.delete(fn); }; },
     snapshot,
     // finish the morph first: its completion may fit the camera or start a play, and both are refused or cleared after
-    destroy: () => { destroyed = true; if (morphing) morphing(); stop(); if (cameraTimer) clearTimeout(cameraTimer); ac.abort(); listeners.clear(); style.remove(); },
+    destroy: () => { destroyed = true; if (morphing) morphing(); stop(); if (cameraTimer) clearTimeout(cameraTimer); ac.abort(); listeners.clear(); style.remove(); root.querySelector(":scope > .strip")?.remove(); },
   };
 }
 
 // Mount when this script runs inside an Orrery SVG opened as a document.
 if (typeof document !== "undefined") {
   const r = document.documentElement;
-  if (r && r.getAttribute("data-orrery") === "1" && r.tagName.toLowerCase() === "svg" && !r.hasAttribute("data-mounted")) { r.setAttribute("data-mounted", "1"); mount(r as unknown as SVGSVGElement); }
+  if (r && r.getAttribute("data-orrery") === "1" && r.tagName.toLowerCase() === "svg" && !r.hasAttribute("data-mounted")) { r.setAttribute("data-mounted", "1"); mount(r as unknown as SVGSVGElement, { controls: true }); }
 }

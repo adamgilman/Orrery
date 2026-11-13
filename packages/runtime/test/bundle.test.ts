@@ -34,5 +34,13 @@ describe("minified runtime inside a rendered SVG document", () => {
     doc.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "2", bubbles: true }));
     for (let i = 0; i < 50 && doc.querySelector<SVGGElement>('.view[data-view="eu-only"]')!.style.display === "none"; i++) await new Promise((res) => setTimeout(res, 20));
     expect([...doc.querySelectorAll<SVGGElement>(".view")].map((v) => `${v.getAttribute("data-view")}:${v.style.display || "shown"}`)).toEqual(["overview:none", "eu-only:shown", "matching:none"]);
+    // the strip (R19) is the script's own drawing: the file as written has none, so an image tag shows none; opened
+    // directly the engine draws it, and a tap on it does what the digit did
+    expect(new JSDOM(svg, { contentType: "image/svg+xml" }).window.document.querySelector(".strip")).toBeNull();
+    expect(q('.strip [data-strip="view"] text').textContent).toMatch(/· 2 of 3$/);
+    q('.strip [data-strip="view"] [data-do="next"]').dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+    for (let i = 0; i < 50 && doc.querySelector<SVGGElement>('.view[data-view="matching"]')!.style.display === "none"; i++) await new Promise((res) => setTimeout(res, 20));
+    expect(doc.querySelector<SVGGElement>('.view[data-view="matching"]')!.style.display).not.toBe("none");
+    expect(q('.strip [data-strip="view"] text').textContent).toMatch(/· 3 of 3$/);
   });
 });
