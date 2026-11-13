@@ -3,6 +3,11 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- Every rendered picture paints its own white background, so it reads on a dark page: in a README under GitHub's dark theme the group titles and connection labels of a transparent picture were lost against the page. The corners are eased; a page that wants the picture transparent styles `.backing`.
+- `orrery --help` no longer says a click changes a state in the interactive file; since 0.5.0 it selects.
+
 ## 0.5.0 (2026-11-13)
 
 Pictures that only say what the author wrote, drawn inside their own outlines: a reader's click no longer changes a state, and the contents of a shaped node stay within its shape.
