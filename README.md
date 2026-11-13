@@ -247,10 +247,25 @@ or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/ch
 
 ## Status
 
-The model is specified in [docs/MODEL.md](docs/MODEL.md); the file is interactive; sequence views, the providers'
-icon packs, shapes, callouts and headings have shipped, and every package is on npm. Next, in the order the
-[PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, GIF and PNG
-export from the frame tooling, and an MCP server.
+Orrery is at 0.5.0: usable, young and still changing.
+
+What works today:
+
+- One JSON model drawn as topology and sequence views, with scenarios, what-ifs, drill-down into groups and tours.
+- One SVG file that animates inside an `<img>`, as in a README, and is interactive when opened in a browser.
+  `orrery embed` writes the diagram and its engine for a page of your own.
+- Your own states, kinds and shapes, the AWS, Azure and GCP icon packs, callouts and headings.
+- The command, the libraries and the packs are on npm, all at one version. A Claude Code plugin writes the models.
+
+What is not there yet:
+
+- PNG and GIF export. The command writes SVG only, so for a place that will not show an SVG you convert it yourself.
+- `orrery explain`: nothing puts a model or a scenario into prose.
+- A walkthrough view: a sequence's messages cannot be played as a token moving along the topology.
+- An MCP server. An agent uses the command line, or the Claude Code plugin.
+
+The model format is version 1, specified in [docs/MODEL.md](docs/MODEL.md) and in a JSON Schema. Until 1.0 a release
+may change it; the [changelog](CHANGELOG.md) says when one does.
 
 ## Installing
 
