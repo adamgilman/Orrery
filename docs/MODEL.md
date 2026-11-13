@@ -326,6 +326,10 @@ inside an image tag anywhere.
 
 `play` and `scenario` are exclusive (S16).
 
+`orrery export --png` or `--gif` writes every entry as `<id>.png` or `<id>.gif` instead, for where an SVG is not
+taken: the picture at rest, or one loop of it (R19). The format is the command's, not the model's: an export says
+what a picture shows, and the same entry is an SVG in the README and a GIF in a chat.
+
 ### 4.10 Warnings
 
 The validator reports, without failing, a source that connects both to a group and to something inside it: both
@@ -405,6 +409,7 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, centred unless the export or command line says `left`, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 | R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
+| R19 | A PNG or a GIF is a raster of the enclosed SVG the same options draw, on white, in fonts that come with the tool: same model and options, same bytes. A PNG is that picture at t = 0. A GIF is one loop of it, each frame the SVG frozen at its moment, evenly spaced, looping for ever. The loop is the whole cycle of a playing view or a tour; for a picture of flows it is the shortest, up to 8 s, in which every flow and the pulse completes whole cycles: exactly when one exists, else the shortest that moves no period by more than 5%, else the one that moves them least. Each period is then the nearest that fits, so the frame after the last is the first and a slower flow is never drawn faster than a quicker one; the SVG's own periods are untouched. A picture in which nothing moves is a GIF of one frame. Colours are kept exactly when the frames have at most 255, and otherwise the most used ones are. | raster gif.test "the loop of an animated picture (R19)", "encodeGif (R19)", "renderGif (R19)", "renderPng (R19)"; cli.test "PNG and GIF (R19)"; readme.test "PNG and GIF (R19)" |
 | R18 | What is drawn in a component or a closed group, its label, tech line, glyph, badge and expand mark, is inside the outline of its shape at every size. Each is placed in the shape's content rectangle: its `inner` rectangle scaled with the node, or without one the box less its `pad`. A shape with an `inner` is measured so that rectangle holds the contents, and never smaller than its `pad` makes it. Every preset is held to it across label lengths, with and without a tech line, a glyph and replicas. An open frame drawn with a shape is not covered: its title and members are placed by `pad`. | shapes.test "contents stay inside the outline (R18)"; issues.test "#51"; invalid fixture `bad-shape` |
 
 ## 7. Non-goals (v1)
@@ -480,5 +485,12 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   LICENSE, installed only by a model that uses it, and the tool ships only `sre`. Rejected: optional dependencies
   of the CLI (the install would no longer be the author's own act) and a licence note inside core (a note does not
   change what the manifest says).
+- **PNG and GIF are formats of the command, not fields of the model (2026-11-13).** `render -o x.png`, `-o x.gif`
+  and `export --png`, `--gif` rasterise the picture the same options draw as an SVG (R19). An export's entry does
+  not name a format: it says what a picture shows, and the same entry is wanted as an SVG in a README and a GIF in
+  a chat. A GIF has to end, which an SVG's animation does not: flows of unrelated loads line up again only after
+  minutes, so a GIF gives each flow the nearest period that fits a loop of a few seconds. The alternative, exact
+  periods and a jump where the loop restarts, keeps every frame true and makes the one thing a reader notices
+  wrong. Design: docs/design/notes/2026-11-13-png-gif-export-design.md.
 - **Rejected:** health expressions (a second syntax inside JSON); inferring anything from connections; a linter
   that argues with the author's scenario; default connection ids like `a->b` in the user-facing model.

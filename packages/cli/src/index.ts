@@ -3,6 +3,7 @@ import { basename, join } from "node:path";
 import { ModelError, PROVIDER_PACKS, installHint, loadPack, packNames, packProblem, render, renderDocument, renderExport, validate, type ValidationError } from "@orrery-diagrams/core";
 import { ElkLayoutEngine } from "@orrery-diagrams/layout-elk";
 import { RUNTIME_SOURCE } from "@orrery-diagrams/runtime";
+import type * as Raster from "@orrery-diagrams/raster"; // the types only: the package is loaded when a PNG or GIF is asked for
 
 export const USAGE = `Usage:
   orrery validate <file>                 Check a model file. Prints "OK: N components, M connections, ...", plus any
@@ -25,9 +26,19 @@ export const USAGE = `Usage:
                                          --play cycles a scenario's steps on a timer; --tour cycles views
                                          (comma-separated ids, or the model's own tour). Both are pure CSS in
                                          the file, so they play inside <img>. --every: seconds per step or view.
+                 [--png | --gif]         For where an SVG is not taken (a chat, a wiki, a forum): -o <out.png> or
+                 [--scale <n>]           --png writes the picture at rest as a PNG; -o <out.gif> or --gif writes
+                 [--fps <n>]             one loop of it as an animated GIF: flow, a playing scenario, a tour.
+                 [--duration <seconds>]  Both draw what --static draws, on white, with their own fonts: same
+                                         model, same bytes. --scale: pixels per unit (default 2). --fps: frames
+                                         a second (default 10, at most 50). The loop is the scenario's or tour's
+                                         whole cycle, else a few seconds in which every flow completes whole
+                                         cycles, each period nudged to fit; --duration sets it instead.
   orrery export <file> [--out <dir>]     Write every entry of the model's "exports" to <dir>/<id>.svg: enclosed
-                                         files, CSS animation only, no script. Default <dir> is the current
-                                         directory. Prints one line per file.
+                 [--png | --gif]         files, CSS animation only, no script. Default <dir> is the current
+                 [--scale <n>]           directory. Prints one line per file. --png writes each as <id>.png and
+                 [--fps <n>]             --gif as <id>.gif instead, as render does, with the same options.
+                 [--duration <seconds>]
   orrery embed <file> [--out <dir>]      Write an embeddable diagram for a web page: <name>.svg (every topology
                                          view and drill-down, the model, the engine), <name>.<view>.svg for each
                                          sequence view, orrery.js (the engine, defining window.Orrery), and a
@@ -51,12 +62,14 @@ const VERSION: string = (JSON.parse(readFileSync(join(import.meta.dirname, "../p
 export class CliError extends Error {
   constructor(message: string, public readonly exitCode: number = 1) { super(message); }
 }
-interface Io { stdout(s: string): void; stderr(s: string): void }
+interface Io { stdout(s: string | Uint8Array): void; stderr(s: string): void }
+type Raster = typeof Raster;
 
-const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--open", "--zoom", "--out"]);
+const VALUE_FLAGS = new Set(["-o", "--view", "--scenario", "--step", "--set", "--play", "--every", "--open", "--zoom", "--out", "--scale", "--fps", "--duration"]);
 /** Flags whose value may be omitted (then the model's own declaration is used). */
 const OPTIONAL_VALUE_FLAGS = new Set(["--tour", "--heading"]);
-const BOOL_FLAGS = new Set(["--static"]);
+const BOOL_FLAGS = new Set(["--static", "--png", "--gif"]);
+const PICTURE_FLAGS = new Set(["--png", "--gif", "--scale", "--fps", "--duration"]);
 
 interface Args { positionals: string[]; values: Map<string, string[]>; flags: Set<string> }
 
@@ -99,6 +112,46 @@ function parseSets(values: string[] | undefined): Record<string, string[]> {
   return out;
 }
 
+/** What a picture is written as: the SVG itself, or a raster of it (R19). */
+interface Picture { format: "svg" | "png" | "gif"; scale: number; fps: number; durationMs?: number }
+
+/** --png and --gif, or the extension of the file -o names; then the options that belong to a raster. */
+function pictureOf(args: Args, out: string | undefined): Picture {
+  if (args.flags.has("--png") && args.flags.has("--gif")) throw new CliError("choose one of --png and --gif", 2);
+  const flag = args.flags.has("--png") ? "png" : args.flags.has("--gif") ? "gif" : undefined;
+  const named = out?.match(/\.(svg|png|gif)$/i)?.[1]!.toLowerCase() as Picture["format"] | undefined;
+  if (flag && named && named !== flag) throw new CliError(`-o ${out} names a .${named} file, but --${flag} writes a ${flag.toUpperCase()}`, 2);
+  const format = flag ?? named ?? "svg";
+  const number = (name: string, ok: (n: number) => boolean, expects: string) => {
+    const raw = one(args, name);
+    if (raw === undefined) return undefined;
+    const n = Number(raw);
+    if (!ok(n)) throw new CliError(`${name} must be ${expects}, got "${raw}"`, 2);
+    return n;
+  };
+  const scale = number("--scale", (n) => n > 0 && n <= 8, "a number above 0 and at most 8");
+  const fps = number("--fps", (n) => n >= 1 && n <= 50, "a number from 1 to 50");
+  const duration = number("--duration", (n) => n > 0 && n <= 600, "a positive number of seconds, at most 600");
+  if (scale !== undefined && format === "svg") throw new CliError("--scale is for a PNG or a GIF (-o <file>.png, --png, -o <file>.gif, --gif); an SVG has no pixels", 2);
+  if (format !== "gif") for (const name of ["--fps", "--duration"]) if (args.values.has(name)) throw new CliError(`${name} is for a GIF (-o <file>.gif or --gif)`, 2);
+  return { format, scale: scale ?? 2, fps: fps ?? 10, ...(duration !== undefined ? { durationMs: duration * 1000 } : {}) };
+}
+
+/**
+ * The bytes of a picture in its format. The rasteriser (resvg, a native binary, and the fonts) is loaded only
+ * here, so the commands that write SVG never wait for it and still work where it cannot be loaded.
+ */
+async function encode(svg: string, picture: Picture, load: () => Promise<Raster>): Promise<string | Uint8Array> {
+  if (picture.format === "svg") return svg;
+  let raster: Raster;
+  try { raster = await load(); } catch (e) {
+    throw new CliError(`PNG and GIF output needs @orrery-diagrams/raster, which could not be loaded: ${(e as Error).message}\nIt is installed with orrery-diagrams; if this platform has no build of it, write the SVG instead.`);
+  }
+  return picture.format === "png"
+    ? raster.renderPng(svg, { scale: picture.scale })
+    : raster.renderGif(svg, { scale: picture.scale, fps: picture.fps, ...(picture.durationMs !== undefined ? { durationMs: picture.durationMs } : {}) });
+}
+
 function loadModel(file: string, io: Io) {
   let text: string;
   if (file === "-") file = "stdin";
@@ -135,7 +188,7 @@ function listPacks(rest: string[]): string {
 }
 
 /** Run the CLI. Returns the process exit code; never calls process.exit itself so it stays testable. */
-export async function main(argv: string[], io: Io): Promise<number> {
+export async function main(argv: string[], io: Io, loadRaster: () => Promise<Raster> = () => import("@orrery-diagrams/raster")): Promise<number> {
   const [command, ...rest] = argv;
   if (rest.includes("--help") || rest.includes("-h") || command === "--help" || command === "-h" || command === "help") { io.stdout(USAGE + "\n"); return 0; }
   if (command === "--version" || command === "-v" || command === "version") { io.stdout(`orrery ${VERSION}\n`); return 0; }
@@ -177,16 +230,16 @@ export async function main(argv: string[], io: Io): Promise<number> {
     }
     if (command === "export") {
       const dir = one(args, "--out") ?? ".";
-      for (const flag of args.values.keys()) if (flag !== "--out") throw new CliError(`export takes only --out, not ${flag}`, 2);
-      if (args.flags.size) throw new CliError(`export takes only --out`, 2);
+      for (const flag of [...args.values.keys(), ...args.flags]) if (flag !== "--out" && !PICTURE_FLAGS.has(flag)) throw new CliError(`export takes --out and the PNG and GIF options, not ${flag}`, 2);
+      const picture = pictureOf(args, undefined);
       const m = loadModel(file, io);
       if (!m.exports.length) throw new CliError(`${file}: the model declares no exports; add an "exports" list (docs/MODEL.md 4.9)`);
       try { mkdirSync(dir, { recursive: true }); } catch (e) { throw new CliError(`${dir}: ${(e as Error).message}`); }
       for (const x of m.exports) {
-        const target = join(dir, `${x.id}.svg`);
+        const target = join(dir, `${x.id}.${picture.format}`);
         let svg: string;
         try { svg = await renderExport(m, new ElkLayoutEngine(), x); } catch (e) { if (e instanceof ModelError) throw new CliError(`${file}: export "${x.id}": ${e.message}`); throw e; }
-        try { writeFileSync(target, svg); } catch (e) { throw new CliError(`${target}: ${(e as Error).message}`); }
+        try { writeFileSync(target, await encode(svg, picture, loadRaster)); } catch (e) { throw new CliError(`${target}: ${(e as Error).message}`); }
         io.stdout(`${target}\n`);
       }
       return 0;
@@ -210,7 +263,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
     const headingValue = one(args, "--heading");
     if (headingValue !== undefined && headingValue !== "left" && headingValue !== "centre") throw new CliError(`--heading takes "left" or "centre", got "${headingValue}"`, 2);
     const heading: true | "left" | "centre" | undefined = headingValue !== undefined ? headingValue : args.flags.has("--heading") ? true : undefined;
-    const isStatic = args.flags.has("--static") || scenario !== undefined || tour !== undefined || open !== undefined || zoom !== undefined;
+    const picture = pictureOf(args, out);
+    const isStatic = args.flags.has("--static") || picture.format !== "svg" || scenario !== undefined || tour !== undefined || open !== undefined || zoom !== undefined;
     const model = loadModel(file, io);
     let svg: string;
     try {
@@ -222,9 +276,10 @@ export async function main(argv: string[], io: Io): Promise<number> {
       if (e instanceof ModelError) throw new CliError(`${file}: ${e.message}`);
       throw e;
     }
+    const bytes = await encode(svg, picture, loadRaster);
     if (out !== undefined) {
-      try { writeFileSync(out, svg); } catch (e) { throw new CliError(`${out}: ${(e as Error).message}`); }
-    } else io.stdout(svg);
+      try { writeFileSync(out, bytes); } catch (e) { throw new CliError(`${out}: ${(e as Error).message}`); }
+    } else io.stdout(bytes);
     return 0;
   } catch (e) {
     if (e instanceof CliError) { io.stderr(e.message + "\n"); return e.exitCode; }

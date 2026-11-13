@@ -398,3 +398,120 @@ describe("orrery render --heading", () => {
     expect(readFileSync(join(dir, "b.svg"), "utf8")).toContain("orrery-model");
   });
 });
+
+describe("orrery render and export: PNG and GIF (R19)", () => {
+  const bytes = (...args: string[]) => { const r = spawnSync("node", [bin, ...args]); return { code: r.status, out: r.stdout, err: r.stderr.toString() }; };
+  const pngSize = (b: Buffer) => [b.readUInt32BE(16), b.readUInt32BE(20)];
+  const gifSize = (b: Buffer) => [b.readUInt16LE(6), b.readUInt16LE(8)];
+  const isPng = (b: Buffer) => b.subarray(1, 4).toString("latin1") === "PNG";
+  const isGif = (b: Buffer) => b.subarray(0, 6).toString("latin1") === "GIF89a";
+  const model = join(fixtures, "valid/three-tier.json");
+  const viewBox = (() => { const m = run("render", model, "--static").out.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/)!; return [Number(m[1]), Number(m[2])]; })();
+
+  it("writes a PNG when -o names one, at twice the picture's size unless --scale says otherwise", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const r = run("render", model, "-o", join(dir, "a.png"));
+    expect(r.err).toBe("");
+    expect(r.code).toBe(0);
+    expect(r.out).toBe("");
+    const png = readFileSync(join(dir, "a.png"));
+    expect(isPng(png)).toBe(true);
+    expect(pngSize(png)).toEqual(viewBox.map((n) => Math.round(n * 2)));
+    expect(run("render", model, "--scale", "1", "-o", join(dir, "b.png")).code).toBe(0);
+    expect(pngSize(readFileSync(join(dir, "b.png")))).toEqual(viewBox.map((n) => Math.round(n)));
+  });
+  it("writes a GIF when -o names one: one loop of the picture, at --fps frames a second", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    expect(run("render", model, "--scale", "1", "-o", join(dir, "a.gif")).code).toBe(0);
+    const gif = readFileSync(join(dir, "a.gif"));
+    expect(isGif(gif)).toBe(true);
+    expect(gifSize(gif)).toEqual(viewBox.map((n) => Math.round(n)));
+    expect(gif.includes("NETSCAPE2.0")).toBe(true);
+    expect(run("render", model, "--scale", "1", "--fps", "5", "-o", join(dir, "slow.gif")).code).toBe(0);
+    expect(run("render", model, "--scale", "1", "--duration", "1", "-o", join(dir, "short.gif")).code).toBe(0);
+    expect(readFileSync(join(dir, "slow.gif")).length).toBeLessThan(gif.length);
+    expect(readFileSync(join(dir, "short.gif")).length).toBeLessThan(gif.length);
+  }, 30_000);
+  it("takes --png and --gif for a picture on stdout, or a file of any name", () => {
+    const png = bytes("render", model, "--png");
+    expect(png.code).toBe(0);
+    expect(isPng(png.out)).toBe(true);
+    const gif = bytes("render", model, "--gif", "--scale", "1");
+    expect(gif.code).toBe(0);
+    expect(isGif(gif.out)).toBe(true);
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    expect(run("render", model, "--png", "-o", join(dir, "picture")).code).toBe(0);
+    expect(isPng(readFileSync(join(dir, "picture")))).toBe(true);
+  });
+  it("is byte-for-byte deterministic, PNG and GIF", () => {
+    const fan = join(fixtures, "valid/fan-out.json");
+    const png = () => bytes("render", fan, "--png").out, gif = () => bytes("render", fan, "--gif", "--scale", "1", "--fps", "5", "--duration", "2").out;
+    const [a, b, c, d] = [png(), png(), gif(), gif()];
+    expect(isPng(a!) && isGif(c!)).toBe(true);
+    expect(a!.equals(b!)).toBe(true);
+    expect(c!.equals(d!)).toBe(true);
+  }, 30_000);
+  it("draws the picture the same options draw as an SVG: a scenario moment, a playing scenario", () => {
+    const alt = join(fixtures, "valid/alternatives.json");
+    const base = bytes("render", alt, "--png", "--scale", "1").out;
+    const failed = bytes("render", alt, "--scenario", "orders-failover", "--step", "1", "--png", "--scale", "1").out;
+    expect(isPng(failed)).toBe(true);
+    expect(failed.equals(base)).toBe(false);
+    const still = bytes("render", alt, "--gif", "--scale", "1", "--fps", "2", "--duration", "1").out;
+    const playing = bytes("render", alt, "--play", "orders-failover", "--every", "1", "--gif", "--scale", "1", "--fps", "2").out;
+    expect(isGif(playing)).toBe(true);
+    expect(playing.length).toBeGreaterThan(still.length); // more frames, and whole steps between them
+  }, 30_000);
+  it("refuses options that contradict each other or the format, as usage errors", () => {
+    for (const [args, message] of [
+      [["--png", "--gif"], /one of --png and --gif/],
+      [["--png", "-o", "a.gif"], /a\.gif.*--png/],
+      [["--gif", "-o", "a.svg"], /a\.svg.*--gif/],
+      [["--scale", "2"], /--scale.*PNG or a GIF/],
+      [["--fps", "5", "--png"], /--fps.*GIF/],
+      [["--duration", "2", "-o", "a.png"], /--duration.*GIF/],
+      [["--gif", "--fps", "0"], /--fps/],
+      [["--gif", "--fps", "80"], /--fps/],
+      [["--png", "--scale", "nope"], /--scale/],
+      [["--gif", "--duration", "0"], /--duration/],
+    ] as [string[], RegExp][]) {
+      const r = run("render", model, ...args);
+      expect(r.code, args.join(" ")).toBe(2);
+      expect(r.err, args.join(" ")).toMatch(message);
+    }
+  }, 30_000);
+  it("export --png and --gif write every export in that format instead of SVG", () => {
+    const dir = mkdtempSync(join(tmpdir(), "orrery-"));
+    const nested = join(fixtures, "valid/nested-drill.json");
+    const name = (f: string) => f.replace(/^.*[\\/]/, "");
+    const svgs = run("export", nested, "--out", join(dir, "svg")).out.trim().split("\n");
+    const pngs = run("export", nested, "--png", "--scale", "1", "--out", join(dir, "png"));
+    expect(pngs.err).toBe("");
+    expect(pngs.code).toBe(0);
+    expect(pngs.out.trim().split("\n").map(name)).toEqual(svgs.map((f) => name(f).replace(/\.svg$/, ".png")));
+    for (const f of pngs.out.trim().split("\n")) expect(isPng(readFileSync(f)), f).toBe(true);
+    const one = join(dir, "one.json");
+    writeFileSync(one, JSON.stringify({ components: [{ id: "a" }, { id: "b" }], connections: [{ from: "a", to: "b", load: 1 }], exports: [{ id: "moving" }] }));
+    const gifs = run("export", one, "--gif", "--scale", "1", "--out", join(dir, "gif"));
+    expect(gifs.code).toBe(0);
+    expect(gifs.out.trim()).toBe(join(dir, "gif", "moving.gif"));
+    expect(isGif(readFileSync(join(dir, "gif", "moving.gif")))).toBe(true);
+    expect(run("export", one, "--png", "--gif").code).toBe(2);
+    expect(run("export", one, "--fps", "5").code).toBe(2);
+    expect(run("export", one, "--view", "x", "--png").code).toBe(2);
+  }, 30_000);
+  it("says which package is missing when the rasteriser cannot be loaded, and still writes SVG without it", async () => {
+    const { main } = await import("../src/index.js");
+    const io = { out: "", err: "", stdout(s: string | Uint8Array) { this.out += String(s); }, stderr(s: string) { this.err += s; } };
+    const absent = () => Promise.reject(new Error("Cannot find package '@resvg/resvg-js-plan9-mips'"));
+    expect(await main(["render", model, "--png"], io, absent)).toBe(1);
+    expect(io.err).toMatch(/PNG and GIF output needs @orrery-diagrams\/raster.*Cannot find package '@resvg\/resvg-js-plan9-mips'/s);
+    expect(io.out).toBe("");
+    expect(await main(["render", model, "--static"], io, absent)).toBe(0);
+    expect(io.out).toMatch(/^<svg/);
+  });
+  it("the help says so", () => {
+    const help = run("--help").out;
+    for (const word of ["--png", "--gif", "--scale", "--fps", "--duration", ".png", ".gif"]) expect(help, word).toContain(word);
+  });
+});

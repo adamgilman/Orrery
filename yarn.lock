@@ -444,7 +444,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orrery-diagrams/raster@workspace:packages/raster":
+"@orrery-diagrams/raster@workspace:*, @orrery-diagrams/raster@workspace:packages/raster":
   version: 0.0.0-use.local
   resolution: "@orrery-diagrams/raster@workspace:packages/raster"
   dependencies:
@@ -2000,6 +2000,7 @@ __metadata:
   dependencies:
     "@orrery-diagrams/core": "workspace:*"
     "@orrery-diagrams/layout-elk": "workspace:*"
+    "@orrery-diagrams/raster": "workspace:*"
     "@orrery-diagrams/runtime": "workspace:*"
     "@types/jsdom": "npm:^30"
     jsdom: "npm:^31"

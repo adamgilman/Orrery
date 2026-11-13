@@ -245,6 +245,23 @@ scenario and cycle through them, brackets to step it. Try it: [open the checkout
 or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout-sequence.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server.
 
+**Pixels, for where an SVG is not taken.** A chat, a forum or a wiki that wants a raster gets the same pictures as
+a PNG or an animated GIF: name the output `.png` or `.gif` (or say `--png` or `--gif`), for one picture or for
+every export at once.
+
+```sh
+orrery render examples/checkout.orrery.json --play db-fails -o primary-fails.gif   # one loop: flow, a playing scenario, a tour
+orrery render examples/checkout.orrery.json -o overview.png                        # the picture at rest
+orrery export examples/checkout.orrery.json --gif --out docs/diagrams              # every export as <id>.gif; --png for stills
+```
+
+![The primary fails and reads move to the replica: the GIF the first command writes](examples/checkout/primary-fails.gif)
+
+A GIF is one loop of what the SVG shows, frame by frame, at twice the picture's size and ten frames a second
+(`--scale`, `--fps`); the one above is about 230 KB. The loop is the scenario's or the tour's whole cycle. Flows
+alone would take minutes to line up again, so each is given the nearest period that fits a loop of a few seconds
+(`--duration` to choose it): the end meets the start, and slower stays slower. Same model, same bytes.
+
 ## Status
 
 Orrery is at 0.5.0: usable, young and still changing.
@@ -254,12 +271,13 @@ What works today:
 - One JSON model drawn as topology and sequence views, with scenarios, what-ifs, drill-down into groups and tours.
 - One SVG file that animates inside an `<img>`, as in a README, and is interactive when opened in a browser.
   `orrery embed` writes the diagram and its engine for a page of your own.
+- A PNG or an animated GIF of any picture, for a place that will not show an SVG: `orrery render -o app.png` or
+  `-o app.gif`.
 - Your own states, kinds and shapes, the AWS, Azure and GCP icon packs, callouts and headings.
 - The command, the libraries and the packs are on npm, all at one version. A Claude Code plugin writes the models.
 
 What is not there yet:
 
-- PNG and GIF export. The command writes SVG only, so for a place that will not show an SVG you convert it yourself.
 - `orrery explain`: nothing puts a model or a scenario into prose.
 - A walkthrough view: a sequence's messages cannot be played as a token moving along the topology.
 - An MCP server. An agent uses the command line, or the Claude Code plugin.
@@ -287,6 +305,8 @@ orrery validate app.orrery.json
 orrery render app.orrery.json -o app.svg            # interactive when opened directly
 orrery render app.orrery.json --static -o app.svg   # one view, no runtime
 orrery export app.orrery.json --out docs/           # every picture the model lists
+orrery render app.orrery.json -o app.png            # a PNG of the picture at rest
+orrery render app.orrery.json -o app.gif            # an animated GIF of one loop
 ```
 
 In a project, add it as a dev dependency so the docs build renders the diagrams: `npm install -D orrery-diagrams`,

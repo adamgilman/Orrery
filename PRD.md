@@ -36,7 +36,7 @@ Three tests every release must pass:
 |---|---|---|
 | Author | AI coding agent (Claude Code, Cursor, etc.), occasionally a human | Writes `*.orrery.json`, runs `validate` and `render`, looks at the result with `yarn inspect` |
 | Navigator | Engineer, architect, reviewer | Opens the interactive SVG or a page built on it, drills into groups, plays failure scenarios |
-| Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG (a GIF once M4 ships) |
+| Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG, or a GIF or PNG of it where an SVG is not taken |
 
 ## 3. Scope
 
@@ -54,7 +54,7 @@ Three tests every release must pass:
   scenarios, states, open and zoom as separate actions, play, change events with a snapshot).
 - **What-ifs without a scenario**: `render --set <state>=<ids>`.
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`
-  from the frame tooling (M4).
+  of any of them from the frame tooling (`render -o x.png`, `-o x.gif`; `export --png`, `--gif`).
 - **Agent surface**: MODEL.md, JSON Schema with a description on every property, `validate` with pointer errors
   and warnings, `render`, `export`, `embed`, later `explain`.
 - **Vocabulary packs**: `"kinds": { "use": ["aws"] }` / `"states": { "use": "sre" }` pull in vocabularies shipped
@@ -80,7 +80,7 @@ Specified in [docs/MODEL.md](docs/MODEL.md). That document is normative; nothing
 |---|---|---|---|
 | GitHub README, most markdown renderers | `orrery.svg` via `<img>` | yes (CSS/SMIL) | no |
 | Browser, GitHub Pages, jsDelivr link, Backstage, iframe macros | same `orrery.svg`, or `orrery.html` | yes | **yes** |
-| Confluence Cloud, Slack, Google Docs, anything raster-only | `orrery.gif` / `.png`: planned, M4; today the frame tooling in `@orrery-diagrams/raster` writes PNG frames and contact sheets | GIF yes, once M4 ships | no |
+| Confluence Cloud, Slack, Google Docs, anything raster-only | `orrery.gif` / `.png`: `orrery render -o x.gif` or `-o x.png`, `orrery export --gif` or `--png` (R19) | GIF yes: one loop of the flow, the playing scenario or the tour | no |
 | PR review | per-scenario static SVGs | no | no |
 
 Rule: **one source file, every output derived**. Layout runs at build time so the shipped SVG carries coordinates and needs no layout engine at view time.
@@ -94,8 +94,8 @@ Monorepo, TypeScript, Yarn 4. Packages are split along the seams we expect to re
 | `@orrery-diagrams/core` | JSON Schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` interface and fake engine, SVG renderer, document assembly | the model; pure, no DOM |
 | `@orrery-diagrams/layout-elk` | `LayoutEngine` backed by elkjs | the one we expect to outgrow; nothing else imports elk (a test enforces it) |
 | `@orrery-diagrams/runtime` | Vanilla JS inlined into the SVG: the engine (camera, state changes, scenarios, view morph, drill-down) and its interface, `window.Orrery.mount`. No panel. Budget 25 KB gzipped (currently ~6) | never React |
-| `@orrery-diagrams/raster` | Freeze animation at time *t*, rasterise with a bundled font, frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
-| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`), `export`, `embed`, `packs` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
+| `@orrery-diagrams/raster` | Freeze animation at time *t*, rasterise with a bundled font, PNG and GIF output (its own GIF writer), frame diffs, `inspect` | frames are a pure function of (model, t), so no browser is needed |
+| `orrery` (CLI) | `validate`, `render` (`--view`, `--static`, `--scenario`, `--step`, `--set`, `--play`, `--tour`, `--open`, `--zoom`; `--png`, `--gif`, `--scale`, `--fps`, `--duration`), `export` (SVG, `--png`, `--gif`), `embed`, `packs` | `node packages/cli/dist/main.js` today; `npx orrery` after publishing |
 
 Layout boundary, so we can swap engines or write our own:
 
@@ -133,6 +133,7 @@ interface LayoutEngine {
 | Performance ratchet | `test/perf`: a frozen benchmark model measured at every stage against `test/perf/baseline.json`, which CI tightens and commits back on every push to main; deterministic metrics exact, timings with slack; pull requests may only be no worse. |
 | Claude Code plugin | `plugins/orrery`, installable from this repository as a marketplace: the `orrery-diagrams` skill with the schema as reference, every variant worked as an example, the checkout stages, the validator's messages, a starter and a check script; `test/orrery/skill.test.ts` keeps every example valid and every schema property shown. |
 | Sequence views | `type: sequence` on a view: messages in order over declared connections, participants as the entities' own boxes in their states on lifelines, activations from call and reply, `play` reveals, the runtime steps them; the checkout and the diagram of Orrery each carry one (M3b, the sequence half; the walkthrough is reserved). |
+| M4 PNG and GIF | `orrery render -o x.png` writes the picture at rest and `-o x.gif` one loop of it (flow, a playing scenario, a tour); `export --png` and `--gif` write every export that way. Rasterised from the same enclosed SVG by `@orrery-diagrams/raster`, now a dependency of the command loaded only on demand; the GIF writer is in the repository, with no new dependency. A GIF's loop is the picture's own cycle, with flows fitted to it so it has no seam (R19). The README carries a real GIF, regenerated by `yarn examples`; an agent looks at its own output with `-o x.png`. Design: docs/design/notes/2026-11-13-png-gif-export-design.md. |
 
 ### Roadmap (aligned to the model, 2026-09-05)
 
@@ -143,7 +144,6 @@ Ordered by how directly each item serves the thesis that the file is a model in 
 | N1 | **Browser click-through by a human**; fix what only eyes can find (morph feel, camera, legend placement). Standalone file confirmed in Safari on 2026-09-06: tour, morphs, drill-down, clicks and keys all good. Still to look at: the embed's sample page, Chrome, a phone. | The user reports the interactive file works on desktop Safari/Chrome |
 | N2 | **`orrery explain`**: the model and a scenario in prose, in the author's vocabulary ("Step 1: Orders DB fails. Checkout API is degraded: reads from the replica."). Agents self-check with it; humans read it. | Explain output for every fixture is snapshot-tested and reads as English |
 | M3b | **Walkthrough view**: a sequence view's messages as a token moving along the topology, stepping through the runtime with the morph. (The sequence view shipped 2026-09-06.) | The same messages animate on the topology |
-| M4 | **GIF/PNG export** from the frame tooling; `render --png/--gif`. | Confluence fallback documented with a real GIF; agents can look at their own output |
 | M5 | **Launch**: docs site built from MODEL.md, examples gallery, MCP server exposing validate/render/explain/check, agent eval harness with retry counts, tags and neighbourhood views if the backlog still wants them. | Public |
 
 Principles for adding anything: it must be expressible in the author's vocabulary, it must add or change a
