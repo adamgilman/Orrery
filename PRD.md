@@ -25,7 +25,8 @@ Three tests every release must pass:
 
 1. **The README test.** The rendered SVG dropped into a GitHub README shows animated flow, with no plugin.
 2. **The click-through test.** The *same file* opened directly in a browser is interactive with clicks and the
-   keyboard alone: scenarios, views, drill-down. No panel; a page brings its own controls.
+   keyboard alone: scenarios, views, drill-down. No panel; a page brings its own controls. With no keyboard, the
+   strip along the bottom edge steps the author's views and scenarios by tap (MODEL.md R19).
 3. **The agent test.** An AI agent given only MODEL.md, the JSON Schema and the CLI can grow a model through the
    progressive walk (components, groups, connections, scenarios, views, own vocabulary), validating first time at
    each step, and gets the pictures it expected.
@@ -49,8 +50,8 @@ Three tests every release must pass:
   gives direction and order, never coordinates. Engines are replaceable behind `LayoutEngine`.
 - **Render**: one standalone SVG; CSS animation of flow and pulse; looks and kinds rendered exactly as bound;
   legend in the author's words; ghosts for one-ended connections in scoped views.
-- **Runtime** (inside the SVG): an engine with no user interface of its own. Clicks and the keyboard work in the
-  standalone file; a page mounts the engine and builds its own controls from the interface it exposes (views,
+- **Runtime** (inside the SVG): an engine with no user interface of its own when a page mounts it. Clicks and the keyboard work in the
+  standalone file, and its strip (R19) makes views and scenario steps reachable by tap; a page mounts the engine and builds its own controls from the interface it exposes (views,
   scenarios, states, open and zoom as separate actions, play, change events with a snapshot).
 - **What-ifs without a scenario**: `render --set <state>=<ids>`.
 - **Exports**: `svg` (interactive, graceful in `<img>`), `--static`, per-scenario-step static; `png` and `gif`

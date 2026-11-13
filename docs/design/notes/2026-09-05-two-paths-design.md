@@ -125,3 +125,12 @@ engine's interface has `open(ids)`, `zoom(id | null)` and `back()` (zoom out, th
 snapshot carries `open` and `zoom`. Inside the diagram a click opens a closed box, Enter or double-click zooms,
 Escape zooms out then closes. The interactive file carries a layer per way the view's closed groups can be open
 (S17, R11, R12 in MODEL.md).
+
+## Amendment, 2026-11-13: a strip for the reader with no keyboard
+
+"Clicks and the keyboard, nothing else" left a phone's reader unable to start or step a scenario or switch views.
+The standalone file now draws one strip along its bottom edge: the view, the scenario step and its note, with
+previous and next tap targets and a cross to leave the scenario (MODEL.md R19 and its decision). It walks only the
+author's views and steps and sets no state, it is plain SVG drawn by the engine at mount (still no HTML, nothing
+in the file as written), and a page that mounts the engine still gets no controls unless it passes
+`controls: true`.

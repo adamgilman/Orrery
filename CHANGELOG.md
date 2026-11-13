@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- The interactive file can be worked by touch or a mouse alone. Opened on its own it draws a strip along the bottom edge that names the current view, the scenario and step, and the step's note, with tap targets 44px on the glass: arrows for the next and previous view, arrows that walk every step of every scenario in the order written (back from the first step is the picture as written), and a cross that leaves the scenario; a sequence's file steps its messages the same way. A tour's captions show there too. Before, starting or stepping a scenario and switching views were keyboard only, so on a phone they were out of reach. The keyboard is unchanged, a tap stops a play as any interaction does, and no tap sets a state. The engine draws the strip, so a still, an image tag and a page's embed never show it; a page that wants it passes `{ controls: true }` to `Orrery.mount`. The strip appears only when the model has more than one view, a scenario, or a sequence's messages.
+
 ## 0.5.0 (2026-11-13)
 
 Pictures that only say what the author wrote, drawn inside their own outlines: a reader's click no longer changes a state, and the contents of a shaped node stay within its shape.
