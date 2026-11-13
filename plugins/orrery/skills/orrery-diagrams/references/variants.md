@@ -345,8 +345,8 @@ scene per view.
 ## The interactive file and the embed
 
 `orrery render app.orrery.json -o app.svg` writes one file with every view and every drill-down layer, the model
-and the engine inside. Opened in a browser: arrows select, Enter zooms, `f` steps a state, `s` starts and cycles
-scenarios, brackets step, digits switch views, Escape resets, a click steps a component through the states and
-opens a closed group. `orrery embed app.orrery.json --out site/` writes the diagram, `orrery.js` (defining
+and the engine inside. Opened in a browser: arrows select, Enter zooms, `s` starts and cycles
+scenarios, brackets step, digits switch views, Escape resets, a click selects a component and opens a closed
+group; nothing inside the file changes a state. `orrery embed app.orrery.json --out site/` writes the diagram, `orrery.js` (defining
 `window.Orrery`) and a sample page that builds controls from `Orrery.mount(svg)`: `showView`, `open`, `zoom`,
 `back`, `setScenario`, `next`, `prev`, `setState`, `play`, `stop`, `on("change")`, `snapshot()`.

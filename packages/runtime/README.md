@@ -1,9 +1,10 @@
 # @orrery-diagrams/runtime
 
 The engine inlined into every interactive Orrery SVG: camera, states, scenarios, drill-down, sequence stepping and
-tours. Opened directly, a rendered SVG is interactive with no page around it: click a component to step it through
-its states, click a closed group to open it, Enter or a double-click zooms, Escape steps back out, arrows select,
-`s` cycles scenarios, brackets step, digits switch views. For a page of your own, the same engine mounts on the SVG
+tours. Opened directly, a rendered SVG is interactive with no page around it: click a component to select it,
+click a closed group to open it, Enter or a double-click zooms, Escape steps back out, arrows select,
+`s` cycles scenarios, brackets step, digits switch views. Nothing inside the diagram changes a state; a page's
+controls do, through `setState` and `cycle`. For a page of your own, the same engine mounts on the SVG
 and reports what it does.
 
 ```sh

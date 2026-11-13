@@ -25,7 +25,7 @@ Three tests every release must pass:
 
 1. **The README test.** The rendered SVG dropped into a GitHub README shows animated flow, with no plugin.
 2. **The click-through test.** The *same file* opened directly in a browser is interactive with clicks and the
-   keyboard alone: state changes, scenarios, views, drill-down. No panel; a page brings its own controls.
+   keyboard alone: scenarios, views, drill-down. No panel; a page brings its own controls.
 3. **The agent test.** An AI agent given only MODEL.md, the JSON Schema and the CLI can grow a model through the
    progressive walk (components, groups, connections, scenarios, views, own vocabulary), validating first time at
    each step, and gets the pictures it expected.
@@ -35,7 +35,7 @@ Three tests every release must pass:
 | Role | Who | What they do |
 |---|---|---|
 | Author | AI coding agent (Claude Code, Cursor, etc.), occasionally a human | Writes `*.orrery.json`, runs `validate` and `render`, looks at the result with `yarn inspect` |
-| Navigator | Engineer, architect, reviewer | Opens the interactive SVG or a page built on it, drills into groups, steps components through states, plays failure scenarios |
+| Navigator | Engineer, architect, reviewer | Opens the interactive SVG or a page built on it, drills into groups, plays failure scenarios |
 | Reader | Anyone viewing a README, design doc, PR | Sees the animated static SVG (a GIF once M4 ships) |
 
 ## 3. Scope

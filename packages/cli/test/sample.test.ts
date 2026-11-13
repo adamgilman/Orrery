@@ -46,7 +46,7 @@ describe("the embed's sample page", () => {
     expect(doc.querySelector('#diagram [data-group="payments"]')!.getAttribute("data-state")).toBe("degraded");
     // a click in the diagram selects; the state buttons act on the selection
     doc.querySelector('#diagram [data-node="web"]')!.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
-    expect(doc.querySelector("#selected")!.textContent).toMatch(/^web: degraded/);
+    expect(doc.querySelector("#selected")!.textContent).toMatch(/^web: on/);
     (doc.querySelector('#states button[data-state="off"]') as HTMLButtonElement).click();
     expect(doc.querySelector('#diagram [data-node="web"]')!.getAttribute("data-state")).toBe("off");
     // open from the groups list, zoom from it, then back out twice
