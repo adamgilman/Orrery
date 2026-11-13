@@ -110,13 +110,15 @@ interactive file embeds only the kinds a model uses.
 
 Presets: `box` (the default), `sharp`, `pill`, `ellipse`, `cylinder`, `hexagon`, `diamond`, `parallelogram`,
 `document`, `card`, `cloud`. A component kind or a group kind names one with `shape`. Your own is path data in a
-100×100 box plus `pad`, the room the label needs on each side; or a rounded rectangle by `corner` (px, or
-`"round"` for a pill). Connections end at the bounding box, so a line into a diamond stops a little short.
+100×100 box plus `pad`, room round the contents in px, and `inner`, the rectangle of that box the outline leaves
+clear (`[x0, y0, x1, y1]`): the label, glyph and badge are drawn inside it and the component grows until they fit,
+so give one to any outline whose edge slants or curves in. Or a rounded rectangle by `corner` (px, or `"round"`
+for a pill). Connections end at the bounding box, so a line into a diamond stops a little short.
 
 ```json
 {
   "shapes": { "define": {
-    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A pipeline stage" },
+    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "inner": [15, 0, 85, 100], "description": "A pipeline stage" },
     "box": { "corner": 2 }
   } },
   "kinds": {

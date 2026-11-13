@@ -84,7 +84,7 @@ exports[`renderSvg: structure > matches the snapshot for grouped with the fake e
 <g class="nodes">
 <g class="node kind-gateway st-on" data-node="web" data-kind="gateway" data-state="on" data-bbox="84 84 149 48" transform="translate(84 84)">
 <path class="node-box" d="M22.4 0H126.7L149 24 126.7 48H22.4L0 24Z"/>
-<g class="glyph" transform="translate(28 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
+<g class="glyph" transform="translate(26.9 16)"><path d="M8 1.5l6.5 6.5L8 14.5 1.5 8z"/></g>
 <text class="node-label" x="92.5" y="24">Web tier</text>
 </g>
 <g class="node kind-service st-on" data-node="api" data-kind="service" data-state="on" data-bbox="393 84 124 48" transform="translate(393 84)">

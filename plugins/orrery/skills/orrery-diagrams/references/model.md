@@ -195,7 +195,7 @@ to `hexagon`, `client` to `pill` and `external` to `cloud`. A top-level `shapes`
 ```jsonc
 "shapes": {
   "define": {
-    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "description": "A pipeline stage" },
+    "chevron": { "path": "M0 0H85L100 50 85 100H0L15 50Z", "pad": { "x": 16, "y": 0 }, "inner": [15, 0, 85, 100], "description": "A pipeline stage" },
     "box":     { "corner": 2 }
   }
 }
@@ -208,9 +208,14 @@ leaves the line between its endpoints and grows as the box is stretched. The pre
 test holds them to it.
 
 An outline is `path`, SVG path data in a 100×100 box scaled to the component's size, or `corner`, a rounded
-rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is the room the label needs to
-clear the outline, per side, declared rather than computed. A pack's `shapes` come in with `kinds.use`, prefixed
-like its kinds.
+rectangle with that radius in px (`"round"` for a pill); one or the other. `pad` is room added round the contents,
+in px per side. `inner` is the rectangle of the unit box the outline leaves clear, `[x0, y0, x1, y1]`: the label,
+tech line, glyph and badge are drawn inside it, and the component grows until they fit (R18). An edge that slants
+or curves into the box takes a share of the node's size, not a fixed number of px, so `pad` alone stops being
+enough as a label grows; `inner` scales with the node. Both are declared rather than computed, and a node is
+never smaller than `pad` makes it. A shape redefined with a new outline does not keep the old one's `inner`. The
+presets `ellipse`, `hexagon`, `diamond`, `parallelogram` and `cloud` declare one; a cloud's is the body below its
+lobes. A pack's `shapes` come in with `kinds.use`, prefixed like its kinds.
 
 **Packs.** `"use": ["aws"]` pulls in a vocabulary by name (docs/PACKS.md): `sre` comes with the tool; a provider's
 icon set is its own package, `@orrery-diagrams/pack-aws`, under the provider's terms rather than the tool's MIT

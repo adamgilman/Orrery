@@ -1,7 +1,7 @@
 import type { LayoutEngine, LayoutResult, Point } from "./layout.js";
 import { FLOW_DASH, FLOW_PERIOD, PULSE_MIN_OPACITY, PULSE_PERIOD, flowStyle } from "./flow.js";
 export * from "./flow.js";
-import { EXPAND_MARK_WIDTH, GLYPH_WIDTH, REPLICA_BADGE_WIDTH, groupShapeOf, hasGlyph, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
+import { EXPAND_MARK_WIDTH, closedGroupSlots, componentSlots, groupShapeOf, shapeOf, textWidth, toLayoutGraph } from "./measure.js";
 import { scalePath } from "./shapes.js";
 import { layoutSequence, sequenceLayoutResult, type SequenceLayout } from "./sequence.js";
 import { lineOf, lookOf } from "./looks.js";
@@ -57,10 +57,10 @@ const GLYPHS: Record<string, string> = {
   function: `<text class="glyph-text" x="8" y="8.5">λ</text>`,
 };
 /** A stroke glyph in its 16×16 slot, or an icon (R13) as a nested svg 20×20, outside `.glyph` so its own colours apply. */
-const glyphMarkup = (glyph: string | Glyph, height: number, pad: number) =>
+const glyphMarkup = (glyph: string | Glyph, at: { x: number; y: number }) =>
   typeof glyph === "string"
-    ? `<g class="glyph" transform="translate(${num(12 + pad)} ${num(height / 2 - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
-    : `<svg class="icon" x="${num(10 + pad)}" y="${num(height / 2 - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
+    ? `<g class="glyph" transform="translate(${num(at.x)} ${num(at.y - 8)})">${GLYPHS[glyph] ?? `<path d="${escAttr(glyph)}"/>`}</g>`
+    : `<svg class="icon" x="${num(at.x - 2)}" y="${num(at.y - 10)}" width="20" height="20" viewBox="${escAttr(glyph.viewBox)}">${glyph.svg}</svg>`;
 /** A component's outline at its size (R14): a rounded rect for a `corner` shape, a scaled path for a `path` shape. */
 const outline = (shape: ShapeDef, b: { width: number; height: number }, cls: string, extra = "") =>
   shape.path !== undefined
@@ -175,41 +175,39 @@ const pulses = (model: Model, state: string) => !!lookOf(model.states.define[sta
 /** Box, glyph, label: the drawing of a component inside its own `<g class="node">`, at (0,0). Reused by the tour's state variants. */
 function componentBody(c: Component, model: Model, b: { width: number; height: number }): string {
   const shape = shapeOf(c, model);
-  const pad = shape.pad.x;
-  const glyph = !c.ghost && hasGlyph(c, model.kinds) ? glyphMarkup(model.kinds.components[c.kind]!.glyph!, b.height, pad) : undefined;
-  const inset = glyph ? 12 + GLYPH_WIDTH : 0;
-  const badge = c.replicas > 1;
-  const labelY = c.tech !== undefined ? b.height / 2 - 8 : b.height / 2;
+  const at = componentSlots(c, model, b);
+  const badge = at.badge !== undefined;
   return [
     ...(badge ? [`<g class="replicas"><g transform="translate(6 -6)">${outline(shape, b, "replica-box")}</g><g transform="translate(3 -3)">${outline(shape, b, "replica-box")}</g></g>`] : []),
     outline(shape, b, "node-box"),
-    ...(glyph ? [glyph] : []),
-    `<text class="node-label" x="${num((pad + inset + b.width - pad - (badge ? 20 : 0)) / 2)}" y="${num(labelY)}">${esc(c.label)}</text>`,
-    ...(c.tech !== undefined ? [`<text class="node-tech" x="${num((pad + inset + b.width - pad - (badge ? 20 : 0)) / 2)}" y="${num(b.height / 2 + 10)}">${esc(c.tech)}</text>`] : []),
-    ...(badge ? [`<text class="badge" x="${num(b.width - 8)}" y="${num(12 + shape.pad.y)}">×${c.replicas}</text>`] : []),
+    ...(at.glyph ? [glyphMarkup(model.kinds.components[c.kind]!.glyph!, at.glyph)] : []),
+    `<text class="node-label" x="${num(at.label.x)}" y="${num(at.label.y)}">${esc(c.label)}</text>`,
+    ...(at.tech ? [`<text class="node-tech" x="${num(at.tech.x)}" y="${num(at.tech.y)}">${esc(c.tech!)}</text>`] : []),
+    ...(at.badge ? [`<text class="badge" x="${num(at.badge.x)}" y="${num(at.badge.y)}">×${c.replicas}</text>`] : []),
   ].join("\n");
 }
 
 /** The expand mark: a small boxed plus in the top-right corner of a closed group, the conventional sign that there is more inside. */
-const expandMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("expand-mark", "M7 3.5v7M3.5 7h7", w, pad);
+const expandMark = (at: { x: number; y: number }) => cornerMark("expand-mark", "M7 3.5v7M3.5 7h7", at);
 /** The collapse mark: the same box with a minus, on a group the reader can close. Drawn only where a click does something, so a still never shows a control that is not there (R11). */
-const collapseMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("collapse-mark", "M3.5 7h7", w, pad);
-const cornerMark = (cls: string, d: string, w: number, pad: { x: number; y: number }) => `<g class="${cls}" transform="translate(${num(w - 22 - pad.x)} ${num(8 + pad.y)})"><rect width="14" height="14" rx="3"/><path d="${d}"/></g>`;
+const collapseMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("collapse-mark", "M3.5 7h7", { x: w - 22 - pad.x, y: 8 + pad.y });
+const cornerMark = (cls: string, d: string, at: { x: number; y: number }) => `<g class="${cls}" transform="translate(${num(at.x)} ${num(at.y)})"><rect width="14" height="14" rx="3"/><path d="${d}"/></g>`;
 
 /** A group's frame at (0,0): open, with its title in the band; or closed (R11), the size of a component, with its name centred and an expand mark. */
 function groupBody(g: Group, model: Model, b: { width: number; height: number }, collapsible = false): string {
   const closed = g.collapsed !== undefined;
   const shape = groupShapeOf(g, model);
   const many = g.replicas > 1;
+  const at = closedGroupSlots(g, model, b);
   return [
     // Closed, identical instances stack behind the front frame; the boxes behind take no clicks, so only the
     // front one opens, and opening drills into one of them (R11).
     ...(many && closed ? [`<g class="replicas"><g transform="translate(6 -6)">${outline(shape, b, "replica-box")}</g><g transform="translate(3 -3)">${outline(shape, b, "replica-box")}</g></g>`] : []),
     outline(shape, b, "group-box"),
     // the count sits left of the corner mark in both states; the title band reserves the room for both
-    ...(many ? [`<text class="badge" x="${num(b.width - 8 - EXPAND_MARK_WIDTH - shape.pad.x)}" y="${num(closed ? 12 + shape.pad.y : 16 + shape.pad.y)}">×${g.replicas}</text>`] : []),
+    ...(many ? [closed ? `<text class="badge" x="${num(at.badge!.x)}" y="${num(at.badge!.y)}">×${g.replicas}</text>` : `<text class="badge" x="${num(b.width - 8 - EXPAND_MARK_WIDTH - shape.pad.x)}" y="${num(16 + shape.pad.y)}">×${g.replicas}</text>`] : []),
     closed
-      ? `<g class="summary"><text class="summary-label" x="${num((b.width - EXPAND_MARK_WIDTH - (many ? REPLICA_BADGE_WIDTH : 0)) / 2)}" y="${num(b.height / 2)}">${esc(g.label)}</text>${expandMark(b.width, shape.pad)}</g>`
+      ? `<g class="summary"><text class="summary-label" x="${num(at.label.x)}" y="${num(at.label.y)}">${esc(g.label)}</text>${expandMark(at.mark)}</g>`
       : groupTitle(g.label, shape, b.width) + (collapsible && g.closable ? `\n${collapseMark(b.width, shape.pad)}` : ""),
   ].join("\n");
 }
@@ -544,16 +542,19 @@ async function tourLayer(model: Model, tour: Tour, engine: LayoutEngine, set: Re
       css.push(`@keyframes orrery-size-${id}{${track(size(id), sizedAs, move, ease)}}`);
       css.push(`@keyframes orrery-open-${id}{${track(isOpen, opacity, staged)}}`);
       css.push(`@keyframes orrery-closed-${id}{${track((k) => !isOpen(k), opacity, staged)}}`);
-      css.push(`@keyframes orrery-mark-${id}{${track((k) => { const [w] = size(id)(k).split(" "); return `${num(Number(w) - 22 - shape.pad.x)} ${num(8 + shape.pad.y)}`; }, translate, move, ease)}}`);
-      css.push(`@keyframes orrery-centre-${id}{${track((k) => { const [w, h] = size(id)(k).split(" "); return `${num((Number(w) - EXPAND_MARK_WIDTH) / 2)} ${num(Number(h) / 2)}`; }, translate, move, ease)}}`);
+      // the summary's name and mark sit where a closed box draws them (R18), at every size the frame passes through
+      const slots = (b: { width: number; height: number }) => closedGroupSlots({ ...g0, replicas: 1 }, model, b);
+      const slotsAt = (k: number) => { const [w, h] = size(id)(k).split(" "); return slots({ width: Number(w), height: Number(h) }); };
+      css.push(`@keyframes orrery-mark-${id}{${track((k) => { const p = slotsAt(k).mark; return `${num(p.x)} ${num(p.y)}`; }, translate, move, ease)}}`);
+      css.push(`@keyframes orrery-centre-${id}{${track((k) => { const p = slotsAt(k).label; return `${num(p.x)} ${num(p.y)}`; }, translate, move, ease)}}`);
       const b0 = held(0, id, (j) => boxAt(j, id));
       const frames = variants(id, (k) => groupAt(k, id), (g) => `${outline(shape, b0, "group-box", ` style="${anim(`orrery-size-${id}`)}"`)}${g.reason !== undefined ? `<title>${esc(g.reason)}</title>` : ""}`);
       // a centred title follows the frame's width through the tour
       if (shape.path !== undefined) css.push(`@keyframes orrery-title-${id}{${track((k) => { const [w] = size(id)(k).split(" "); return `${num(Number(w) / 2)} ${num(16 + shape.pad.y)}`; }, translate, move, ease)}}`);
       const title = shown(`orrery-open-${id}`, isOpen, shape.path !== undefined ? `<g transform="translate(${num(b0.width / 2)} ${num(16 + shape.pad.y)})" style="${anim(`orrery-title-${id}`)}"><text class="group-label centred">${esc(g0.label)}</text></g>` : groupTitle(g0.label, shape, b0.width), "detail");
       const summary = shown(`orrery-closed-${id}`, (k) => !isOpen(k),
-        `<g transform="translate(${num((b0.width - EXPAND_MARK_WIDTH) / 2)} ${num(b0.height / 2)})" style="${anim(`orrery-centre-${id}`)}"><text class="summary-label">${esc(g0.label)}</text></g>` +
-        `<g class="expand-mark" transform="translate(${num(b0.width - 22 - shape.pad.x)} ${num(8 + shape.pad.y)})" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
+        `<g transform="translate(${num(slots(b0).label.x)} ${num(slots(b0).label.y)})" style="${anim(`orrery-centre-${id}`)}"><text class="summary-label">${esc(g0.label)}</text></g>` +
+        `<g class="expand-mark" transform="translate(${num(slots(b0).mark.x)} ${num(slots(b0).mark.y)})" style="${anim(`orrery-mark-${id}`)}"><rect width="14" height="14" rx="3"/><path d="M7 3.5v7M3.5 7h7"/></g>`, "lod-summary");
       return shown(`orrery-show-${id}`, present, moved(id, `group gk-${g0.kind}`, `data-group="${escAttr(id)}"${g0.collapsed !== undefined ? ` data-collapsed="${g0.collapsed}"` : ""}`, `${frames}\n${title}\n${summary}`), "entity");
     });
     const nodesMarkup = componentIds.map((id) => {

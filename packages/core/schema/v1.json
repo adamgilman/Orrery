@@ -428,7 +428,7 @@
                   "x",
                   "y"
                 ],
-                "description": "Room the label needs to clear the outline, in px on each side. Default 0.",
+                "description": "Room added round the contents (label, tech line, glyph, badge), in px on each side. Default 0. Enough for an outline whose edge is a fixed distance in; an edge that slants or curves into the box wants 'inner' as well.",
                 "properties": {
                   "x": {
                     "type": "number",
@@ -441,6 +441,17 @@
                     "description": "Extra height above and below."
                   }
                 }
+              },
+              "inner": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "description": "The rectangle of the 100\u00d7100 box your outline leaves clear, as [x0, y0, x1, y1] with x0 < x1 and y0 < y1. The label, tech line, glyph and badge are drawn inside it and the component grows until they fit, so nothing touches a slanted or curved edge however long the label is. A cloud's is the body below its lobes. Omit it for an outline that is a rectangle, or near enough; an outline you redefine does not keep the old one's."
               },
               "description": {
                 "type": "string",

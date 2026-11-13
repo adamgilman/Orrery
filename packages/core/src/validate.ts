@@ -129,7 +129,10 @@ function buildShapes(raw: Raw["shapes"], packs: Pack[], err: (p: string, m: stri
     else if (s.path === undefined && s.corner === undefined && !base) err(`/shapes/define/${name}`, "a shape needs path or corner");
     if (s.path !== undefined && !PATH_DATA.test(s.path)) err(`/shapes/define/${name}/path`, "must be SVG path data in a 100×100 box, starting with M");
     const outline = s.path !== undefined ? { path: s.path } : s.corner !== undefined ? { corner: s.corner } : { ...opt("path", base?.path), ...opt("corner", base?.corner) };
-    shapes[name] = { name, ...outline, pad: s.pad ?? base?.pad ?? { x: 0, y: 0 }, ...opt("description", s.description ?? base?.description) };
+    if (s.inner !== undefined && !(s.inner[0] < s.inner[2] && s.inner[1] < s.inner[3])) err(`/shapes/define/${name}/inner`, "must be [x0, y0, x1, y1] in the 100×100 box, with x0 < x1 and y0 < y1");
+    // the clear rectangle belongs to the outline it was declared for: a redrawn outline does not inherit it
+    const inner = s.inner ?? (s.path === undefined && s.corner === undefined ? base?.inner : undefined);
+    shapes[name] = { name, ...outline, pad: s.pad ?? base?.pad ?? { x: 0, y: 0 }, ...opt("inner", inner), ...opt("description", s.description ?? base?.description) };
   }
   if (!Object.hasOwn(shapes, "box")) err("/shapes/define", 'shapes.replace is true, so "box" must be defined: a kind without a shape is drawn as box');
   return shapes;

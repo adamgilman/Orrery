@@ -10,9 +10,10 @@ export interface Extent { minX: number; minY: number; maxX: number; maxY: number
 const ARITY: Record<string, number> = { M: 2, L: 2, T: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, A: 7, Z: 0 };
 const SAMPLES = 96;
 
-export function pathExtent(d: string): Extent {
+export function pathExtent(d: string, visit?: (x: number, y: number, start: boolean) => void): Extent {
   const e: Extent = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-  const at = (x: number, y: number) => { e.minX = Math.min(e.minX, x); e.minY = Math.min(e.minY, y); e.maxX = Math.max(e.maxX, x); e.maxY = Math.max(e.maxY, y); };
+  let starting = false;
+  const at = (x: number, y: number) => { visit?.(x, y, starting); starting = false; e.minX = Math.min(e.minX, x); e.minY = Math.min(e.minY, y); e.maxX = Math.max(e.maxX, x); e.maxY = Math.max(e.maxY, y); };
   let x = 0, y = 0, startX = 0, startY = 0;
   let prevCubic: [number, number] | undefined;
 
@@ -25,7 +26,7 @@ export function pathExtent(d: string): Extent {
       const a = nums.slice(g * arity, g * arity + arity);
       const px = x, py = y;
       const X = (v: number) => (rel ? px + v : v), Y = (v: number) => (rel ? py + v : v);
-      if (upper === "M") { x = X(a[0]!); y = Y(a[1]!); startX = x; startY = y; at(x, y); }
+      if (upper === "M") { x = X(a[0]!); y = Y(a[1]!); startX = x; startY = y; starting = true; at(x, y); }
       else if (upper === "L" || upper === "T") { x = X(a[0]!); y = Y(a[1]!); at(x, y); }
       else if (upper === "H") { x = X(a[0]!); at(x, y); }
       else if (upper === "V") { y = Y(a[0]!); at(x, y); }

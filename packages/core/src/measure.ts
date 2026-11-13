@@ -1,4 +1,5 @@
 import type { LayoutGraph } from "./layout.js";
+import { contentRect, shapedSize } from "./shapes.js";
 import type { Component, Group, Kinds, Model, ShapeDef } from "./types.js";
 
 const COMPONENT_HEIGHT = 48;
@@ -20,7 +21,13 @@ const CHAR_WIDTH = 7.6; // average glyph width at 14px
 const TECH_CHAR_WIDTH = 6.7; // 12px
 const PADDING = 32;
 const CONNECTION_LABEL_HEIGHT = 16;
+/** What must clear a shaped outline vertically (R18): a label with its glyph or badge, a label over a tech line, a closed group's name beside its expand mark. */
+const ONE_LINE = 24;
+const TWO_LINES = 40;
+const MARKED_LINE = 30;
 const LABEL_CHAR_WIDTH = 6.6;
+
+interface Point { x: number; y: number }
 
 export const hasGlyph = (c: Component, kinds: Kinds) => kinds.components[c.kind]?.glyph !== undefined;
 /** The outline a component is drawn with: its kind's shape, or `box`. */
@@ -33,10 +40,41 @@ export const textWidth = (chars: number, px = 14) => chars * (px * 0.54);
 /** Estimate a component's box from its label, tech line, glyph and badge. Engines receive sizes; they never measure text. */
 export function measureComponent(c: Component, model: Pick<Model, "kinds" | "shapes">): { width: number; height: number } {
   const glyph = hasGlyph(c, model.kinds) ? GLYPH_WIDTH : 0;
-  const pad = shapeOf(c, model).pad;
   const badge = c.replicas > 1 ? REPLICA_BADGE_WIDTH : 0;
   const text = Math.max(c.label.length * CHAR_WIDTH, (c.tech?.length ?? 0) * TECH_CHAR_WIDTH);
-  return { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(text + PADDING + glyph + badge)) + 2 * pad.x, height: (c.tech !== undefined ? COMPONENT_TECH_HEIGHT : COMPONENT_HEIGHT) + 2 * pad.y };
+  return shapedSize(shapeOf(c, model), { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(text + PADDING + glyph + badge)), height: c.tech !== undefined ? COMPONENT_TECH_HEIGHT : COMPONENT_HEIGHT }, c.tech !== undefined ? TWO_LINES : ONE_LINE);
+}
+
+/**
+ * Where a component's contents are drawn in a box of this size, each a point the renderer anchors on: the label
+ * and tech line by their centres, the glyph by the left middle of its 16px slot, the badge by its right middle.
+ * All of them inside the shape's content rectangle, so none is placed against a corner the outline does not reach.
+ */
+export function componentSlots(c: Component, model: Pick<Model, "kinds" | "shapes">, b: { width: number; height: number }): { label: Point; tech?: Point; glyph?: Point; badge?: Point } {
+  const r = contentRect(shapeOf(c, model), b.width, b.height);
+  const glyph = !c.ghost && hasGlyph(c, model.kinds), badge = c.replicas > 1;
+  const cx = r.x + ((glyph ? 12 + GLYPH_WIDTH : 0) + r.width - (badge ? 20 : 0)) / 2, cy = r.y + r.height / 2;
+  return {
+    label: { x: cx, y: c.tech !== undefined ? cy - 8 : cy },
+    ...(c.tech !== undefined ? { tech: { x: cx, y: cy + 10 } } : {}),
+    ...(glyph ? { glyph: { x: r.x + 12, y: cy } } : {}),
+    ...(badge ? { badge: { x: r.x + r.width - 8, y: r.y + 12 } } : {}),
+  };
+}
+
+/** A closed group's box as a component would be measured: its label, the expand mark, the replicas badge. */
+export function measureClosedGroup(g: Group, model: Pick<Model, "kinds" | "shapes">): { width: number; height: number } {
+  return shapedSize(groupShapeOf(g, model), { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH + (g.replicas > 1 ? REPLICA_BADGE_WIDTH : 0))), height: COMPONENT_HEIGHT }, MARKED_LINE);
+}
+
+/** Where a closed group's contents are drawn: its name by its centre, the expand mark by its top left, the badge by its right middle. */
+export function closedGroupSlots(g: Group, model: Pick<Model, "kinds" | "shapes">, b: { width: number; height: number }): { label: Point; mark: Point; badge?: Point } {
+  const r = contentRect(groupShapeOf(g, model), b.width, b.height), many = g.replicas > 1;
+  return {
+    label: { x: r.x + (r.width - EXPAND_MARK_WIDTH - (many ? REPLICA_BADGE_WIDTH : 0)) / 2, y: r.y + r.height / 2 },
+    mark: { x: r.x + r.width - 22, y: r.y + 8 },
+    ...(many ? { badge: { x: r.x + r.width - 8 - EXPAND_MARK_WIDTH, y: r.y + 12 } } : {}),
+  };
 }
 
 export function measureConnectionLabel(text: string): { width: number; height: number } {
@@ -57,7 +95,7 @@ export function toLayoutGraph(model: Model): LayoutGraph {
         // Open, the frame is never narrower than its own title band: a long label used to run into the corner mark.
         ...(g.collapsed === undefined ? { minWidth: titleBandWidth(g.label, pad, g.replicas) } : {}),
         // A closed group is the size of a component with that label, plus room for the expand mark and the shape's pad.
-        ...(g.collapsed !== undefined ? { emptySize: { width: Math.max(COMPONENT_MIN_WIDTH, Math.ceil(g.label.length * CHAR_WIDTH + PADDING + EXPAND_MARK_WIDTH + (g.replicas > 1 ? REPLICA_BADGE_WIDTH : 0))) + 2 * pad.x, height: COMPONENT_HEIGHT + 2 * pad.y } } : {}),
+        ...(g.collapsed !== undefined ? { emptySize: measureClosedGroup(g, model) } : {}),
       };
     }),
     nodes: model.components.map((c) => ({ id: c.id, ...measureComponent(c, model), ...(c.group !== undefined ? { group: c.group } : {}) })),
