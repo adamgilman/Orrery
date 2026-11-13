@@ -54,6 +54,6 @@
   },
   "devDependencies": {
     "@types/jsdom": "^30",
-    "jsdom": "^30"
+    "jsdom": "^31"
   }
 }
