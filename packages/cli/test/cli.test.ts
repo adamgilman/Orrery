@@ -110,6 +110,7 @@ describe("orrery usage", () => {
   });
   it("prints usage on --help", () => {
     const r = run("--help");
+    expect(r.out, "a click selects in the interactive file; it has not changed a state since 0.5.0").not.toMatch(/click to change state/);
     expect(r.code).toBe(0);
     expect(r.out).toContain("orrery validate <file>");
     expect(r.out).toContain("orrery render <file> [-o <out.svg>]");

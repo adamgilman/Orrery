@@ -24,6 +24,7 @@
 .callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
 .callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
+.backing{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
 .heading-title.centred,.heading-text.centred{text-anchor:middle}
@@ -59,6 +60,7 @@
 .st-off .group-box{stroke-dasharray:4 4}
 .st-off{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<rect class="backing" x="0" y="0" width="420.2" height="503.5" rx="8"/>
 <g class="scene">
 <g class="view" data-view="overview" data-open="" data-title="Overview" data-size="420.2 503.5">
 <g class="groups">

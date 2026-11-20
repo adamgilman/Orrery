@@ -151,6 +151,14 @@ describe("mount: the engine's interface", () => {
     expect(rt.snapshot()).toMatchObject({ scenario: null, selected: null, zoom: null, open: [] });
   });
 
+  it("takes the file's backing out: mounted, the diagram fills its element and paints that instead (R19)", async () => {
+    const root = await doc("alternatives");
+    expect(root.querySelector(":scope > rect.backing"), "the file carries a backing for the image tag").not.toBeNull();
+    rt = mount(root, SIZE);
+    expect(root.querySelector("rect.backing")).toBeNull();
+    expect(root.style.background).toMatch(/#fff|rgb\(255, 255, 255\)/);
+  });
+
   it("destroy stops listening and leaves the diagram as it is", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);

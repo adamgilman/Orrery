@@ -493,6 +493,29 @@ describe("render: callouts follow a zoom (R16)", () => {
   });
 });
 
+describe("render: a picture paints its own background (R19)", () => {
+  const backing = (svg: string) => [...svg.matchAll(/<rect class="backing" x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)" rx="8"\/>/g)].map((m) => m.slice(1).map(Number));
+  const viewBox = (svg: string) => svg.match(/<svg [^>]*viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number);
+  it("a still has one white backing the size of its viewBox, behind everything drawn", async () => {
+    const svg = await draw(fixture("grouped"));
+    expect(backing(svg)).toEqual([viewBox(svg)]);
+    expect(svg).toContain(".backing{fill:#ffffff}");
+    expect(svg.indexOf('class="backing"')).toBeLessThan(svg.indexOf('<g class="scene"'));
+    expect(svg.indexOf('class="backing"')).toBeGreaterThan(svg.indexOf("</defs>"));
+  });
+  it("a zoomed picture's backing starts where its viewBox does, and a heading's band is inside it", async () => {
+    const n = fixture("nested-drill");
+    const zoomed = await render(n, new FakeLayoutEngine(), { open: ["outer", "inner"], zoom: "inner", heading: true });
+    expect(viewBox(zoomed).slice(0, 2)).not.toEqual([0, 0]);
+    expect(backing(zoomed)).toEqual([viewBox(zoomed)]);
+    expect(zoomed.indexOf('class="backing"')).toBeLessThan(zoomed.indexOf('<g class="heading"'));
+  });
+  it("the interactive document, a playing view and a tour each carry exactly one", async () => {
+    const m = fixture("alternatives");
+    for (const svg of [await renderDocument(m, new FakeLayoutEngine(), { runtime: "" }), await render(m, new FakeLayoutEngine(), { play: { scenario: "orders-failover" } }), await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true })]) expect(backing(svg)).toEqual([viewBox(svg)]);
+  });
+});
+
 describe("renderSvg: states on connections (#60, R22)", () => {
   const edge = (svg: string, key: string) => svg.match(new RegExp(`<path class="edge[^>]*data-edge="${key}"[^>]*>(?:<title>[^<]*</title></path>)?`))![0];
   const style = (svg: string) => svg.slice(svg.indexOf("<style>"), svg.indexOf("</style>"));

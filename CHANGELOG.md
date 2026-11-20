@@ -9,6 +9,8 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 - **Breaking, narrowly:** a connection's `id` is now in the same id space as components and groups, so a file whose connection id equals an entity's id is rejected with a message naming the clash. Rename the connection.
 - A step or `--set` naming an id that does not exist now says `unknown entity or connection id "x"`, where it said `unknown entity "x"`.
 - In the interactive file a line standing for several connections between closed groups keeps their summed load. The engine was rewriting it with the first member's load alone as soon as it mounted.
+- Every rendered picture paints its own white background, so it reads on a dark page: in a README under GitHub's dark theme the group titles and connection labels of a transparent picture were lost against the page. The corners are eased; a page that wants the picture transparent styles `.backing`.
+- `orrery --help` no longer says a click changes a state in the interactive file; since 0.5.0 it selects.
 
 ## 0.5.0 (2026-11-13)
 
