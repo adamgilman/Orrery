@@ -105,6 +105,18 @@ and reasons directly.
 
 ![The replica out for maintenance](what-if.svg)
 
+A connection takes a state too, by its `id`, when the link is what broke and both ends are fine. The line and its
+arrowhead wear the state's look, a state that stops flows stops that line's own, and the reason is the line's
+tooltip. Nothing spreads: the database is as healthy as the author left it. A line that is only idle, because its
+load is 0 or an end of it has failed, stays grey.
+
+```jsonc
+"connections": [{ "id": "writes", "from": "api", "to": "db", "load": 0.6, "label": "writes" }]
+{ "id": "what-if-link", "set": { "failed": { "writes": "TLS certificate expired" }, "degraded": { "api": "writes failing" } } }
+```
+
+![The certificate between the API and the database has expired](what-if-link.svg)
+
 ## Play
 
 `play` cycles a scenario's steps on a timer, the base model and then each step, captioned with its note. In the

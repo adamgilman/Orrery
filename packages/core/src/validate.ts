@@ -80,7 +80,7 @@ interface Raw {
   shapes?: { replace?: boolean; define?: Record<string, Omit<ShapeDef, "name" | "pad"> & { pad?: { x: number; y: number } }> };
   kinds?: { replace?: boolean; use?: string | string[]; components?: Record<string, ComponentKindDef>; groups?: Record<string, GroupKindDef>; connections?: Record<string, ConnectionKindDef> };
   components: { id: string; label?: string; kind: string; group?: string; state?: string; replicas: number; tech?: string; description?: string; meta?: Record<string, unknown> }[];
-  connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; bidirectional: boolean; meta?: Record<string, unknown> }[];
+  connections: { from: string; to: string; id?: string; kind: string; label?: string; load: number; state?: string; bidirectional: boolean; meta?: Record<string, unknown> }[];
   groups: { id: string; label?: string; kind: string; parent?: string; replicas: number; state?: string; description?: string; meta?: Record<string, unknown> }[];
   views?: { id: string; title?: string; description?: string; type: ViewType; direction?: Direction; scope?: string; only?: string[]; play?: { scenario?: string; seconds: number }; collapse?: string[]; messages?: { from: string; to: string; text?: string; kind?: string; reply?: boolean }[] }[];
   scenarios: { id: string; label?: string; steps: { note?: string; callouts?: Callout[]; set?: Record<string, SetEntry>; restore?: string | string[]; load?: { from?: string; to?: string; id?: string; load: number }[] }[] }[];
@@ -207,6 +207,9 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
     componentIds.add(c.id);
   });
   const isEntity = (id: string) => componentIds.has(id) || groupIds.has(id);
+  /** What a state can be given to: an entity, or a connection the author gave an id (S3). */
+  const connectionIds = new Set(raw.connections.flatMap((c) => (c.id !== undefined ? [c.id] : [])));
+  const takesState = (id: string) => isEntity(id) || connectionIds.has(id);
   /** Callouts point at an entity or a connection by id (R16); each is kept as written. */
   const checkCallouts = (base: string, list: Callout[] | undefined): Callout[] => (list ?? []).map((c, k) => { if (!isEntity(c.at) && !connectionKeys.has(c.at)) err(`${base}/callouts/${k}/at`, `unknown entity or connection id "${c.at}"`); return { at: c.at, text: c.text, ...opt("side", c.side) }; });
   const parentOf = new Map(raw.groups.map((g) => [g.id, g.parent] as const));
@@ -252,8 +255,10 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
     if (parallel && c.id === undefined) err(`/connections/${i}`, `"${c.from}" has several connections to "${c.to}"; give each an id`);
     const key = c.id ?? `${c.from}->${c.to}`;
     if (c.id !== undefined && connectionKeys.has(key)) err(`/connections/${i}/id`, `duplicate connection id "${key}"`);
+    else if (c.id !== undefined && isEntity(c.id)) err(`/connections/${i}/id`, `id "${c.id}" is already used by a ${componentIds.has(c.id) ? "component" : "group"}`);
+    if (c.state !== undefined && !stateOk(c.state)) err(`/connections/${i}/state`, `unknown state "${c.state}"; known: ${Object.keys(states.define).join(", ")}`);
     connectionKeys.add(key);
-    connections.push({ key, from: c.from, to: c.to, kind: c.kind, load: c.load, bidirectional: c.bidirectional, ...opt("id", c.id), ...opt("label", c.label), ...opt("meta", c.meta) });
+    connections.push({ key, from: c.from, to: c.to, kind: c.kind, load: c.load, state: c.state ?? states.default, bidirectional: c.bidirectional, ...opt("id", c.id), ...opt("label", c.label), ...opt("meta", c.meta) });
   });
   // W1: an entity connected both to a group and to something inside it, in either direction.
   connections.forEach((c, i) => {
@@ -317,14 +322,14 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
         Object.assign(reasons, reasonsOf(entry));
         set[state]!.forEach((id, k) => {
           const p = Array.isArray(entry) ? `${base}/set/${state}/${k}` : typeof entry === "string" ? `${base}/set/${state}` : `${base}/set/${state}/${id}`;
-          if (!isEntity(id)) err(p, `unknown entity "${id}"`);
+          if (!takesState(id)) err(p, `unknown entity or connection id "${id}"`);
           if (seen.has(id)) err(p, `"${id}" is already set to "${seen.get(id)}" in this step`);
           seen.set(id, state);
         });
       }
       const restore = list(st.restore);
       for (const id of restore) {
-        if (!isEntity(id)) err(`${base}/restore`, `unknown entity "${id}"`);
+        if (!takesState(id)) err(`${base}/restore`, `unknown entity or connection id "${id}"`);
         if (seen.has(id)) err(`${base}/restore`, `"${id}" is both set and restored in this step`);
         seen.set(id, "restore");
       }
@@ -389,7 +394,7 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
         if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
         set[state] = idsOf(entry);
         Object.assign(reasons, reasonsOf(entry));
-        for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
+        for (const id of set[state]!) if (!takesState(id)) err(`${base}/set/${state}`, `unknown entity or connection id "${id}"`);
       }
       return { view: sc.view, seconds: sc.seconds ?? t.seconds, ...(open ? { open } : {}), ...opt("zoom", sc.zoom), ...opt("scenario", sc.scenario), ...opt("step", sc.step), ...(sc.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(sc.callouts ? { callouts: checkCallouts(base, sc.callouts) } : {}), ...opt("note", sc.note) };
     });
@@ -424,7 +429,7 @@ export function validate(input: unknown, options: ValidateOptions = {}): Validat
       if (!stateOk(state)) err(`${base}/set/${state}`, `unknown state "${state}"; known: ${Object.keys(states.define).join(", ")}`);
       set[state] = idsOf(entry);
       Object.assign(reasons, reasonsOf(entry));
-      for (const id of set[state]!) if (!isEntity(id)) err(`${base}/set/${state}`, `unknown entity "${id}"`);
+      for (const id of set[state]!) if (!takesState(id)) err(`${base}/set/${state}`, `unknown entity or connection id "${id}"`);
     }
     return { id: x.id, view: viewId, ...(x.heading ? { heading: x.heading === true ? (true as const) : x.heading } : {}), ...(x.callouts ? { callouts: checkCallouts(base, x.callouts) } : {}), ...(open ? { open } : {}), ...opt("zoom", x.zoom), ...opt("scenario", x.scenario), ...opt("step", x.step), ...(x.set ? { set } : {}), ...(Object.keys(reasons).length ? { reasons } : {}), ...(x.play !== undefined ? { play: { scenario: x.play, seconds: x.seconds ?? 3 } } : {}) };
   });

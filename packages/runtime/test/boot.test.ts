@@ -594,3 +594,73 @@ describe("sequence views (R17)", () => {
     expect(state(root, "db")).toBe("degraded");
   });
 });
+
+describe("states on connections (#60)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  const edge = (root: Element, key: string) => vis(root, `[data-edge="${key}"]`);
+  const head = (root: Element, id: string) => root.querySelector(`defs > marker[id="${id}"] path`)?.getAttribute("fill");
+
+  it("a step puts a line in its state: look, arrowhead, reason and no flow; the snapshot reports it; the next step takes it all back", async () => {
+    const root = await doc("connection-states");
+    let last: Snapshot | undefined;
+    rt = mount(root, SIZE);
+    rt.on("change", (s) => { last = s; });
+    expect(rt.snapshot().states["api-to-cache"], "the base model's state").toEqual({ state: "degraded" });
+    expect(rt.snapshot().states["db->cache"], "a connection with no id cannot be named, so it is not listed").toBeUndefined();
+    rt.setScenario("cert-expires", 1);
+    const e = edge(root, "api-to-db");
+    expect(e.classList.contains("st-failed")).toBe(true);
+    expect(e.getAttribute("data-state")).toBe("failed");
+    expect(e.getAttribute("data-pulse")).toBe("1");
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow-st-failed)");
+    expect(head(root, "arrow-st-failed"), "the engine draws the arrowhead it needs").toBe("#dc2626");
+    expect(e.querySelector("title")!.textContent).toBe("TLS certificate expired");
+    expect(flowLoad(root, "api-to-db")).toBe("0");
+    expect(state(root, "db"), "the far end is as the author left it").toBe("on");
+    expect(last!.states["api-to-db"]).toEqual({ state: "failed", reason: "TLS certificate expired" });
+    rt.setScenario("cert-expires", 2);
+    expect([...e.classList]).toEqual(["edge", "edge-sync"]);
+    expect(e.hasAttribute("data-state")).toBe(false);
+    expect(e.hasAttribute("data-pulse")).toBe(false);
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow)");
+    expect(e.querySelector("title")).toBeNull();
+    expect(flowLoad(root, "api-to-db")).toBe("0.6");
+  });
+
+  it("setState and cycle take a connection's id; a look with no colour keeps the plain arrowhead", async () => {
+    const root = await doc("connection-states");
+    rt = mount(root, SIZE);
+    rt.setState("web-to-api", "brownout");
+    const e = edge(root, "web-to-api");
+    expect(e.classList.contains("st-brownout")).toBe(true);
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow-st-brownout)");
+    expect(head(root, "arrow-st-brownout")).toBe("#7c3aed");
+    expect(flowLoad(root, "web-to-api")).toBe("0");
+    rt.setState("web-to-api", "off");
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow)");
+    expect(e.classList.contains("st-off")).toBe(true);
+    rt.setState("web-to-api", "on");
+    expect(flowLoad(root, "web-to-api")).toBe("0.8");
+    rt.cycle("web-to-api");
+    expect(rt.snapshot().states["web-to-api"]).toEqual({ state: "degraded" });
+    expect(root.querySelectorAll('defs > marker[id="arrow-st-brownout"]')).toHaveLength(1);
+  });
+
+  it("a line standing for several connections takes its state and load from its members (R11)", async () => {
+    const root = await doc("connection-states", "closed");
+    rt = mount(root, SIZE);
+    const e = edge(root, "api-to-db");
+    expect(e.getAttribute("data-state")).toBe("degraded");
+    expect(flowLoad(root, "api-to-db"), "the members' loads, summed").toBe("0.9");
+    rt.setScenario("cert-expires", 1);
+    expect(e.getAttribute("data-state")).toBe("failed");
+    expect(e.querySelector("title")!.textContent).toBe("TLS certificate expired");
+    expect(flowLoad(root, "api-to-db")).toBe("0.3");
+    rt.setState("api-to-db", "on");
+    rt.setState("api-to-cache", "on");
+    expect(e.hasAttribute("data-state")).toBe(false);
+    expect(flowLoad(root, "api-to-db")).toBe("0.9");
+  });
+});

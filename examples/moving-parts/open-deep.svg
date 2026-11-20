@@ -84,8 +84,8 @@
 <g class="edges">
 <path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M321.5 68 L321.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M321.5 68 L321.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 461.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 449.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 461.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 449.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="334.5" y="224">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 695.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 670.5 L409.8 670.5 L409.8 683.5" style="stroke-width:1.5;animation:none;opacity:0"/>

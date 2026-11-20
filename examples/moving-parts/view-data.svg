@@ -74,8 +74,8 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M250.5 68 L250.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M250.5 68 L250.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M250.5 68 L250.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M250.5 68 L250.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="263.5" y="136">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 335.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 323.5" style="stroke-width:1.5;animation:none;opacity:0"/>

@@ -41,14 +41,22 @@ Generated from docs/MODEL.md §4 by tools/skill-refs.mjs; edit the specification
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `from`, `to` | id | required | Entity ids. Direction is who initiates. A connection to a group attaches to its frame (R7). |
-| `id` | id | | Required when the same pair has more than one connection, so scenarios can tell them apart. |
+| `id` | id | | A handle in the id space of components and groups (S1). Required when the same pair has more than one connection, and for a step, a what-if or a page to give the connection a state. |
 | `kind` | kind name | `sync` | How it is drawn: the line style bound to that name in `kinds.connections` (4.8). Defaults: `sync` solid, `async` dashed, `replication` dotted, `dataflow` heavy. |
 | `label` | string | | Short text on the line: protocol, purpose. |
 | `load` | 0..1 | 0.5 | Relative traffic; speed and weight of the flow. 0 hides the flow. Scenario steps change it. |
+| `state` | state name | `states.default` | The state of the connection itself: the link is broken or impaired while both ends are fine (a partition, an expired certificate, a firewall rule). The line and its arrowhead take the state's look and a state with `flows: stop` stops its flow (R22, B4). Scenario steps and what-ifs change it. |
 | `bidirectional` | boolean | false | Arrowheads at both ends. Flow still animates from `from` to `to`. |
 | `meta` | object | | Free-form. |
 
-A scenario refers to a connection by `{ "from", "to" }`, or by `{ "id" }` when that pair is ambiguous (S7).
+A step's `load` refers to a connection by `{ "from", "to" }`, or by `{ "id" }` when that pair is ambiguous (S7).
+Its `set` and `restore` name a connection by its `id` alone, in the same list as entities, so a connection that is
+to be given a state needs one.
+
+A line can be still for two different reasons, and they are drawn differently. A line that carries nothing,
+because its load is 0 or because an end of it is in a state that stops flows, is grey and still: idle. A line
+whose own state says so is drawn in that state's look: with the default states, `failed` is red. Neither follows
+from the other; a line beside a failed box is not failed unless the author says it is (B3).
 
 ### 4.4 Group
 
@@ -108,12 +116,12 @@ Step:
 | Field | Type | Meaning |
 |---|---|---|
 | `note` | string | What happens, shown during step-through. |
-| `set` | object: state name → entity id, array of ids, or object of id → reason | Put those entities in that state. `"set": { "failed": "db", "degraded": { "api": "reads from the replica" } }`. A reason is the author's explanation, shown as a tooltip. On a group, the state applies to the group's frame only. |
-| `restore` | entity id or array | Return those entities to their base-model state and drop their reasons. |
+| `set` | object: state name → entity or connection id, array of ids, or object of id → reason | Put those entities in that state. `"set": { "failed": "db", "degraded": { "api": "reads from the replica" } }`. A reason is the author's explanation, shown as a tooltip. On a group, the state applies to the group's frame only. A connection is named by its `id` and the state applies to the line: `"failed": { "api-to-db": "TLS certificate expired" }`. |
+| `restore` | entity or connection id, or array | Return those to their base-model state and drop their reasons. |
 | `callouts` | array of `{ at, text, side? }` | Notes drawn at this step only: `at` is an entity id or a connection id, `text` the explanation, `side` (`top`, `right`, `bottom`, `left`) pins the note; without it the note goes where there is room. The next step says its own thing (R16). |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Set a connection's load. This is how traffic moves in a story: off one path, onto another. |
 
-A step must change at least one thing and may name an entity only once across `set` and `restore` (S8).
+A step must change at least one thing and may name an entity or a connection only once across `set` and `restore` (S8).
 
 ### 4.7 States
 
@@ -141,8 +149,8 @@ defaults, in which case `default` must name a state from `define` (S14).
 
 | Field | Default | Meaning |
 |---|---|---|
-| `look` | `normal` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object with `stroke`, `fill`, `text` (colours), `dash`, `pulse` (animated outline), `opacity` (0..1). The renderer emits exactly this. |
-| `flows` | `keep` | `stop`: connections touching an entity in this state are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic. |
+| `look` | `normal` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object with `stroke`, `fill`, `text` (colours), `dash`, `pulse` (animated outline), `opacity` (0..1). The renderer emits exactly this. On a connection the line and its arrowhead take `stroke`, and the line `dash`, `pulse` and `opacity`; `fill` and `text` have nothing to apply to. The connection's kind still gives the line its width, and its dash unless the look has one. |
+| `flows` | `keep` | `stop`: a connection in this state, and connections touching an entity in this state, are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic and a failed link is not shown carrying any. |
 | `description` | | What the state means to you. Shown in the legend. |
 | `use` | | A states pack (`sre`, with the tool), or a list. A pack is a whole vocabulary: it stands in for the defaults, as `replace` does, and `define` merges onto it. `orrery packs` lists them. |
 

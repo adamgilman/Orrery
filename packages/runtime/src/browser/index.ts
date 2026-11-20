@@ -1,3 +1,4 @@
+import { mergedState } from "@orrery-diagrams/core/declare";
 import { flowDuration, flowStyle } from "@orrery-diagrams/core/internal/flow";
 import { lookOf } from "@orrery-diagrams/core/internal/looks";
 import { scalePath } from "@orrery-diagrams/core/internal/shapes";
@@ -27,7 +28,7 @@ export interface Snapshot {
   scenario: { id: string; step: number; steps: number; note?: string } | null;
   /** On a sequence view: how many of its messages are shown, and how many there are (R17). */
   message: { index: number; count: number } | null;
-  /** Every entity, as drawn. */
+  /** Every entity, and every connection its author gave an id, as drawn. */
   states: Record<string, { state: string; reason?: string }>;
   selected: string | null;
   playing: boolean;
@@ -156,7 +157,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   let lastEffective = session.effective();
   const snapshot = (): Snapshot => {
     const states: Snapshot["states"] = {};
-    for (const e of [...lastEffective.components, ...lastEffective.groups]) states[e.id] = { state: e.state, ...(e.reason !== undefined ? { reason: e.reason } : {}) };
+    for (const e of [...lastEffective.components, ...lastEffective.groups, ...lastEffective.connections]) if (e.id !== undefined) states[e.id] = { state: e.state, ...(e.reason !== undefined ? { reason: e.reason } : {}) };
     const sc = session.scenario;
     const note = sceneNote ?? session.note();
     return {
@@ -169,26 +170,58 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
   const emit = () => { const s = snapshot(); for (const fn of listeners) fn(s); };
 
   /* ---- write the effective model into every layer ---- */
+  const tooltip = (el: Element, reason: string | undefined) => {
+    let t: Element | null = el.querySelector(":scope > title");
+    if (reason) { if (!t) { t = document.createElementNS("http://www.w3.org/2000/svg", "title"); el.insertBefore(t, el.firstChild); } t.textContent = reason; }
+    else t?.remove();
+  };
+  /** Put what is drawn in its state: the class its look hangs on, the state, whether it pulses, and the author's reason. Returns the look. */
+  const wear = (el: Element, e: { state: string; reason?: string }, marked: boolean) => {
+    const look = lookOf(model.states.define[e.state]!);
+    for (const cls of [...el.classList]) if (cls.startsWith("st-")) el.classList.remove(cls);
+    if (marked) { el.classList.add(`st-${e.state}`); el.setAttribute("data-state", e.state); } else el.removeAttribute("data-state");
+    if (marked && look.pulse) el.setAttribute("data-pulse", "1"); else el.removeAttribute("data-pulse");
+    tooltip(el, e.reason);
+    return look;
+  };
+  /** The arrowhead in a state's colour: the file carries the ones its own lines use, and the engine draws any other when a line first needs it. */
+  const arrowhead = (base: "arrow" | "arrow-start", state: string, fill: string): string => {
+    const id = `${base}-st-${state}`, plain = root.querySelector(`defs > marker[id="${base}"]`);
+    if (plain && !root.querySelector(`defs > marker[id="${id}"]`)) {
+      const m = plain.cloneNode(true) as Element;
+      m.setAttribute("id", id);
+      m.querySelector("path")?.setAttribute("fill", fill);
+      plain.parentNode!.appendChild(m);
+    }
+    return id;
+  };
   const apply = () => {
     const d = (lastEffective = session.effective());
     const entities = new Map<string, { state: string; reason?: string }>([...d.components.map((c) => [c.id, c] as const), ...d.groups.map((g) => [g.id, g] as const)]);
     const conns = new Map(d.connections.map((c) => [c.key, c]));
+    const membersOf = (p: Element, key: string) => p.getAttribute("data-members")?.split(" ").map((i) => d.connections[Number(i)]!) ?? [conns.get(key)].flatMap((c) => c ?? []);
     for (const layer of layers.values()) {
       // The current step's callouts show; every other step's stay hidden (R16).
       for (const g of layer.querySelectorAll<SVGGElement>(".callouts-step")) g.style.display = session.scenario && g.getAttribute("data-scenario") === session.scenario.id && Number(g.getAttribute("data-step")) === session.scenario.step ? "" : "none";
       for (const g of layer.querySelectorAll<SVGGElement>("[data-node],[data-group]")) {
         const e = entities.get(g.getAttribute("data-node") ?? g.getAttribute("data-group")!);
         if (!e) continue;
-        for (const cls of [...g.classList]) if (cls.startsWith("st-")) g.classList.remove(cls);
-        g.classList.add(`st-${e.state}`);
-        g.setAttribute("data-state", e.state);
-        if (lookOf(model.states.define[e.state]!).pulse) g.setAttribute("data-pulse", "1"); else g.removeAttribute("data-pulse");
-        let t: Element | null = g.querySelector(":scope > title");
-        if (e.reason) { if (!t) { t = document.createElementNS("http://www.w3.org/2000/svg", "title"); g.insertBefore(t, g.firstChild); } t.textContent = e.reason; }
-        else t?.remove();
+        wear(g, e, true);
+      }
+      // Lines (R22): each in its own state, or, standing for several connections, in the state and load its members give it (R11).
+      const drawn = new Map<string, { state: string; reason?: string; load: number }>();
+      for (const p of layer.querySelectorAll<SVGPathElement>("[data-edge]")) {
+        const key = p.getAttribute("data-edge")!;
+        const members = membersOf(p, key);
+        if (!members.length) continue;
+        const c = { ...mergedState(members, model.states.default), load: Math.min(1, Math.round(members.reduce((sum, m) => sum + m.load, 0) * 100) / 100) };
+        drawn.set(key, c);
+        // a line in the default state is drawn by its kind alone, as the file drew it
+        const stated = c.state !== model.states.default, stroke = wear(p, c, stated).stroke;
+        for (const [attr, id] of [["marker-end", "arrow"], ["marker-start", "arrow-start"]] as const) if (p.hasAttribute(attr)) p.setAttribute(attr, `url(#${stated && stroke ? arrowhead(id, c.state, stroke) : id})`);
       }
       for (const f of layer.querySelectorAll<SVGPathElement>("[data-flow]")) {
-        const c = conns.get(f.getAttribute("data-flow")!);
+        const c = drawn.get(f.getAttribute("data-flow")!);
         if (!c) continue;
         const oldLoad = Number(f.getAttribute("data-load"));
         if (oldLoad === c.load) continue;

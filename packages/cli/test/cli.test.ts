@@ -399,3 +399,27 @@ describe("orrery render --heading", () => {
     expect(readFileSync(join(dir, "b.svg"), "utf8")).toContain("orrery-model");
   });
 });
+
+describe("states on connections (#60)", () => {
+  const f = join(fixtures, "valid/connection-states.json");
+  it("--set gives a connection a state by its id: the line is drawn in it with no flow, and both ends stay as they were", () => {
+    const r = run("render", f, "--static", "--view", "all", "--set", "failed=api-to-db");
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/class="edge edge-sync st-failed" data-edge="api-to-db"[^>]*data-state="failed"[^>]*marker-end="url\(#arrow-st-failed\)"/);
+    expect(r.out).toMatch(/data-flow="api-to-db" data-load="0"/);
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="on"/);
+    expect(r.out).toMatch(/data-node="db"[^>]*data-state="on"/);
+    expect(r.out).toContain('<marker id="arrow-st-failed"');
+  });
+  it("an unknown id is refused, and so is a connection that was given none", () => {
+    const bad = run("render", f, "--set", "failed=nolink");
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain('unknown entity or connection id "nolink"');
+    expect(run("render", f, "--set", "failed=db->cache").code).not.toBe(0);
+  });
+  it("the interactive file carries the rule for a line in every state, so setState can draw any of them", () => {
+    const r = run("render", f);
+    expect(r.code).toBe(0);
+    for (const s of ["degraded", "failed", "off", "brownout"]) expect(r.out).toContain(`.edge.st-${s}{`);
+  });
+});
