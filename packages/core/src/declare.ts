@@ -4,20 +4,21 @@ import type { Callout, Model } from "./types.js";
 export class ModelError extends Error {}
 
 /**
- * Put entities in states, with the author's reasons, and set connection loads. Unknown names or ids throw.
- * A reason is kept only with the state it was given for: setting an entity again without one clears it.
+ * Put entities, and connections named by their id, in states, with the author's reasons, and set connection loads.
+ * Unknown names or ids throw. A reason is kept only with the state it was given for: setting an entity again
+ * without one clears it.
  */
 export function applySet(model: Model, set: Record<string, string[]>, loads: Record<string, number> = {}, reasons: Record<string, string> = {}): Model {
   const states = new Map<string, string>();
   for (const [s, ids] of Object.entries(set)) {
     if (!Object.hasOwn(model.states.define, s)) throw new ModelError(`unknown state "${s}"; known: ${Object.keys(model.states.define).join(", ")}`);
     for (const id of ids) {
-      if (!model.components.some((c) => c.id === id) && !model.groups.some((g) => g.id === id)) throw new ModelError(`unknown entity "${id}"`);
+      if (!model.components.some((c) => c.id === id) && !model.groups.some((g) => g.id === id) && !model.connections.some((c) => c.id === id)) throw new ModelError(`unknown entity or connection id "${id}"`);
       states.set(id, s);
     }
   }
-  const place = <E extends { id: string; state: string; reason?: string }>(e: E): E => {
-    if (!states.has(e.id)) return e;
+  const place = <E extends { id?: string; state: string; reason?: string }>(e: E): E => {
+    if (e.id === undefined || !states.has(e.id)) return e;
     const { reason, ...rest } = e;
     const why = reasons[e.id];
     return { ...rest, state: states.get(e.id)!, ...(why !== undefined ? { reason: why } : {}) } as E;
@@ -26,7 +27,7 @@ export function applySet(model: Model, set: Record<string, string[]>, loads: Rec
     ...model,
     components: model.components.map(place),
     groups: model.groups.map(place),
-    connections: model.connections.map((c) => (Object.hasOwn(loads, c.key) ? { ...c, load: loads[c.key]! } : c)),
+    connections: model.connections.map((c) => place(Object.hasOwn(loads, c.key) ? { ...c, load: loads[c.key]! } : c)),
   };
 }
 
@@ -59,7 +60,7 @@ export function declare(model: Model, d: Declaration = {}): { model: Model; step
     step = d.step ?? sc.steps.length;
     steps = sc.steps.length;
     if (!Number.isInteger(step) || step < 1 || step > steps) throw new ModelError(`scenario "${d.scenario}": step must be between 1 and ${steps}`);
-    const base = new Map<string, string>([...model.components.map((c) => [c.id, c.state] as const), ...model.groups.map((g) => [g.id, g.state] as const)]);
+    const base = new Map<string, string>([...model.components.map((c) => [c.id, c.state] as const), ...model.groups.map((g) => [g.id, g.state] as const), ...model.connections.flatMap((c) => (c.id !== undefined ? [[c.id, c.state] as const] : []))]);
     for (const st of sc.steps.slice(0, step)) {
       for (const [s, ids] of Object.entries(st.set)) for (const id of ids) { states.set(id, s); reasons.delete(id); }
       for (const [id, why] of Object.entries(st.reasons)) reasons.set(id, why);
@@ -78,12 +79,24 @@ export function declare(model: Model, d: Declaration = {}): { model: Model; step
 }
 
 /**
- * The one drawing rule over declared loads (MODEL.md §5.2): a connection touching an entity whose state has
- * `flows: stop` is drawn with no flow. Every other load is exactly as declared. Pure.
+ * The one drawing rule over declared loads (MODEL.md §5.2): a connection whose own state has `flows: stop`, or
+ * touching an entity whose state has, is drawn with no flow. Every other load is exactly as declared. Pure.
  */
 export function stopFlows(model: Model): Model {
+  const halts = (state: string) => model.states.define[state]?.flows === "stop";
   const stops = new Set<string>();
-  for (const e of [...model.components, ...model.groups]) if (model.states.define[e.state]?.flows === "stop") stops.add(e.id);
-  if (stops.size === 0) return model;
-  return { ...model, connections: model.connections.map((c) => (stops.has(c.from) || stops.has(c.to) ? { ...c, load: 0 } : c)) };
+  for (const e of [...model.components, ...model.groups]) if (halts(e.state)) stops.add(e.id);
+  if (stops.size === 0 && !model.connections.some((c) => halts(c.state))) return model;
+  return { ...model, connections: model.connections.map((c) => (c.load !== 0 && (halts(c.state) || stops.has(c.from) || stops.has(c.to)) ? { ...c, load: 0 } : c)) };
+}
+
+/**
+ * The state and reason of a line standing for several connections (R11). Nothing ranks one state above another,
+ * so the line takes the first member, in declaration order, that is not in the default state; its reason lists
+ * every such member's. Shared by view scoping and the runtime.
+ */
+export function mergedState(members: readonly { state: string; reason?: string }[], fallback: string): { state: string; reason?: string } {
+  const marked = members.filter((m) => m.state !== fallback);
+  const reasons = marked.flatMap((m) => (m.reason !== undefined ? [m.reason] : []));
+  return { state: marked[0]?.state ?? fallback, ...(reasons.length ? { reason: reasons.join("; ") } : {}) };
 }

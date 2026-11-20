@@ -34,7 +34,7 @@ describe("the README's Try it", () => {
 });
 
 /** The same for the raster pictures: the GIF and the PNG in "Two ways out" are what the commands beside them write. */
-describe("the README's PNG and GIF (R19)", () => {
+describe("the README's PNG and GIF (R21)", () => {
   const out = readme.slice(readme.indexOf("## Two ways out"), readme.indexOf("## Installing"));
   it("shows a GIF and a PNG the examples script writes with the commands given", () => {
     expect(out).toContain("](examples/checkout/primary-fails.gif)");

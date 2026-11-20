@@ -1,5 +1,5 @@
 /**
- * PNG and GIF of an animated picture (MODEL.md R19). A PNG is the picture at rest; a GIF is one loop of it, every
+ * PNG and GIF of an animated picture (MODEL.md R21). A PNG is the picture at rest; a GIF is one loop of it, every
  * frame the SVG frozen at its moment and rasterised, so both show what the SVG shows and nothing is drawn twice.
  * The GIF writer is here, whole: the format is small, and a picture of flat colours needs little from a quantiser.
  */

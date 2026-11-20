@@ -116,14 +116,22 @@ the id.
 | Field | Type | Default | Meaning |
 |---|---|---|---|
 | `from`, `to` | id | required | Entity ids. Direction is who initiates. A connection to a group attaches to its frame (R7). |
-| `id` | id | | Required when the same pair has more than one connection, so scenarios can tell them apart. |
+| `id` | id | | A handle in the id space of components and groups (S1). Required when the same pair has more than one connection, and for a step, a what-if or a page to give the connection a state. |
 | `kind` | kind name | `sync` | How it is drawn: the line style bound to that name in `kinds.connections` (4.8). Defaults: `sync` solid, `async` dashed, `replication` dotted, `dataflow` heavy. |
 | `label` | string | | Short text on the line: protocol, purpose. |
 | `load` | 0..1 | 0.5 | Relative traffic; speed and weight of the flow. 0 hides the flow. Scenario steps change it. |
+| `state` | state name | `states.default` | The state of the connection itself: the link is broken or impaired while both ends are fine (a partition, an expired certificate, a firewall rule). The line and its arrowhead take the state's look and a state with `flows: stop` stops its flow (R22, B4). Scenario steps and what-ifs change it. |
 | `bidirectional` | boolean | false | Arrowheads at both ends. Flow still animates from `from` to `to`. |
 | `meta` | object | | Free-form. |
 
-A scenario refers to a connection by `{ "from", "to" }`, or by `{ "id" }` when that pair is ambiguous (S7).
+A step's `load` refers to a connection by `{ "from", "to" }`, or by `{ "id" }` when that pair is ambiguous (S7).
+Its `set` and `restore` name a connection by its `id` alone, in the same list as entities, so a connection that is
+to be given a state needs one.
+
+A line can be still for two different reasons, and they are drawn differently. A line that carries nothing,
+because its load is 0 or because an end of it is in a state that stops flows, is grey and still: idle. A line
+whose own state says so is drawn in that state's look: with the default states, `failed` is red. Neither follows
+from the other; a line beside a failed box is not failed unless the author says it is (B3).
 
 ### 4.4 Group
 
@@ -183,12 +191,12 @@ Step:
 | Field | Type | Meaning |
 |---|---|---|
 | `note` | string | What happens, shown during step-through. |
-| `set` | object: state name → entity id, array of ids, or object of id → reason | Put those entities in that state. `"set": { "failed": "db", "degraded": { "api": "reads from the replica" } }`. A reason is the author's explanation, shown as a tooltip. On a group, the state applies to the group's frame only. |
-| `restore` | entity id or array | Return those entities to their base-model state and drop their reasons. |
+| `set` | object: state name → entity or connection id, array of ids, or object of id → reason | Put those entities in that state. `"set": { "failed": "db", "degraded": { "api": "reads from the replica" } }`. A reason is the author's explanation, shown as a tooltip. On a group, the state applies to the group's frame only. A connection is named by its `id` and the state applies to the line: `"failed": { "api-to-db": "TLS certificate expired" }`. |
+| `restore` | entity or connection id, or array | Return those to their base-model state and drop their reasons. |
 | `callouts` | array of `{ at, text, side? }` | Notes drawn at this step only: `at` is an entity id or a connection id, `text` the explanation, `side` (`top`, `right`, `bottom`, `left`) pins the note; without it the note goes where there is room. The next step says its own thing (R16). |
 | `load` | array of `{ from, to, load }` or `{ id, load }` | Set a connection's load. This is how traffic moves in a story: off one path, onto another. |
 
-A step must change at least one thing and may name an entity only once across `set` and `restore` (S8).
+A step must change at least one thing and may name an entity or a connection only once across `set` and `restore` (S8).
 
 ### 4.7 States
 
@@ -216,8 +224,8 @@ defaults, in which case `default` must name a state from `define` (S14).
 
 | Field | Default | Meaning |
 |---|---|---|
-| `look` | `normal` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object with `stroke`, `fill`, `text` (colours), `dash`, `pulse` (animated outline), `opacity` (0..1). The renderer emits exactly this. |
-| `flows` | `keep` | `stop`: connections touching an entity in this state are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic. |
+| `look` | `normal` | A preset name (`normal`, `warn`, `alert`, `muted`, `highlight`) or a style object with `stroke`, `fill`, `text` (colours), `dash`, `pulse` (animated outline), `opacity` (0..1). The renderer emits exactly this. On a connection the line and its arrowhead take `stroke`, and the line `dash`, `pulse` and `opacity`; `fill` and `text` have nothing to apply to. The connection's kind still gives the line its width, and its dash unless the look has one. |
+| `flows` | `keep` | `stop`: a connection in this state, and connections touching an entity in this state, are drawn with no flow, whatever their load. A drawing rule, so a failed box is not shown receiving traffic and a failed link is not shown carrying any. |
 | `description` | | What the state means to you. Shown in the legend. |
 | `use` | | A states pack (`sre`, with the tool), or a list. A pack is a whole vocabulary: it stands in for the defaults, as `replace` does, and `define` merges onto it. `orrery packs` lists them. |
 
@@ -327,7 +335,7 @@ inside an image tag anywhere.
 `play` and `scenario` are exclusive (S16).
 
 `orrery export --png` or `--gif` writes every entry as `<id>.png` or `<id>.gif` instead, for where an SVG is not
-taken: the picture at rest, or one loop of it (R19). The format is the command's, not the model's: an export says
+taken: the picture at rest, or one loop of it (R21). The format is the command's, not the model's: an export says
 what a picture shows, and the same entry is an SVG in the README and a GIF in a chat.
 
 ### 4.10 Warnings
@@ -339,18 +347,19 @@ lines will be drawn, which is usually a mistake. Warnings carry a pointer like e
 
 ### 5.1 States are declared
 
-Every entity has exactly the state the author gave it: in the base model (`state`, default `states.default`),
+Every entity, and every connection, has exactly the state the author gave it: in the base model (`state`, default `states.default`),
 changed by scenario steps in order, then by a what-if (`--set`, an export's or a tour scene's `set`, or a page's
 call to the engine). No click or key inside the interactive file changes a state: a reader cannot draw a picture
 the author did not write. Nothing computes a state from another state. A group's state is the group's own; members keep
-theirs until a step sets them. A reason set alongside a state travels with it until the entity is set again or
-restored.
+theirs until a step sets them. A connection's state is the connection's own in the same way: it says nothing
+about either end, and neither end's state says anything about it. A reason set alongside a state travels with it
+until the entity is set again or restored.
 
 ### 5.2 Flow
 
 A connection is drawn with the load the author gave it: the base `load`, changed by scenario steps. One drawing
-rule applies on top: a connection touching an entity whose state has `flows: stop` is drawn with no flow. Loads
-never move on their own.
+rule applies on top: a connection whose own state has `flows: stop`, or touching an entity whose state has, is
+drawn with no flow. Loads never move on their own.
 
 ### 5.3 Scenarios
 
@@ -372,14 +381,14 @@ kept and the outside end becomes a ghost at the top level (R4).
 
 | # | Invariant | Test |
 |---|---|---|
-| S1 | Component and group ids are unique and share one id space. | validate.test: invalid fixtures `duplicate-id`, `id-clash-component-group` |
+| S1 | Component and group ids are unique and share one id space; a connection's id, when given, is in it too, so an id names one thing a state can be given to. | validate.test: invalid fixtures `duplicate-id`, `id-clash-component-group`, `id-clash-connection-entity` |
 | S2 | Connection ids (when given), view ids and scenario ids are unique within their kind. | invalid fixtures `duplicate-connection-id`, `duplicate-view-id`, `scenario-duplicate-id` |
-| S3 | Every reference resolves: component→group, group→parent, connection ends, view scope, `only` and `collapse` (groups inside the scope), scenario `set`/`restore`/`load`. | invalid fixtures `unknown-*`, `scenario-unknown-*`, `collapse-*` |
+| S3 | Every reference resolves: component→group, group→parent, connection ends, view scope, `only` and `collapse` (groups inside the scope), scenario `set`/`restore`/`load`. A `set` or `restore`, in a step, an export, a scene or on the command line, names an entity or a connection by its id; a connection without an id cannot be named. | invalid fixtures `unknown-*`, `scenario-unknown-*`, `collapse-*`, `connection-state-unknown`; cli.test "states on connections (#60)" |
 | S4 | Groups form a forest: no cycles, no self-parent. | invalid fixture `group-cycle` |
 | S5 | No connection from an entity to itself, nor between an entity and one of its own ancestors or descendants. | invalid fixtures `self-connection`, `connection-to-ancestor` |
 | S6 | Two connections between the same ordered pair must both carry ids. | invalid fixture `parallel-without-ids` |
 | S7 | A connection reference by `{from,to}` must be unambiguous; otherwise the reference must use `id`. | invalid fixture `ambiguous-connection-ref`; valid fixture `parallel` |
-| S8 | A scenario step changes at least one thing and names each entity at most once across `set` and `restore`. | invalid fixtures `scenario-empty-step`, `scenario-conflicting-verbs` |
+| S8 | A scenario step changes at least one thing and names each entity, and each connection, at most once across `set` and `restore`. | invalid fixtures `scenario-empty-step`, `scenario-conflicting-verbs`, `connection-state-unknown` |
 | S9 | A scenario step's `set` names each entity once, as an id, in a list, or as an id with a reason. | invalid fixture `scenario-conflicting-verbs`; validate.test "normalisation" |
 | S11 | Every schema property has a description; unknown properties are errors. | schema.test; invalid fixture `unknown-property` |
 | S12 | Only `components` is required; a file of components alone is valid. | validate.test "normalisation (S12, defaults)"; valid fixtures `minimal`, `sketch` |
@@ -390,8 +399,8 @@ kept and the outside end becomes a ghost at the top level (R4).
 | S17 | Opening and zooming are declared apart and checked the same way in a scene and an export: every `open` id is a group in the view's `collapse`, and a group inside another closed group needs that one in `open` too, so what is open is exactly what is written; `zoom` is an entity not inside a closed group. `open` is kept in declaration order. | invalid fixtures `open-and-zoom`, `tour-bad-zoom`; validate.test "exports (S16)" |
 | B1 | Declaring is pure, deterministic and never mutates its input. | declare.test "pure (B1)" |
 | B2 | Scenario steps are cumulative; step *k* equals the base model with steps 1..*k* applied; `restore` returns to the base model and drops reasons; a what-if applies last. | declare.test "scenario steps (B2)" |
-| B3 | No state is ever computed: with no step naming an entity, its state is its base-model state whatever happens around it. | declare.test "nothing is inferred (B3)" |
-| B4 | A connection touching an entity whose state stops flows is drawn with load 0; every other load is exactly as declared. | declare.test "flow (B4)" |
+| B3 | No state is ever computed: with no step naming an entity, its state is its base-model state whatever happens around it. The same holds between a connection and its ends: neither takes a state from the other. | declare.test "nothing is inferred (B3)", "states on connections (#60)" |
+| B4 | A connection whose own state stops flows, or touching an entity whose state does, is drawn with load 0; every other load is exactly as declared. | declare.test "flow (B4)", "states on connections (#60)" |
 | R1 | The file never contains coordinates; layout is deterministic. | schema (no coordinate fields); layoutContract "is deterministic" |
 | R2 | Rendering is byte-deterministic for the same model. | render.test "escapes text, is deterministic"; cli.test "byte-for-byte deterministic" |
 | R3 | A connection is drawn by its kind's line style, preset or author-defined, never by its name. | render.test "draws connections by their kind's line" |
@@ -400,8 +409,8 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R6 | Order in the file is a layout signal: siblings keep declaration order. | elk.test "model order" |
 | R7 | A connection whose end is a group attaches to that group's frame; an empty group is drawn as a frame of minimum size. | layoutContract "(group endpoints)" |
 | R8 | An entity is drawn by its state's look and its kind's glyph or frame, never by the names; a custom look or kind renders exactly its style object; an author's reason is its tooltip. | render.test "looks and kinds (R8)" |
-| R9 | A legend lists every non-default state used in a view with its look and description. | render.test "legend (R9)" |
-| R11 | A closed group is drawn as one box the size of a component: its name centred, an expand mark, nothing inside. In the interactive file a group a view could draw closed carries a collapse mark while it is open, and a click on that frame's own chrome closes that one group; a still draws no such mark, since nothing there can be clicked. An open frame is never narrower than its own title band, the label, the count and that corner mark, whatever its contents measure. `replicas` on a group says how many identical instances run: the closed frame is stacked and counted, the boxes behind take no clicks, and opening it drills into one of them. Its members and everything below them leave the view; connections to them re-attach to the box, and several onto one pair of boxes merge into one line with their loads summed. Every set of open groups is its own layout. Opening or closing a group (a scene's `open`, a click on a closed box, or a page's call) moves the picture to that layout: shared entities slide, frames resize, edges are swapped, what appears fades in once settled. Zooming is a separate action (a scene's `zoom`, Enter or a double-click, or a page's call): the camera closes on one entity in whatever layout is showing, and opening does not zoom. Closed groups nest to any depth; opening an inner one means its closed ancestors are open too. Escape zooms out first, then closes the innermost open group. The interactive file carries one layer per way the view's closed groups can be open. | view.test "collapsed groups (R11)"; render.test "closed groups (R11)"; boot.test "drill-down" |
+| R9 | A legend lists every non-default state used in a view, on an entity or on a connection, with its look and description. A state only connections are in has a line for its swatch, not a box. | render.test "legend (R9)", "states on connections (#60, R22)" |
+| R11 | A closed group is drawn as one box the size of a component: its name centred, an expand mark, nothing inside. In the interactive file a group a view could draw closed carries a collapse mark while it is open, and a click on that frame's own chrome closes that one group; a still draws no such mark, since nothing there can be clicked. An open frame is never narrower than its own title band, the label, the count and that corner mark, whatever its contents measure. `replicas` on a group says how many identical instances run: the closed frame is stacked and counted, the boxes behind take no clicks, and opening it drills into one of them. Its members and everything below them leave the view; connections to them re-attach to the box, and several onto one pair of boxes merge into one line with their loads summed. Every set of open groups is its own layout. Opening or closing a group (a scene's `open`, a click on a closed box, or a page's call) moves the picture to that layout: shared entities slide, frames resize, edges are swapped, what appears fades in once settled. Zooming is a separate action (a scene's `zoom`, Enter or a double-click, or a page's call): the camera closes on one entity in whatever layout is showing, and opening does not zoom. Closed groups nest to any depth; opening an inner one means its closed ancestors are open too. Escape zooms out first, then closes the innermost open group. The interactive file carries one layer per way the view's closed groups can be open. Several connections that land on one pair of boxes are drawn as one line that names them: its load is theirs summed, capped at one, each already stopped by its own state or its own ends; its state is that of the first of them, in the order they are written, that is not in the default state, and its reason lists every such member's. Nothing ranks one state above another, so the order is the author's. | view.test "collapsed groups (R11)", "states on merged connections (#60, R11)"; render.test "closed groups (R11)"; boot.test "drill-down", "states on connections (#60)" |
 | R12 | A tour whose scenes share one view is one drawing that moves. Each scene says which closed groups are open and what the camera closes on, every distinct set of open groups has its own layout, and the drawing holds the union of entities: each has a position track, a visibility track and one variant per state it takes; a group's frame also has a size track and swaps its title for its summary. Edges are one set per distinct drawing. A transition has three phases that never overlap: what leaves fades (caption, entities, edges), then positions, sizes and the camera ease to the new layout, then what arrives fades in. States crossfade over the whole window. The camera closes on the scene's zoom in its layout, or fits the whole layout, clipped to the stage; the legend and caption are a fixed strip below. Everything shown per scene carries whether it is visible at t = 0, so a still keeps exactly the first scene. Scenes across views crossfade between whole views. | render.test "tour of views (R12)"; raster document.test "tours"; boot.test "runtime tour" |
 | R10 | A playing view carries one complete layer per step on one shared layout, cycled by CSS with the declared period, each captioned with its step note; frame tooling inspects the base step; the runtime replaces the cycle with its own timer, stopped by the first interaction. | render.test "plays a scenario (R10)"; raster document.test "playing views"; boot.test "autoplay" |
 | R13 | A pack is data merged into the model before validation continues: kinds under the pack's prefix, states as they are. Defaults, then packs in order, then the author's own definitions; a states pack stands in for the default states. An icon glyph is drawn as a nested `<svg>` in the glyph slot, in its own colours, and a kind's colon is escaped in the stylesheet. Nothing in the renderer knows a provider. The interactive file embeds only the kinds and shapes the model's entities use, never a pack whole. | packs.test; render.test "icon glyphs and namespaced kinds (R13)"; cli.test "orrery packs"; invalid fixture `unknown-pack`; document.test "only the kinds and shapes the model uses" |
@@ -409,8 +418,11 @@ kept and the outside end becomes a ghost at the top level (R4).
 | R15 | A picture asked for a heading carries the title at 16 and the description at 12, wrapped to the picture's width, centred unless the export or command line says `left`, in a band above the scene on a white backing: the view's title and description, else the model's. The canvas grows by the band; a zoom crop keeps it; the interactive file marks the band's height and the runtime's camera works in the screen below it. Nothing else moves. | render.test "heading (R15)"; document.test "heading"; boot.test "heading"; cli.test "--heading" |
 | R16 | A callout is drawn at the moment it was declared for: the model's standing ones on every picture, a step's at that step only, a scene's or an export's with its what-if. It points at what it names, or at the closed box standing for it, and leaves the picture with it. Placed on the side with the least overlap (right, bottom, left, top on a tie) unless the author pins one; the canvas grows to hold it, moving the picture over for a note past the top or left edge. In play and tours the notes arrive and leave with their moment; the interactive file carries every step's, hidden, and shows the current step's. | validate.test, declare.test, view.test, render.test, document.test, boot.test "callouts (R16)" |
 | R17 | A sequence view draws its messages in order between the entities they touch, in order of first appearance, each participant as its own box in its state on a lifeline; every message runs over a declared connection or is an error (a self-message excepted), in the line of its kind, a reply dashed; a call opens an activation on its receiver and the receiver's reply closes it, an unanswered call stays active to the end; columns are spaced by the widest label between them; `play` reveals one message per period as a visibility track; the runtime steps the messages with next, prev and the brackets and reports `message` in the snapshot. Exports, scenario moments, callouts and the heading apply as to any view. | validate.test (sequence fixtures); sequence.test; boot.test "sequence views" |
-| R19 | A PNG or a GIF is a raster of the enclosed SVG the same options draw, on white, in fonts that come with the tool: same model and options, same bytes. A PNG is that picture at t = 0. A GIF is one loop of it, each frame the SVG frozen at its moment, evenly spaced, looping for ever. The loop is the whole cycle of a playing view or a tour; for a picture of flows it is the shortest, up to 8 s, in which every flow and the pulse completes whole cycles: exactly when one exists, else the shortest that moves no period by more than 5%, else the one that moves them least. Each period is then the nearest that fits, so the frame after the last is the first and a slower flow is never drawn faster than a quicker one; the SVG's own periods are untouched. A picture in which nothing moves is a GIF of one frame. Colours are kept exactly when the frames have at most 255, and otherwise the most used ones are. | raster gif.test "the loop of an animated picture (R19)", "encodeGif (R19)", "renderGif (R19)", "renderPng (R19)"; cli.test "PNG and GIF (R19)"; readme.test "PNG and GIF (R19)" |
 | R18 | What is drawn in a component or a closed group, its label, tech line, glyph, badge and expand mark, is inside the outline of its shape at every size. Each is placed in the shape's content rectangle: its `inner` rectangle scaled with the node, or without one the box less its `pad`. A shape with an `inner` is measured so that rectangle holds the contents, and never smaller than its `pad` makes it. Every preset is held to it across label lengths, with and without a tech line, a glyph and replicas. An open frame drawn with a shape is not covered: its title and members are placed by `pad`. | shapes.test "contents stay inside the outline (R18)"; issues.test "#51"; invalid fixture `bad-shape` |
+| R19 | Every rendered picture paints its own background: one white `backing` rectangle the size of its viewBox, corners eased, behind the heading and the scene, so the picture reads the same on a dark page as on a light one. A zoomed picture's starts where its viewBox does. Mounted, the engine removes it and paints the element it fills instead. A page that wants the picture transparent styles `.backing`. | render.test "a picture paints its own background (R19)"; boot.test "takes the file's backing out" |
+| R20 | The interactive file opened on its own draws a strip along its bottom edge when the model gives a reader somewhere to go: more than one view in the file, a scenario, or a sequence's messages. It names the view, the scenario and step (or the message), and carries the step's note or the tour's caption. Each line has a previous and a next target: views go round; scenario steps are walked as one line, every step of every scenario in the order written, back from the first to the picture as written, stopping at the last; messages are stepped as the brackets step them; a cross leaves the scenario. A target is 44 by 44 as the reader sees it, whatever width a phone lays the file out at, and none overlaps another. A tap stops a play as any interaction does, reaches only pictures the author wrote, and never sets a state; the keyboard is unchanged. The strip is outside the scene, the camera fits the picture above it, and its height does not change from step to step. The engine draws it, so nothing of it is in the file as written: a still, an image tag and an animation show none, and a page that mounts the engine gets none unless it asks. | boot.test "the strip (R19)"; bundle.test "minified runtime inside a rendered SVG document" |
+| R21 | A PNG or a GIF is a raster of the enclosed SVG the same options draw, on white, in fonts that come with the tool: same model and options, same bytes. A PNG is that picture at t = 0. A GIF is one loop of it, each frame the SVG frozen at its moment, evenly spaced, looping for ever. The loop is the whole cycle of a playing view or a tour; for a picture of flows it is the shortest, up to 8 s, in which every flow and the pulse completes whole cycles: exactly when one exists, else the shortest that moves no period by more than 5%, else the one that moves them least. Each period is then the nearest that fits, so the frame after the last is the first and a slower flow is never drawn faster than a quicker one; the SVG's own periods are untouched. A picture in which nothing moves is a GIF of one frame. Colours are kept exactly when the frames have at most 255, and otherwise the most used ones are. | raster gif.test "the loop of an animated picture (R19)", "encodeGif (R19)", "renderGif (R19)", "renderPng (R19)"; cli.test "PNG and GIF (R19)"; readme.test "PNG and GIF (R19)" |
+| R22 | A connection in a state other than the default is drawn in that state's look, never by the state's name: the line and its arrowhead in the look's `stroke`, the line with its `dash`, `pulse` and `opacity`, the author's reason as its tooltip. The kind still gives the line its width, and its dash unless the look has one. A connection in the default state is drawn by its kind alone, byte for byte as before connections had states, and a still carries the arrowhead and the rule of only the states its own lines are in. The interactive file carries the rule for every state, its engine draws an arrowhead when a line first needs one, `setState` and `cycle` take a connection's id, and the snapshot lists every connection that has an id. A message in a sequence view is drawn by its kind only. | render.test "states on connections (#60, R22)"; raster pulse.test "a line in a state (#60, R22)"; boot.test "states on connections (#60)"; cli.test "states on connections (#60)" |
 
 ## 7. Non-goals (v1)
 
@@ -438,6 +450,23 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   step it through the author's states, a gesture left from when the tool worked out what a failure did to the rest.
   With nothing inferred it changed one box and its flows, a picture nobody wrote, and a stray click was enough to
   draw it. A page's own controls still call `setState` and `cycle` on the engine.
+- **A strip for the reader with no keyboard (2026-11-13).** In the file opened on its own, starting and stepping a
+  scenario and switching views were keys only, so on a phone the part most worth seeing could not be reached. The
+  file now draws one strip along its bottom edge (R20): the view, the scenario step and its note, with previous and
+  next targets and a cross to leave. This is not the panel coming back. The panel was a general control surface in
+  a `foreignObject` that also set states; the strip only walks the author's own views and steps, which is what the
+  click rule above protects, and it is plain SVG the engine draws at mount. Drawn by the script, it cannot appear
+  where nothing can be tapped (an image tag, a still), which is the collapse mark's rule kept by construction
+  rather than by a render option, and the renderer and the file's bytes as written do not change. A page that
+  mounts the engine still gets no controls and brings its own. Scenario steps are one line across scenarios because
+  the tap equivalent of `s` (tap the name to change scenario) is not discoverable, and with one-step scenarios the
+  step arrows alone would do nothing. Rejected: tap targets on the caption (the interactive file has no caption
+  until a scenario is on, so there is nothing to tap to start one); swipes or tapping the left and right halves of
+  the picture (invisible, and they collide with selecting, opening and the browser's own pan and zoom); a strip
+  written by the renderer and hidden in stills (a second place to keep in step with the engine, bytes in every
+  file, and an image tag would show targets that do nothing); HTML controls in a `foreignObject` (the SVG never
+  contains HTML). A phone lays a bare SVG out about 980 wide and shows it small, so the strip is drawn at the size
+  the reader sees, read from the visual viewport's scale; without that a 44px target is 17 on the glass.
 - **Connections to groups, including empty ones,** after first rejecting them for layout reasons. A group is an
   entity with a state of its own; layout risk is an adapter problem.
 - **A group's state is its own.** Setting a region off does not set its members; list them. Explicit beats a
@@ -463,6 +492,13 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   is what most readers see; nothing is embedded, so a README picture stays small. Legend rows on a 22px pitch with
   16px above; captions in a 28px strip. Rejected: a sentence-case group title (a title and a label would look
   alike); embedding a font subset in every picture (80 KB each).
+- **A picture brings its background (2026-11-13).** Pictures were transparent, and every colour in one, the
+  defaults and the author's own looks, frames and lines, was chosen against white. In a README under a dark theme
+  the group titles and connection labels, dark text with a white halo, became smudges. The picture now carries a
+  white backing. Rejected: a dark variant switched by `prefers-color-scheme` (an image follows the system's
+  setting, a page such as GitHub its own, so the two can disagree; and the tool cannot darken colours the author
+  declared); a `background` property in the model (nobody has asked for another colour, and a page can style
+  `.backing`).
 - **Contents go where the outline is not (2026-11-13).** A label was centred in the node's box and kept off the
   outline by a fixed `pad`, which holds for a rectangle and fails for anything else: a cloud's lobe line crossed
   every label, a badge sat at a corner no curved outline reaches, and a long label on a diamond or a
@@ -486,11 +522,25 @@ Recorded so the reasoning is not lost. Dates are 2026-09-05.
   of the CLI (the install would no longer be the author's own act) and a licence note inside core (a note does not
   change what the manifest says).
 - **PNG and GIF are formats of the command, not fields of the model (2026-11-13).** `render -o x.png`, `-o x.gif`
-  and `export --png`, `--gif` rasterise the picture the same options draw as an SVG (R19). An export's entry does
+  and `export --png`, `--gif` rasterise the picture the same options draw as an SVG (R21). An export's entry does
   not name a format: it says what a picture shows, and the same entry is wanted as an SVG in a README and a GIF in
   a chat. A GIF has to end, which an SVG's animation does not: flows of unrelated loads line up again only after
   minutes, so a GIF gives each flow the nearest period that fits a loop of a few seconds. The alternative, exact
   periods and a jump where the loop restarts, keeps every frame true and makes the one thing a reader notices
   wrong. Design: docs/design/notes/2026-11-13-png-gif-export-design.md.
+- **A connection has a state of its own (2026-11-20, #60).** Only entities had states, so a link that broke
+  between two healthy services could be shown only by failing one of its ends, which misstates the incident, or
+  by setting its load to 0, which draws it grey and still: idle, not broken. A connection now takes any of the
+  author's states, in the base model or from a step, a what-if or a page, named by its `id` in the same `set`
+  and `restore` as entities; the line wears the state's look and a state that stops flows stops its own.
+  Connection ids therefore join the id space of components and groups, which is the one breaking edge: a file
+  whose connection id equals an entity id is now an error (S1). Grey stays "nothing to carry" and the state's
+  colour means "this link": a line beside a failed box is not drawn failed, because nothing is inferred (B3).
+  Rejected: a separate vocabulary of connection states (the author's states are one vocabulary, and a custom
+  state works on a line as on a box); naming a connection in `set` by its ends (the id-less key `a->b` is not
+  an id, and `load` needs `{from, to}` only because it predates ids being cheap); and, for a line standing for
+  several connections between closed groups, taking "the most severe" member's state: states are the author's
+  names and nothing ranks them, so the line takes the first member's that is not the default, in the order the
+  connections are written, and lists every reason.
 - **Rejected:** health expressions (a second syntax inside JSON); inferring anything from connections; a linter
   that argues with the author's scenario; default connection ids like `a->b` in the user-facing model.

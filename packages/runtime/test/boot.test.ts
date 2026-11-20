@@ -151,6 +151,14 @@ describe("mount: the engine's interface", () => {
     expect(rt.snapshot()).toMatchObject({ scenario: null, selected: null, zoom: null, open: [] });
   });
 
+  it("takes the file's backing out: mounted, the diagram fills its element and paints that instead (R19)", async () => {
+    const root = await doc("alternatives");
+    expect(root.querySelector(":scope > rect.backing"), "the file carries a backing for the image tag").not.toBeNull();
+    rt = mount(root, SIZE);
+    expect(root.querySelector("rect.backing")).toBeNull();
+    expect(root.style.background).toMatch(/#fff|rgb\(255, 255, 255\)/);
+  });
+
   it("destroy stops listening and leaves the diagram as it is", async () => {
     const root = await doc("alternatives");
     rt = mount(root, SIZE);
@@ -584,5 +592,219 @@ describe("sequence views (R17)", () => {
     expect(state(root, "db")).toBe("on");
     rt.setState("db", "degraded");
     expect(state(root, "db")).toBe("degraded");
+  });
+});
+
+describe("the strip (R20)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  const PHONE = { size: { width: 390, height: 760 }, controls: true };
+  const row = (root: Element, name: string) => root.querySelector(`.strip [data-strip="${name}"]`);
+  const tap = (root: Element, name: string, what: string) => click(row(root, name)!.querySelector(`[data-do="${what}"]`)!);
+  const text = (root: Element, name: string) => row(root, name)!.querySelector("text")!.textContent;
+  const off = (root: Element, name: string, what: string) => row(root, name)!.querySelector(`[data-do="${what}"]`)!.classList.contains("off");
+  const note = (root: Element) => root.querySelector(".strip .strip-note")!.textContent;
+
+  it("a page that mounts the engine gets no strip; nor does a file with one view and no scenario", async () => {
+    rt = mount(await doc("alternatives"), SIZE);
+    expect(document.querySelector(".strip")).toBeNull();
+    rt.destroy();
+    const root = await doc("minimal");
+    rt = mount(root, PHONE);
+    expect(rt.views).toHaveLength(1);
+    expect(rt.scenarios).toHaveLength(0);
+    expect(root.querySelector(".strip")).toBeNull();
+  });
+
+  it("taps walk every authored step of every scenario in order, back out to the picture as written, and leave at once; the keyboard is as it was", async () => {
+    const root = await doc("alternatives");
+    rt = mount(root, PHONE);
+    expect(root.querySelector(".strip")!.parentNode).toBe(root); // outside the scene: the camera never moves it
+    expect(rt.snapshot().scenario).toBeNull();
+    expect(text(root, "scenario")).toBe("Start: Orders DB failover");
+    expect(off(root, "scenario", "prev")).toBe(true);
+    expect(off(root, "scenario", "leave")).toBe(true);
+    tap(root, "scenario", "next");
+    expect(rt.snapshot().scenario).toMatchObject({ id: "orders-failover", step: 1 });
+    expect(state(root, "orders")).toBe("failed");
+    expect(text(root, "scenario")).toBe("Orders DB failover · 1 of 4");
+    expect(note(root)).toMatch(/^Primary goes down.*API runs reduced$/);
+    tap(root, "scenario", "next"); tap(root, "scenario", "next"); tap(root, "scenario", "next");
+    expect(rt.snapshot().scenario!.step).toBe(4);
+    tap(root, "scenario", "next"); // past a scenario's last step is the next scenario's first
+    expect(rt.snapshot().scenario).toMatchObject({ id: "stripe-outage", step: 1 });
+    expect(text(root, "scenario")).toBe("Stripe outage · 1 of 1");
+    expect(off(root, "scenario", "next")).toBe(true); // the last step of the last scenario: nothing further was written
+    tap(root, "scenario", "prev");
+    expect(rt.snapshot().scenario).toMatchObject({ id: "orders-failover", step: 4 });
+    tap(root, "scenario", "leave");
+    expect(rt.snapshot().scenario).toBeNull();
+    expect(state(root, "orders")).toBe("on");
+    expect(note(root)).toBe("");
+    tap(root, "scenario", "next"); tap(root, "scenario", "prev"); // back from the first step is the picture as written
+    expect(rt.snapshot().scenario).toBeNull();
+    key("s");
+    expect(text(root, "scenario")).toBe("Orders DB failover · 1 of 4");
+    key("]");
+    expect(text(root, "scenario")).toBe("Orders DB failover · 2 of 4");
+    key("s"); key("s");
+    expect(text(root, "scenario")).toBe("Start: Orders DB failover");
+  });
+
+  it("taps switch views, round and round, and a tap stops the play", async () => {
+    const root = await doc("alternatives");
+    rt = mount(root, PHONE);
+    expect(text(root, "view")).toBe("Checkout with alternatives · 1 of 2");
+    tap(root, "view", "next");
+    vi.advanceTimersByTime(400);
+    expect(rt.snapshot()).toMatchObject({ view: "failover-loop", playing: true });
+    expect(text(root, "view")).toBe("Failover, on a loop · 2 of 2");
+    vi.advanceTimersByTime(2000);
+    expect(text(root, "scenario")).toBe("Orders DB failover · 1 of 4"); // the strip follows the play
+    tap(root, "scenario", "next");
+    expect(rt.snapshot()).toMatchObject({ playing: false, scenario: { step: 2 } });
+    vi.advanceTimersByTime(10000);
+    expect(rt.snapshot().scenario!.step).toBe(2);
+    tap(root, "view", "next"); vi.advanceTimersByTime(400);
+    expect(rt.snapshot().view).toBe("overview");
+    tap(root, "view", "prev"); vi.advanceTimersByTime(400);
+    expect(rt.snapshot().view).toBe("failover-loop");
+  });
+
+  it("every tap target is 44 by 44 or more, on the screen, none over another, and the camera keeps the picture above the strip", async () => {
+    const root = await doc("alternatives");
+    rt = mount(root, PHONE);
+    const strip = root.querySelector<SVGGElement>(".strip")!;
+    const nums = (el: Element) => el.getAttribute("transform")!.match(/-?[\d.]+/g)!.map(Number);
+    const top = nums(strip)[1]!;
+    const targets = [...strip.querySelectorAll<SVGGElement>("[data-do]")];
+    expect(targets).toHaveLength(5);
+    const boxes = targets.map((t) => {
+      const [x = 0, y = 0] = nums(t), [rx = 0, ry = 0] = nums(t.parentElement!);
+      const hit = t.querySelector("rect")!;
+      return { x: rx + x, y: top + ry + y, w: Number(hit.getAttribute("width")), h: Number(hit.getAttribute("height")) };
+    });
+    for (const b of boxes) {
+      expect(b.w).toBeGreaterThanOrEqual(44); expect(b.h).toBeGreaterThanOrEqual(44);
+      expect(b.x).toBeGreaterThanOrEqual(0); expect(b.x + b.w).toBeLessThanOrEqual(390); expect(b.y + b.h).toBeLessThanOrEqual(760);
+    }
+    for (const a of boxes) for (const b of boxes) if (a !== b) expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true);
+    const [, h = 0] = shownLayer(root).getAttribute("data-size")!.split(" ").map(Number);
+    const [, ty = 0, k = 1] = nums(root.querySelector(".scene")!);
+    expect(ty + h * k).toBeLessThanOrEqual(top);
+    rt.destroy();
+    expect(root.querySelector(".strip")).toBeNull();
+  });
+
+  it("a phone lays a bare file out 980 wide and shows it small: the strip is drawn at the size the reader sees, so a target is still 44 on the glass", async () => {
+    Object.defineProperty(window, "visualViewport", { value: { scale: 0.4 }, configurable: true });
+    try {
+      const root = await doc("alternatives");
+      rt = mount(root, { size: { width: 980, height: 1900 }, controls: true });
+      const strip = root.querySelector<SVGGElement>(".strip")!;
+      const [, top = 0, scale = 0] = strip.getAttribute("transform")!.match(/-?[\d.]+/g)!.map(Number);
+      expect(scale).toBe(2.5);
+      // 392 wide as seen: the rows stack as on any phone, and each target is 44 × 2.5 in the file's own units
+      const rows = [...strip.querySelectorAll("[data-strip]")].map((g) => g.getAttribute("transform"));
+      expect(new Set(rows.map((t) => t!.match(/-?[\d.]+/g)![0])).size).toBe(1);
+      expect(new Set(rows).size).toBe(2);
+      const bottomRow = Math.max(...rows.map((t) => Number(t!.match(/-?[\d.]+/g)![1])));
+      expect(top + (bottomRow + 44) * 2.5).toBe(1900);
+      const [, ty = 0, k = 1] = root.querySelector(".scene")!.getAttribute("transform")!.match(/-?[\d.]+/g)!.map(Number);
+      expect(ty + Number(shownLayer(root).getAttribute("data-size")!.split(" ")[1]) * k).toBeLessThanOrEqual(top);
+    } finally { Reflect.deleteProperty(window, "visualViewport"); }
+  });
+
+  it("a sequence file steps its messages by tap", async () => {
+    const root = await doc("sequence", "checkout");
+    rt = mount(root, PHONE);
+    rt.stop();
+    expect(row(root, "view")).toBeNull();
+    expect(text(root, "message")).toBe("Message 6 of 6");
+    expect(off(root, "message", "next")).toBe(true);
+    tap(root, "message", "prev");
+    expect(rt.snapshot().message).toEqual({ index: 5, count: 6 });
+    expect(text(root, "message")).toBe("Message 5 of 6");
+    tap(root, "message", "next");
+    expect(rt.snapshot().message).toEqual({ index: 6, count: 6 });
+  });
+
+  it("carries the tour's caption while it plays", async () => {
+    const root = await doc("drill-down");
+    rt = mount(root, PHONE);
+    expect(note(root)).toBe("The platform. Payments and Identity are closed.");
+    vi.advanceTimersByTime(8000 + 800);
+    expect(note(root)).toMatch(/^The ledger fails/);
+  });
+});
+
+describe("states on connections (#60)", () => {
+  let rt: Orrery;
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { rt?.destroy(); vi.useRealTimers(); });
+  const edge = (root: Element, key: string) => vis(root, `[data-edge="${key}"]`);
+  const head = (root: Element, id: string) => root.querySelector(`defs > marker[id="${id}"] path`)?.getAttribute("fill");
+
+  it("a step puts a line in its state: look, arrowhead, reason and no flow; the snapshot reports it; the next step takes it all back", async () => {
+    const root = await doc("connection-states");
+    let last: Snapshot | undefined;
+    rt = mount(root, SIZE);
+    rt.on("change", (s) => { last = s; });
+    expect(rt.snapshot().states["api-to-cache"], "the base model's state").toEqual({ state: "degraded" });
+    expect(rt.snapshot().states["db->cache"], "a connection with no id cannot be named, so it is not listed").toBeUndefined();
+    rt.setScenario("cert-expires", 1);
+    const e = edge(root, "api-to-db");
+    expect(e.classList.contains("st-failed")).toBe(true);
+    expect(e.getAttribute("data-state")).toBe("failed");
+    expect(e.getAttribute("data-pulse")).toBe("1");
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow-st-failed)");
+    expect(head(root, "arrow-st-failed"), "the engine draws the arrowhead it needs").toBe("#dc2626");
+    expect(e.querySelector("title")!.textContent).toBe("TLS certificate expired");
+    expect(flowLoad(root, "api-to-db")).toBe("0");
+    expect(state(root, "db"), "the far end is as the author left it").toBe("on");
+    expect(last!.states["api-to-db"]).toEqual({ state: "failed", reason: "TLS certificate expired" });
+    rt.setScenario("cert-expires", 2);
+    expect([...e.classList]).toEqual(["edge", "edge-sync"]);
+    expect(e.hasAttribute("data-state")).toBe(false);
+    expect(e.hasAttribute("data-pulse")).toBe(false);
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow)");
+    expect(e.querySelector("title")).toBeNull();
+    expect(flowLoad(root, "api-to-db")).toBe("0.6");
+  });
+
+  it("setState and cycle take a connection's id; a look with no colour keeps the plain arrowhead", async () => {
+    const root = await doc("connection-states");
+    rt = mount(root, SIZE);
+    rt.setState("web-to-api", "brownout");
+    const e = edge(root, "web-to-api");
+    expect(e.classList.contains("st-brownout")).toBe(true);
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow-st-brownout)");
+    expect(head(root, "arrow-st-brownout")).toBe("#7c3aed");
+    expect(flowLoad(root, "web-to-api")).toBe("0");
+    rt.setState("web-to-api", "off");
+    expect(e.getAttribute("marker-end")).toBe("url(#arrow)");
+    expect(e.classList.contains("st-off")).toBe(true);
+    rt.setState("web-to-api", "on");
+    expect(flowLoad(root, "web-to-api")).toBe("0.8");
+    rt.cycle("web-to-api");
+    expect(rt.snapshot().states["web-to-api"]).toEqual({ state: "degraded" });
+    expect(root.querySelectorAll('defs > marker[id="arrow-st-brownout"]')).toHaveLength(1);
+  });
+
+  it("a line standing for several connections takes its state and load from its members (R11)", async () => {
+    const root = await doc("connection-states", "closed");
+    rt = mount(root, SIZE);
+    const e = edge(root, "api-to-db");
+    expect(e.getAttribute("data-state")).toBe("degraded");
+    expect(flowLoad(root, "api-to-db"), "the members' loads, summed").toBe("0.9");
+    rt.setScenario("cert-expires", 1);
+    expect(e.getAttribute("data-state")).toBe("failed");
+    expect(e.querySelector("title")!.textContent).toBe("TLS certificate expired");
+    expect(flowLoad(root, "api-to-db")).toBe("0.3");
+    rt.setState("api-to-db", "on");
+    rt.setState("api-to-cache", "on");
+    expect(e.hasAttribute("data-state")).toBe(false);
+    expect(flowLoad(root, "api-to-db")).toBe("0.9");
   });
 });

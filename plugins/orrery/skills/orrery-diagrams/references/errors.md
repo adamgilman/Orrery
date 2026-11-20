@@ -93,6 +93,16 @@ Provoked by: `{"groups":[{"id":"g"}],"components":[{"id":"a","group":"g"}],"view
 
 Provoked by: `{"groups":[{"id":"g"},{"id":"h"}],"components":[{"id":"a","group":"g"},{"id":"b","group":"h"}],"views":[{"id":"v","scope":"g","collapse":["h"]}]}`
 
+### connection-state-unknown
+
+- `/connections/0/state`: unknown state "wobbly"; known: on, degraded, failed, off
+- `/scenarios/0/steps/0/set/failed/0`: unknown entity or connection id "nolink"
+- `/scenarios/0/steps/0/restore`: unknown entity or connection id "gone"
+- `/scenarios/0/steps/1/set/degraded/link`: "link" is already set to "failed" in this step
+- `/scenarios/0/steps/2/restore`: "link" is both set and restored in this step
+
+Provoked by: `{"components":[{"id":"a"},{"id":"b"}],"connections":[{"id":"link","from":"a","to":"b","state":"wobbly"},{"from":"b","to":"a"}],"scenarios":[{"id":"s","steps":[{"set":{"failed":["nolink"]},"restore":"gone"},{"set":{"failed":"link","degraded":{"link":"twice"}}},{"set":{"failed":"link"},"restore":"link…`
+
 ### connection-to-ancestor
 
 - `/connections/0`: contain one another
@@ -156,6 +166,13 @@ Provoked by: `{"groups":[{"id":"g1","parent":"g2"},{"id":"g2","parent":"g1"},{"i
 - `/components/0/id`: id "shared" is already used by a group
 
 Provoked by: `{"groups":[{"id":"shared"}],"components":[{"id":"shared"}]}`
+
+### id-clash-connection-entity
+
+- `/connections/0/id`: id "a" is already used by a component
+- `/connections/1/id`: id "data" is already used by a group
+
+Provoked by: `{"groups":[{"id":"data"}],"components":[{"id":"a"},{"id":"b","group":"data"}],"connections":[{"id":"a","from":"a","to":"b"},{"id":"data","from":"b","to":"a"}]}`
 
 ### load-out-of-range
 
@@ -250,7 +267,7 @@ Provoked by: `{"components":[{"id":"a"},{"id":"b"}],"connections":[{"from":"a","
 
 ### scenario-unknown-entity
 
-- `/scenarios/0/steps/0/set/failed`: unknown entity "ghost"
+- `/scenarios/0/steps/0/set/failed`: unknown entity or connection id "ghost"
 
 Provoked by: `{"components":[{"id":"a"}],"scenarios":[{"id":"s","steps":[{"set":{"failed":"ghost"}}]}]}`
 

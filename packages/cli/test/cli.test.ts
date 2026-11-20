@@ -110,6 +110,7 @@ describe("orrery usage", () => {
   });
   it("prints usage on --help", () => {
     const r = run("--help");
+    expect(r.out, "a click selects in the interactive file; it has not changed a state since 0.5.0").not.toMatch(/click to change state/);
     expect(r.code).toBe(0);
     expect(r.out).toContain("orrery validate <file>");
     expect(r.out).toContain("orrery render <file> [-o <out.svg>]");
@@ -399,7 +400,7 @@ describe("orrery render --heading", () => {
   });
 });
 
-describe("orrery render and export: PNG and GIF (R19)", () => {
+describe("orrery render and export: PNG and GIF (R21)", () => {
   const bytes = (...args: string[]) => { const r = spawnSync("node", [bin, ...args]); return { code: r.status, out: r.stdout, err: r.stderr.toString() }; };
   const pngSize = (b: Buffer) => [b.readUInt32BE(16), b.readUInt32BE(20)];
   const gifSize = (b: Buffer) => [b.readUInt16LE(6), b.readUInt16LE(8)];
@@ -513,5 +514,29 @@ describe("orrery render and export: PNG and GIF (R19)", () => {
   it("the help says so", () => {
     const help = run("--help").out;
     for (const word of ["--png", "--gif", "--scale", "--fps", "--duration", ".png", ".gif"]) expect(help, word).toContain(word);
+  });
+});
+
+describe("states on connections (#60)", () => {
+  const f = join(fixtures, "valid/connection-states.json");
+  it("--set gives a connection a state by its id: the line is drawn in it with no flow, and both ends stay as they were", () => {
+    const r = run("render", f, "--static", "--view", "all", "--set", "failed=api-to-db");
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/class="edge edge-sync st-failed" data-edge="api-to-db"[^>]*data-state="failed"[^>]*marker-end="url\(#arrow-st-failed\)"/);
+    expect(r.out).toMatch(/data-flow="api-to-db" data-load="0"/);
+    expect(r.out).toMatch(/data-node="api"[^>]*data-state="on"/);
+    expect(r.out).toMatch(/data-node="db"[^>]*data-state="on"/);
+    expect(r.out).toContain('<marker id="arrow-st-failed"');
+  });
+  it("an unknown id is refused, and so is a connection that was given none", () => {
+    const bad = run("render", f, "--set", "failed=nolink");
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain('unknown entity or connection id "nolink"');
+    expect(run("render", f, "--set", "failed=db->cache").code).not.toBe(0);
+  });
+  it("the interactive file carries the rule for a line in every state, so setState can draw any of them", () => {
+    const r = run("render", f);
+    expect(r.code).toBe(0);
+    for (const s of ["degraded", "failed", "off", "brownout"]) expect(r.out).toContain(`.edge.st-${s}{`);
   });
 });

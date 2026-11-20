@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, renderExport, validate, type Model, type LayoutResult } from "../src/index.js";
+import { declare, render, renderDocument, renderExport, validate, type Model, type LayoutResult } from "../src/index.js";
 import { FakeLayoutEngine } from "../src/testing.js";
-import { PULSE_PERIOD, applySet, renderSvg, scopeModel, toLayoutGraph } from "../src/internal.js";
+import { PULSE_PERIOD, applySet, renderSvg, scopeModel, stopFlows, toLayoutGraph } from "../src/internal.js";
 
 const fixture = (name: string): Model => { const r = validate(JSON.parse(readFileSync(join(import.meta.dirname, "../../../fixtures/valid", `${name}.json`), "utf8"))); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
 const inline = (input: unknown): Model => { const r = validate(input); if (!r.ok) throw new Error(JSON.stringify(r.errors)); return r.model; };
@@ -490,5 +490,89 @@ describe("render: callouts follow a zoom (R16)", () => {
     const plain = await render({ ...m, callouts: [] }, new FakeLayoutEngine(), { tour: true });
     const plainScale = Number(plain.match(/@keyframes orrery-camera\{[^}]*\}[^}]*\}([^}]*)\}/)![1]!.match(/scale\(([\d.]+)\)/)![1]);
     expect(scale).toBeLessThan(plainScale); // wider, to hold the note
+  });
+});
+
+describe("render: a picture paints its own background (R19)", () => {
+  const backing = (svg: string) => [...svg.matchAll(/<rect class="backing" x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)" rx="8"\/>/g)].map((m) => m.slice(1).map(Number));
+  const viewBox = (svg: string) => svg.match(/<svg [^>]*viewBox="([\d.-]+) ([\d.-]+) ([\d.]+) ([\d.]+)"/)!.slice(1).map(Number);
+  it("a still has one white backing the size of its viewBox, behind everything drawn", async () => {
+    const svg = await draw(fixture("grouped"));
+    expect(backing(svg)).toEqual([viewBox(svg)]);
+    expect(svg).toContain(".backing{fill:#ffffff}");
+    expect(svg.indexOf('class="backing"')).toBeLessThan(svg.indexOf('<g class="scene"'));
+    expect(svg.indexOf('class="backing"')).toBeGreaterThan(svg.indexOf("</defs>"));
+  });
+  it("a zoomed picture's backing starts where its viewBox does, and a heading's band is inside it", async () => {
+    const n = fixture("nested-drill");
+    const zoomed = await render(n, new FakeLayoutEngine(), { open: ["outer", "inner"], zoom: "inner", heading: true });
+    expect(viewBox(zoomed).slice(0, 2)).not.toEqual([0, 0]);
+    expect(backing(zoomed)).toEqual([viewBox(zoomed)]);
+    expect(zoomed.indexOf('class="backing"')).toBeLessThan(zoomed.indexOf('<g class="heading"'));
+  });
+  it("the interactive document, a playing view and a tour each carry exactly one", async () => {
+    const m = fixture("alternatives");
+    for (const svg of [await renderDocument(m, new FakeLayoutEngine(), { runtime: "" }), await render(m, new FakeLayoutEngine(), { play: { scenario: "orders-failover" } }), await render(fixture("drill-down"), new FakeLayoutEngine(), { tour: true })]) expect(backing(svg)).toEqual([viewBox(svg)]);
+  });
+});
+
+describe("renderSvg: states on connections (#60, R22)", () => {
+  const edge = (svg: string, key: string) => svg.match(new RegExp(`<path class="edge[^>]*data-edge="${key}"[^>]*>(?:<title>[^<]*</title></path>)?`))![0];
+  const style = (svg: string) => svg.slice(svg.indexOf("<style>"), svg.indexOf("</style>"));
+  it("a line in the default state is drawn as before; in another state it carries the state, its look and the author's reason", async () => {
+    const m = fixture("connection-states");
+    const plain = await draw(applySet(m, { on: ["api-to-cache"] }));
+    expect(plain).not.toMatch(/class="edge[^"]* st-/);
+    const svg = await draw(stopFlows(declare(m, { scenario: "cert-expires", step: 1 }).model));
+    const e = edge(svg, "api-to-db");
+    expect(e).toContain('class="edge edge-sync st-failed"');
+    expect(e).toContain('data-state="failed"');
+    expect(e).toContain('data-pulse="1"');
+    expect(e).toContain('marker-end="url(#arrow-st-failed)"');
+    expect(e).toContain("<title>TLS certificate expired</title>");
+    expect(svg).toMatch(/data-flow="api-to-db" data-load="0"/);
+    expect(edge(svg, "web-to-api")).toBe(edge(plain, "web-to-api"));
+    expect(style(svg)).toContain(`.edge.st-failed{stroke:#dc2626;animation:orrery-pulse ${PULSE_PERIOD}s linear infinite}`);
+    expect(style(svg)).toContain(".edge.st-degraded{stroke:#d97706}");
+    expect(style(svg), "a still carries the rule of each state a line in it is drawn in, and no others").not.toContain(".edge.st-off");
+    expect(style(await draw(applySet(m, { brownout: ["web-to-api"] })))).toContain(".st-brownout{opacity:0.8}\n.edge.st-brownout{stroke:#7c3aed;stroke-dasharray:4 4}");
+  });
+  it("the document defines an arrowhead in the colour of each state a line is drawn in, and no others", async () => {
+    const m = fixture("connection-states");
+    const svg = await render(m, new FakeLayoutEngine(), { view: "all", scenario: "cert-expires", step: 1 });
+    expect(svg).toMatch(/<marker id="arrow-st-failed"[^>]*><path [^>]*fill="#dc2626"\/><\/marker>/);
+    expect(svg).toMatch(/<marker id="arrow-st-degraded"[^>]*><path [^>]*fill="#d97706"\/><\/marker>/);
+    expect(svg).not.toContain('id="arrow-st-brownout"');
+    expect(svg).not.toContain('id="arrow-start-st-failed"');
+    const two = inline({ components: [{ id: "a" }, { id: "b" }], connections: [{ id: "l", from: "a", to: "b", bidirectional: true, state: "failed" }] });
+    const both = await render(two, new FakeLayoutEngine());
+    expect(both).toContain('marker-end="url(#arrow-st-failed)" marker-start="url(#arrow-start-st-failed)"');
+    expect(both).toContain('<marker id="arrow-start-st-failed"');
+    expect(await render(inline({ components: [{ id: "a" }, { id: "b" }], connections: [{ from: "a", to: "b" }] }), new FakeLayoutEngine())).not.toContain("arrow-st-");
+  });
+  it("the legend lists a state used on a line; one used only on lines has a line for its swatch (R9)", async () => {
+    const m = fixture("connection-states");
+    const svg = await draw(stopFlows(declare(m, { scenario: "cert-expires", step: 1 }).model));
+    const legend = between(svg, '<g class="legend"');
+    const row = (name: string) => legend.split("\n").find((l) => l.includes(`>${name}<`))!;
+    expect(row("failed")).toContain('<path d="M0 7H12" style="fill:none;stroke:#dc2626;stroke-width:2"/>');
+    expect(row("failed")).not.toContain("<rect");
+    expect(row("degraded"), "api is degraded too, so it keeps the box").toContain("<rect");
+    expect(legend).not.toContain("brownout");
+  });
+  it("a merged line is drawn in its state and names its members for the runtime (R11)", async () => {
+    const m = fixture("connection-states");
+    const svg = await render(m, new FakeLayoutEngine(), { view: "closed", scenario: "cert-expires", step: 1 });
+    const e = edge(svg, "api-to-db");
+    expect(e).toContain("st-failed");
+    expect(svg, "a still has no engine to read them").not.toContain("data-members");
+    expect(edge(await renderDocument(m, new FakeLayoutEngine(), { runtime: "", view: "closed" }), "api-to-db")).toContain('data-members="1 2"');
+    expect(svg).toMatch(/data-flow="api-to-db" data-load="0.3"/); // the failed member's flow stopped; the other's is still carried
+  });
+  it("a playing view and a tour draw the line's state at each step", async () => {
+    const m = fixture("connection-states");
+    const playing = await render(m, new FakeLayoutEngine(), { view: "playing" });
+    expect(playing).toContain('class="edge edge-sync st-failed"');
+    expect(playing).toContain('<marker id="arrow-st-failed"');
   });
 });

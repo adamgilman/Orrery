@@ -104,7 +104,7 @@ drawing a thousand units tall take over a minute at scale 2, and `--scale 1` or 
 
 ## Invariant
 
-R19: a PNG or a GIF is a raster of the enclosed SVG the same options draw; same model, same bytes; a GIF is one
+R21: a PNG or a GIF is a raster of the enclosed SVG the same options draw; same model, same bytes; a GIF is one
 loop whose last frame is followed by its first.
 
 ## Not done

@@ -10,8 +10,8 @@ export const USAGE = `Usage:
                                          warnings; or one "<file>:<json-pointer>: <message>" line per error on stderr.
   orrery render <file> [-o <out.svg>]    Validate, lay out and render one standalone SVG. Inside <img> (a README)
                  [--view <id>]           it is the animated first view; opened directly in a browser it is
-                 [--static]              interactive: the model and a runtime are embedded (outline, zoom,
-                 [--scenario <id>]       click to change state, scenarios). Deterministic. A file is one
+                 [--static]              interactive: the model and a runtime are embedded (drill-down, zoom,
+                 [--scenario <id>]       views, scenarios). Deterministic. A file is one
                  [--step <n>]            drawing: every topology view together (--view: the one shown first),
                  [--set <state>=<ids>]   or, when --view names a sequence view, that sequence alone; a model's
                  [--play <id>]           sequences are separate files. --static: one view, no runtime.
@@ -112,7 +112,7 @@ function parseSets(values: string[] | undefined): Record<string, string[]> {
   return out;
 }
 
-/** What a picture is written as: the SVG itself, or a raster of it (R19). */
+/** What a picture is written as: the SVG itself, or a raster of it (R21). */
 interface Picture { format: "svg" | "png" | "gif"; scale: number; fps: number; durationMs?: number }
 
 /** --png and --gif, or the extension of the file -o names; then the options that belong to a raster. */

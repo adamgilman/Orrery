@@ -73,7 +73,8 @@ The database is red and pulsing, and the flow into it has stopped. Nothing else 
 said: a scenario is where you write what a failure does to the rest.
 
 Or look before you write anything: [open the checkout below as an interactive file](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
-click the closed box to open it, press `s` to start a scenario and `]` to step it.
+click the closed box to open it, and step through a failure with the arrows on the strip along the bottom edge
+(or press `s` to start a scenario and `]` to step it). It works on a phone: every step is a tap.
 
 ## Why not Mermaid, D2 or Structurizr?
 
@@ -240,8 +241,12 @@ orrery.on("change", (snapshot) => { /* view, open groups, scenario step and note
 
 The sample `index.html` and `app.js` build a view chooser, a scenario stepper, state buttons for the selected
 component, drill-down buttons and play controls from that interface, in plain HTML. Throw them away and wire your
-own. Opened directly with no page around it, the SVG is purely the diagram: click a component to select it, click a closed group to drill in and its frame's own edge or corner mark to close it again, Escape to step back out, digits to switch views, `s` to start a
-scenario and cycle through them, brackets to step it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
+own. Opened directly with no page around it, the SVG is the diagram and one strip along its bottom edge: click a component to select it, click a closed group to drill in and its frame's own edge or corner mark to close it again, Escape to step back out, digits to switch views, `s` to start a
+scenario and cycle through them, brackets to step it. The strip names the view, the scenario step and its note,
+and its arrows do by tap or click what those keys do: the next and previous view, the next and previous step
+through every scenario in the order written, and a cross to leave the scenario. So a reader on a phone can watch a
+failure play out. It is drawn by the engine, only in the file opened on its own and only when the model has more
+than one view, a scenario or a sequence's messages; an image tag, a still and a page's embed never show it. Try it: [open the checkout](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout.svg),
 or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/checkout-sequence.svg)
 (served with the right content type by jsDelivr; GitHub's raw links serve SVG as text). No page, no build, no server.
 
@@ -394,6 +399,9 @@ Rules an agent needs to know:
 - Order in the file is order on the canvas within a layer, so list the important things first.
 - Nothing is inferred. A state is in the picture because you wrote it there, in the base model, a scenario step or a
   what-if. When something fails, say what that does to the rest, with a reason, and move the loads yourself.
+- A connection takes a state too, when the link is what broke and both ends are fine. Give it an `id` and name it
+  like an entity: `"set": { "failed": { "api-to-db": "TLS certificate expired" } }` draws that line red with no
+  flow and leaves the boxes alone. A line that is only idle, because its load is 0 or an end of it failed, stays grey.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
 The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).

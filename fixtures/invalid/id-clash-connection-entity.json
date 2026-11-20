@@ -1,0 +1,8 @@
+{
+  "groups": [{ "id": "data" }],
+  "components": [{ "id": "a" }, { "id": "b", "group": "data" }],
+  "connections": [
+    { "id": "a", "from": "a", "to": "b" },
+    { "id": "data", "from": "b", "to": "a" }
+  ]
+}

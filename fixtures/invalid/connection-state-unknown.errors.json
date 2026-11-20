@@ -1,0 +1,7 @@
+[
+  { "pointer": "/connections/0/state", "message": "unknown state \"wobbly\"; known: on, degraded, failed, off" },
+  { "pointer": "/scenarios/0/steps/0/set/failed/0", "message": "unknown entity or connection id \"nolink\"" },
+  { "pointer": "/scenarios/0/steps/0/restore", "message": "unknown entity or connection id \"gone\"" },
+  { "pointer": "/scenarios/0/steps/1/set/degraded/link", "message": "\"link\" is already set to \"failed\" in this step" },
+  { "pointer": "/scenarios/0/steps/2/restore", "message": "\"link\" is both set and restored in this step" }
+]

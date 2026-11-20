@@ -24,6 +24,7 @@
 .callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
 .callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
+.backing{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
 .heading-title.centred,.heading-text.centred{text-anchor:middle}
@@ -135,6 +136,7 @@
 @keyframes orrery-caption-6{0%{opacity:0}90%{opacity:0}91.07%{opacity:1}100%{opacity:1}}
 @keyframes orrery-camera{0%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}15.36%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}18.57%{transform:translate(245.58px, 455.75px) scale(1.2183) translate(-201.58px, -319.75px)}29.64%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.2183) translate(-201.58px, -319.75px)}32.86%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}43.93%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}47.14%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}58.21%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -453.5px)}61.43%{transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -405px)}72.5%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1.9647) translate(-145px, -405px)}75.71%{transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}86.79%{animation-timing-function:ease-in-out;transform:translate(245.58px, 455.75px) scale(1) translate(-245.58px, -455.75px)}90%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}100%{transform:translate(245.58px, 455.75px) scale(1.169) translate(-210.08px, -251.75px)}}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<rect class="backing" x="0" y="0" width="491.2" height="999.5" rx="8"/>
 <g class="scene">
 <g class="view" data-view="overview" data-open="" data-title="Checkout: the moving parts" data-size="491.2 999.5">
 <clipPath id="orrery-stage-overview"><rect width="491.2" height="911.5"/></clipPath>
@@ -158,8 +160,8 @@
 </g>
 <g class="edges" data-edges="0" data-t0="1" style="animation:orrery-edges-0 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M250.5 68 L250.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M250.5 68 L250.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M250.5 156 L250.5 191 L289.5 191 L289.5 325.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M250.5 156 L250.5 191 L289.5 191 L289.5 313.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M250.5 156 L250.5 191 L289.5 191 L289.5 325.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M250.5 156 L250.5 191 L289.5 191 L289.5 313.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="263.5" y="224">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M287.5 156 L287.5 181 L315.5 181 L315.5 257 L377 257 L377 398.5 L338.8 398.5 L338.8 423.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M287.5 156 L287.5 181 L315.5 181 L315.5 257 L377 257 L377 398.5 L338.8 398.5 L338.8 411.5" style="stroke-width:1.5;animation:none;opacity:0"/>
@@ -169,8 +171,8 @@
 <path class="flow" data-flow="api->sessions" data-load="0.5" d="M213.5 156 L213.5 257 L109.5 257 L109.5 313.5" style="stroke-width:3;animation-duration:1.8s"/></g>
 <g class="edges" data-edges="1" data-t0="0" style="animation:orrery-edges-1 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M233.5 68 L233.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M233.5 68 L233.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M233.5 156 L233.5 191 L272.5 191 L272.5 393.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M233.5 156 L233.5 191 L272.5 191 L272.5 381.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M233.5 156 L233.5 191 L272.5 191 L272.5 393.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M233.5 156 L233.5 191 L272.5 191 L272.5 381.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="246.5" y="224">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M270.5 156 L270.5 181 L298.5 181 L298.5 257 L360 257 L360 534.5 L321.8 534.5 L321.8 559.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M270.5 156 L270.5 181 L298.5 181 L298.5 257 L360 257 L360 534.5 L321.8 534.5 L321.8 547.5" style="stroke-width:1.5;animation:none;opacity:0"/>
@@ -182,8 +184,8 @@
 <path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M101 409.5 L101 437.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
 <g class="edges" data-edges="2" data-t0="0" style="animation:orrery-edges-2 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M321.5 68 L321.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M321.5 68 L321.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="334.5" y="224">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 831.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 819.5" style="stroke-width:1.5;animation:none;opacity:0"/>
@@ -199,8 +201,8 @@
 <path class="flow" data-flow="cache-a->cache-b" data-load="0.2" d="M145 545.5 L145 573.5" style="stroke-width:2.1;animation-duration:2.5s"/></g>
 <g class="edges" data-edges="3" data-t0="0" style="animation:orrery-edges-3 28s linear infinite"><path class="edge edge-sync" data-edge="web->api" data-kind="sync" d="M321.5 68 L321.5 108" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="web->api" data-load="0.8" d="M321.5 68 L321.5 96" style="stroke-width:3.9;animation-duration:1s"/>
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M321.5 156 L321.5 191 L360.5 191 L360.5 529.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M321.5 156 L321.5 191 L360.5 191 L360.5 517.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="334.5" y="224">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 831.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M358.5 156 L358.5 181 L386.5 181 L386.5 257 L448 257 L448 806.5 L409.8 806.5 L409.8 819.5" style="stroke-width:1.5;animation:none;opacity:0"/>

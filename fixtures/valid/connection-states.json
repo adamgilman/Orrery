@@ -1,0 +1,46 @@
+{
+  "states": {
+    "define": {
+      "brownout": { "look": { "stroke": "#7c3aed", "dash": true, "opacity": 0.8 }, "flows": "stop", "description": "Throttled by the provider" }
+    }
+  },
+  "groups": [
+    { "id": "data", "label": "Data" }
+  ],
+  "components": [
+    { "id": "web", "label": "Web" },
+    { "id": "api", "label": "Checkout API" },
+    { "id": "db", "label": "Orders DB", "kind": "database", "group": "data" },
+    { "id": "cache", "label": "Cache", "kind": "cache", "group": "data" }
+  ],
+  "connections": [
+    { "id": "web-to-api", "from": "web", "to": "api", "load": 0.8 },
+    { "id": "api-to-db", "from": "api", "to": "db", "load": 0.6 },
+    { "id": "api-to-cache", "from": "api", "to": "cache", "load": 0.3, "state": "degraded" },
+    { "from": "db", "to": "cache", "load": 0.2 }
+  ],
+  "views": [
+    { "id": "all" },
+    { "id": "closed", "collapse": ["data"] },
+    { "id": "playing", "play": { "scenario": "cert-expires" } }
+  ],
+  "scenarios": [
+    {
+      "id": "cert-expires",
+      "label": "Certificate expires",
+      "steps": [
+        {
+          "note": "The database's TLS certificate expires. Both services are up; the connection between them is refused.",
+          "set": {
+            "failed": { "api-to-db": "TLS certificate expired" },
+            "degraded": { "api": "writes failing" }
+          }
+        },
+        {
+          "note": "The certificate is renewed.",
+          "restore": ["api-to-db", "api", "api-to-cache"]
+        }
+      ]
+    }
+  ]
+}

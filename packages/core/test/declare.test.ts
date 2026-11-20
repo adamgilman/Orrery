@@ -50,7 +50,7 @@ describe("declare: scenario steps (B2)", () => {
     expect(() => at(fixture("alternatives"), "nope")).toThrow(/unknown scenario "nope".*orders-failover/);
     expect(() => at(fixture("alternatives"), "orders-failover", 9)).toThrow(/between 1 and 4/);
     expect(() => applySet(fixture("minimal"), { broken: ["a"] })).toThrow(/unknown state "broken"/);
-    expect(() => applySet(fixture("minimal"), { failed: ["zzz"] })).toThrow(/unknown entity "zzz"/);
+    expect(() => applySet(fixture("minimal"), { failed: ["zzz"] })).toThrow(/unknown entity or connection id "zzz"/);
   });
 });
 
@@ -111,5 +111,41 @@ describe("declare: callouts (R16)", () => {
     expect(declare(m, { scenario: "s", step: 2 }).model.callouts.map((c) => c.text)).toEqual(["standing", "step two"]);
     expect(declare(m, { scenario: "s", step: 3 }).model.callouts.map((c) => c.text)).toEqual(["standing"]);
     expect(declare(m, { scenario: "s", step: 1, callouts: [{ at: "a", text: "what if" }] }).model.callouts.map((c) => c.text)).toEqual(["standing", "step one", "what if"]);
+  });
+});
+
+describe("declare: states on connections (#60)", () => {
+  const conn = (m: Model, id: string) => m.connections.find((c) => c.key === id)!;
+  it("a connection has a base state, the default unless the author wrote one", () => {
+    const m = fixture("connection-states");
+    expect(conn(m, "api-to-db").state).toBe("on");
+    expect(conn(m, "api-to-cache").state).toBe("degraded");
+    expect(conn(m, "db->cache").state).toBe("on");
+  });
+  it("a step sets a connection by id with its reason, and restore returns it to its base state (B2)", () => {
+    const m = fixture("connection-states");
+    const s1 = at(m, "cert-expires", 1).model;
+    expect(conn(s1, "api-to-db")).toMatchObject({ state: "failed", reason: "TLS certificate expired" });
+    expect(st(s1, "api")).toBe("degraded");
+    expect(st(s1, "db"), "both ends keep the state the author gave them (B3)").toBe("on");
+    const s2 = at(m, "cert-expires", 2).model;
+    expect(conn(s2, "api-to-db").state).toBe("on");
+    expect(conn(s2, "api-to-db").reason).toBeUndefined();
+    expect(conn(s2, "api-to-cache").state, "restore is to the base state, not the default").toBe("degraded");
+    expect(conn(m, "api-to-db").state, "the input is untouched (B1)").toBe("on");
+  });
+  it("a what-if names a connection like an entity; an unknown id throws", () => {
+    const m = fixture("connection-states");
+    const d = declare(m, { set: { brownout: ["web-to-api"] }, reasons: { "web-to-api": "rate limited" } }).model;
+    expect(conn(d, "web-to-api")).toMatchObject({ state: "brownout", reason: "rate limited" });
+    expect(() => applySet(m, { failed: ["db->cache"] })).toThrow(/unknown entity or connection id "db->cache"/);
+  });
+  it("a connection in a state that stops flows is drawn with load 0, whatever its load; its neighbours keep theirs (B4)", () => {
+    const m = fixture("connection-states");
+    const d = stopFlows(at(m, "cert-expires", 1).model);
+    expect(load(d, "api-to-db")).toBe(0);
+    expect(load(d, "web-to-api")).toBe(0.8);
+    expect(load(d, "api-to-cache"), "degraded keeps flow").toBe(0.3);
+    expect(load(stopFlows(declare(m, { set: { brownout: ["web-to-api"] } }).model), "web-to-api")).toBe(0);
   });
 });

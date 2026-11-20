@@ -28,7 +28,7 @@ const solid = (width: number, height: number, rgb: [number, number, number]): Bi
 };
 const paint = (bm: Bitmap, x: number, y: number, rgb: [number, number, number]) => { bm.data.set([...rgb, 255], (y * bm.width + x) * 4); return bm; };
 
-describe("the loop of an animated picture (R19)", () => {
+describe("the loop of an animated picture (R21)", () => {
   it("is nothing for a picture that does not move", async () => {
     const svg = await draw({ components: [{ id: "a" }, { id: "b" }] });
     expect(fitLoop(svg)).toEqual({ durationMs: 0, stretch: 0, svg });
@@ -75,7 +75,7 @@ describe("the loop of an animated picture (R19)", () => {
   });
 });
 
-describe("encodeGif (R19)", () => {
+describe("encodeGif (R21)", () => {
   it("keeps the colours of a picture with few of them exactly, and writes only what changed after the first frame", () => {
     const red: [number, number, number] = [220, 38, 38];
     const a = paint(solid(8, 6, [255, 255, 255]), 1, 1, red);
@@ -130,7 +130,7 @@ describe("encodeGif (R19)", () => {
   });
 });
 
-describe("renderGif (R19)", () => {
+describe("renderGif (R21)", () => {
   it("is one loop of the picture at the frame rate asked for, each frame the SVG frozen at its moment", async () => {
     const svg = await chain(0.8, 0.6);
     const gif = decodeGif(renderGif(svg, { fps: 10 }));
@@ -174,7 +174,7 @@ describe("renderGif (R19)", () => {
   });
 });
 
-describe("renderPng (R19)", () => {
+describe("renderPng (R21)", () => {
   it("is the picture at rest: the first step of a playing view, as the frame at t = 0", async () => {
     const svg = await fixture("alternatives", { play: { scenario: "orders-failover", seconds: 1 } });
     expect(renderPng(svg).equals(frame(svg, 0))).toBe(true);
