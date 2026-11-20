@@ -88,6 +88,7 @@
       "load": 0.8
     },
     {
+      "id": "writes",
       "from": "api",
       "to": "db",
       "load": 0.6,
@@ -416,6 +417,17 @@
         },
         "degraded": {
           "api": "no failover while the replica is out"
+        }
+      }
+    },
+    {
+      "id": "what-if-link",
+      "set": {
+        "failed": {
+          "writes": "TLS certificate expired"
+        },
+        "degraded": {
+          "api": "writes failing"
         }
       }
     },

@@ -84,8 +84,14 @@ export interface Connection {
   label?: string;
   /** The load the author gave it: base model, then scenario steps. */
   load: number;
+  /** The state the author gave the connection itself: base model, then scenario steps, then a what-if. Only one with an id can be named by those. */
+  state: string;
+  /** The author's explanation of the state. */
+  reason?: string;
   bidirectional: boolean;
   meta?: Record<string, unknown>;
+  /** Set by view scoping on a line standing for several connections between closed groups: their positions in the model's `connections`, in order (R11). */
+  members?: number[];
 }
 
 /** A topology view plays a scenario; a sequence view reveals its messages one per period. */

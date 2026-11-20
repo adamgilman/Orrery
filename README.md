@@ -252,10 +252,25 @@ or [its sequence](https://cdn.jsdelivr.net/gh/adamgilman/Orrery@main/examples/ch
 
 ## Status
 
-The model is specified in [docs/MODEL.md](docs/MODEL.md); the file is interactive; sequence views, the providers'
-icon packs, shapes, callouts and headings have shipped, and every package is on npm. Next, in the order the
-[PRD](PRD.md) gives: a human click-through of the sample page, `orrery explain`, the walkthrough view, GIF and PNG
-export from the frame tooling, and an MCP server.
+Orrery is at 0.5.0: usable, young and still changing.
+
+What works today:
+
+- One JSON model drawn as topology and sequence views, with scenarios, what-ifs, drill-down into groups and tours.
+- One SVG file that animates inside an `<img>`, as in a README, and is interactive when opened in a browser.
+  `orrery embed` writes the diagram and its engine for a page of your own.
+- Your own states, kinds and shapes, the AWS, Azure and GCP icon packs, callouts and headings.
+- The command, the libraries and the packs are on npm, all at one version. A Claude Code plugin writes the models.
+
+What is not there yet:
+
+- PNG and GIF export. The command writes SVG only, so for a place that will not show an SVG you convert it yourself.
+- `orrery explain`: nothing puts a model or a scenario into prose.
+- A walkthrough view: a sequence's messages cannot be played as a token moving along the topology.
+- An MCP server. An agent uses the command line, or the Claude Code plugin.
+
+The model format is version 1, specified in [docs/MODEL.md](docs/MODEL.md) and in a JSON Schema. Until 1.0 a release
+may change it; the [changelog](CHANGELOG.md) says when one does.
 
 ## Installing
 
@@ -364,6 +379,9 @@ Rules an agent needs to know:
 - Order in the file is order on the canvas within a layer, so list the important things first.
 - Nothing is inferred. A state is in the picture because you wrote it there, in the base model, a scenario step or a
   what-if. When something fails, say what that does to the rest, with a reason, and move the loads yourself.
+- A connection takes a state too, when the link is what broke and both ends are fine. Give it an `id` and name it
+  like an entity: `"set": { "failed": { "api-to-db": "TLS certificate expired" } }` draws that line red with no
+  flow and leaves the boxes alone. A line that is only idle, because its load is 0 or an end of it failed, stays grey.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
 The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).

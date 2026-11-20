@@ -1,8 +1,11 @@
 import { declare, stopFlows } from "@orrery-diagrams/core/declare";
 import type { Model } from "@orrery-diagrams/core/types";
 
+/** What a state can be given to: an entity, or a connection by the id its author gave it. */
+const stated = (m: Model, id: string) => m.components.find((c) => c.id === id) ?? m.groups.find((g) => g.id === id) ?? m.connections.find((c) => c.id === id);
+
 /**
- * What the viewer has done to the model: a scenario position plus per-entity states they set. Pure state; the
+ * What the viewer has done to the model: a scenario position plus the states they set, per entity or connection id. Pure state; the
  * model to draw comes from core's `declare` + `stopFlows`, the same path the CLI uses.
  */
 export class Session {
@@ -17,7 +20,7 @@ export class Session {
   /** Declared state of an entity under the current scenario, before overrides. */
   declared(id: string): string {
     const d = declare(this.model, this.scenario ? { scenario: this.scenario.id, step: this.scenario.step } : {}).model;
-    return (d.components.find((c) => c.id === id) ?? d.groups.find((g) => g.id === id))!.state;
+    return stated(d, id)!.state;
   }
 
   /** Declared state including the viewer's override. */
@@ -31,7 +34,7 @@ export class Session {
 
   /** Base-model state of an entity, before any scenario. */
   base(id: string): string {
-    return (this.model.components.find((c) => c.id === id) ?? this.model.groups.find((g) => g.id === id))!.state;
+    return stated(this.model, id)!.state;
   }
 
   /** Next (or previous) state in the author's definition order. */

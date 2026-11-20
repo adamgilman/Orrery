@@ -41,7 +41,7 @@
           "type": "string",
           "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
           "default": "on",
-          "description": "State of any entity that declares none, and what 'restore' returns to."
+          "description": "State of any entity or connection that declares none, and what 'restore' returns to."
         },
         "replace": {
           "type": "boolean",
@@ -545,7 +545,12 @@
           "id": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
-            "description": "Optional handle. Required when the same pair of entities has more than one connection, so scenarios can tell them apart."
+            "description": "Optional handle, in the id space of components and groups. Required when the same pair of entities has more than one connection, and for a scenario step, a what-if or setState to give the connection a state."
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "description": "State of the connection itself in the base model, one of the names in 'states': the link is broken or impaired while both ends are fine. The line and its arrowhead take the state's look, and a state with flows: stop stops its flow. Defaults to states.default. Scenario steps and what-ifs change it, naming the connection by its id."
           },
           "kind": {
             "type": "string",
@@ -785,7 +790,7 @@
           "steps": {
             "type": "array",
             "minItems": 1,
-            "description": "Ordered changes. A step must change at least one thing and may name an entity only once across 'set' and 'restore'.",
+            "description": "Ordered changes. A step must change at least one thing and may name an entity or a connection only once across 'set' and 'restore'.",
             "items": {
               "type": "object",
               "additionalProperties": false,
@@ -797,7 +802,7 @@
                 },
                 "set": {
                   "type": "object",
-                  "description": "State name to entities: an id, a list of ids, or an object of id to reason. \"set\": { \"failed\": \"db\", \"degraded\": { \"api\": \"reads from the replica\" } }. A reason is your one-line explanation, shown as a tooltip. Any name from 'states'.",
+                  "description": "State name to entities or connections: an id, a list of ids, or an object of id to reason. \"set\": { \"failed\": \"db\", \"degraded\": { \"api\": \"reads from the replica\" } }. A connection is named by its id and its line takes the state's look: \"failed\": { \"api-to-db\": \"TLS certificate expired\" }. A reason is your one-line explanation, shown as a tooltip. Any name from 'states'.",
                   "propertyNames": {
                     "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
                   },
@@ -805,7 +810,7 @@
                     "oneOf": [
                       {
                         "type": "string",
-                        "description": "One entity id."
+                        "description": "One entity id, or the id of a connection."
                       },
                       {
                         "type": "array",
@@ -848,7 +853,7 @@
                       }
                     }
                   ],
-                  "description": "Entity id(s) returned to their base-model state."
+                  "description": "Entity or connection id(s) returned to their base-model state."
                 },
                 "load": {
                   "type": "array",
@@ -1013,7 +1018,7 @@
                   "oneOf": [
                     {
                       "type": "string",
-                      "description": "One entity id."
+                      "description": "One entity id, or the id of a connection."
                     },
                     {
                       "type": "array",
@@ -1141,7 +1146,7 @@
               "oneOf": [
                 {
                   "type": "string",
-                  "description": "One entity id."
+                  "description": "One entity id, or the id of a connection."
                 },
                 {
                   "type": "array",

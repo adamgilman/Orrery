@@ -1,0 +1,19 @@
+{
+  "$schema": "../../packages/core/schema/v1.json",
+  "title": "States on connections",
+  "direction": "right",
+  "components": [
+    { "id": "src", "label": "Caller", "kind": "client" },
+    { "id": "on", "label": "on" }, { "id": "degraded", "label": "degraded" }, { "id": "failed", "label": "failed" }, { "id": "off", "label": "off" },
+    { "id": "idle", "label": "load 0" }, { "id": "down", "label": "a failed box", "state": "failed" }
+  ],
+  "connections": [
+    { "id": "to-on", "from": "src", "to": "on", "load": 0.6 },
+    { "id": "to-degraded", "from": "src", "to": "degraded", "load": 0.6, "state": "degraded" },
+    { "id": "to-failed", "from": "src", "to": "failed", "load": 0.6, "state": "failed" },
+    { "id": "to-off", "from": "src", "to": "off", "load": 0.6, "state": "off" },
+    { "from": "src", "to": "idle", "load": 0 },
+    { "from": "src", "to": "down", "load": 0.6 }
+  ],
+  "exports": [{ "id": "connection-states" }]
+}

@@ -24,6 +24,7 @@
 .callout-leader{fill:none;stroke:#64748b;stroke-width:1.5}
 .callout-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#334155;dominant-baseline:central}
 .heading-back{fill:#ffffff}
+.backing{fill:#ffffff}
 .heading-title{font:600 16px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#0f172a}
 .heading-text{font:12px Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:#64748b}
 .heading-title.centred,.heading-text.centred{text-anchor:middle}
@@ -59,6 +60,7 @@
 .st-off .group-box{stroke-dasharray:4 4}
 .st-off{opacity:0.45}</style>
 <defs><marker id="arrow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L12 6L0 12z" fill="#94a3b8"/></marker><marker id="arrow-start" viewBox="0 0 12 12" refX="1" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M12 0L0 6L12 12z" fill="#94a3b8"/></marker></defs>
+<rect class="backing" x="0" y="0" width="420.2" height="415.5" rx="8"/>
 <g class="scene">
 <g class="view" data-view="data" data-open="" data-title="Data tier" data-size="420.2 415.5">
 <g class="groups">
@@ -72,8 +74,8 @@
 </g>
 </g>
 <g class="edges">
-<path class="edge edge-sync" data-edge="api->db" data-kind="sync" d="M250.5 68 L250.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
-<path class="flow" data-flow="api->db" data-load="0.6" d="M250.5 68 L250.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
+<path class="edge edge-sync" data-edge="writes" data-kind="sync" d="M250.5 68 L250.5 103 L289.5 103 L289.5 237.5" marker-end="url(#arrow)"/>
+<path class="flow" data-flow="writes" data-load="0.6" d="M250.5 68 L250.5 103 L289.5 103 L289.5 225.5" style="stroke-width:3.3;animation-duration:1.5s"/>
 <text class="edge-label" x="263.5" y="136">writes</text>
 <path class="edge edge-sync" data-edge="failover" data-kind="sync" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 335.5" marker-end="url(#arrow)"/>
 <path class="flow" data-flow="failover" data-load="0" d="M287.5 68 L287.5 93 L315.5 93 L315.5 169 L377 169 L377 310.5 L338.8 310.5 L338.8 323.5" style="stroke-width:1.5;animation:none;opacity:0"/>

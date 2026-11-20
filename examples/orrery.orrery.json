@@ -494,6 +494,13 @@
       "load": 0.6
     },
     {
+      "id": "to-explain",
+      "from": "model",
+      "to": "explain",
+      "load": 0,
+      "state": "planned"
+    },
+    {
       "from": "validate",
       "to": "validator",
       "load": 0.5

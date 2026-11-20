@@ -130,7 +130,7 @@ Escape zooms out then closes. The interactive file carries a layer per way the v
 
 "Clicks and the keyboard, nothing else" left a phone's reader unable to start or step a scenario or switch views.
 The standalone file now draws one strip along its bottom edge: the view, the scenario step and its note, with
-previous and next tap targets and a cross to leave the scenario (MODEL.md R19 and its decision). It walks only the
+previous and next tap targets and a cross to leave the scenario (MODEL.md R20 and its decision). It walks only the
 author's views and steps and sets no state, it is plain SVG drawn by the engine at mount (still no HTML, nothing
 in the file as written), and a page that mounts the engine still gets no controls unless it passes
 `controls: true`.
