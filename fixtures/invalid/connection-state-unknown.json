@@ -1,0 +1,17 @@
+{
+  "components": [{ "id": "a" }, { "id": "b" }],
+  "connections": [
+    { "id": "link", "from": "a", "to": "b", "state": "wobbly" },
+    { "from": "b", "to": "a" }
+  ],
+  "scenarios": [
+    {
+      "id": "s",
+      "steps": [
+        { "set": { "failed": ["nolink"] }, "restore": "gone" },
+        { "set": { "failed": "link", "degraded": { "link": "twice" } } },
+        { "set": { "failed": "link" }, "restore": "link" }
+      ]
+    }
+  ]
+}

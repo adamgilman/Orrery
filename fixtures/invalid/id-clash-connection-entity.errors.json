@@ -1,0 +1,4 @@
+[
+  { "pointer": "/connections/0/id", "message": "id \"a\" is already used by a component" },
+  { "pointer": "/connections/1/id", "message": "id \"data\" is already used by a group" }
+]

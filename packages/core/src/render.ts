@@ -84,7 +84,8 @@ const frameOf = (k: GroupKindDef) => (typeof k.frame === "string" ? FRAME_PRESET
  * States come last so a state's look wins over a kind's box or frame at equal specificity (R8). Names appear only
  * as class names.
  */
-function vocabularyCss(model: Model): string {
+/** `lines`: whether a line can be drawn in the state here, so its rule is needed; a file with no line in a state carries none (R22). */
+function vocabularyCss(model: Model, lines: (state: string) => boolean = () => true): string {
   const rules: string[] = [];
   for (const [name, k] of Object.entries(model.kinds.components)) {
     const b = k.box; if (!b) continue;
@@ -122,6 +123,12 @@ function vocabularyCss(model: Model): string {
     if (box.length) rules.push(`.st-${def.name} .node-box{${box.join(";")}}`, `.st-${def.name} .group-box{${box.join(";")}}`);
     if (look.text) rules.push(`.st-${def.name} .node-label{fill:${css(look.text)}}`, `.st-${def.name} .group-label{fill:${css(look.text)}}`);
     if (look.opacity !== undefined) rules.push(`.st-${def.name}{opacity:${look.opacity}}`);
+    // A line in the state (R22): its colour and emphasis. The kind's rule still gives its width, and its dash unless the look has one.
+    const line: string[] = [];
+    if (look.stroke) line.push(`stroke:${css(look.stroke)}`);
+    if (look.dash) line.push(`stroke-dasharray:${DASH}`);
+    if (look.pulse) line.push(`animation:orrery-pulse ${PULSE_PERIOD}s linear infinite`);
+    if (line.length && lines(def.name)) rules.push(`.edge.st-${def.name}{${line.join(";")}}`);
   }
   return rules.join("\n");
 }
@@ -246,11 +253,18 @@ function componentMarkup(c: Component, model: Model, layout: LayoutResult): stri
 /** An edge and its flow along a route. The flow animates its own dashes, so it carries no other animation. */
 function connectionMarkup(c: Connection, model: Model, route: { points: Point[]; labelAt?: Point }): string {
   const key = escAttr(c.key);
-  const markers = ` marker-end="url(#arrow)"${c.bidirectional ? ' marker-start="url(#arrow-start)"' : ""}`;
+  // A line in a state other than the default carries it, as an entity does (R22): the class its look hangs on, an
+  // arrowhead in the look's colour, and the author's reason. A line in the default state is drawn by its kind alone.
+  const stated = c.state !== model.states.default;
+  const look = lookOf(model.states.define[c.state]!);
+  const head = stated && look.stroke ? `-st-${escAttr(c.state)}` : "";
+  const markers = ` marker-end="url(#arrow${head})"${c.bidirectional ? ` marker-start="url(#arrow-start${head})"` : ""}`;
+  const state = stated ? ` data-state="${escAttr(c.state)}"${look.pulse ? ' data-pulse="1"' : ""}` : "";
+  const members = c.members ? ` data-members="${escAttr(c.members.join(" "))}"` : "";
   const flowPts = c.bidirectional ? trimStart(trimEnd(route.points, ARROW_LENGTH), ARROW_LENGTH) : trimEnd(route.points, ARROW_LENGTH);
   const flowColour = lineOf(model.kinds.connections[c.kind]!).flow;
   const parts = [
-    `<path class="edge edge-${escAttr(c.kind)}" data-edge="${key}" data-kind="${escAttr(c.kind)}" d="${pathD(route.points)}"${markers}/>`,
+    `<path class="edge edge-${escAttr(c.kind)}${stated ? ` st-${escAttr(c.state)}` : ""}" data-edge="${key}" data-kind="${escAttr(c.kind)}"${state}${members} d="${pathD(route.points)}"${markers}${c.reason !== undefined ? `><title>${esc(c.reason)}</title></path>` : "/>"}`,
     `<path class="flow" data-flow="${key}" data-load="${num(c.load)}" d="${pathD(flowPts)}" style="${flowStyle(c.load)}${flowColour ? `;stroke:${css(flowColour)}` : ""}"/>`,
   ];
   if (c.label !== undefined) {
@@ -319,14 +333,18 @@ function withNotes(box: Rect, target: string, model: Model, notes: Notes): Rect 
 
 /** Legend rows for every non-default state used in this (scoped, declared) model (R9). Empty when none. */
 function legendMarkup(model: Model, y: number): { markup: string; height: number; width: number } {
-  const used = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
+  const boxed = new Set([...model.components.map((c) => c.state), ...model.groups.map((g) => g.state)]);
+  const used = new Set([...boxed, ...model.connections.map((c) => c.state)]);
   used.delete(model.states.default);
   const rows = Object.values(model.states.define).filter((d) => used.has(d.name));
   if (rows.length === 0) return { markup: "", height: 0, width: 0 };
   const lines = rows.map((d, i) => {
     const look = lookOf(d);
     const style = [`fill:${css(look.fill ?? "#ffffff")}`, `stroke:${css(look.stroke ?? "#64748b")}`, "stroke-width:1.5", ...(look.dash ? [`stroke-dasharray:${DASH}`] : []), ...(look.opacity !== undefined ? [`opacity:${look.opacity}`] : [])].join(";");
-    return `<g transform="translate(0 ${i * LEGEND_ROW})"><rect y="1" width="12" height="12" rx="3" style="${style}"/><text x="20" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? `: ${esc(d.description)}` : ""}</text></g>`;
+    // a state only lines are in is shown as a line
+    const line = ["fill:none", `stroke:${css(look.stroke ?? "#64748b")}`, "stroke-width:2", ...(look.dash ? [`stroke-dasharray:${DASH}`] : []), ...(look.opacity !== undefined ? [`opacity:${look.opacity}`] : [])].join(";");
+    const swatch = boxed.has(d.name) ? `<rect y="1" width="12" height="12" rx="3" style="${style}"/>` : `<path d="M0 7H12" style="${line}"/>`;
+    return `<g transform="translate(0 ${i * LEGEND_ROW})">${swatch}<text x="20" y="7"><tspan class="legend-name">${esc(d.name)}</tspan>${d.description ? `: ${esc(d.description)}` : ""}</text></g>`;
   });
   const chars = Math.max(...rows.map((d) => d.name.length + (d.description ? d.description.length + 2 : 0)));
   return { markup: `<g class="legend" transform="translate(20 ${num(y)})">\n${lines.join("\n")}\n</g>`, height: rows.length * LEGEND_ROW + LEGEND_GAP, width: 20 + 20 + textWidth(chars, 12) + 20 };
@@ -688,17 +706,26 @@ function headingBlock(title: string | undefined, description: string | undefined
   return { markup: `<rect class="heading-back" width="${num(w)}" height="${num(height)}"/>\n${parts.join("\n")}`, height, width: w };
 }
 
-function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[], viewBox?: { x: number; y: number; width: number; height: number }, heading?: Heading): string {
+function wrapDocument(model: Model, title: string | undefined, layers: ViewLayer[], extra: string[], viewBox?: { x: number; y: number; width: number; height: number }, heading?: Heading, interactive = false): string {
   const first = layers[0]!;
   const crop = viewBox ?? { x: 0, y: 0, width: first.width, height: first.height };
   // the heading sits in a band above the crop; the scene moves down by its height
   const vb = heading ? { x: crop.x, y: crop.y, width: Math.max(crop.width, heading.width), height: crop.height + heading.height } : crop;
-  const m = (id: string, reverse: boolean) => `<marker id="${id}" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${reverse ? 1 : ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="${reverse ? `M${ARROW_LENGTH} 0L0 ${ARROW_LENGTH / 2}L${ARROW_LENGTH} ${ARROW_LENGTH}z` : `M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z`}" fill="#94a3b8"/></marker>`;
+  const m = (id: string, reverse: boolean, fill = "#94a3b8") => `<marker id="${id}" viewBox="0 0 ${ARROW_LENGTH} ${ARROW_LENGTH}" refX="${reverse ? 1 : ARROW_LENGTH - 1}" refY="${ARROW_LENGTH / 2}" markerWidth="${ARROW_LENGTH}" markerHeight="${ARROW_LENGTH}" markerUnits="userSpaceOnUse" orient="auto"><path d="${reverse ? `M${ARROW_LENGTH} 0L0 ${ARROW_LENGTH / 2}L${ARROW_LENGTH} ${ARROW_LENGTH}z` : `M0 0L${ARROW_LENGTH} ${ARROW_LENGTH / 2}L0 ${ARROW_LENGTH}z`}" fill="${fill}"/></marker>`;
+  // An arrowhead in the colour of each state some line here is drawn in (R22), and no others: a file with no line in a state is unchanged.
+  // What a merged line stands for is the engine's to read; a still has no engine, so it does not carry it.
+  if (!interactive) layers = layers.map((l) => ({ ...l, markup: l.markup.replace(/ data-members="[\d ]+"/g, "") }));
+  const body = layers.map((l) => l.markup).join("") + extra.join("");
+  const stateHeads = Object.values(model.states.define).flatMap((d) => {
+    const stroke = lookOf(d).stroke;
+    if (!stroke) return [];
+    return (["arrow", "arrow-start"] as const).filter((id) => body.includes(`url(#${id}-st-${d.name})`)).map((id) => m(`${id}-st-${d.name}`, id === "arrow-start", escAttr(stroke)));
+  }).join("");
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${num(vb.x)} ${num(vb.y)} ${num(vb.width)} ${num(vb.height)}" width="${num(vb.width)}" height="${num(vb.height)}" data-orrery="1"${heading ? ` data-heading="${num(heading.height)}"` : ""}>`,
-    (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model)}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
+    (title !== undefined ? `<title>${esc(title)}</title>\n` : "") + `<style>${BASE_STYLE}\n${vocabularyCss(model, (name) => interactive || body.includes(` st-${name}" data-edge=`))}${layers.map((l) => (l.css ? `\n${l.css}` : "")).join("")}</style>`,
     // orient="auto" (not auto-start-reverse): resvg draws the latter wrong on vertical paths.
-    `<defs>${m("arrow", false)}${m("arrow-start", true)}</defs>`,
+    `<defs>${m("arrow", false)}${m("arrow-start", true)}${stateHeads}</defs>`,
     ...(heading ? [`<g class="heading" transform="translate(${num(vb.x)} ${num(vb.y)})">\n${heading.markup}\n</g>`] : []),
     `<g class="scene"${heading ? ` transform="translate(0 ${num(heading.height)})"` : ""}>\n${layers.map((l, i) => viewLayer(l, i === 0)).join("\n")}\n</g>`,
     ...extra,
@@ -848,5 +875,5 @@ export async function renderDocument(model: Model, engine: LayoutEngine, options
   const json = JSON.stringify(usedVocabulary(declared)).replace(/]]>/g, "]]\\u003e");
   const extra = [`<script type="application/json" id="orrery-model"><![CDATA[${json}]]></script>`];
   if (options.runtime) extra.push(`<script>${cdata(options.runtime)}</script>`);
-  return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width)), options.heading) : undefined);
+  return wrapDocument(model, model.title, layers, extra, undefined, options.heading ? headingFor(model, first, Math.max(...layers.map((l) => l.width)), options.heading) : undefined, true);
 }

@@ -115,3 +115,21 @@ describe("scopeModel: callouts (R16)", () => {
     expect(scopeModel(r.model, r.model.views[0]!, ["g"]).callouts.map((c) => c.at)).toEqual(["a", "ab", "c"]);
   });
 });
+
+describe("scopeModel: states on merged connections (#60, R11)", () => {
+  const conn = (m: Model, key: string) => m.connections.find((c) => c.key === key)!;
+  it("a line standing for several connections names them, and takes the first member's state that is not the default, with every member's reason", () => {
+    const m = fixture("connection-states");
+    const view = selectView(m, "closed");
+    const plain = scopeModel(m, view);
+    const merged = conn(plain, "api-to-db");
+    expect(merged.to).toBe("data");
+    expect(merged.members, "positions in the model's connections").toEqual([1, 2]);
+    expect(merged.state, "the base state of api-to-cache").toBe("degraded");
+    const set = applySet(m, { failed: ["api-to-db"], brownout: ["api-to-cache"] }, {}, { "api-to-db": "TLS certificate expired", "api-to-cache": "throttled" });
+    const both = conn(scopeModel(set, view), "api-to-db");
+    expect(both.state).toBe("failed");
+    expect(both.reason).toBe("TLS certificate expired; throttled");
+    expect(conn(scopeModel(m, selectView(m, "all")), "api-to-db").members, "an unmerged line has no members").toBeUndefined();
+  });
+});

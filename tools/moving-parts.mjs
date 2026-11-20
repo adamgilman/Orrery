@@ -8,7 +8,8 @@ const dbFails = scenarios.find((s) => s.id === "db-fails");
 const model = {
   $schema, title: "Checkout: the moving parts",
   description: "One small checkout, the README's own: a storefront, an API, an orders database with a read replica, and a session cache of two Redis nodes. Every picture on the moving parts page is a view, a moment or a story drawn from this one model.",
-  direction, kinds, groups, components, connections,
+  // the line from the API to the database gets an id here, so a what-if can give that connection a state of its own
+  direction, kinds, groups, components, connections: connections.map((c) => (c.from === "api" && c.to === "db" ? { id: "writes", ...c } : c)),
   views: [
     ...views,
     { id: "front", title: "The front door", only: ["web", "api"] },
@@ -28,6 +29,7 @@ const model = {
     { id: "open-sessions", open: ["sessions"] }, { id: "open-deep", open: ["sessions", "cache-a"] }, { id: "zoom-db", zoom: "db" }, { id: "open-and-zoom", open: ["sessions"], zoom: "sessions" },
     { id: "step-1", scenario: "db-fails", step: 1 }, { id: "step-2", scenario: "db-fails", step: 2 }, { id: "step-3", scenario: "db-fails", step: 3 },
     { id: "what-if", set: { off: { replica: "out for maintenance" }, degraded: { api: "no failover while the replica is out" } } },
+    { id: "what-if-link", set: { failed: { writes: "TLS certificate expired" }, degraded: { api: "writes failing" } } },
     { id: "heading", heading: true },
     { id: "sequence", view: "checkout-seq" },
     { id: "sequence-failed", view: "checkout-seq", scenario: "db-fails", step: 1 },
