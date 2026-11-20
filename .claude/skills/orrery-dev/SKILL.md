@@ -71,9 +71,9 @@ say means: MODEL.md invariant first, then the test named there, then the code.
 |---|---|
 | `packages/core` | schema, validator, declaration (scenario steps folded into the model), view scoping, `LayoutEngine` + fake engine, SVG renderer, document assembly |
 | `packages/layout-elk` | the only ELK importer |
-| `packages/raster` | freeze, rasterise, frames, contact sheet, `inspect` |
+| `packages/raster` | freeze, rasterise, frames, contact sheet, `inspect`; PNG and GIF output (`renderPng`, `renderGif`, `fitLoop`, the GIF writer in `gif.ts`; R19) |
 | `packages/runtime` | the engine bundled into every rendered SVG: `window.Orrery.mount(svg)` returns the interface a page builds controls from; no panel |
-| `packages/cli` | `orrery validate` / `render` / `export` (the model's `exports`, enclosed files) / `embed` (diagram + engine + sample page in `packages/cli/sample/`) / `packs` (list the vocabulary packs) |
+| `packages/cli` | `orrery validate` / `render` (SVG, or `-o x.png` / `-o x.gif`) / `export` (the model's `exports`, enclosed files) / `embed` (diagram + engine + sample page in `packages/cli/sample/`) / `packs` (list the vocabulary packs) |
 | `tools/inspect.mjs` | the loop script above |
 | `tools/skill-refs.mjs` | regenerates the Claude Code plugin's references (plugins/orrery/skills/orrery-diagrams/references: model.md from MODEL.md §4, examples.md from the checkout stages, errors.md from the invalid fixtures); run after changing any of those, or test/orrery/skill.test.ts fails |
 | `tools/packs/build.mjs` | regenerates `packages/core/packs/*.json` from the providers' icon sets (docs/PACKS.md); the outputs are committed, so re-run only for a new icon release and read the diff |

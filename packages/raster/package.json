@@ -1,12 +1,13 @@
 {
   "name": "@orrery-diagrams/raster",
   "version": "0.5.0",
-  "description": "Freeze Orrery animations at a moment and rasterise them: frames, contact sheets, pixel checks.",
+  "description": "Freeze Orrery animations at a moment and rasterise them: PNG, animated GIF, frames, contact sheets, pixel checks.",
   "keywords": [
     "orrery",
     "svg",
     "png",
-    "raster"
+    "raster",
+    "gif"
   ],
   "repository": {
     "type": "git",

@@ -13,6 +13,9 @@ run("render", "examples/try-it.orrery.json", "-o", "examples/try-it.svg");
 run("render", "examples/try-it.orrery.json", "--set", "failed=db", "-o", "examples/try-it-failed.svg");
 run("render", "examples/checkout.orrery.json", "-o", "examples/checkout.svg"); // the interactive file the README and landing page link to
 run("render", "examples/checkout.orrery.json", "--view", "checkout-seq", "-o", "examples/checkout-sequence.svg"); // its sequence, a file of its own
+// the README's raster pictures, written with the commands it gives (test/orrery/readme.test.ts): one loop as a GIF, the picture at rest as a PNG
+run("render", "examples/checkout.orrery.json", "--play", "db-fails", "-o", "examples/checkout/primary-fails.gif");
+run("render", "examples/checkout.orrery.json", "-o", "examples/checkout/overview.png");
 for (const f of ["examples/checkout.orrery.json", ...readdirSync("examples/checkout").filter((f) => f.endsWith(".orrery.json")).map((f) => `examples/checkout/${f}`)]) {
   for (const line of run("export", f, "--out", "examples/checkout").trim().split("\n")) console.log(line);
 }
