@@ -57,6 +57,20 @@ flow at all. Labels sit on the line; `bidirectional` puts an arrowhead at both e
 
 ![Connections](connections.svg)
 
+A connection has a state of its own, for a link that is broken or impaired while both of its ends are fine: a
+partition, an expired certificate, a firewall rule. The line and its arrowhead wear the state's look, and a state
+that stops flows stops that line's. The last two lines are only idle: one carries no load and the other runs into
+a failed box, and neither was given a state, so both stay grey.
+
+```jsonc
+"connections": [{ "id": "to-failed", "from": "src", "to": "failed", "load": 0.6, "state": "failed" }]
+```
+
+In a scenario step or a what-if a connection is named by its `id`, with a reason if you like:
+`"set": { "failed": { "to-failed": "TLS certificate expired" } }`.
+
+![States on connections](connection-states.svg)
+
 ## Shapes
 
 Eleven presets. A kind names one with `shape`; the default kinds already do (database is a cylinder, client a pill,

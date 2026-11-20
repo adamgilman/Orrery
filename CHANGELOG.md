@@ -3,6 +3,13 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- A connection takes a state, as a component or a group does (#60), so a picture can show a broken link between two healthy services: a network partition, an expired certificate, a firewall rule. `state` on a connection sets it in the base model, and a scenario step's `set` and `restore`, an export's or a tour scene's `set`, `--set` on the command line and the engine's `setState` and `cycle` name a connection by its `id`, with a reason if you like. The line and its arrowhead take the state's look (`failed` is red and pulses, `degraded` amber, `off` dimmed and dashed, a custom look its own stroke, dash, pulse and opacity), a state with `flows: stop` stops that line's flow, the reason is the line's tooltip, and the legend lists the state, with a line for its swatch when only lines are in it. Nothing is inferred in either direction: a line beside a failed box stays grey and still, and a failed line leaves both of its ends as the author wrote them. Between closed groups, a line standing for several connections takes the state of the first of them that is not in the default state and lists every reason. The engine's `change` snapshot lists every connection that has an id.
+- **Breaking, narrowly:** a connection's `id` is now in the same id space as components and groups, so a file whose connection id equals an entity's id is rejected with a message naming the clash. Rename the connection.
+- A step or `--set` naming an id that does not exist now says `unknown entity or connection id "x"`, where it said `unknown entity "x"`.
+- In the interactive file a line standing for several connections between closed groups keeps their summed load. The engine was rewriting it with the first member's load alone as soon as it mounted.
+
 ## 0.5.0 (2026-11-13)
 
 Pictures that only say what the author wrote, drawn inside their own outlines: a reader's click no longer changes a state, and the contents of a shaped node stay within its shape.

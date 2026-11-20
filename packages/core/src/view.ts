@@ -1,4 +1,4 @@
-import { ModelError } from "./declare.js";
+import { ModelError, mergedState } from "./declare.js";
 import type { Component, Connection, Model, View } from "./types.js";
 
 /**
@@ -45,6 +45,7 @@ export function scopeModel(model: Model, view: View, open: readonly string[] = [
   const components: Component[] = model.components.filter((c) => shown.has(c.id) && visible(c.id));
   const ghosts = new Map<string, Component>();
   const connections: Connection[] = [];
+  const membersOf = new Map<Connection, Connection[]>();
   for (const c of model.connections) {
     const a = shown.has(c.from), b = shown.has(c.to);
     if (!a && !b) continue;
@@ -55,10 +56,17 @@ export function scopeModel(model: Model, view: View, open: readonly string[] = [
     }
     const from = representative(c.from), to = representative(c.to);
     if (from === to) continue; // internal to a closed group
-    // Several connections landing on one pair of boxes are drawn as one line, with their load summed.
+    // Several connections landing on one pair of boxes are drawn as one line, with their load summed. The line
+    // names its members and takes its state from them (R11).
     const same = connections.find((x) => x.from === from && x.to === to);
-    if (same) { same.load = Math.min(1, Math.round((same.load + c.load) * 100) / 100); continue; }
+    if (same) { same.load = Math.min(1, Math.round((same.load + c.load) * 100) / 100); (membersOf.get(same) ?? membersOf.set(same, [model.connections.find((x) => x.key === same.key)!]).get(same)!).push(c); continue; }
     connections.push({ ...c, from, to });
+  }
+  for (const [line, members] of membersOf) {
+    const { state, reason } = mergedState(members, model.states.default);
+    line.members = members.map((m) => model.connections.findIndex((x) => x.key === m.key));
+    line.state = state;
+    if (reason !== undefined) line.reason = reason; else delete line.reason;
   }
   // Callouts (R16) follow their target: at the closed box standing for it, or dropped with it.
   const callouts = model.callouts.flatMap((c) => {

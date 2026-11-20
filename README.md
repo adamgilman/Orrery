@@ -374,6 +374,9 @@ Rules an agent needs to know:
 - Order in the file is order on the canvas within a layer, so list the important things first.
 - Nothing is inferred. A state is in the picture because you wrote it there, in the base model, a scenario step or a
   what-if. When something fails, say what that does to the rest, with a reason, and move the loads yourself.
+- A connection takes a state too, when the link is what broke and both ends are fine. Give it an `id` and name it
+  like an entity: `"set": { "failed": { "api-to-db": "TLS certificate expired" } }` draws that line red with no
+  flow and leaves the boxes alone. A line that is only idle, because its load is 0 or an end of it failed, stays grey.
 - Unknown properties are errors, on purpose. Run `validate` and fix what it lists: each line is a JSON pointer and a message.
 
 The specification, with every invariant, is [docs/MODEL.md](docs/MODEL.md).
