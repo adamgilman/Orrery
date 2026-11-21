@@ -269,7 +269,7 @@ alone would take minutes to line up again, so each is given the nearest period t
 
 ## Status
 
-Orrery is at 0.5.0: usable, young and still changing.
+Orrery is at 0.6.0: usable, young and still changing.
 
 What works today:
 
@@ -278,7 +278,8 @@ What works today:
   `orrery embed` writes the diagram and its engine for a page of your own.
 - A PNG or an animated GIF of any picture, for a place that will not show an SVG: `orrery render -o app.png` or
   `-o app.gif`.
-- Your own states, kinds and shapes, the AWS, Azure and GCP icon packs, callouts and headings.
+- Your own states, kinds and shapes, the AWS, Azure and GCP icon packs, callouts and headings. A state goes on a
+  connection as well as a box, for a link that broke between two healthy services.
 - The command, the libraries and the packs are on npm, all at one version. A Claude Code plugin writes the models.
 
 What is not there yet:
