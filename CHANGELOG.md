@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- In Safari and other WebKit browsers, a legend row's state name sat higher than its description, and callout text sat off centre. Text inside a `<tspan>` now takes its line's baseline, so the name and description share one line.
+
 ## 0.6.0 (2026-11-21)
 
 A broken link can be drawn as broken, and a picture can go where an SVG cannot: a connection takes a state of its own, `orrery render` writes PNG and animated GIF, the interactive file can be worked by touch, and every picture reads on a dark page. One narrow break: a connection's `id` may no longer equal a component's or a group's.
