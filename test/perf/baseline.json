@@ -4,7 +4,7 @@
     "unit": "ms"
   },
   "layout.ms": {
-    "value": 75.47,
+    "value": 70.81,
     "unit": "ms"
   },
   "render.ms": {
@@ -16,7 +16,7 @@
     "unit": "bytes"
   },
   "document.ms": {
-    "value": 618.94,
+    "value": 554.2,
     "unit": "ms"
   },
   "document.bytes": {
@@ -32,7 +32,7 @@
     "unit": "count"
   },
   "tour.ms": {
-    "value": 148.91,
+    "value": 132.98,
     "unit": "ms"
   },
   "tour.bytes": {
