@@ -405,7 +405,7 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
       if (twin && rect) { frames.push({ el: g, rect, a: bbox(g), b: bbox(twin) }); g.querySelectorAll<SVGElement>("text,.expand-mark").forEach((t) => (t.style.opacity = "0")); }
       else g.style.opacity = "0";
     }
-    from.querySelectorAll<SVGElement>(".edges, .legend, .callouts, .callouts-step").forEach((e) => (e.style.opacity = "0")); // what belongs to the old layout fades with it
+    from.querySelectorAll<SVGElement>(".edges, .controls, .legend, .callouts, .callouts-step").forEach((e) => (e.style.opacity = "0")); // what belongs to the old layout fades with it
     const start = Date.now(), dur = 350;
     let handle: ReturnType<typeof setTimeout> | undefined;
     const finish = () => {
@@ -524,6 +524,9 @@ export function mount(root: SVGSVGElement, opts: MountOptions = {}): Orrery {
 
   /* ---- inside the diagram: clicks, hover, keyboard; no page code needed ---- */
   on(scene, "click", (ev) => {
+    // A frame's collapse mark is drawn above the lines, apart from its frame; a click on it closes that group.
+    const mark = (ev.target as Element).closest?.("[data-close]");
+    if (mark) { stop(); const id = mark.getAttribute("data-close")!; open(openSet.filter((o) => o !== id && !isInside(o, id))); return; }
     const g = (ev.target as Element).closest?.("[data-node]:not([data-ghost]),[data-group]") as SVGGElement | null;
     if (!g) return;
     stop();

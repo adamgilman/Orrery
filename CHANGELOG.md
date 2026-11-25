@@ -3,6 +3,10 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## Unreleased
+
+- In the interactive file, a connection routed through an open group's corner no longer covers the group's collapse mark. The mark is drawn above every line and box, filled, so the line passes beneath it and the mark can still be clicked.
+
 ## 0.6.0 (2026-11-21)
 
 A broken link can be drawn as broken, and a picture can go where an SVG cannot: a connection takes a state of its own, `orrery render` writes PNG and animated GIF, the interactive file can be worked by touch, and every picture reads on a dark page. One narrow break: a connection's `id` may no longer equal a component's or a group's.
