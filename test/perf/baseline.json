@@ -4,7 +4,7 @@
     "unit": "ms"
   },
   "layout.ms": {
-    "value": 88.7,
+    "value": 75.47,
     "unit": "ms"
   },
   "render.ms": {
@@ -12,15 +12,15 @@
     "unit": "ms"
   },
   "overview.bytes": {
-    "value": 32296,
+    "value": 32329,
     "unit": "bytes"
   },
   "document.ms": {
-    "value": 653.7,
+    "value": 646.55,
     "unit": "ms"
   },
   "document.bytes": {
-    "value": 393794,
+    "value": 393827,
     "unit": "bytes"
   },
   "document.layers": {
@@ -32,15 +32,15 @@
     "unit": "count"
   },
   "tour.ms": {
-    "value": 173.21,
+    "value": 155.23,
     "unit": "ms"
   },
   "tour.bytes": {
-    "value": 139812,
+    "value": 139845,
     "unit": "bytes"
   },
   "play.bytes": {
-    "value": 117422,
+    "value": 117455,
     "unit": "bytes"
   },
   "freeze.ms": {

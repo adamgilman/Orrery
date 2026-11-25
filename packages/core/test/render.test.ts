@@ -142,6 +142,12 @@ describe("renderSvg: legend (R9)", () => {
     expect(legend).toContain("degraded");
     expect(legend).not.toContain(">on<");
   });
+
+  it("a tspan sits on its text's baseline: browsers do not inherit dominant-baseline into tspans", async () => {
+    const svg = await draw(applySet(fixture("alternatives"), { failed: ["orders"] }));
+    expect(between(svg, '<g class="legend"')).toContain('<tspan class="legend-name">');
+    expect(svg).toMatch(/(>|[}\n,])tspan\{dominant-baseline:inherit\}/);
+  });
 });
 
 describe("render options", () => {
