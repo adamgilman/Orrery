@@ -1,4 +1,4 @@
-# Publishes every package to npm when a v* tag is pushed, after the full check, with provenance. Auth is an
+# Publishes every package to npm when a v* tag is pushed, after typecheck, lint and tests, with provenance. Auth is an
 # NPM_TOKEN repository secret when one is set (a granular token with publish rights on the orrery-diagrams org),
 # otherwise npm's trusted publishing (each package on npmjs.com naming this repository and this workflow).
 # The tag must equal the version in the package.json files: bump with
@@ -24,7 +24,10 @@ jobs:
           cache: yarn
       - run: npm install -g npm@latest
       - run: yarn install --immutable
-      - run: yarn check
+      # Typecheck, lint and tests, as `yarn check` runs them, but not the performance ratchet: it already gated the
+      # pull request that put this commit on main, and a timing metric measured again on a fresh runner can only
+      # block a release on noise.
+      - run: yarn typecheck && yarn lint && yarn test
       - name: Tag matches the package versions
         run: |
           tag="${GITHUB_REF_NAME#v}"
