@@ -5,6 +5,7 @@ model are also recorded, with their reasons, in the decisions log of [docs/MODEL
 
 ## Unreleased
 
+- In the interactive file, a connection routed through an open group's corner no longer covers the group's collapse mark. The mark is drawn above every line and box, filled, so the line passes beneath it and the mark can still be clicked.
 - In Safari and other WebKit browsers, a legend row's state name sat higher than its description, and callout text sat off centre. Text inside a `<tspan>` now takes its line's baseline, so the name and description share one line.
 
 ## 0.6.0 (2026-11-21)

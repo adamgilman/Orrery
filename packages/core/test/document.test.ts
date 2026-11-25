@@ -53,18 +53,36 @@ describe("renderDocument", () => {
 });
 
 describe("renderDocument: a collapse mark on an open group (#33)", () => {
+  const layerOf = (svg: string, open: string) => {
+    const from = svg.indexOf(`data-open="${open}"`);
+    const next = svg.indexOf('<g class="view"', from);
+    return svg.slice(from, next < 0 ? undefined : next);
+  };
   const marks = (svg: string, open: string, group: string) => {
-    const layer = svg.slice(svg.indexOf(`data-open="${open}"`));
+    const layer = layerOf(svg, open);
     const at = layer.indexOf(`data-group="${group}"`);
     const next = layer.indexOf('data-group="', at + 12);
     const g = layer.slice(at, next < 0 ? undefined : next); // this group's markup, not its neighbour's
-    return { collapse: g.includes('<g class="collapse-mark"'), expand: g.includes('<g class="expand-mark"') };
+    return { collapse: layer.includes(`<g class="collapse-mark" data-close="${group}"`), expand: g.includes('<g class="expand-mark"') };
   };
   it("marks a group the reader can close, and keeps the expand mark on the closed one", async () => {
     const svg = await renderDocument(fixture("drill-down"), engine(), { runtime: "" });
     expect(marks(svg, "", "payments"), "closed: a plus, nothing to collapse").toEqual({ collapse: false, expand: true });
     expect(marks(svg, "payments", "payments"), "open: a minus the reader can click").toEqual({ collapse: true, expand: false });
     expect(marks(svg, "payments", "identity"), "still closed in that layer").toEqual({ collapse: false, expand: true });
+  });
+  it("draws the collapse mark above every line, opaque, so no connection runs over it", async () => {
+    const layer = layerOf(await renderDocument(fixture("drill-down"), engine(), { runtime: "" }), "payments");
+    const mark = layer.indexOf('<g class="collapse-mark" data-close="payments"');
+    expect(mark).toBeGreaterThan(layer.indexOf('<g class="edges">'));
+    expect(mark, "above the components too: a line ends on a box, and the mark sits above both").toBeGreaterThan(layer.indexOf('<g class="nodes">'));
+    // in the group's corner, in scene coordinates, wherever the frame was laid out
+    const [x, y, w] = layer.match(/data-group="payments" data-bbox="([\d.]+) ([\d.]+) ([\d.]+)/)!.slice(1).map(Number);
+    expect(layer).toContain(`<g class="collapse-mark" data-close="payments" transform="translate(${x! + w! - 22} ${y! + 8})">`);
+  });
+  it("fills the collapse mark, so a line passing beneath it is hidden", async () => {
+    const svg = await renderDocument(fixture("drill-down"), engine(), { runtime: "" });
+    expect(svg).toMatch(/\.collapse-mark rect\{fill:#[0-9a-f]{6}\}/);
   });
   it("draws no collapse mark on a still, where nothing can be clicked", async () => {
     const still = await render(fixture("drill-down"), engine(), { open: ["payments"] });

@@ -403,7 +403,7 @@ describe("closing a group from the picture (#33)", () => {
     vi.advanceTimersByTime(900);
     expect(rt.snapshot().open, "a child's click must not close the group around it").toEqual(["outer", "inner"]);
     // the collapse mark on the inner frame closes only the inner one
-    click(vis(root, '[data-group="inner"] .collapse-mark'));
+    click(vis(root, '.collapse-mark[data-close="inner"]'));
     vi.advanceTimersByTime(900);
     expect(rt.snapshot().open).toEqual(["outer"]);
     // the outer frame's own background closes the outer one, and the picture is back where it started

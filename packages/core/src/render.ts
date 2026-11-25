@@ -141,7 +141,7 @@ tspan{dominant-baseline:inherit}
 .group[data-collapsed] .group-box{fill-opacity:.7}
 .summary-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .expand-mark,.collapse-mark{fill:none;stroke:#94a3b8;stroke-width:1.5;stroke-linecap:round}
-.collapse-mark{cursor:pointer}
+.collapse-mark{cursor:pointer}.collapse-mark rect{fill:#f8fafc}
 .node-box{fill:#ffffff;stroke:#64748b;stroke-width:1.5}
 .node-label{font:500 14px ${FONT};fill:#0f172a;text-anchor:middle;dominant-baseline:central}
 .node-tech{font:12px ${FONT};fill:#64748b;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
@@ -198,12 +198,19 @@ function componentBody(c: Component, model: Model, b: { width: number; height: n
 
 /** The expand mark: a small boxed plus in the top-right corner of a closed group, the conventional sign that there is more inside. */
 const expandMark = (at: { x: number; y: number }) => cornerMark("expand-mark", "M7 3.5v7M3.5 7h7", at);
-/** The collapse mark: the same box with a minus, on a group the reader can close. Drawn only where a click does something, so a still never shows a control that is not there (R11). */
-const collapseMark = (w: number, pad = { x: 0, y: 0 }) => cornerMark("collapse-mark", "M3.5 7h7", { x: w - 22 - pad.x, y: 8 + pad.y });
-const cornerMark = (cls: string, d: string, at: { x: number; y: number }) => `<g class="${cls}" transform="translate(${num(at.x)} ${num(at.y)})"><rect width="14" height="14" rx="3"/><path d="${d}"/></g>`;
+/**
+ * The collapse mark: the same box with a minus, on a group the reader can close. Drawn only where a click does something,
+ * so a still never shows a control that is not there (R11). It sits in the frame's corner but is drawn in a layer of its
+ * own above the lines and boxes, filled, because a connection entering the frame may be routed through that corner.
+ */
+const collapseMark = (g: Group, model: Model, b: { x: number; y: number; width: number }) => {
+  const pad = groupShapeOf(g, model).pad;
+  return cornerMark("collapse-mark", "M3.5 7h7", { x: b.x + b.width - 22 - pad.x, y: b.y + 8 + pad.y }, ` data-close="${escAttr(g.id)}"`);
+};
+const cornerMark = (cls: string, d: string, at: { x: number; y: number }, attrs = "") => `<g class="${cls}"${attrs} transform="translate(${num(at.x)} ${num(at.y)})"><rect width="14" height="14" rx="3"/><path d="${d}"/></g>`;
 
 /** A group's frame at (0,0): open, with its title in the band; or closed (R11), the size of a component, with its name centred and an expand mark. */
-function groupBody(g: Group, model: Model, b: { width: number; height: number }, collapsible = false): string {
+function groupBody(g: Group, model: Model, b: { width: number; height: number }): string {
   const closed = g.collapsed !== undefined;
   const shape = groupShapeOf(g, model);
   const many = g.replicas > 1;
@@ -217,7 +224,7 @@ function groupBody(g: Group, model: Model, b: { width: number; height: number },
     ...(many ? [closed ? `<text class="badge" x="${num(at.badge!.x)}" y="${num(at.badge!.y)}">×${g.replicas}</text>` : `<text class="badge" x="${num(b.width - 8 - EXPAND_MARK_WIDTH - shape.pad.x)}" y="${num(16 + shape.pad.y)}">×${g.replicas}</text>`] : []),
     closed
       ? `<g class="summary"><text class="summary-label" x="${num(at.label.x)}" y="${num(at.label.y)}">${esc(g.label)}</text>${expandMark(at.mark)}</g>`
-      : groupTitle(g.label, shape, b.width) + (collapsible && g.closable ? `\n${collapseMark(b.width, shape.pad)}` : ""),
+      : groupTitle(g.label, shape, b.width),
   ].join("\n");
 }
 /** A frame's title: in the band at the top left; centred on a path-shaped frame, whose corners are not where a box's are. */
@@ -230,13 +237,13 @@ const entityAttrs = (e: Component | Group, model: Model) => `data-state="${escAt
 const bboxAttr = (b: { x: number; y: number; width: number; height: number }) => `data-bbox="${num(b.x)} ${num(b.y)} ${num(b.width)} ${num(b.height)}"`;
 const at = (b: { x: number; y: number }) => `transform="translate(${num(b.x)} ${num(b.y)})"`;
 
-function groupMarkup(g: Group, model: Model, layout: LayoutResult, collapsible = false): string {
+function groupMarkup(g: Group, model: Model, layout: LayoutResult): string {
   const b = layout.groups[g.id];
   if (!b) throw new Error(`layout returned no box for group ${g.id}`);
   return [
     `<g class="group gk-${g.kind} st-${g.state}" data-group="${escAttr(g.id)}" ${bboxAttr(b)} ${entityAttrs(g, model)}${g.collapsed !== undefined ? ` data-collapsed="${g.collapsed}"` : ""} ${at(b)}>`,
     ...(g.reason !== undefined ? [`<title>${esc(g.reason)}</title>`] : []),
-    groupBody(g, model, b, collapsible),
+    groupBody(g, model, b),
     `</g>`,
   ].join("\n");
 }
@@ -361,10 +368,12 @@ export function renderView(model: Model, layout: LayoutResult, collapsible = fal
   if (notes.left < 0 || notes.top < 0) { layout = shiftLayout(layout, Math.max(0, CALLOUT_MARGIN - notes.left), Math.max(0, CALLOUT_MARGIN - notes.top)); notes = calloutsMarkup(model, layout); }
   const bottom = Math.max(layout.height, notes.bottom + CALLOUT_MARGIN);
   const legend = legendMarkup(model, bottom + LEGEND_GAP);
+  const controls = collapsible ? model.groups.filter((g) => g.collapsed === undefined && g.closable).map((g) => collapseMark(g, model, layout.groups[g.id]!)).join("\n") : "";
   const picture = [
-    `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout, collapsible)).join("\n")}\n</g>`,
+    `<g class="groups">\n${model.groups.map((g) => groupMarkup(g, model, layout)).join("\n")}\n</g>`,
     `<g class="edges">\n${edgesMarkup(model, layout)}\n</g>`,
     `<g class="nodes">\n${model.components.map((c) => componentMarkup(c, model, layout)).join("\n")}\n</g>`,
+    ...(controls ? [`<g class="controls">\n${controls}\n</g>`] : []),
     ...(notes.markup ? [notes.markup] : []),
   ].join("\n");
   return { picture, legend: legend.markup, width: Math.max(layout.width, notes.right + CALLOUT_MARGIN, legend.width), height: bottom + legend.height, layout };
