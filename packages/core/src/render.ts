@@ -134,6 +134,7 @@ function vocabularyCss(model: Model, lines: (state: string) => boolean = () => t
 }
 
 const BASE_STYLE = `
+tspan{dominant-baseline:inherit}
 .group-box{fill:#e2e8f0;fill-opacity:.35;stroke:#cbd5e1;stroke-width:1.5}
 .group-label{font:700 11px ${FONT};fill:#64748b;letter-spacing:.1em;text-transform:uppercase;paint-order:stroke;stroke:#f1f5f9;stroke-width:3px;stroke-linejoin:round}
 .group-label.centred{text-anchor:middle}
