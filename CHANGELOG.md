@@ -3,6 +3,13 @@
 Versions follow [semver](https://semver.org); every package in the workspace shares one version. Changes to the
 model are also recorded, with their reasons, in the decisions log of [docs/MODEL.md](docs/MODEL.md).
 
+## 0.6.2 (2026-11-26)
+
+The project has a home page, https://www.adamgilman.com/orrery/.
+
+- The npm packages, the Claude Code plugin and the README link to the home page. The README's badge and the plugin linked `adamgilman.github.io/Orrery/`, which no longer resolves.
+- Releases publish after typecheck, lint and tests, without measuring performance again: the performance ratchet already gates every pull request into main.
+
 ## 0.6.1 (2026-11-25)
 
 Two drawing fixes: legend names line up in Safari, and a line no longer covers a group's collapse mark.

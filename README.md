@@ -271,7 +271,7 @@ alone would take minutes to line up again, so each is given the nearest period t
 
 ## Status
 
-Orrery is at 0.6.1: usable, young and still changing.
+Orrery is at 0.6.2: usable, young and still changing.
 
 What works today:
 
