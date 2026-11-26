@@ -1,6 +1,6 @@
 {
   "name": "@orrery-diagrams/raster",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Freeze Orrery animations at a moment and rasterise them: PNG, animated GIF, frames, contact sheets, pixel checks.",
   "keywords": [
     "orrery",
@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/adamgilman/Orrery.git"
   },
-  "homepage": "https://github.com/adamgilman/Orrery#readme",
+  "homepage": "https://www.adamgilman.com/orrery/",
   "bugs": {
     "url": "https://github.com/adamgilman/Orrery/issues"
   },
