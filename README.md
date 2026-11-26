@@ -1,11 +1,13 @@
 # Orrery
 
-[![ci](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![site](https://img.shields.io/badge/site-adamgilman.github.io%2FOrrery-FF7A1A)](https://adamgilman.github.io/Orrery/)
+[![ci](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml/badge.svg)](https://github.com/adamgilman/Orrery/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![home page](https://img.shields.io/badge/home-adamgilman.com%2Forrery-FF7A1A)](https://www.adamgilman.com/orrery/)
 
 > An orrery is a mechanical model of the solar system. You crank it and watch the parts move.
 
 **Orrery makes architecture diagrams that are models, not pictures.** Written as JSON by AI agents,
 laid out automatically, rendered to a single SVG that animates in a GitHub README with no plugin.
+
+Home page: **[adamgilman.com/orrery](https://www.adamgilman.com/orrery/)**
 
 Orrery's first diagram is, naturally, an orrery.
 
